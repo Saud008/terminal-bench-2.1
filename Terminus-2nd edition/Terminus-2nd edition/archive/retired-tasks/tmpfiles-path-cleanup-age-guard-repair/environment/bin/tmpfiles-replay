@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+
+ROOT="/app"
+# shellcheck source=lib/common.sh
+source "$ROOT/lib/common.sh"
+# shellcheck source=lib/parse_rules.sh
+source "$ROOT/lib/parse_rules.sh"
+# shellcheck source=lib/age_eval.sh
+source "$ROOT/lib/age_eval.sh"
+# shellcheck source=lib/glob_prune.sh
+source "$ROOT/lib/glob_prune.sh"
+# shellcheck source=lib/recreate_seq.sh
+source "$ROOT/lib/recreate_seq.sh"
+# shellcheck source=lib/ownership.sh
+source "$ROOT/lib/ownership.sh"
+# shellcheck source=lib/generator_merge.sh
+source "$ROOT/lib/generator_merge.sh"
+# shellcheck source=lib/export.sh
+source "$ROOT/lib/export.sh"
+# shellcheck source=lib/pipeline.sh
+source "$ROOT/lib/pipeline.sh"
+
+cmd_apply() {
+  local scenario="" seed="" now_epoch="" out="/app/output/apply.json"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --scenario) scenario="$2"; shift 2 ;;
+      --seed) seed="$2"; shift 2 ;;
+      --now) now_epoch="$2"; shift 2 ;;
+      --export) out="$2"; shift 2 ;;
+      *) echo "unknown arg: $1" >&2; return 2 ;;
+    esac
+  done
+  [[ -n "$scenario" && -n "$seed" && -n "$now_epoch" ]] || {
+    echo "usage: tmpfiles-replay apply --scenario NAME --seed SEED --now EPOCH [--export FILE]" >&2
+    return 2
+  }
+  mkdir -p "$(dirname "$out")"
+  run_tmpfiles_apply "$scenario" "$seed" "$now_epoch" "$out"
+}
+
+cmd_generate() {
+  local scenario="" mode="" out="/app/output/generate.json"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --scenario) scenario="$2"; shift 2 ;;
+      --mode) mode="$2"; shift 2 ;;
+      --export-rules) out="$2"; shift 2 ;;
+      *) echo "unknown arg: $1" >&2; return 2 ;;
+    esac
+  done
+  [[ -n "$scenario" && -n "$mode" ]] || {
+    echo "usage: tmpfiles-replay generate --scenario NAME --mode boot|boot-ex [--export-rules FILE]" >&2
+    return 2
+  }
+  mkdir -p "$(dirname "$out")"
+  run_tmpfiles_generate "$scenario" "$mode" "$out"
+}
+
+main() {
+  [[ $# -ge 1 ]] || { echo "usage: tmpfiles-replay apply|generate ..." >&2; exit 2; }
+  case "$1" in
+    apply) shift; cmd_apply "$@" ;;
+    generate) shift; cmd_generate "$@" ;;
+    *) echo "unknown command: $1" >&2; exit 2 ;;
+  esac
+}
+
+main "$@"

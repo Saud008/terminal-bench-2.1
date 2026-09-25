@@ -1,0 +1,11 @@
+--- environment/crates/pointer_walk/src/lib.rs
++++ solution/oracle/golden/crates/pointer_walk/src/lib.rs
+@@ -13,7 +13,7 @@
+     }
+     let mut cur = root;
+     for part in p.trim_start_matches('/').split('/') {
+-        let part = part.replace("~0", "~").replace("~1", "/");
++        let part = part.replace("~1", "/").replace("~0", "~");
+         if part.chars().all(|c| c.is_ascii_digit()) {
+             let idx: usize = part.parse().ok()?;
+             cur = cur.get(idx)?;

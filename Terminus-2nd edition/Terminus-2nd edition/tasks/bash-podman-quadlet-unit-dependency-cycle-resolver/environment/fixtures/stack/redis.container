@@ -1,0 +1,11 @@
+[Unit]
+Description=Redis cache
+After=network-online.target
+
+[Service]
+EnvironmentFile=-/etc/redis/env
+Restart=on-failure
+
+[Container]
+Image=localhost/redis:7
+Restart=no

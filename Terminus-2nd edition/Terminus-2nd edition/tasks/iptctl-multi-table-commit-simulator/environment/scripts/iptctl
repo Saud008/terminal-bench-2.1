@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="/app"
+source "$ROOT/lib/report_emit.sh"
+source "$ROOT/lib/ingest.sh"
+
+cmd_ingest() {
+  local restore=""
+  local snapshot=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --restore) restore="$2"; shift 2 ;;
+      --snapshot) snapshot="$2"; shift 2 ;;
+      *) echo "unknown arg: $1" >&2; exit 2 ;;
+    esac
+  done
+  [[ -n "$restore" && -n "$snapshot" ]] || {
+    echo "usage: iptctl ingest --restore <file.v4> --snapshot <out.json>" >&2
+    exit 2
+  }
+  ingest_restore "$restore" "$snapshot"
+  exit $?
+}
+
+cmd_export() {
+  local snapshot=""
+  local seed=""
+  local export=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --snapshot) snapshot="$2"; shift 2 ;;
+      --seed) seed="$2"; shift 2 ;;
+      --export) export="$2"; shift 2 ;;
+      *) echo "unknown arg: $1" >&2; exit 2 ;;
+    esac
+  done
+  [[ -n "$snapshot" && -n "$seed" && -n "$export" ]] || {
+    echo "usage: iptctl export --snapshot <staging.json> --seed <seed> --export <out.json>" >&2
+    exit 2
+  }
+  export_from_staging "$snapshot" "$seed" "$export"
+  local code
+  code="$(python3 -c "import json; print(json.load(open('$export'))['exit_code'])")"
+  exit "$code"
+}
+
+cmd_simulate() {
+  local restore=""
+  local seed=""
+  local export=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --restore) restore="$2"; shift 2 ;;
+      --seed) seed="$2"; shift 2 ;;
+      --export) export="$2"; shift 2 ;;
+      *) echo "unknown arg: $1" >&2; exit 2 ;;
+    esac
+  done
+  [[ -n "$restore" && -n "$seed" && -n "$export" ]] || {
+    echo "usage: iptctl simulate --restore <file.v4> --seed <seed> --export <out.json>" >&2
+    exit 2
+  }
+  export_simulation_report "$restore" "$seed" "$export"
+  local code
+  code="$(python3 -c "import json; print(json.load(open('$export'))['exit_code'])")"
+  exit "$code"
+}
+
+main() {
+  if [[ $# -lt 1 ]]; then
+    echo "usage: iptctl <ingest|export|simulate> ..." >&2
+    exit 2
+  fi
+  case "$1" in
+    ingest) shift; cmd_ingest "$@" ;;
+    export) shift; cmd_export "$@" ;;
+    simulate) shift; cmd_simulate "$@" ;;
+    *) echo "unknown command" >&2; exit 2 ;;
+  esac
+}
+
+main "$@"

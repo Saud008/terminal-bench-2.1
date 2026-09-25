@@ -1,0 +1,22 @@
+--- a/internal/crpe91/weight/normalize.sh
++++ b/internal/crpe91/weight/normalize.sh
+@@ -7,14 +7,16 @@
+   python3 - <<'PY' "$json_rows"
+ import json, sys
+ rows = json.loads(sys.argv[1])
+-total = sum(float(r.get("weight", 0)) for r in rows)
++eligible = [r for r in rows if r.get("eligible", True)]
++total = sum(float(r.get("eff_weight", r.get("weight", 0))) for r in eligible)
+ if total <= 0:
+     print("[]")
+     raise SystemExit
+ scale = 65536.0 / total
+ out = []
+-for r in rows:
+-    out.append({"id": r["id"], "norm_weight": int(float(r.get("weight", 0)) * scale)})
++for r in eligible:
++    w = float(r.get("eff_weight", r.get("weight", 0)))
++    out.append({"id": r["id"], "norm_weight": int(w * scale)})
+ print(json.dumps(out))
+ PY
+ }

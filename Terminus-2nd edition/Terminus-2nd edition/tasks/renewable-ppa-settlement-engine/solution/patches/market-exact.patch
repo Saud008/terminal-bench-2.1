@@ -1,0 +1,19 @@
+--- internal/marketlookup/lookup.go
++++ internal/marketlookup/lookup.go
+@@ -5,12 +5,9 @@
+ // PriceForInterval returns the market price for an aligned interval start key.
+ // Contract: exact string match on interval_start_utc after alignment.
+ func PriceForInterval(intervalStart string, prices []model.MarketPrice) (int64, bool) {
+-	var prior int64
+-	ok := false
+ 	for _, row := range prices {
+-		if row.IntervalStartUTC < intervalStart {
+-			prior = row.PriceCents
+-			ok = true
++		if row.IntervalStartUTC == intervalStart {
++			return row.PriceCents, true
+ 		}
+ 	}
+-	return prior, ok
++	return 0, false
+ }

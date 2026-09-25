@@ -1,0 +1,28 @@
+--- internal/routewin/pick_tier.go
++++ internal/routewin/pick_tier.go
+@@ -4,17 +4,22 @@
+ 
+ func RouteScore(rule model.RouteRule) int {
+     if rule.Match.Path != "" {
+-        return len(rule.Match.Path)
++        return 1_000_000 + len(rule.Match.Path)
+     }
+     return len(rule.Match.Prefix)
+ }
+ 
+-// SelectWinningRoutes collapses duplicate cluster routes using precedence score.
+ func SelectWinningRoutes(routes []model.RouteRule) []model.RouteRule {
+     best := map[string]model.RouteRule{}
+     for _, rule := range routes {
+         cur, ok := best[rule.Cluster]
+-        if !ok || RouteScore(rule) < RouteScore(cur) {
++        if !ok {
++            best[rule.Cluster] = rule
++            continue
++        }
++        if RouteScore(rule) > RouteScore(cur) {
++            best[rule.Cluster] = rule
++        } else if RouteScore(rule) == RouteScore(cur) && rule.Precedence > cur.Precedence {
+             best[rule.Cluster] = rule
+         }
+     }

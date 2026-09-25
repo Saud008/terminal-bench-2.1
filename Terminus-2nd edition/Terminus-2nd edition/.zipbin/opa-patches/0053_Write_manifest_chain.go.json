@@ -1,0 +1,9 @@
+{
+  "path": "d:\\Terminus-2nd edition\\Terminus-2nd edition\\tasks\\opa-bundle-signature-digest-chain-verifier-repair\\environment\\internal\\verify\\manifest_chain.go",
+  "tool": "Write",
+  "old_string": null,
+  "new_string": null,
+  "contents_len": 990,
+  "contents": "package verify\n\nimport (\n\t\"crypto/sha256\"\n\t\"encoding/hex\"\n\n\t\"github.com/terminus/bundlectl/internal/bundle\"\n)\n\n// LegacyChainRoot computes a rolling digest using manifest declaration order.\n// Deprecated diagnostic helper \u2014 contract acceptance uses lexicographic preview order.\nfunc LegacyChainRoot(members []bundle.Member, manifestOrder []string) (string, map[string]string) {\n\torder := make([]bundle.Member, 0, len(members))\n\tbyRaw := make(map[string]bundle.Member, len(members))\n\tfor _, m := range members {\n\t\tbyRaw[m.Raw] = m\n\t}\n\tfor _, raw := range manifestOrder {\n\t\tif m, ok := byRaw[raw]; ok {\n\t\t\torder = append(order, m)\n\t\t}\n\t}\n\tdigests := make(map[string]string, len(order))\n\tstate := sha256.Sum256(nil)\n\tfor _, m := range order {\n\t\tfd := sha256.Sum256(m.Bytes)\n\t\tdigests[m.Canonical] = hex.EncodeToString(fd[:])\n\t\th := sha256.New()\n\t\th.Write(state[:])\n\t\th.Write([]byte(m.Canonical))\n\t\th.Write(fd[:])\n\t\tcopy(state[:], h.Sum(nil))\n\t}\n\treturn hex.EncodeToString(state[:]), digests\n}\n",
+  "contents_omitted": false
+}

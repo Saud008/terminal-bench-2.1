@@ -1,0 +1,372 @@
+---
+description: Snorkel Terminal-Bench Dockerfile and image best practices (Terminus Edition 2) (LOCKED)
+alwaysApply: false
+---
+
+# Terminus Edition 2 — Dockerfile & Image Best Practices
+
+**Snorkel platform verbatim (LOCKED):** `shared/snorkel-dockerfile-image-best-practices.mdc` — §1–15 + CI blocking checks. This file adds Terminus verifier/Rust/checklist extensions only; on conflict prefer the **stricter** rule.
+
+**Canonical summary:** `shared/dockerfile.mdc` (extended Snorkel spec). Hub: `shared/WORKFLOW-MAP.mdc`.
+
+This file is the extended Snorkel **Dockerfile & Image Best Practices** (15 sections). Apply on every task audit and creation. On conflict with other Terminus rules, prefer the **stricter** rule or platform CI output.
+
+All Terminal-Bench task images must be:
+
+| Property | Requirement |
+|----------|-------------|
+| **Reproducible** | Same source builds to the same image over time and across systems |
+| **Cacheable** | Common layers are shared across tasks |
+| **Lazy-pull friendly** | Startup-critical files are accessible without pulling the full image |
+| **Auditable** | Images are digest-pinned, signed, labeled, and free of secrets |
+| **Complete** | Tasks run without network access — all dependencies in the image |
+| **Siloed** | Image must not leak task solutions or tests |
+| **Resourced** | CPU, memory, and storage defined in `task.toml` |
+
+---
+
+## 1. Pin base images by digest
+
+Every `FROM` line must use an immutable digest. Never use floating tags such as `latest`. Tags may be included for readability, but the **digest is the source of truth**. CI fails any `FROM` without `@sha256`.
+
+```dockerfile
+# Bad
+FROM python:3.13-slim-bookworm
+
+# Good
+FROM python:3.13-slim-bookworm@sha256:...
+```
+
+Update digests deliberately, in reviewable commits.
+
+---
+
+## 2. Use sanctioned base images where possible
+
+Prefer Reflection-sanctioned Terminal-Bench base images over ad hoc public images. A good base-image family provides shell utilities, observability tooling (if required), standard CA certs/locale, common verifier/runtime bootstrap tools, and a pinned package-manager baseline.
+
+Runtime classes: Python, Node, JVM, Rust/C/C++ build, database/service, minimal POSIX.
+
+Custom base images must be flagged to Reflection ahead of time and should generally be avoided.
+
+---
+
+## 3. Make builds reproducible
+
+Pin all dependencies; avoid nondeterministic build steps.
+
+| Ecosystem | Lockfiles |
+|-----------|-----------|
+| Python | `requirements.txt` (exact versions), `uv.lock`, `poetry.lock` |
+| Node | `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock` |
+| Rust | `Cargo.lock` |
+| Go | `go.mod` and **`go.sum`** |
+| JVM | Pinned Maven/Gradle locks where possible |
+
+Pin downloaded binaries by version and checksum. Avoid `curl | sh` unless version-pinned and checksum-verified:
+
+```dockerfile
+# Bad
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Good
+ARG UV_VERSION=0.6.14
+ARG UV_SHA256=...
+RUN curl -fsSL "https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-x86_64-unknown-linux-gnu.tar.gz" -o /tmp/uv.tar.gz \
+    && echo "${UV_SHA256}  /tmp/uv.tar.gz" | sha256sum -c - \
+    && tar -xzf /tmp/uv.tar.gz -C /usr/local/bin --strip-components=1 \
+    && rm /tmp/uv.tar.gz
+```
+
+Avoid build steps that embed wall-clock time, random paths, usernames, or nondeterministic generated output. Set `SOURCE_DATE_EPOCH` where applicable.
+
+---
+
+## 4. Structure layers from least volatile to most volatile
+
+Order Dockerfile operations so task edits only invalidate top layers.
+
+- Base OS and runtime dependencies **before** task-specific source
+- Copy manifest files **before** copying source
+- Install dependencies **before** copying frequently edited files
+- Do **not** use `COPY . /app` unless the task directory is minimal and `.dockerignore` is strict
+- Aim for purposeful layers (not one squashed layer)
+
+```dockerfile
+FROM <base>@sha256:...
+
+# 1. OS/system packages
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ... \
+    && rm -rf /var/lib/apt/lists/*
+
+# 2. Runtime / package-manager setup
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+# 3–6. Manifests, deps, source, task build
+...
+WORKDIR /app
+```
+
+---
+
+## 5. Consolidate apt usage correctly
+
+One apt transaction per stage and volatility class.
+
+- Do **not** run `apt-get upgrade`
+- Do **not** leave `/var/lib/apt/lists/*` in the image
+- Do **not** install recommended packages unless required
+- Do **not** install build tools in the runtime stage unless the task requires them
+- Prefer common apt packages in sanctioned base images
+- On **Debian/bookworm** images: **do not pin apt package versions** (`tmux=3.3a-3`, `python3=3.11.2-1+b1`, etc.) — platform preference; use package names only (`shared/platform-preferences.mdc` §2). **Do** pin base digest, verifier pytest (`requirements.lock` + `--require-hashes`), and stack lockfiles — full matrix in `shared/platform-preferences.mdc` §2b.
+
+```dockerfile
+# Bad — split apt layers
+RUN apt-get update && apt-get install -y git
+RUN apt-get update && apt-get install -y tmux asciinema
+
+# Bad — pinned Debian package versions
+RUN apt-get install -y --no-install-recommends tmux=3.3a-3 python3=3.11.2-1+b1
+
+# Good
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        asciinema \
+        ca-certificates \
+        git \
+        python3 \
+        python3-pip \
+        python3-venv \
+        tmux \
+    && rm -rf /var/lib/apt/lists/*
+```
+
+---
+
+## 6. Keep build tools out of runtime images (when possible)
+
+Use **multi-stage builds** when the Dockerfile compiles or bundles artifacts. If the task requires the agent to compile or build code, toolchains in the final image are fine.
+
+Use multi-stage for: `cargo build`, `go build`, `mvn package`, `gradle build`, `npm ci && npm run build`, `dotnet publish`, C/C++ with make/cmake, etc.
+
+---
+
+## 7. Images must contain all dependencies
+
+All tasks must work **without network** during agent run and verifier.
+
+**Mandatory:**
+
+- **`tmux`** and **`asciinema`** must be installed — agent runtime requires both; missing either causes agent runs to fail with no verifier output
+- All package downloads at **image build time**
+- `test.sh` must **not** use `curl`, `wget`, `pip install`, `npm install`, `cargo fetch`, `mvn dependency:get`, or similar networked operations at runtime
+- Python wheels, npm packages, Maven artifacts, Cargo registry state, reference binaries, and fixtures preloaded at build
+- `task.toml`: **`allow_internet = false`**
+- Oracle must pass with network disabled
+
+---
+
+## 8. Separate agent-visible runtime from verifier-only assets
+
+- Do **not** copy `solution/` into the runtime image
+- Do **not** copy hidden tests into agent-visible locations
+- Do **not** store expected outputs in writable agent paths
+- Do **not** let the verifier read ground truth from agent-modifiable files
+- Place verifier-only binaries/fixtures under controlled paths (e.g. `/opt/verifier-venv`, `/opt/verifier-scripts`)
+- Public fixtures may be in the image; hidden verifier assets stay isolated
+
+---
+
+## 9. Use `.dockerignore` and narrow `COPY`
+
+All non-trivial tasks must include `environment/.dockerignore`.
+
+- Prefer `COPY file file` or `COPY src/ src/` over `COPY . .`
+- Do not copy caches, virtualenvs, build outputs, `.git`, editor files, credentials
+
+Recommended `.dockerignore`:
+
+```
+.git
+.gitignore
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/node_modules/
+**/target/
+**/dist/
+**/build/
+**/.venv/
+**/venv/
+.env
+*.log
+solution/
+tests/
+```
+
+---
+
+## 10. Store files as files, not heredocs or opaque archives
+
+```dockerfile
+# Bad
+RUN cat > /app/foo.py <<'EOF'
+print('hello world')
+EOF
+
+# Good
+COPY hello_world.py /app/hello_world.py
+```
+
+Extract archives at build time so lazy-pull works:
+
+```dockerfile
+COPY fixtures.tar.gz /tmp/fixtures.tar.gz
+RUN mkdir -p /app/fixtures \
+    && tar -xzf /tmp/fixtures.tar.gz -C /app/fixtures \
+    && rm /tmp/fixtures.tar.gz
+```
+
+---
+
+## 11. Use metadata-preserving COPY options
+
+Only change permissions where needed.
+
+```dockerfile
+# Bad
+RUN chmod -R 755 /app
+
+# Good
+COPY --chmod=0755 run.sh /usr/local/bin/run-task
+COPY --chown=appuser:appuser src/ /app/src/
+```
+
+---
+
+## 12. General image hygiene
+
+Unless required, images must **not** contain: `.git`, `.env`, credentials, SSH keys, package-manager/compiler caches, unused build tools, editor files, large unused datasets, hidden solution files.
+
+Perform cleanup in the **same layer** that creates files:
+
+```dockerfile
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential \
+    && rm -rf /var/lib/apt/lists/*
+```
+
+---
+
+## 13. Optimise for lazy pull and hot-path locality
+
+Put startup-critical files in earlier, smaller layers: shell entrypoints, instructions, small runtime scripts, dependency metadata, small fixtures for the first command.
+
+Keep large optional datasets out of the image when possible; mount at runtime instead.
+
+---
+
+## 14. Declare task resources explicitly
+
+`task.toml` must include realistic `[environment]` resources from observed runs. Oracle must pass within limits.
+
+```toml
+[agent]
+timeout_sec = 900
+
+[verifier]
+timeout_sec = 420
+
+[environment]
+build_timeout_sec = 600.0
+cpus = 1
+memory_mb = 2048
+storage_mb = 10240
+workdir = "/app"
+allow_internet = false
+```
+
+---
+
+## 15. Publish images with audit metadata
+
+```dockerfile
+LABEL org.opencontainers.image.source="..."
+LABEL org.opencontainers.image.revision="..."
+LABEL org.opencontainers.image.created="..."
+LABEL org.opencontainers.image.version="..."
+LABEL org.opencontainers.image.licenses="..."
+```
+
+---
+
+## Rust / C++ — pin `linux/amd64` (build timeout + oracle reliability)
+
+Platform runs **`linux/amd64`**. Rust tasks: use the **Snorkel ECR canonical Rust row** from **`shared/canonical-base-image-gate.mdc`** (copy exact digest). Example:
+
+```dockerfile
+FROM public.ecr.aws/docker/library/rust:1.85-slim@sha256:9f841bbe9e7d8e37ceb96ed907265a3a0df7f44e3737d0b100e7907a679acb36
+```
+
+**Rules:**
+
+- Use **exact** `FROM …@sha256:…` from `canonical-base-image-gate.mdc` for upload form **Yes**.
+- Add **`FROM --platform=linux/amd64`** when platform CI requires amd64-only builds.
+- Digest must be the **per-architecture manifest** for amd64 when using `--platform=linux/amd64`, not the multi-arch index digest.
+- **`ENV CARGO_INCREMENTAL=0`** before `cargo build --release --locked`.
+- Pair with **`build_timeout_sec = 900.0`** or **`1800.0`** in `task.toml` for release compiles (`shared/platform-preferences.mdc` §5).
+
+**Verifier (Dockerfile only):**
+
+```dockerfile
+RUN python3 -m venv /opt/verifier-venv \
+ && /opt/verifier-venv/bin/pip install --no-cache-dir \
+    pytest==9.0.3 \
+    pytest-json-ctrf==0.5.0
+```
+
+Full template: `shared/platform-preferences.mdc` §5.
+
+---
+
+## Terminus verifier integration (`test.sh`)
+
+`tests/test.sh` should only:
+
+- create `/logs/verifier`
+- run **already-installed** tools (e.g. `python -m pytest`, preinstalled rebuild helpers on `PATH`)
+- capture the exit code
+- write `0` or `1` to `/logs/verifier/reward.txt`
+- exit with the test command result
+
+If a dependency is needed only by tests, install it in the Docker image (e.g. `/opt/verifier-venv`, `/opt/verifier-scripts`) — **not** in `test.sh` at runtime.
+
+**Blockers in `test.sh`:** `curl`, `uv install`, `uvx`, `pip install`, `npm install`, `npx playwright install`, `apt-get install`, runtime downloads.
+
+Default skeleton: `task.toml` has `allow_internet = false`; Dockerfile installs verifier packages in `/opt/verifier-venv`; `test.sh` runs `python -m pytest` without installing dependencies.
+
+**Platform-preferred verifier pins** (new/revised tasks, especially Rust): `pytest==9.0.3`, `pytest-json-ctrf==0.5.0` — see `shared/platform-preferences.mdc` §5.
+
+---
+
+## Cursor verification checklist (Dockerfile audit)
+
+Before saying Dockerfile setup is OK, confirm from **actual files**:
+
+1. Every `FROM` in `environment/Dockerfile` uses `@sha256:...` (or flag as blocker for CI)
+2. **`tmux`** and **`asciinema`** present in image (or flag High)
+3. `task.toml` has `[environment] allow_internet = false` and `workdir = "/app"` (non-milestone)
+4. App deps pinned; lockfiles where applicable (`go.sum`, `package-lock.json`, etc.)
+5. Verifier deps in Dockerfile (`/opt/...`), not in `test.sh`
+6. `environment/.dockerignore` exists for non-trivial tasks
+7. No `solution/` or `tests/` copied into the image
+8. No secrets, solution hints, or ground-truth outputs in `environment/`
+9. Layer order: manifests/deps before volatile source where possible
+10. **Rust tasks:** `FROM --platform=linux/amd64` with amd64 digest; `CARGO_INCREMENTAL=0`; `build_timeout_sec` 900–1800; verifier `pytest==9.0.3` / `pytest-json-ctrf==0.5.0` (`shared/platform-preferences.mdc` §5)
+11. Do **not** claim CI-clean or digest-compliant unless digests were actually checked
+
+Do not say “verifier dependency setup is okay” unless **both** are true: no runtime installs in `test.sh`, and required verifier tools are preinstalled in Dockerfile.

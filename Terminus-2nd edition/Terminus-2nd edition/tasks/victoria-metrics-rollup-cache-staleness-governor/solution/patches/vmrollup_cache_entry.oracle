@@ -1,0 +1,24 @@
+package cache
+
+import (
+	"fmt"
+
+	"github.com/chronostack/metricrollup/internal/model"
+)
+
+func CacheKey(metric, labels string, windowStartMs, windowEndMs int64) string {
+	return fmt.Sprintf("%s|%s|%d|%d", metric, labels, windowStartMs, windowEndMs)
+}
+
+func NewEntry(metric, labels string, windowStartMs, windowEndMs, lastSampleTsMs, createdWallMs int64, rollup model.SeriesRollup) model.CacheEntry {
+	return model.CacheEntry{
+		Key:            CacheKey(metric, labels, windowStartMs, windowEndMs),
+		Metric:         metric,
+		Labels:         labels,
+		WindowStartMs:  windowStartMs,
+		WindowEndMs:    windowEndMs,
+		LastSampleTsMs: lastSampleTsMs,
+		CreatedWallMs:  createdWallMs,
+		Rollup:         rollup,
+	}
+}

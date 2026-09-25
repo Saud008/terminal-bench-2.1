@@ -1,0 +1,33 @@
+{
+  "zone": "iter.zone.",
+  "soa_serial": 77,
+  "nsec3_params": {
+    "salt_hex": "beef",
+    "iterations": 5,
+    "hash_algorithm": 1
+  },
+  "records": [
+    {
+      "owner": "iter.zone.",
+      "rtype": "NSEC",
+      "next": "iter.zone.",
+      "type_bitmap": ["NS", "SOA", "NSEC"]
+    },
+    {
+      "owner": "3a00000000000000",
+      "rtype": "NSEC3",
+      "hash_owner": "3a00000000000000",
+      "next_hashed": "3c00000000000000",
+      "iterations": 1,
+      "salt_hex": "beef",
+      "type_bitmap": ["A"]
+    }
+  ],
+  "queries": [
+    {
+      "qname": "probe.iter.zone.",
+      "qtype": "A",
+      "expect": "invalid"
+    }
+  ]
+}

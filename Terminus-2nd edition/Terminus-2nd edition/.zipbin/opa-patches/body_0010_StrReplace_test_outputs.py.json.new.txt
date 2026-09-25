@@ -1,0 +1,56 @@
+def assert_eval_matches_reference(
+    bundle: str, seed: str, export: Path, *, expect_allow: bool | None = None
+) -> None:
+    proc = eval_bundle(bundle, seed, export)
+    assert proc.returncode == 0, proc.stderr or proc.stdout
+    got = json.loads(proc.stdout)
+    ref = reference_eval(BUNDLES / bundle, seed, BUNDLES / bundle / "input/default.json")
+    if expect_allow is not None:
+        assert got["allow"] is expect_allow
+    assert got["allow"] == ref["allow"]
+    assert_trace_matches(got, ref)
+    assert json.loads(export.read_text(encoding="utf-8")) == got
+
+
+def _go_paths() -> dict[str, Path]:
+    return {
+        "digest": APP / "internal/verify/digest.go",
+        "trace": APP / "internal/eval/trace.go",
+        "preview": APP / "internal/bundle/preview_ledger.go",
+    }
+
+
+def _apply_partial_stubs(
+    *,
+    digest_stub: str | None = None,
+    trace_stub: str | None = None,
+    preview_stub: str | None = None,
+) -> dict[str, str]:
+    """Swap stub sources; skip a stub when the swap breaks compile (agent refactored internals)."""
+    stubs = Path(__file__).parent / "stubs"
+    paths = _go_paths()
+    backups = {key: paths[key].read_text(encoding="utf-8") for key in paths}
+    mapping = {
+        "digest": digest_stub,
+        "trace": trace_stub,
+        "preview": preview_stub,
+    }
+    for key, stub_name in mapping.items():
+        if stub_name:
+            shutil.copy(stubs / stub_name, paths[key])
+    proc = run(["go", "build", "-mod=readonly", "-o", str(CLI), "./cmd/bundlectl"], check=False)
+    if proc.returncode != 0:
+        for key, stub_name in mapping.items():
+            if stub_name:
+                paths[key].write_text(backups[key], encoding="utf-8")
+        proc = run(["go", "build", "-mod=readonly", "-o", str(CLI), "./cmd/bundlectl"], check=False)
+        assert proc.returncode == 0, proc.stderr or proc.stdout
+        return backups
+    return backups
+
+
+def _restore_go_sources(backups: dict[str, str]) -> None:
+    paths = _go_paths()
+    for key, content in backups.items():
+        paths[key].write_text(content, encoding="utf-8")
+    build_install()

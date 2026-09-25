@@ -1,0 +1,15 @@
+Border desk operators run the host-local borderdocctl passport-validity ops desk at `/app/bin/borderdocctl`. The desk admits offline passport, visa, stamp, stay-cap, revocation, and watchlist manifests for a named inspection day, evaluates admission gates, and publishes a digest-bound validity ledger. There is no live border host or outbound network step. This is a system-administration host-local ops desk (import → score → seal); keep staging snapshots, eval_pass counters, and ledger republication aligned. It is not a generic Go CLI rebuild, pytest harness, or software-engineering service-repair exercise.
+
+Ops contracts under `/app/docs/` define enforceable invariants: `cli-surface.md` for verb order and flags; `passport-window-contract.md` for inclusive passport expiry; `visa-overlap-contract.md` for full visa span containment; `stay-calculation-contract.md` for cumulative stay including open entry stamps; `rule-precedence-contract.md` for federal-over-port max_stay caps; `revoke-suppression-contract.md` for revocation-linked visa suppression; `watchlist-hold-contract.md` for active hold blocks; `ledger-replay-stable-contract.md` for seal counters and byte-stable republication; `validity-output-contract.md` for generated JSON fields, types, ordering, digest basis, and `eval_pass`. The decoy travelscore analytics under `internal/decoy/travelscore` are informational only and must never alter score-validity or commit-ledger output.
+
+`borderdocctl` must expose:
+
+```text
+borderdocctl import-manifest --scenario <name> [--fixture-dir <dir>]
+borderdocctl score-validity --scenario <name>
+borderdocctl commit-ledger --scenario <name> [--output <path>]
+```
+
+`import-manifest` must normalize the scenario into `/app/state/border-validity.db` and emit `/app/state/manifest-snapshot.json`. `score-validity` must join identity rows, evaluate temporal overlap and stay budgets at the scenario inspection date, write `/app/output/validity-decisions.json`, and increment `eval_pass` in `/app/state/eval-pass.json`. `commit-ledger` must seal SQLite ledger rows only after `eval_pass` is positive and must remain replay-stable across repeated invocations (default manifest `/app/output/ledger-manifest.json`). Generated JSON must match `validity-output-contract.md`.
+
+Bundled scenarios under `/app/fixtures/scenarios` exercise clean entry, expiry edges, visa-span containment, cumulative stay, grace overstay, revoked passport, and open-stamp tails. When `--fixture-dir` is provided, import reads scenarios from that root instead of `/app/fixtures`. When `BORDERDOC_SEED` is present for anti-hardcoding probes, the fixture JSON handed to the CLI is already remapped: passport `doc_id`, visa `doc_id`, stamp `stamp_id`, and every visa/stamp `passport_id` that references a remapped passport already carry the seeded values. The CLI must ingest those identifiers as written and must not remap them again. After policy-module edits under `/app/internal/`, rebuild `/app/bin/borderdocctl` and validate the CLI. Do not edit `/app/docs/`, `/app/fixtures/`, or `/tests/`.

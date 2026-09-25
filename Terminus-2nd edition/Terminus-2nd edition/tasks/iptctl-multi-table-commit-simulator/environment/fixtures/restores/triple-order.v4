@@ -1,0 +1,14 @@
+*mangle
+:PREROUTING ACCEPT [5:300]
+-A PREROUTING -j MARK --set-mark 0x10
+COMMIT
+*nat
+:PREROUTING ACCEPT [2:120]
+-A PREROUTING -m mark --mark 0x10/0xff -j DNAT --to-destination 192.168.1.10 [2:120]
+COMMIT
+*filter
+:INPUT DROP [200:90000]
+:FORWARD ACCEPT [0:0]
+-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT [80:12000]
+-A INPUT -m conntrack --ctstate NEW -j DROP [15:900]
+COMMIT

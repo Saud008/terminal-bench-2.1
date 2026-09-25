@@ -1,0 +1,49 @@
+﻿--- lib/boltlane/fleet_intake/collect_fleet_snapshot.sh
++++ lib/boltlane/fleet_intake/collect_fleet_snapshot.sh
+@@ -1,5 +1,4 @@
+ #!/usr/bin/env bash
+-# Incomplete salted-id/load_seq handling for the baseline image.
+ set -euo pipefail
+ 
+ SCENARIO=""
+@@ -14,7 +13,7 @@
+ [[ -n "$SCENARIO" && -n "$RUN_ID" ]] || { echo "missing --scenario/--run-id" >&2; exit 2; }
+ 
+ python3 - <<'PY' "$SCENARIO" "$RUN_ID"
+-import json, os, sys
++import hashlib, json, os, sys
+ from pathlib import Path
+ 
+ scenario, run_id = sys.argv[1], sys.argv[2]
+@@ -22,11 +21,27 @@
+ fixture_dir = os.environ.get("TB3_SCENARIO_DIR") or cfg["fixture_dir"]
+ src = Path(fixture_dir) / scenario / "inventory.json"
+ inv = json.loads(src.read_text())
+-inv["load_seq"] = 1
++
++host_salt = inv.get("host_salt") or ""
++for adapter in inv.get("adapters", []):
++    adapter_id = adapter["adapter_id"]
++    for dev in adapter.get("devices", []):
++        digest = hashlib.sha256(f'{host_salt}:{adapter_id}:{dev["mac"]}'.encode("utf-8")).hexdigest()
++        dev["salted_id"] = digest[:16]
++
+ state = Path(cfg["state_dir"])
+ state.mkdir(parents=True, exist_ok=True)
+-(state / "inventory.json").write_text(json.dumps(inv, indent=2) + "\n")
+-meta = {"scenario": scenario, "run_id": run_id, "load_seq": 1}
++prev_path = state / "inventory.json"
++load_seq = 1
++if prev_path.exists():
++    try:
++        prev = json.loads(prev_path.read_text())
++        load_seq = int(prev.get("load_seq", 0)) + 1
++    except Exception:
++        load_seq = 1
++inv["load_seq"] = load_seq
++prev_path.write_text(json.dumps(inv, indent=2) + "\n")
++meta = {"scenario": scenario, "run_id": run_id, "load_seq": load_seq}
+ (state / "run-meta.json").write_text(json.dumps(meta, indent=2) + "\n")
+-print(json.dumps({"ok": True, "load_seq": 1}))
++print(json.dumps({"ok": True, "load_seq": load_seq}))
+ PY

@@ -1,0 +1,26 @@
+stages:
+- build
+- test
+- deploy
+build:a:
+  stage: build
+  script:
+  - a
+test:b:
+  stage: test
+  needs:
+  - build:a
+  script:
+  - b
+deploy:c:
+  stage: deploy
+  needs:
+  - test:b
+  script:
+  - c
+test:backref:
+  stage: test
+  needs:
+  - deploy:c
+  script:
+  - bad

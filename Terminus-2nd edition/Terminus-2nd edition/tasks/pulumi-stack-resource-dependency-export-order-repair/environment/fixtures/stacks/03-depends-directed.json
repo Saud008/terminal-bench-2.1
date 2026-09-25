@@ -1,0 +1,37 @@
+{
+  "stack": "dev",
+  "version": 3,
+  "deployment": {
+    "resources": [
+      {
+        "urn": "urn:pulumi:dev::acme::pulumi:providers:aws::default",
+        "type": "pulumi:providers:aws",
+        "parent": "urn:pulumi:dev::acme::pulumi:stack$acme/dev"
+      },
+      {
+        "urn": "urn:pulumi:dev::acme::aws:iam/role:Role::lambda",
+        "type": "aws:iam/role:Role",
+        "parent": "urn:pulumi:dev::acme::pulumi:stack$acme/dev",
+        "provider": "urn:pulumi:dev::acme::pulumi:providers:aws::default"
+      },
+      {
+        "urn": "urn:pulumi:dev::acme::aws:lambda/function:Function::worker",
+        "type": "aws:lambda/function:Function",
+        "parent": "urn:pulumi:dev::acme::pulumi:stack$acme/dev",
+        "provider": "urn:pulumi:dev::acme::pulumi:providers:aws::default",
+        "dependencies": [
+          "urn:pulumi:dev::acme::aws:iam/role:Role::lambda"
+        ]
+      },
+      {
+        "urn": "urn:pulumi:dev::acme::aws:cloudwatch/logGroup:LogGroup::worker",
+        "type": "aws:cloudwatch/logGroup:LogGroup",
+        "parent": "urn:pulumi:dev::acme::pulumi:stack$acme/dev",
+        "provider": "urn:pulumi:dev::acme::pulumi:providers:aws::default",
+        "dependencies": [
+          "urn:pulumi:dev::acme::aws:lambda/function:Function::worker"
+        ]
+      }
+    ]
+  }
+}

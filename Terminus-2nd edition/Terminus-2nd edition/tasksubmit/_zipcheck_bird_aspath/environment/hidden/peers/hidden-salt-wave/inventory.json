@@ -1,0 +1,64 @@
+{
+  "scenario": "hidden-salt-wave",
+  "critical_prefixes": [],
+  "peer_groups": [
+    {
+      "group_id": "g",
+      "filters": [
+        {
+          "filter_id": "o",
+          "priority": 1,
+          "match_mode": "origin",
+          "asn": 42,
+          "action": "accept"
+        }
+      ]
+    }
+  ],
+  "peers": [
+    {
+      "peer_id": "p2",
+      "asn": 2,
+      "group_id": "g",
+      "wave_rank": 1,
+      "med_ceiling": 10,
+      "abort_on_critical_deny": false,
+      "community_rewrite": {
+        "2:1": "2:9"
+      },
+      "filters": []
+    },
+    {
+      "peer_id": "p1",
+      "asn": 1,
+      "group_id": "g",
+      "wave_rank": 1,
+      "med_ceiling": 10,
+      "abort_on_critical_deny": false,
+      "community_rewrite": {},
+      "filters": []
+    }
+  ],
+  "rib": [
+    {
+      "prefix": "1.1.1.0/24",
+      "as_path": [
+        42
+      ],
+      "communities": [
+        "2:1"
+      ],
+      "med": 20,
+      "peer_id": "p2"
+    },
+    {
+      "prefix": "1.1.2.0/24",
+      "as_path": [
+        42
+      ],
+      "communities": [],
+      "med": 20,
+      "peer_id": "p1"
+    }
+  ]
+}

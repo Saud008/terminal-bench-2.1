@@ -1,0 +1,13 @@
+--- internal/raidops/policies/level_path_policy.sh	2026-07-16 16:45:59.534132100 +0000
++++ internal/raidops/policies/level_path_policy.sh	2026-07-16 14:44:17.002663900 +0000
+@@ -6,9 +6,8 @@
+ ALLOWED = {
+     ("raid1", "raid5"),
+     ("raid5", "raid6"),
++    ("raid5", "raid1"),
+     ("raid10", "raid10"),
+-    ("raid0", "raid5"),
+-    ("raid6", "raid5"),
+ }
+ inv = json.loads(Path("/app/state/inventory.json").read_text())
+ blocked = {}

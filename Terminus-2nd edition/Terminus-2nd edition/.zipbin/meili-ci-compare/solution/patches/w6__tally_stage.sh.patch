@@ -1,0 +1,26 @@
+--- a/internal/mbx7/w6/tally_stage.sh
++++ b/internal/mbx7/w6/tally_stage.sh
+@@ -30,6 +30,7 @@
+ 
+ priority = ["blocked_pin","blocked_bbox","blocked_replica_lag","blocked_doc_floor","blocked_admit_cap"]
+ lag_ok = bool(lag.get("lag_ok")); focus = inv["focus"]; max_admit = int(inv["max_admit"])
++doc_floor = int(floor.get("doc_floor", inv["doc_floor"]))
+ denied = {}; candidates = []
+ for doc in inv.get("documents", []):
+     if doc.get("kind") != "document":
+@@ -43,10 +44,13 @@
+     else:
+         aff = 1.0 / (1.0 + hav(float(focus["lon"]), float(focus["lat"]), float(doc["lon"]), float(doc["lat"])))
+         candidates.append({"doc_id": did, "lon": float(doc["lon"]), "lat": float(doc["lat"]), "affinity": aff, "capture_seq": int(doc.get("capture_seq", 0))})
+-# baseline skips floor quorum
++if len(candidates) < doc_floor:
++    for row in candidates:
++        denied[row["doc_id"]] = "blocked_doc_floor"
++    candidates = []
+ proc = subprocess.run(["bash","/app/internal/mbx7/w5/rank_mix.sh"], input=json.dumps(candidates).encode(), stdout=subprocess.PIPE, check=True)
+ ranked = json.loads(proc.stdout.decode())
+-admitted = ranked[:max_admit]
++admitted = [{"doc_id": r["doc_id"], "lon": r["lon"], "lat": r["lat"], "affinity": r["affinity"], "admit_rank": r["admit_rank"]} for r in ranked[:max_admit]]
+ for row in ranked[max_admit:]:
+     denied[row["doc_id"]] = "blocked_admit_cap"
+ ledger = {

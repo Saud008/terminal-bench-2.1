@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+ROOT="/app"
+source "$ROOT/lib/staging/ingest.sh"
+source "$ROOT/lib/export.sh"
+
+cmd_ingest() {
+  local repo_dir="" mirror_manifest=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --mirror-manifest) mirror_manifest="$2"; shift 2 ;;
+      -*) echo "unknown flag: $1" >&2; return 2 ;;
+      *)
+        if [[ -z "$repo_dir" ]]; then
+          repo_dir="$1"
+        else
+          echo "unexpected arg: $1" >&2
+          return 2
+        fi
+        shift
+        ;;
+    esac
+  done
+  [[ -n "$repo_dir" && -n "$mirror_manifest" ]] || {
+    echo "usage: rpm-repo-attest ingest <repo-dir> --mirror-manifest PATH" >&2
+    return 2
+  }
+  ingest_repository "$repo_dir" "$mirror_manifest"
+}
+
+cmd_export_attestation() {
+  local out="/app/output/repo-attestation.json"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --out) out="$2"; shift 2 ;;
+      *) echo "unknown arg: $1" >&2; return 2 ;;
+    esac
+  done
+  export_attestation "$out"
+}
+
+main() {
+  [[ $# -ge 1 ]] || {
+    echo "usage: rpm-repo-attest ingest|export ..." >&2
+    exit 2
+  }
+  case "$1" in
+    ingest)
+      shift
+      cmd_ingest "$@"
+      ;;
+    export)
+      shift
+      [[ $# -ge 1 && "$1" == "attestation" ]] || {
+        echo "usage: rpm-repo-attest export attestation [--out PATH]" >&2
+        exit 2
+      }
+      shift
+      cmd_export_attestation "$@"
+      ;;
+    *)
+      echo "unknown command: $1" >&2
+      exit 2
+      ;;
+  esac
+}
+
+main "$@"

@@ -1,0 +1,31 @@
+--- a/row_publish/publish.rs
++++ b/row_publish/publish.rs
+@@ -37,7 +37,7 @@
+         out_of_tolerance_count: inst.out_of_tolerance_count,
+         cert_valid: inst.cert_valid,
+         authorized_tech: inst.authorized_tech,
+-        expanded_uncertainty: inst.combined_uncertainty,
++        expanded_uncertainty: inst.expanded_uncertainty,
+     }
+ }
+ 
+@@ -52,7 +52,7 @@
+ 
+ pub fn dossier_digest(
+     batch_id: &str,
+-    _generation: i32,
++    generation: i32,
+     rows: &[DossierRow],
+     summary: &DossierSummary,
+ ) -> String {
+@@ -62,9 +62,10 @@
+         .collect();
+     parts.sort();
+     let body = format!(
+-        "{}|{}|{}|{}|{}",
++        "{}|{}|{}|{}|{}|{}",
+         batch_id,
++        generation,
+         summary.instrument_count,
+         summary.invalid_cert_count,
+         summary.unauthorized_tech_count,

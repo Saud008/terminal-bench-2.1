@@ -1,0 +1,21 @@
+--- a/internal/wgpa91/export/export_atlas.sh
++++ b/internal/wgpa91/export/export_atlas.sh
+@@ -14,10 +14,14 @@
+ [[ -n "$run_id" && -n "$output" ]] || exit 2
+ 
+ snap=$(cat "${APP_ROOT}/state/wgpatlas-workspace.json")
+-
+-peers=$(echo "$snap" | jq 'sort_by(.peer_id) | [.[] | {public_key, peer_id, interface, allowed_ips, endpoint, disabled}]')
++peers=$(echo "$snap" | jq '[.peers[] | select(.disabled == false)] | sort_by(.public_key) | [.[] | {public_key, peer_id, interface, allowed_ips, endpoint, disabled}]')
+ overlaps=$(echo "$snap" | jq '.overlaps')
+ route_conflicts=$(echo "$snap" | jq '.route_conflicts')
+-active_count=$(echo "$peers" | jq '[.[] | select(.disabled == false)] | length')
+-audit=$(echo "$peers" | jq -c '.' | sha256sum | awk '{print $1}')
++active_count=$(echo "$peers" | jq 'length')
++audit=$(python3 - <<'PY' "$peers" "$overlaps" "$route_conflicts"
++import hashlib, json, sys
++payload = [json.loads(sys.argv[1]), json.loads(sys.argv[2]), json.loads(sys.argv[3])]
++print(hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest())
++PY
++)
+ jq -n --arg run_id "$run_id" --argjson peers "$peers" --argjson overlaps "$overlaps" --argjson route_conflicts "$route_conflicts" --argjson active_count "$active_count" --arg audit "$audit" '{run_id: $run_id, peers: $peers, overlaps: $overlaps, route_conflicts: $route_conflicts, summary: {active_peer_count: $active_count, overlap_count: ($overlaps|length), conflict_count: ($route_conflicts|length)}, audit_digest: $audit}' > "$output"

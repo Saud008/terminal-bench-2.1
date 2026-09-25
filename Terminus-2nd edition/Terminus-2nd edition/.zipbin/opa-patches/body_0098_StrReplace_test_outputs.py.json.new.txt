@@ -1,0 +1,11 @@
+    def test_state_artifact_paths_created(self) -> None:
+        """Instruction paths /app/state/preview-ledger.json and /app/state/eval-audit.json must exist after verify and eval."""
+        verify("allow-basic")
+        assert PREVIEW_LEDGER.is_file()
+        export = OUTPUT / "state-paths.json"
+        eval_bundle("allow-basic", "7", export)
+        assert EVAL_AUDIT.is_file()
+        audit = json.loads(EVAL_AUDIT.read_text(encoding="utf-8"))
+        assert audit["seed"] == "7"
+
+    def test_tb3_hidden_fixture_directory_present(self) -> None:

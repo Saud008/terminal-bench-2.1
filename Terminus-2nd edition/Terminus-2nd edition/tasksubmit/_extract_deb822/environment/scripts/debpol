@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+APP_ROOT="/app"
+LIB="${APP_ROOT}/lib/pq7m"
+
+usage() {
+  echo "usage: debpol build-policy|candidate-report ..." >&2
+  exit 2
+}
+
+cmd="${1:-}"
+shift || true
+case "$cmd" in
+  build-policy)
+    exec bash "${LIB}/w06/f017.sh" "$@"
+    ;;
+  candidate-report)
+    exec bash "${LIB}/w05/f016.sh" "$@"
+    ;;
+  *)
+    usage
+    ;;
+esac

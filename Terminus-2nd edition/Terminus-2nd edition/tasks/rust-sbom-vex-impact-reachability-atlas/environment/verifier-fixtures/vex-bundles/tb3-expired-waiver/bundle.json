@@ -1,0 +1,35 @@
+{
+  "bundle_id": "tb3-expired-waiver",
+  "fingerprint": "fp-tb3-expired",
+  "packages": [
+    {"purl": "pkg:cargo/shipctl@2.0.0", "name": "shipctl", "version": "2.0.0"},
+    {"purl": "pkg:cargo/cargolock@1.1.1", "name": "cargolock", "version": "1.1.1"}
+  ],
+  "edges": [
+    {"from": "pkg:cargo/shipctl@2.0.0", "to": "pkg:cargo/cargolock@1.1.1", "edge_kind": "runtime"}
+  ],
+  "binaries": [
+    {"name": "shipctl", "root_purl": "pkg:cargo/shipctl@2.0.0"}
+  ],
+  "vulnerabilities": [
+    {"vuln_id": "CVE-2024-9001", "summary": "lockfile race"}
+  ],
+  "vex": [
+    {
+      "statement_id": "v-tb3-expired-na",
+      "product_purl": "pkg:cargo/cargolock@1.1.1",
+      "vuln_id": "CVE-2024-9001",
+      "status": "not_affected",
+      "updated_at": "2025-06-01T00:00:00Z",
+      "expires_at": "2026-01-01T00:00:00Z",
+      "justification": "temporary waiver"
+    },
+    {
+      "statement_id": "v-tb3-active-affected",
+      "product_purl": "pkg:cargo/cargolock@1.1.1",
+      "vuln_id": "CVE-2024-9001",
+      "status": "affected",
+      "updated_at": "2026-02-01T00:00:00Z"
+    }
+  ]
+}

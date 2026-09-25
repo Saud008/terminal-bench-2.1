@@ -1,0 +1,11 @@
+--- a/internal/rsfp93/ingest/ingest_tree.sh
++++ b/internal/rsfp93/ingest/ingest_tree.sh
+@@ -23,8 +23,6 @@
+ root_rules=$(echo "$data" | jq -c '.root_rules')
+ cascade_overlays=$(echo "$data" | jq -c '.cascade_overlays')
+ 
+-sender=$(echo "$sender" | jq '[.[] | select(contains(".cache") | not)]')
+-
+ mkdir -p "${APP_ROOT}/work"
+ jq -n --arg tree "$tree" --arg run_id "$run_id" --argjson sender "$sender" \
+   --argjson receiver "$receiver" --argjson root_rules "$root_rules" --argjson cascade_overlays "$cascade_overlays" \

@@ -1,0 +1,21 @@
+--- a/internal/mbx7/w7/emit_stage.sh
++++ b/internal/mbx7/w7/emit_stage.sh
+@@ -10,15 +10,16 @@
+ done
+ [[ -n "$RUN_ID" ]] || { echo "missing --run-id" >&2; exit 2; }
+ python3 - <<'PY' "$RUN_ID" "$OUTPUT"
+-import hashlib, json, sys
++import hashlib, json, os, sys
+ from pathlib import Path
+ run_id, output = sys.argv[1], sys.argv[2]
+ cfg = json.loads(Path("/app/config/geoboxplay.json").read_text())
+ if not output: output = cfg["default_output"]
++digits = int(os.environ.get("TB3_PLAY_DIGITS") or cfg.get("pin_digits") or 4)
+ ledger = json.loads(Path("/app/state/round-score.json").read_text())
+ inv = json.loads(Path("/app/state/level-roster.json").read_text())
+ rows = sorted(ledger.get("admitted") or [], key=lambda r: int(r["admit_rank"]))
+-payload = "".join(r["doc_id"] + "\n" for r in rows)
++payload = "".join(f"{r['doc_id']}:{float(r['affinity']):.{digits}f}\n" for r in rows)
+ atlas = dict(ledger)
+ atlas["atlas_digest"] = hashlib.sha256(payload.encode()).hexdigest()
+ atlas["focus_docs"] = inv.get("focus_docs") or []

@@ -1,0 +1,48 @@
+    def test_partial_digest_fix_still_fails_eval_trace(self) -> None:
+        """Digest-only fix must not satisfy the full eval contract acceptance trace."""
+        backups, applied = _apply_partial_stubs(digest_stub="golden_digest.go", trace_stub="broken_trace.go")
+        try:
+            if not applied.get("digest", False):
+                proc = verify("allow-basic")
+                assert proc.returncode == 0, "agent digest must pass verify when golden digest stub does not compile"
+            assert applied.get("trace", False), "broken trace stub must compile with agent sources"
+            export = OUTPUT / "partial-eval.json"
+            proc = eval_bundle("allow-basic", "3", export)
+            assert proc.returncode == 0, proc.stderr or proc.stdout
+            got = json.loads(proc.stdout)
+            ref = reference_eval(
+                BUNDLES / "allow-basic", "3", BUNDLES / "allow-basic" / "input/default.json"
+            )
+            with pytest.raises(AssertionError):
+                assert_trace_matches(got, ref)
+        finally:
+            _restore_go_sources(backups)
+
+    def test_partial_eval_fix_still_fails_verify(self) -> None:
+        """Trace-only fix must not make multi-scope verify succeed."""
+        backups, applied = _apply_partial_stubs(digest_stub="broken_digest.go", trace_stub="golden_trace.go")
+        try:
+            if not applied.get("digest", False):
+                assert verify("multi-scope").returncode != 0, "digest layer must still fail multi-scope verify"
+            else:
+                proc = verify("multi-scope")
+                assert proc.returncode != 0
+        finally:
+            _restore_go_sources(backups)
+
+    def test_partial_ingest_staging_fix_still_fails_verify(self) -> None:
+        """Ingest-staging-only fix must not satisfy scoped signature checks."""
+        backups, applied = _apply_partial_stubs(
+            preview_stub="golden_preview_ledger.go", digest_stub="broken_digest.go"
+        )
+        try:
+            if applied.get("preview", False) and applied.get("digest", False):
+                proc = verify("multi-scope")
+                assert proc.returncode != 0
+            elif applied.get("preview", False):
+                proc = verify("multi-scope")
+                assert proc.returncode != 0
+            else:
+                assert verify("multi-scope").returncode != 0
+        finally:
+            _restore_go_sources(backups)

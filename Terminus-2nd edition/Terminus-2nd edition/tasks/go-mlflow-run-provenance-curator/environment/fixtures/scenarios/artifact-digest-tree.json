@@ -1,0 +1,27 @@
+{
+  "scenario_name": "artifact-digest-tree",
+  "experiment_id": "exp-rec",
+  "focus_run_id": "run-export",
+  "dataset_manifests": {
+    "clicks-daily": {
+      "version_hash": "clk-445566",
+      "row_count": 2500000
+    }
+  },
+  "runs": [
+    {
+      "run_id": "run-export",
+      "parent_run_id": "",
+      "params": {"format": "onnx"},
+      "metrics": [],
+      "artifacts": [
+        {"rel_path": "./exports/model.onnx", "content": "ONNX-BLOB"},
+        {"rel_path": "exports/manifest.json", "content": "{\"opset\":17}"},
+        {"rel_path": "sig/checksum.txt", "content": "deadbeef"}
+      ],
+      "dataset_pins": [
+        {"name": "clicks-daily", "version_hash": "clk-445566"}
+      ]
+    }
+  ]
+}

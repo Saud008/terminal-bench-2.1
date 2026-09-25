@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+find /app/internal /app/cmd -name '*.go' -exec sed -i 's/\r$//' {} +
+
+cp "${ROOT_DIR}/files/trustcanon_domain.go" /app/internal/trustcanon/domain.go
+cp "${ROOT_DIR}/files/jwksort_order.go" /app/internal/jwksort/order.go
+cp "${ROOT_DIR}/files/x509norm_serial.go" /app/internal/x509norm/serial.go
+cp "${ROOT_DIR}/files/rotwindow_bounds.go" /app/internal/rotwindow/bounds.go
+cp "${ROOT_DIR}/files/fedmatch_wildcard.go" /app/internal/fedmatch/wildcard.go
+cp "${ROOT_DIR}/files/staleid_detect.go" /app/internal/staleid/detect.go
+cp "${ROOT_DIR}/files/normcore_trustfold.go" /app/internal/normcore/trustfold.go
+
+sed -i 's/return right, left, nil/return left, right, nil/' /app/internal/bundlescene/pair_load.go
+sed -i 's/return changes\[i\]\.Path > changes\[j\]\.Path/return changes[i].Path < changes[j].Path/' /app/internal/diffseal/publish.go
+sed -i 's/var changes \[\]model.DiffChange/changes := make([]model.DiffChange, 0)/' /app/internal/diffseal/publish.go
+sed -i 's|Path: "/svid/" + id|Path: "/x509_svid/" + id|g' /app/internal/diffseal/publish.go
+
+go vet -mod=readonly ./internal/trustcanon/...
+go vet -mod=readonly ./internal/jwksort/...
+go vet -mod=readonly ./internal/rotwindow/...
+go vet -mod=readonly ./internal/fedmatch/...
+go vet -mod=readonly ./internal/staleid/...
+go vet -mod=readonly ./internal/normcore/...
+go vet -mod=readonly ./internal/diffseal/...
+go vet -mod=readonly ./internal/bundlescene/...
+go vet -mod=readonly ./internal/stagevault/...

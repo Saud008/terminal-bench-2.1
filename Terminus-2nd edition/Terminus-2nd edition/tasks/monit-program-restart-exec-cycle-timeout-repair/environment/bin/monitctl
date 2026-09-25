@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${MONIT_APP_ROOT:-/app}"
+LIB="${APP_ROOT}/lib"
+
+# shellcheck source=common.sh
+source "${LIB}/common.sh"
+# shellcheck source=staging.sh
+source "${LIB}/staging.sh"
+
+usage() {
+  echo "usage: monitctl ingest --config PATH --scenario PATH" >&2
+  echo "       monitctl replay --config PATH --scenario PATH --export PATH" >&2
+  exit 2
+}
+
+cmd_ingest() {
+  local config="" scenario=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --config) config="$2"; shift 2 ;;
+      --scenario) scenario="$2"; shift 2 ;;
+      *) usage ;;
+    esac
+  done
+  [[ -z "${config}" || -z "${scenario}" ]] && usage
+  scenario="$(monit_resolve_scenario_path "${scenario}")"
+  [[ -f "${scenario}" ]] || { echo "monitctl: scenario not found: ${scenario}" >&2; exit 1; }
+  monit_write_snapshot "${config}" "${scenario}"
+}
+
+cmd_replay() {
+  local config="" scenario="" export_path=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --config) config="$2"; shift 2 ;;
+      --scenario) scenario="$2"; shift 2 ;;
+      --export) export_path="$2"; shift 2 ;;
+      *) usage ;;
+    esac
+  done
+  [[ -z "${config}" || -z "${scenario}" || -z "${export_path}" ]] && usage
+  scenario="$(monit_resolve_scenario_path "${scenario}")"
+  [[ -f "${scenario}" ]] || { echo "monitctl: scenario not found: ${scenario}" >&2; exit 1; }
+  monit_reset_runtime
+  python3 "${APP_ROOT}/tools/run_replay.py" "${config}" "${scenario}" "${export_path}"
+}
+
+main() {
+  [[ $# -lt 1 ]] && usage
+  case "$1" in
+    ingest) shift; cmd_ingest "$@" ;;
+    replay) shift; cmd_replay "$@" ;;
+    *) usage ;;
+  esac
+}
+
+main "$@"

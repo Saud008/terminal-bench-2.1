@@ -1,0 +1,30 @@
+{
+  "bundle_name": "disabled-refs",
+  "generated_at": "2026-03-14T07:00:00Z",
+  "evaluated_at": "2026-03-14T08:00:00Z",
+  "models": [
+    {
+      "unique_id": "model.analytics.legacy_stg",
+      "depends_on": [],
+      "enabled": false,
+      "last_built_at": "2026-03-01T00:00:00Z"
+    },
+    {
+      "unique_id": "model.analytics.mart_active",
+      "depends_on": [
+        "model.analytics.legacy_stg"
+      ],
+      "enabled": true,
+      "last_built_at": "2026-03-14T07:30:00Z"
+    }
+  ],
+  "sources": [],
+  "exposures": [
+    {
+      "unique_id": "exposure.analytics.legacy_dashboard",
+      "depends_on": [
+        "model.analytics.mart_active"
+      ]
+    }
+  ]
+}

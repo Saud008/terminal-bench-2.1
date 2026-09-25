@@ -1,0 +1,11 @@
+--- lib/sshcert/parse_lines.sh	2026-07-05 03:47:19.965404800 +0000
++++ solution/files/lib/sshcert/parse_lines.sh	2026-07-05 03:47:20.404335500 +0000
+@@ -22,7 +22,7 @@
+         text="${line#!}"
+       fi
+       local rank=0
+-      rank="$(principal_specificity "$text")"
++      [[ "$deny" -eq 0 ]] && rank="$(principal_specificity "$text")"
+       rows+=("${base}|${deny}|${rank}|${text}")
+     done < "$f"
+   done

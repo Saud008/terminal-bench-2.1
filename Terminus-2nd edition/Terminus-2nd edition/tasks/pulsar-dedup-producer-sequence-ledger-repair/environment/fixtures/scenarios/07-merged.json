@@ -1,0 +1,18 @@
+{
+  "tenant": "golf",
+  "dedup_window": 4,
+  "streams": [
+    {"producer": "merge", "topic": "north", "epoch": 1},
+    {"producer": "merge", "topic": "south", "epoch": 1}
+  ],
+  "events": [
+    {"producer": "merge", "topic": "north", "epoch": 1, "sequence": 1, "msg_id": "n1", "batch_id": "b1", "broker_ack": true},
+    {"producer": "merge", "topic": "south", "epoch": 1, "sequence": 1, "msg_id": "s1", "batch_id": "b1", "broker_ack": true},
+    {"producer": "merge", "topic": "north", "epoch": 1, "sequence": 5, "msg_id": "n5", "batch_id": "b2", "broker_ack": true},
+    {"producer": "merge", "topic": "north", "epoch": 1, "sequence": 3, "msg_id": "n3", "batch_id": "b3", "broker_ack": true},
+    {"producer": "merge", "topic": "north", "epoch": 1, "sequence": 3, "msg_id": "n3-dup", "batch_id": "b4", "broker_ack": true},
+    {"producer": "merge", "topic": "south", "epoch": 1, "sequence": 2, "msg_id": "s2", "batch_id": "b5", "broker_ack": false},
+    {"producer": "merge", "topic": "south", "epoch": 1, "sequence": 3, "msg_id": "s3", "batch_id": "b5", "broker_ack": true},
+    {"producer": "merge", "topic": "north", "epoch": 1, "sequence": 1, "msg_id": "n1", "batch_id": "b6", "broker_ack": true}
+  ]
+}

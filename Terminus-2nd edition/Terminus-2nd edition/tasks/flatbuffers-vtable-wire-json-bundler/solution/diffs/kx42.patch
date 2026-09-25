@@ -1,0 +1,11 @@
+--- a/src/kx42.rs
++++ b/src/kx42.rs
+@@ -44,7 +44,7 @@
+     if off == 0 {
+         return Err(anyhow!("null uoffset at {field_pos}"));
+     }
+-    let target = field_pos.wrapping_sub(off);
++    let target = field_pos + off;
+     if target >= buf.len() {
+         bail!("uoffset overflow at {field_pos}");
+     }

@@ -1,0 +1,207 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="/app"
+cmd="${1:-}"
+registry_dir=""
+root_slug=""
+config_path="${ROOT}/config/resolve.json"
+output_path="${ROOT}/output/resolve.json"
+
+usage() {
+  echo "usage: lutris-resolve resolve --registry-dir <dir> --root-slug <slug> [--config path] [--output path]" >&2
+  exit 2
+}
+
+if [[ "$cmd" != "resolve" ]]; then
+  usage
+fi
+shift
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --registry-dir)
+      registry_dir="$2"
+      shift 2
+      ;;
+    --root-slug)
+      root_slug="$2"
+      shift 2
+      ;;
+    --config)
+      config_path="$2"
+      shift 2
+      ;;
+    --output)
+      output_path="$2"
+      shift 2
+      ;;
+    *)
+      usage
+      ;;
+  esac
+done
+
+if [[ -z "${registry_dir}" || ! -d "${registry_dir}" ]]; then
+  echo "lutris-resolve: missing registry dir: ${registry_dir}" >&2
+  exit 1
+fi
+
+registry_file="${registry_dir}/registry.yml"
+if [[ ! -f "${registry_file}" ]]; then
+  echo "lutris-resolve: missing registry.yml under ${registry_dir}" >&2
+  exit 1
+fi
+
+if [[ -z "${root_slug}" ]]; then
+  echo "lutris-resolve: --root-slug is required" >&2
+  exit 1
+fi
+
+if [[ ! -f "${config_path}" ]]; then
+  echo "lutris-resolve: missing config: ${config_path}" >&2
+  exit 1
+fi
+
+eval "$(python3 - "${config_path}" <<'PY'
+import json
+import sys
+
+cfg = json.load(open(sys.argv[1], encoding="utf-8"))
+print(f"export RESOLVE_PREFIX_ROOT={json.dumps(cfg.get('prefix_root', '/app'))}")
+print(f"export RESOLVE_FAIL_MISSING={'1' if cfg.get('fail_on_missing_slug', True) else '0'}")
+print(f"export RESOLVE_FAIL_DXVK={'1' if cfg.get('fail_on_dxvk_mismatch', True) else '0'}")
+PY
+)"
+
+# shellcheck source=/app/lib/yaml_parse.sh
+source "${ROOT}/lib/yaml_parse.sh"
+# shellcheck source=/app/lib/registry.sh
+source "${ROOT}/lib/registry.sh"
+# shellcheck source=/app/lib/closure.sh
+source "${ROOT}/lib/closure.sh"
+# shellcheck source=/app/lib/prefix.sh
+source "${ROOT}/lib/prefix.sh"
+# shellcheck source=/app/lib/semver.sh
+source "${ROOT}/lib/semver.sh"
+
+parsed_file="$(mktemp)"
+merged_file="$(mktemp)"
+trap 'rm -f "${parsed_file}" "${merged_file}"' EXIT
+
+yaml_parse_registry "${registry_file}" > "${parsed_file}"
+REGISTRY_MERGED_FILE="${merged_file}"
+registry_merge_entries "${parsed_file}" || true
+if ((${#REGISTRY_ERRORS[@]} == 0)); then
+  closure_build "${merged_file}" "${root_slug}"
+else
+  CLOSURE_ORDER=()
+  CLOSURE_CYCLES=()
+  CLOSURE_ERRORS=()
+  CLOSURE_EDGE_COUNT=0
+  CLOSURE_MAX_DEPTH=0
+  CLOSURE_RUNNER=""
+  CLOSURE_DXVK_VERSION=""
+fi
+
+entry_count=0
+while IFS='|' read -r kind _rest; do
+  [[ "$kind" == "ENTRY" ]] && entry_count=$((entry_count + 1))
+done < "${merged_file}"
+
+resolve_errors=()
+if ((${#REGISTRY_ERRORS[@]} > 0)); then
+  resolve_errors+=("${REGISTRY_ERRORS[@]}")
+fi
+if ((${#CLOSURE_ERRORS[@]} > 0)); then
+  resolve_errors+=("${CLOSURE_ERRORS[@]}")
+fi
+resolve_warnings=("${REGISTRY_WARNINGS[@]-}")
+
+prefix_path=""
+root_prefix=""
+while IFS='|' read -r kind slug _runner prefix _pin; do
+  if [[ "$kind" == "ENTRY" && "$slug" == "${root_slug}" ]]; then
+    root_prefix="$prefix"
+    break
+  fi
+done < "${merged_file}"
+
+if [[ -n "${root_prefix}" ]]; then
+  prefix_canonicalize "${RESOLVE_PREFIX_ROOT}" "${root_prefix}"
+  prefix_path="${PREFIX_CANONICAL}"
+fi
+
+root_pin=""
+while IFS='|' read -r kind slug _runner _prefix pin; do
+  if [[ "$kind" == "ENTRY" && "$slug" == "${root_slug}" ]]; then
+    root_pin="$pin"
+    break
+  fi
+done < "${merged_file}"
+
+if [[ -n "${root_pin}" ]]; then
+  if [[ -z "${CLOSURE_DXVK_VERSION}" ]]; then
+    resolve_errors+=("dxvk pin ${root_pin} not satisfied by ")
+  elif ! semver_pin_satisfied "${CLOSURE_DXVK_VERSION}" "${root_pin}"; then
+    resolve_errors+=("dxvk pin ${root_pin} not satisfied by ${CLOSURE_DXVK_VERSION}")
+  fi
+fi
+
+exit_code=0
+if [[ ${#REGISTRY_ERRORS[@]} -gt 0 ]]; then
+  exit_code=2
+fi
+if [[ ${#CLOSURE_CYCLES[@]} -gt 0 ]]; then
+  exit_code=2
+fi
+if [[ ${#resolve_errors[@]} -gt 0 ]]; then
+  if [[ "$exit_code" -eq 0 ]]; then
+    exit_code=1
+  fi
+fi
+
+mkdir -p "$(dirname "${output_path}")"
+
+export RESOLVE_REGISTRY_DIR="${registry_dir}"
+export RESOLVE_ROOT_SLUG="${root_slug}"
+export RESOLVE_RUNNER="${CLOSURE_RUNNER}"
+export RESOLVE_PREFIX="${prefix_path}"
+export RESOLVE_DXVK="${CLOSURE_DXVK_VERSION}"
+export RESOLVE_CLOSURE_JSON="$(printf '%s\n' "${CLOSURE_ORDER[@]-}" | python3 -c 'import json,sys; print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))')"
+export RESOLVE_WARNINGS_JSON="$(printf '%s\n' "${resolve_warnings[@]-}" | python3 -c 'import json,sys; print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))')"
+export RESOLVE_ERRORS_JSON="$(printf '%s\n' "${resolve_errors[@]-}" | python3 -c 'import json,sys; print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))')"
+export RESOLVE_CYCLES_JSON="$(printf '%s\n' "${CLOSURE_CYCLES[@]-}" | python3 -c 'import json,sys; print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))')"
+export RESOLVE_ENTRY_COUNT="${entry_count}"
+export RESOLVE_EDGE_COUNT="${CLOSURE_EDGE_COUNT}"
+export RESOLVE_MAX_DEPTH="${CLOSURE_MAX_DEPTH}"
+
+python3 - "${output_path}" <<'PY'
+import json
+import os
+import sys
+
+prefix = os.environ.get("RESOLVE_PREFIX", "")
+doc = {
+    "resolve_version": 1,
+    "registry_dir": os.environ["RESOLVE_REGISTRY_DIR"],
+    "root_slug": os.environ["RESOLVE_ROOT_SLUG"],
+    "runner": os.environ.get("RESOLVE_RUNNER") or None,
+    "prefix": prefix if prefix else None,
+    "dxvk_version": os.environ.get("RESOLVE_DXVK") or None,
+    "closure": json.loads(os.environ["RESOLVE_CLOSURE_JSON"]),
+    "warnings": json.loads(os.environ["RESOLVE_WARNINGS_JSON"]),
+    "errors": json.loads(os.environ["RESOLVE_ERRORS_JSON"]),
+    "cycles": json.loads(os.environ["RESOLVE_CYCLES_JSON"]),
+    "stats": {
+        "entry_count": int(os.environ["RESOLVE_ENTRY_COUNT"]),
+        "edge_count": int(os.environ["RESOLVE_EDGE_COUNT"]),
+        "max_depth": int(os.environ["RESOLVE_MAX_DEPTH"]),
+    },
+}
+with open(sys.argv[1], "w", encoding="utf-8") as fh:
+    json.dump(doc, fh, indent=2, sort_keys=True)
+    fh.write("\n")
+PY
+
+exit "${exit_code}"

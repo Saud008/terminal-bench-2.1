@@ -1,0 +1,27 @@
+#!/bin/bash
+# Lmod load-plan planner — ingest / resolve / export
+set -euo pipefail
+APP_ROOT="${APP_ROOT:-/app}"
+
+usage() {
+  echo "usage: lmodplan ingest|resolve|export ..." >&2
+  exit 2
+}
+
+cmd="${1:-}"
+shift || usage
+
+case "${cmd}" in
+  ingest)
+    exec "${APP_ROOT}/lib/ingest/cmd_ingest.sh" "$@"
+    ;;
+  resolve)
+    exec "${APP_ROOT}/lib/resolve/cmd_resolve.sh" "$@"
+    ;;
+  export)
+    exec "${APP_ROOT}/lib/export/cmd_export.sh" "$@"
+    ;;
+  *)
+    usage
+    ;;
+esac

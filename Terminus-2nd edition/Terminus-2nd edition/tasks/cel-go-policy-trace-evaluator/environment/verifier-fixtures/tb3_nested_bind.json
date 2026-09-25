@@ -1,0 +1,28 @@
+{
+  "root": {
+    "type": "call",
+    "fn": "cel.bind",
+    "args": [
+      { "type": "literal", "kind": "int", "value": 9 },
+      { "type": "ident", "name": "a" },
+      {
+        "type": "call",
+        "fn": "cel.bind",
+        "args": [
+          { "type": "literal", "kind": "int", "value": 3 },
+          { "type": "ident", "name": "b" },
+          {
+            "type": "binary",
+            "op": "and",
+            "left": { "type": "literal", "kind": "bool", "value": false },
+            "right": {
+              "type": "call",
+              "fn": "has",
+              "args": [{ "type": "ident", "name": "tb3_probe" }]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

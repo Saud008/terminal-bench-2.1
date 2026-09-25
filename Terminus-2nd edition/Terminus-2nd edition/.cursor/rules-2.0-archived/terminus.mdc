@@ -1,0 +1,42 @@
+---
+description: Terminus hub — hook loads ONE engines/ENGINE_N_*.mdc per turn; standing defaults always on
+alwaysApply: true
+---
+
+# Terminus
+
+**Standing defaults (LOCKED — always on, user never repeats):** `.cursor/rules/sanjana-standing-requirements.mdc` **§0 — new task = all phases auto, no asking**
+
+| Standing rule | One line |
+|---------------|----------|
+| **New / edited task** | **§0** — audit → harbor → probes → `create_finish_to_zip.sh` → zip **same session** |
+| CREATE done | **Same turn** → audit fix → `./scripts/create_finish_to_zip.sh <name>` until **zip** |
+| Hook | Every task save → audit + **8/8** + finish → zip (automatic) |
+| Never ask | audit / harbor / pack / ECR / gates permission |
+| Reviewer instruction | **No hints** in `instruction.md` — `/app/docs/` + tests only |
+| Summary pasted | Auto route `prompts/*.md` — **no case quiz** |
+| **TRIVIAL / EASY summary** | Auto **`prompts/trivial-fix-invoke.md`** + Case 6 — paste `tasks/<slug>/` + platform summary only |
+| Zip | `./scripts/pack_zip.sh <name>` only |
+| **Similarity** | Pack line **sim 0.0** only — if sim > 0 fix task (§K) before zip |
+| **Banned categories** | **Allowed only:** `data-administration`, `machine-learning`, `games`. Never `debugging` / `software-engineering` / `data-processing` / `security` / `system-administration` / `build-and-dependency-management` / etc. On every revise check category + CI `category_classifier` (`shared/task-toml-category-gate.mdc`) |
+| **`task.toml` fields** | **Official skeleton only** — no invented/undocumented keys (`shared/task-toml-supported-fields-only.mdc`) |
+| **Full pipeline** | `create_finish_to_zip.sh` — **no skip flags** (§L table) |
+| **TRIVIAL block** | `shared/trivial-first-upload-lock.mdc` + **`shared/block-trivial-platform-acceptance.mdc`** + **`shared/trivial-fix-invoke-mandatory-steps.mdc`** — Case 6; **14 steps no skip** |
+
+Paste **task path + platform summary** → hook picks phase → injects **one** consolidated rule file.
+
+**TRIVIAL / EASY:** summary → invoke + Case 6 + **steps 8–14 AUTO** (`trivial_easy_auto_finish.sh` on prompt + save). Agent: steps 1–7 only.
+
+| Phase | Policy file |
+|-------|-------------|
+| IDEAS | `.cursor/rules/engines/ENGINE_1_ideas.mdc` |
+| ANTI_SPAM | `.cursor/rules/engines/ENGINE_2_anti_spam.mdc` |
+| CREATE | `.cursor/rules/engines/ENGINE_3_create.mdc` |
+| AUDIT | `.cursor/rules/engines/ENGINE_4_audit.mdc` |
+| VERIFY | `.cursor/rules/engines/ENGINE_5_verify.mdc` |
+| ZIP | `.cursor/rules/engines/ENGINE_6_zip.mdc` |
+| REVISE | `.cursor/rules/engines/ENGINE_7_revise.mdc` |
+
+**Source of truth for ENGINE text:** `archive/terminus-rules-mdc/` → `python3 scripts/build_consolidated_rules.py`
+
+Do **not** load multiple `ENGINE_*.mdc` in one turn — hook selects exactly one.

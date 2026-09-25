@@ -1,0 +1,83 @@
+{
+  "audit_clock_ms": 1707779519671,
+  "default_retention_days": 30,
+  "pvcs": [
+    {
+      "namespace": "ns-quota-",
+      "name": "pvc-173",
+      "storage_class_name": "sc-fast",
+      "requested_bytes": 10000000
+    },
+    {
+      "namespace": "ns-quota-",
+      "name": "pvc-1126",
+      "storage_class_name": "sc-slow",
+      "requested_bytes": 20000000
+    },
+    {
+      "namespace": "other-quot",
+      "name": "pvc-cross",
+      "storage_class_name": "sc-fast",
+      "requested_bytes": 5000000
+    }
+  ],
+  "snapshots": [
+    {
+      "uid": "snap-quota-hidden-trap-a",
+      "namespace": "ns-quota-",
+      "name": "snap-a",
+      "source_pvc": "pvc-173",
+      "restore_size_bytes": 2102370,
+      "deletion_policy": "Delete",
+      "creation_clock_ms": 1700003519671
+    },
+    {
+      "uid": "snap-quota-hidden-trap-b",
+      "namespace": "ns-quota-",
+      "name": "snap-b",
+      "source_pvc": "pvc-1126",
+      "restore_size_bytes": 4322563,
+      "deletion_policy": "Delete",
+      "creation_clock_ms": 1700089919671
+    },
+    {
+      "uid": "snap-quota-hidden-trap-cross",
+      "namespace": "other-quot",
+      "name": "snap-cross",
+      "source_pvc": "pvc-cross",
+      "restore_size_bytes": 8000000,
+      "deletion_policy": "Delete",
+      "creation_clock_ms": 1707520319671
+    }
+  ],
+  "storage_classes": [
+    {
+      "name": "sc-fast",
+      "retention_days": 7
+    },
+    {
+      "name": "sc-slow",
+      "retention_days": 60
+    }
+  ],
+  "backup_policies": [
+    {
+      "name": "default-backup",
+      "priority": 10,
+      "retention_days": 14,
+      "namespace_selector": ""
+    }
+  ],
+  "quotas": [
+    {
+      "namespace": "ns-quota-",
+      "max_snapshot_bytes": 50000000,
+      "used_snapshot_bytes": 0
+    },
+    {
+      "namespace": "other-quot",
+      "max_snapshot_bytes": 6000000,
+      "used_snapshot_bytes": 0
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+    def test_hidden_duplicate_fragment_replay_matches_reference(self) -> None:
+        """Hidden duplicate-fragment replay stream must match reference merge."""
+        reset()
+        build()
+        hidden = TESTS / "hidden_bundles" / "duplicate-replay-part2.nmea"
+        state_fixture = TESTS / "hidden_bundles" / "duplicate-replay-session.json"
+        assert hidden.is_file(), "missing hidden duplicate replay stream"
+        assert state_fixture.is_file(), "missing hidden duplicate replay session"
+        STATE.write_text(state_fixture.read_text(encoding="utf-8"), encoding="utf-8")
+        assert merge(hidden, state=STATE).returncode == 0
+        doc = json.loads(OUT.read_text())
+        session = load_session_file(state_fixture)
+        ref, _ = reference_merge(hidden, session, use_session=True)
+        assert doc == ref
+
+    def test_output_artifact_paths_written(self) -> None:

@@ -1,0 +1,11 @@
+--- internal/dirauth/acl/rank_aces.sh
++++ internal/dirauth/acl/rank_aces.sh
+@@ -16,7 +16,7 @@
+     *) scope_w=100 ;;
+   esac
+   deny_w=0
+-  [[ "$effect" == "deny" ]] && deny_w=1
++  [[ "$effect" == "allow" ]] && deny_w=1
+   user_w=0
+   [[ "$subj_type" == "group" ]] && user_w=1
+   printf '%04d|%03d|%d|%d|%s' "$((9999 - depth))" "$scope_w" "$user_w" "$deny_w" "$ace_id"

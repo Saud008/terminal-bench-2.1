@@ -1,0 +1,12 @@
+[Unit]
+Description=Auth service
+After=db.service network-online.target
+Wants=db.service
+
+[Service]
+EnvironmentFile=-/etc/auth/env
+Restart=always
+
+[Container]
+Image=localhost/auth:1
+Restart=no

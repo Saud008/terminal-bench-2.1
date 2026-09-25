@@ -1,0 +1,32 @@
+--- environment/crates/canonical_fp/src/lib.rs	2026-07-05 06:57:10.335620600 +0000
++++ solution/oracle/golden/crates/canonical_fp/src/lib.rs	2026-07-05 06:57:11.243040800 +0000
+@@ -12,11 +12,14 @@
+ fn canonicalize(v: &Value) -> Value {
+     match v {
+         Value::Object(map) => {
++            let mut keys: Vec<&String> = map.keys().collect();
++            keys.sort();
+             let mut out = Map::new();
+-            for (k, val) in map {
++            for k in keys {
+                 if k == "doc" || k == "default" || k == "aliases" {
+                     continue;
+                 }
++                let val = &map[k];
+                 let cleaned = if k == "fields" && map.get("type").and_then(|t| t.as_str()) == Some("record") {
+                     canonicalize_fields(val)
+                 } else {
+@@ -34,7 +37,12 @@
+ fn canonicalize_fields(v: &Value) -> Value {
+     match v {
+         Value::Array(arr) => {
+-            let fields: Vec<Value> = arr.iter().map(canonicalize).collect();
++            let mut fields: Vec<Value> = arr.iter().map(|f| canonicalize(f)).collect();
++            fields.sort_by(|a, b| {
++                let an = a.get("name").and_then(|n| n.as_str()).unwrap_or("");
++                let bn = b.get("name").and_then(|n| n.as_str()).unwrap_or("");
++                an.cmp(bn)
++            });
+             Value::Array(fields)
+         }
+         other => canonicalize(other),

@@ -1,0 +1,30 @@
+{
+  "system_timezone": "UTC",
+  "batches": [
+    {
+      "batch_id": "queue",
+      "jobs": [
+        {
+          "job_id": "late",
+          "atq_epoch": 1700000000,
+          "script": "worker.sh",
+          "start_letter": "a",
+          "umask": "0022",
+          "exit_code": 0
+        },
+        {
+          "job_id": "early",
+          "atq_epoch": 1699999999,
+          "script": "worker.sh",
+          "start_letter": "d",
+          "umask": "0022",
+          "exit_code": 0
+        }
+      ]
+    }
+  ],
+  "leave_pending": [
+    "queue:late",
+    "queue:early"
+  ]
+}

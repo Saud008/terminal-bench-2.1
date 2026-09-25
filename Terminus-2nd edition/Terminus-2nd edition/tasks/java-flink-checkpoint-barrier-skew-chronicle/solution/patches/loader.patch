@@ -1,0 +1,11 @@
+--- a/src/main/java/com/flinkskew/parse/EventJsonLoader.java
++++ b/src/main/java/com/flinkskew/parse/EventJsonLoader.java
+@@ -37,7 +37,7 @@
+                         continue;
+                     }
+                     EventRecord ev = GSON.fromJson(line, EventRecord.class);
+-                    String key = ev.checkpointId + "|" + ev.operatorId + "|" + ev.subtaskIndex
++                    String key = ev.checkpointId + "|" + ev.attemptId + "|" + ev.operatorId + "|" + ev.subtaskIndex
+                             + "|" + ev.eventKind + "|" + ev.timestampMs;
+                     if (!seen.add(key)) {
+                         continue;

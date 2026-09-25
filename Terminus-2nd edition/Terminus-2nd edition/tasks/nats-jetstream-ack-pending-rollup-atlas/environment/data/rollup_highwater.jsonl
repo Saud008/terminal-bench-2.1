@@ -1,0 +1,10 @@
+{"seq":1,"op":"PUB","stream":"METRICS","subject":"m.a","stream_seq":1,"tick":1}
+{"seq":2,"op":"PUB","stream":"METRICS","subject":"m.b","stream_seq":2,"tick":2}
+{"seq":3,"op":"PUB","stream":"METRICS","subject":"m.c","stream_seq":3,"tick":3}
+{"seq":4,"op":"CONSUMER_UPSERT","stream":"METRICS","consumer":"slow","filter_subject":">","max_deliver":5,"require_ack_sync":true}
+{"seq":5,"op":"CONSUMER_UPSERT","stream":"METRICS","consumer":"fast","filter_subject":">","max_deliver":5,"require_ack_sync":true}
+{"seq":6,"op":"DELIVER","stream":"METRICS","consumer":"slow","stream_seq":1,"delivery_num":1,"tick":10}
+{"seq":7,"op":"ACK","stream":"METRICS","consumer":"slow","stream_seq":1,"ack_sync":true,"tick":11}
+{"seq":8,"op":"DELIVER","stream":"METRICS","consumer":"fast","stream_seq":2,"delivery_num":1,"tick":12}
+{"seq":9,"op":"ACK","stream":"METRICS","consumer":"fast","stream_seq":2,"ack_sync":true,"tick":13}
+{"seq":10,"op":"DELIVER","stream":"METRICS","consumer":"fast","stream_seq":3,"delivery_num":1,"tick":14}

@@ -1,0 +1,8 @@
+    def test_partial_eval_fix_still_fails_verify(self) -> None:
+        """Trace-only fix must not make multi-scope verify succeed."""
+        stubs = Path(__file__).parent / "stubs"
+        shutil.copy(stubs / "broken_digest.go", APP / "internal/verify/digest.go")
+        shutil.copy(stubs / "golden_trace.go", APP / "internal/eval/trace.go")
+        build_install()
+        proc = verify("multi-scope")
+        assert proc.returncode != 0

@@ -1,0 +1,10 @@
+bundle metrics-edge
+service sink oneshot
+service tap longrun
+service fanout longrun
+service probe oneshot
+dep tap hard sink
+dep fanout hard tap
+soft dep probe soft tap
+longrun tap
+longrun fanout

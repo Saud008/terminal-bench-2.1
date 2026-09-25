@@ -1,0 +1,49 @@
+{
+  "scenario": "rewrite-wellknown",
+  "critical_prefixes": [],
+  "peer_groups": [
+    {
+      "group_id": "g",
+      "filters": [
+        {
+          "filter_id": "o",
+          "priority": 1,
+          "match_mode": "origin",
+          "asn": 7,
+          "action": "accept"
+        }
+      ]
+    }
+  ],
+  "peers": [
+    {
+      "peer_id": "wk",
+      "asn": 65040,
+      "group_id": "g",
+      "wave_rank": 1,
+      "med_ceiling": null,
+      "abort_on_critical_deny": false,
+      "community_rewrite": {
+        "0:99": "65040:99",
+        "65535:1": "65040:1",
+        "65040:3": "65040:4"
+      },
+      "filters": []
+    }
+  ],
+  "rib": [
+    {
+      "prefix": "172.16.0.0/16",
+      "as_path": [
+        7
+      ],
+      "communities": [
+        "0:99",
+        "65535:1",
+        "65040:3"
+      ],
+      "med": 2,
+      "peer_id": "wk"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+--- a/internal/wv/qj.rs
++++ b/internal/wv/qj.rs
+@@ -24,8 +24,8 @@
+         })
+         .collect();
+     breaches.sort_by(|a, b| {
+-        a.severity_pct
+-            .total_cmp(&b.severity_pct)
++        b.severity_pct
++            .total_cmp(&a.severity_pct)
+             .then_with(|| a.chem_id.cmp(&b.chem_id))
+     });
+     let summary = SafetySummary {

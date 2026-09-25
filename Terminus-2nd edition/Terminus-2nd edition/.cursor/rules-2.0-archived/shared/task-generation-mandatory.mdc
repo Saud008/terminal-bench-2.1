@@ -1,0 +1,156 @@
+---
+description: LOCKED — no debugging, no software-engineering; hard acceptance 7/7 before zip
+alwaysApply: true
+---
+
+# Terminus — Task generation rules (MANDATORY)
+
+**Additive LOCKED rule.** Applies to **every** new task and **every** revise before zip.
+
+**No zip without PASS.** `pack_zip.sh` runs `repository_state_gate.py --pack-gate` — all **7 hard acceptance checks** must PASS. Verdict **`REGENERATE`** blocks zip when repair/debug is the primary objective (`shared/forbidden-repair-objectives-gate.mdc`). **No skip** unless user explicitly overrides in the current message (`TERMINUS_TASK_GENERATION_SKIP=1`).
+
+| When | Script |
+|------|--------|
+| Ideas intake (before CREATE) | `idea_similarity_gate.py` → hard acceptance on idea text |
+| Pack / finish / post-create hook | `repository_state_gate.py --pack-gate` in `pack_zip.sh` + `anti_spam_hook_runner.py` |
+
+Policy: `scripts/task_generation_policy.py` · Reports: `jobs-local/repository-state-gate-last.json` · **On FAIL:** `shared/repository-state-fail-fix.mdc`
+
+---
+
+## HARD BLOCK: NO DEBUGGING · NO SOFTWARE-ENGINEERING
+
+Under **no circumstances** generate or upload:
+
+| Forbidden | Includes |
+|-----------|----------|
+| **Debugging tasks** | Fix bugs, repair broken code, patch source, restore functionality, seeded bugs, make tests pass |
+| **Software-engineering tasks** | Fix/repair the service or API, broken service under /app, wrong/inconsistent output repair, `category = "software-engineering"` |
+
+**Platform metadata:** `category` must be one of **`security`**, **`cloud-devops`**, **`system-configuration-and-setup`**, **`build-and-dependency-management`**. Never `debugging`, `software-engineering`, or `data-processing` — pack and platform CI FAIL (`shared/task-toml-category-gate.mdc`). No exceptions in this repo.
+
+**Task shape:** even with allowed category, **repair/software-engineering objective** in `instruction.md` → **FAIL** gate.
+
+### Forbidden core objectives
+
+fix · repair · patch · debug · broken · incomplete · restore · correct · resolve bug · make tests pass · failing implementation · fix the service · repair the API · service under /app is producing wrong/inconsistent
+
+If any appear as the **primary goal** → **regenerate** the task.
+
+---
+
+## Repository state requirement
+
+**Full policy:** `shared/repository-state-requirement.mdc` · enforced in `task_generation_policy.py`
+
+### Repository provided to the agent must be
+
+| Property | Requirement |
+|----------|-------------|
+| **Functional** | Working baseline under /app — not a defect hunt |
+| **Buildable** | Image builds; `test.sh` rebuilds compiled stacks |
+| **Internally consistent** | Docs, schemas, and fixtures align |
+| **Not intentionally broken** | No `BUG:` / `INTENTIONALLY BROKEN` in `environment/` |
+
+### Agent goal — NEVER
+
+> Identify what is wrong and fix it.
+
+Also forbidden as primary objective: find the bug · make tests pass · repair broken code · fix the service · restore functionality · debug seeded defects.
+
+### Agent goal — MUST (at least one)
+
+| Goal | Examples |
+|------|----------|
+| Add a new capability | New feature on working /app baseline |
+| Build a new subsystem | Planner, correlator, exporter, governor |
+| Construct a planner | Scheduling / routing / closure planner |
+| Implement a new workflow | Ingest → staging → export pipeline |
+| Generate analytical outputs | Ledgers, atlases, rollups, reports |
+| Scientific computation | Closure, traverse, correlation, modeling |
+| Security analysis engine | Trust, compromise, attestation reasoning |
+| Reproducibility artifacts | Sealed bundles, attestations, SBOM-style outputs |
+| Build dependency-management functionality | Supply-chain / reproducibility tooling |
+| Governance or compliance reasoning | Policy checks over datasets |
+| Generate reports from complex datasets | Multi-source analytical exports |
+
+Instruction must open with **what to build or analyze**, not what is broken.
+
+---
+
+## Accepted categories (H6)
+
+Use **`task.toml`** category from this allowlist only:
+
+| Allowed | Examples |
+|---------|----------|
+| **`data-administration`** | Host-local data ops desks, ledgers, admit→gate→seal inventory / catalog admin |
+| **`machine-learning`** | Feature stores, model eval/calibration, embedding/MinHash pipelines, ML metrics |
+| **`games`** | Playfields, playtest atlases, turn planners, level packs, win-condition sealing |
+
+**Never:** `debugging` · `software-engineering` · `data-processing` · `security` · `system-administration` · `build-and-dependency-management` · `scientific-computing` · `cloud-devops` · any other value
+
+See `shared/task-toml-category-gate.mdc` for forced remap from old categories.
+
+---
+
+## Hard acceptance check (automated — 7/7 required before zip)
+
+| # | Check | Gate ID | Automated signal |
+|---|-------|---------|------------------|
+| 1 | Task is **NOT** debugging | **H1** | Instruction/slug/tags; no fix/repair/debug objective |
+| 2 | Repository is **functional, buildable, consistent** — not intentionally broken | **H2** | No `BUG:` / broken-repo framing; rebuild in `test.sh` when compiled |
+| 3 | Agent is **NOT** fixing existing functionality | **H3** | No correct-existing / service-repair shape; no patch-only oracle |
+| 4 | Agent **adds capability / subsystem / workflow / analysis** (NEW) | **H4** | Allowed goal patterns; not find-and-fix |
+| 5 | Cannot summarize as *"find the bug and make tests pass"* | **H5** | No find-the-bug / make-tests-pass phrasing |
+| 6 | Belongs to an **accepted category** | **H6** | Not debugging/SE; category in allowed set |
+| 7 | Not repair, patch, correction, or restoration workflow | **H7** | No restoration/correction workflow; no repair slug/oracle |
+
+**Any FAIL → discard task and regenerate.** **No `tasksubmit/<name>.zip` until 7/7 PASS.**
+
+```bash
+python3 scripts/repository_state_gate.py --pack-gate --task-dir tasks/<name>
+```
+
+---
+
+## Task uniqueness (similarity gates — also required before zip)
+
+**Full policy:** `shared/task-uniqueness-gate.mdc` · `scripts/task_uniqueness_policy.py`
+
+**Ideas:** `idea_similarity_gate.py` — similarity **+ 14-row uniqueness table** (block on any FAIL).
+
+**Pack:** `unacceptable_class_gate.py` (8 classes) then `task_uniqueness_gate.py` (distinct dimensions on instruction).
+
+No duplicate · copy · sibling · same-family · same-lane · template variant · fabricated benchmark · synthetic puzzle · spam
+
+Every task: distinct workflow, artifact, reasoning pattern, operational objective, industry use case.
+
+**Ideas:** weighted **> 0.10** → BLOCK · **== 0.0** → auto CREATE when uniqueness **PASS**.
+
+**Pack:** anti-spam PASS + unacceptable-class **8/8** + uniqueness distinct-dimension **PASS**.
+
+---
+
+## When FAIL → fix
+
+| Signal | Fix |
+|--------|-----|
+| Debugging / SE instruction | Reframe: new capability on **working** baseline repo |
+| `category = debugging`, `software-engineering`, or `data-processing` | Change to an **allowed** category (`security` / `cloud-devops` / `system-configuration-and-setup` / `build-and-dependency-management`) |
+| Repair slug (`repair-*`, `fix-*`) | Rename; change workflow |
+| Patch-only oracle | Oracle builds real new artifacts |
+| Seeded BUG in environment | Remove; ship functional baseline |
+| H4 fail (no new-capability framing) | Rewrite instruction opening around build/analyze/implement |
+
+**Do not** weaken gates or use skip overrides unless the user explicitly overrides in the current message.
+
+---
+
+## Related
+
+- `shared/repository-state-requirement.mdc` — functional baseline + allowed agent goals
+- `shared/task-toml-category-gate.mdc` — metadata blocklist
+- `ideas/idea-similarity-gate.mdc` — ideas + similarity
+- `shared/unacceptable-task-classes.mdc` — 8-class pack gate
+- `create/new-task-pipeline-A-H.mdc` — Phase B

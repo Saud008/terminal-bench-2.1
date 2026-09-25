@@ -1,0 +1,26 @@
+{
+  "process_id": "clock-skew",
+  "partition_id": 4,
+  "broker_clock_ms": 10000,
+  "process_clock_ms": 9950,
+  "job_timeout_ms": 3000,
+  "incidents": [],
+  "jobs": [
+    {
+      "job_key": "job-fulfill",
+      "element_id": "task-fulfill",
+      "type": "fulfill",
+      "intent_at_ms": 50,
+      "activating_until_ms": 120
+    }
+  ],
+  "boundaries": [],
+  "variables": {
+    "inputs": {"sku": 7},
+    "output_mapping": {"fulfilled_sku": "sku"},
+    "incident_overlay": {}
+  },
+  "replay_batches": [
+    {"batch_id": "clk", "job_keys": ["job-fulfill"], "idempotent": false}
+  ]
+}

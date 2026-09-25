@@ -1,0 +1,90 @@
+{
+  "oracle_frontier": [
+    {
+      "path": "internal/topicmatch/wildcard.go",
+      "fix_symbols": ["Match"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/retainstore/retained.go",
+      "fix_symbols": ["ApplyPublish"],
+      "co_resident_helpers": ["Snapshot"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/qosledger/inflight.go",
+      "fix_symbols": ["TrackPublish", "TrackAck"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/sessionexp/expiry.go",
+      "fix_symbols": ["EventAllowed", "ApplyConnect", "expiryWindowMs"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/curatormux/reconcile.go",
+      "fix_symbols": ["IncrementCuratorSeal"],
+      "co_resident_helpers": ["Analyze", "WriteReport", "WriteSeal"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/atlasemit/export.go",
+      "fix_symbols": ["ComposeAtlasExport", "stableReplayDigest"],
+      "co_resident_helpers": ["WriteAtlas", "WriteLedger"],
+      "allowed_top_level_symbols": []
+    }
+  ],
+  "flipping_point_contract": {
+    "concentration_cap": 0.5,
+    "locations": [
+      {
+        "id": "cli",
+        "path": "cmd/mqttsessctl/main.go",
+        "controls_tests": ["test_t280159_mqsess_emit_atlas_rejects_zero_curator_seal"]
+      },
+      {
+        "id": "wildcard",
+        "path": "internal/topicmatch/wildcard.go",
+        "controls_tests": [
+          "test_t280159_mqsess_delivery_ledger_matches_ref_for_scenario",
+          "test_t280159_mqsess_wildcard_plus_matches_single_level_segment",
+          "test_t280159_mqsess_qos2_handshake_atlas_matches_refmath"
+        ]
+      },
+      {
+        "id": "retain",
+        "path": "internal/retainstore/retained.go",
+        "controls_tests": [
+          "test_t280159_mqsess_retained_overwrite_keeps_latest_payload_in_atlas",
+          "test_t280159_mqsess_retained_delete_clears_atlas_retained_payload"
+        ]
+      },
+      {
+        "id": "qos",
+        "path": "internal/qosledger/inflight.go",
+        "controls_tests": ["test_t280159_mqsess_delivery_ledger_matches_ref_for_scenario"]
+      },
+      {
+        "id": "expiry",
+        "path": "internal/sessionexp/expiry.go",
+        "controls_tests": ["test_t280159_mqsess_session_expiry_suppresses_late_offline_delivery"]
+      },
+      {
+        "id": "seal",
+        "path": "internal/curatormux/reconcile.go",
+        "controls_tests": ["test_t280159_mqsess_merge_pass_writes_audit_and_positive_seal"]
+      },
+      {
+        "id": "export",
+        "path": "internal/atlasemit/export.go",
+        "controls_tests": [
+          "test_t280159_mqsess_emit_bytes_identical_on_repeated_curator_run",
+          "test_t280159_mqsess_atlas_row_order_matches_ref_wildcard_hash"
+        ]
+      }
+    ]
+  }
+}

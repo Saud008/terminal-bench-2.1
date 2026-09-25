@@ -1,0 +1,11 @@
+--- internal/raidops/atlasstage/emit_eligibility_atlas.sh	2026-07-16 16:45:59.484525100 +0000
++++ internal/raidops/atlasstage/emit_eligibility_atlas.sh	2026-07-16 14:44:16.950461600 +0000
+@@ -26,7 +26,7 @@
+ eligible_names = ",".join(r["name"] for r in eligible)
+ blocked_pairs = ",".join(f'{r["name"]}:{r["block_reason"]}' for r in blocked)
+ payload = "|".join([
+-    "reshape",
++    "mdreshape|v1",
+     run_id,
+     ledger["scenario"],
+     str(ledger["eligible_count"]),

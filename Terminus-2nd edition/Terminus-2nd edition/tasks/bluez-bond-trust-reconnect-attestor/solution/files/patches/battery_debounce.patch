@@ -1,0 +1,40 @@
+--- lib/trustgate/battery_debounce.sh
++++ lib/trustgate/battery_debounce.sh
+@@ -17,18 +17,32 @@
+ }
+ 
+ _read_last_reconnect_ts() {
+-  local _path="$1"
+-  printf '%s' '-10000'
++  local path="$1"
++  if [[ -f "$path" ]]; then
++    tr -d '[:space:]' < "$path"
++  else
++    printf '%s' '-10000'
++  fi
+ }
+ 
+ _should_suppress_reconnect() {
+-  local _mac="$1" _ts="$2"
++  local mac="$1" ts="$2"
++  local debounce_ms last_file last
++  debounce_ms="$(_debounce_window_ms)"
++  last_file="$(_last_reconnect_path "$mac")"
++  last="$(_read_last_reconnect_ts "$last_file")"
++  if (( ts - last < debounce_ms )); then
++    return 0
++  fi
+   return 1
+ }
+ 
+ _record_reconnect_ts() {
+-  local _mac="$1" _ts="$2"
+-  return 0
++  local mac="$1" ts="$2"
++  local last_file
++  last_file="$(_last_reconnect_path "$mac")"
++  mkdir -p "$(dirname "$last_file")"
++  printf '%s\n' "$ts" > "$last_file"
+ }
+ 
+ battery_level() {

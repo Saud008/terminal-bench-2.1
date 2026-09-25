@@ -1,0 +1,36 @@
+{
+  "zone": "example.com.",
+  "soa_serial": 2024060101,
+  "nsec3_params": {
+    "salt_hex": "a1b2",
+    "iterations": 2,
+    "hash_algorithm": 1
+  },
+  "records": [
+    {
+      "owner": "example.com.",
+      "rtype": "NSEC",
+      "next": "hosta.example.com.",
+      "type_bitmap": ["NS", "SOA", "RRSIG", "NSEC"]
+    },
+    {
+      "owner": "hosta.example.com.",
+      "rtype": "NSEC",
+      "next": "hostb.example.com.",
+      "type_bitmap": ["A", "RRSIG", "NSEC"]
+    },
+    {
+      "owner": "hostb.example.com.",
+      "rtype": "NSEC",
+      "next": "example.com.",
+      "type_bitmap": ["AAAA", "RRSIG", "NSEC"]
+    }
+  ],
+  "queries": [
+    {
+      "qname": "missing.example.com.",
+      "qtype": "A",
+      "expect": "invalid"
+    }
+  ]
+}

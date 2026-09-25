@@ -1,0 +1,26 @@
+{
+  "scenario_id": "combo-handoff",
+  "current_bss": {"ssid": "EdgeOld", "bssid": "aa:00:11", "gateway": "192.168.200.1"},
+  "target_bss": {"ssid": "EdgeNew", "bssid": "11:00:12", "gateway": "10.200.1.1"},
+  "disconnect_delay_ms": 12,
+  "scan": {
+    "required_bssids": ["11:00:12"],
+    "events": [
+      {"type": "partial", "bssids_seen": [], "coverage": 0.3},
+      {"type": "partial", "bssids_seen": ["11:00:12"], "coverage": 0.8},
+      {"type": "full", "bssids_seen": ["11:00:12"], "coverage": 1.0}
+    ]
+  },
+  "services": [
+    {"ssid": "EdgeNew", "security": "wpa2", "signal": -57, "hidden": false, "preference": 18},
+    {"ssid": "EdgeNew", "security": "wpa3", "signal": -57, "hidden": false, "preference": 18}
+  ],
+  "hidden_candidate": {
+    "ssid": "EdgeHidden",
+    "security": "wpa3",
+    "signal": -35,
+    "hidden": true,
+    "preference": 30
+  },
+  "user_consent_hidden": false
+}

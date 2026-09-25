@@ -1,0 +1,187 @@
+---
+description: Terminus Edition 2 runtime internet block, verifier deps in Dockerfile, test.sh constraints (LOCKED)
+alwaysApply: false
+---
+
+# Terminus Edition 2 — Runtime Internet and Verifier Rules
+
+## task.toml (mandatory)
+
+Every `task.toml` must include **`[agent] timeout_sec`**, **`[verifier] timeout_sec`**, and under **`[environment]`**: `build_timeout_sec`, `cpus`, `memory_mb`, `storage_mb`, `workdir = "/app"`, **`allow_internet = false`**.
+
+### `[metadata].subcategories` (LOCKED — this repo)
+
+**Always use an empty array:**
+
+```toml
+subcategories = []
+```
+
+Do **not** assign Harbor subcategory labels (`api_integration`, `db_interaction`, `long_context`, `tool_specific`, `ui_building`) in any task under `tasks/`. Empty `[]` passes CodeBuild static checks.
+
+If a task already has non-empty `subcategories`, clear it to `[]` before zip.
+
+**Platform-preferred defaults** (`shared/platform-preferences.mdc` — use for timeout / build issues):
+
+```toml
+[agent]
+timeout_sec = 1800
+
+[verifier]
+timeout_sec = 900
+
+[environment]
+allow_internet = false
+build_timeout_sec = 600.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+workdir = "/app"
+```
+
+Use `build_timeout_sec = 900.0` for heavy images. Raise `[agent] timeout_sec` before blaming agents when runs hit the agent timeout gate.
+
+Runtime internet is blocked. The verifier must not download or install dependencies while running.
+
+## tests/test.sh must
+
+- Bootstrap `/logs/verifier` **before** any guard, rebuild, or pytest (see **Common `verifier_did_not_run` root causes** below).
+- Prewrite **`0`** to `/logs/verifier/reward.txt` and seed minimal `/logs/verifier/ctrf.json` before early exits.
+- Explicitly **`cd /app`** (or fail with reward **`0`**) — do not depend on Docker `WORKDIR` alone.
+- Never install or download dependencies at runtime.
+- Never use `apt-get install`, `pip install`, `curl`, `uv` installs, `uvx` package downloads, `npm install`, `npx playwright install`, or any external dependency download.
+- Use only verifier tools already installed in `environment/Dockerfile`.
+- Always write `0` or `1` to `/logs/verifier/reward.txt`.
+- Write `0` on failure and `1` only when all tests pass.
+- Use the same verifier logic for oracle and agent.
+- Never use partial rewards.
+- Never exit before writing `/logs/verifier/reward.txt`.
+- **Harbor / CodeBuild static check:** `tests/test.sh` must **end** with this exact block (use `$?` directly — not `PYTEST_RC` or other variables). Put `set +e` immediately before `pytest`. **Nothing after the closing `fi`** (no trailing `exit`).
+
+```bash
+if [ $? -eq 0 ]; then
+    echo 1 > /logs/verifier/reward.txt
+else
+    echo 0 > /logs/verifier/reward.txt
+fi
+```
+
+With `allow_internet = false`, all verifier dependencies must be installed in `environment/Dockerfile` before runtime (pytest, pytest-json-ctrf, Playwright, Vitest, task-specific verifier packages, etc.). If a dependency is needed only by tests, install it in the image (e.g. under `/opt/verifier-venv`) before `test.sh` runs.
+
+**Accepted corpus overrides generic templates:** when creating or revising tasks, **`tests/test.sh` and `environment/Dockerfile` must match the closest `tasks/_accepted-tasks/<ref>/` file exactly** (see `shared/accepted-corpus.mdc` § Follow exactly). Accepted shape uses `PWD=/` guard and/or `cd /app`; both appear in corpus — copy your stack reference, do not mix.
+
+**Dockerfile pins (new/revised tasks)** — install in image only; see `shared/platform-preferences.mdc` §2b:
+
+| Pin | Required |
+|-----|----------|
+| `FROM …@sha256:…` base digest | Yes |
+| `FROM --platform=linux/amd64` + amd64 digest | Go/Rust tasks on platform |
+| `pytest==9.0.3`, `pytest-json-ctrf==0.5.0` | Yes (prefer `requirements.lock` + `--require-hashes`) |
+| `package-lock.json` + `npm ci` | Node tasks |
+| `go.sum` / `go mod vendor` | Go tasks (offline oracle) |
+| `Cargo.lock` + `--locked` | Rust tasks |
+| Apt `tmux` / `asciinema` | Package name only — **no** `tmux=…` apt pins |
+
+```dockerfile
+COPY requirements.lock /tmp/requirements.lock
+RUN python3 -m venv /opt/verifier-venv \
+ && /opt/verifier-venv/bin/pip install --no-cache-dir --require-hashes -r /tmp/requirements.lock
+```
+
+## tests/test.sh may
+
+- Create `/logs/verifier`
+- Run already-installed tools (e.g. `python -m pytest` with no install step)
+- Copy tests to `/tmp` or use `TEST_DIR="${TEST_DIR:-/tests}"`
+- Link preinstalled verifier dependencies
+- Write `/logs/verifier/ctrf.json`
+
+For new tasks, run `python -m pytest` directly without installing dependencies. Do **not** add `exit` after the required reward `fi` block unless a separate repo doc explicitly allows it — Harbor static check expects the file to end with that block.
+
+## Supersedes deprecated guidance
+
+**Do not use or approve** this old rule:
+
+> `tests/test.sh` must use pinned verifier dependencies when installing pytest, uvx, pytest-json-ctrf, or other test-only packages.
+
+**Do not** avoid flagging or give a pass to pinned `uvx`/`pytest` setup in `test.sh` just because reward writing is correct. Any runtime install or download in `test.sh` is a **blocker** for new tasks, pinned or not.
+
+## Cursor verification checklist (runtime)
+
+Before saying verifier setup is okay, confirm **all**:
+
+1. **`tmux`** and **`asciinema`** installed in `environment/Dockerfile` — package name only (`tmux`, `asciinema`); **never** apt version pins (`tmux=3.3a-3`, `asciinema=2.2.0-1`).
+2. **Pinned deps in Dockerfile:** base `FROM …@sha256:…`; verifier `pytest==9.0.3` / `pytest-json-ctrf==0.5.0` (prefer `requirements.lock` + `--require-hashes`); stack lockfiles (`package-lock.json`, `go.sum`, `Cargo.lock`) as applicable.
+3. No runtime installs or downloads in `test.sh`.
+4. Required verifier tools are preinstalled in `environment/Dockerfile`.
+5. `test.sh` seeds reward **`0`** + minimal CTRF **before** guards/rebuild; every early exit writes reward **`0`**.
+6. `task.toml` has `[environment] allow_internet = false` (and `workdir = "/app"` for non-milestone tasks).
+7. Local oracle → reward **`1`**; NOP → reward **`0`**.
+
+Treat old `test.sh` patterns using `curl`, `uv install`, `uvx` package downloads, `pip install`, `npm install`, or `playwright install` as **blockers**.
+
+Do not mark tasks ready without reading actual `task.toml`, `tests/test.sh`, and `environment/Dockerfile`.
+
+## Common `verifier_did_not_run` root causes (platform Quality Guidelines)
+
+When platform metrics show **`verifier_did_not_run: 0 passed / N runs`**, **`Oracle solution failed`**, or **no `/logs/verifier/reward.txt`**, treat these three causes as the default hypothesis before blaming agent logic.
+
+**Oracle solution failed (platform oracle 0):** follow **LOCKED** `@REVISE RULES` → `revise/oracle-fix-g025-g027.mdc` + **`oracleFix.md`** (G-025–G-027). Registry: `revise/platform-hardness-guards.mdc`.
+
+### 1. Missing terminal recording dependencies (`tmux` / `asciinema`)
+
+The platform harness wraps agent runs in a session recorder that requires **`tmux`** and **`asciinema`** in the Docker image. If either is missing, session initialization can fail **before pytest starts**, producing no verifier output and no meaningful agent score.
+
+**Do not apt-pin harness packages.** Install `tmux` and `asciinema` by name only — not `tmux=3.3a-3` or `asciinema=2.2.0-1`. Pinned Debian versions fail image builds when security updates rotate package revisions. Pin the **base image digest** and **pip/npm/Cargo** deps instead (`shared/platform-preferences.mdc` §2).
+
+**Fix (Dockerfile — mandatory on every task):**
+
+```dockerfile
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+    asciinema \
+    ca-certificates \
+    python3 \
+    python3-pip \
+    python3-venv \
+    tmux \
+ && rm -rf /var/lib/apt/lists/*
+```
+
+Also set `WORKDIR /app` in `environment/Dockerfile` and `workdir = "/app"` in `task.toml` (non-milestone).
+
+### 2. Early `test.sh` exit before reward / CTRF
+
+Template guards (`if [ "$PWD" = "/" ]`, missing rebuild, failed `go build` / `cargo build`) that **`exit 1` before** creating `/logs/verifier/` or writing `/logs/verifier/reward.txt` cause **`verifier_did_not_run`**.
+
+**Fix:** Bootstrap logging **first**, prewrite reward **`0`**, seed minimal CTRF, then run guards. On **every** early exit, write **`0`** to reward before exiting.
+
+```bash
+mkdir -p /logs/verifier
+echo 0 > /logs/verifier/reward.txt
+printf '%s\n' '{"version":"1.0.0","results":{"summary":{"tests":0,"passed":0,"failed":0,"pending":0,"skipped":0,"other":0}}}}' > /logs/verifier/ctrf.json
+
+cd /app || {
+    echo 0 > /logs/verifier/reward.txt
+    exit 1
+}
+
+# Optional: if rebuild fails
+# echo 0 > /logs/verifier/reward.txt; exit 1
+```
+
+Do **not** rely on Docker `WORKDIR` alone — explicitly `cd /app` (or equivalent) before rebuild/pytest. A `PWD=/` guard is acceptable **only** when it writes reward **`0`** first (same block as above).
+
+### 3. No-internet resolve errors (runtime package installs)
+
+With **`allow_internet = false`**, any runtime install in `test.sh` (`pip install`, `uvx pytest`, `npm install`, `apt-get install`, `curl | sh`, Playwright browser download, etc.) **hangs or crashes** because PyPI/registry access is blocked — pytest never launches.
+
+**Fix:** Install **all** verifier dependencies in `environment/Dockerfile` (e.g. `/opt/verifier-venv` with pinned `pytest==9.0.3`, `pytest-json-ctrf==0.5.0`). Run **`/opt/verifier-venv/bin/python -m pytest`** in `test.sh` with **no install step**.
+
+### Diagnosis checklist (run before upload)
+
+1. Dockerfile: `FROM …@sha256:…`; **`tmux`** + **`asciinema`** (unpinned apt names); pinned verifier venv (`requirements.lock` or `pytest==9.0.3` / `pytest-json-ctrf==0.5.0`); stack lockfiles as needed; `WORKDIR /app`.
+2. `test.sh` seeds `/logs/verifier/reward.txt` with **`0`** and minimal **`ctrf.json`** before any guard or rebuild.
+3. Every early-exit path writes reward **`0`**; file **ends** with Harbor `if [ $? -eq 0 ]` block — **nothing after `fi`**.
+4. No runtime downloads/installs in `test.sh`; `allow_internet = false` in `task.toml`.
+5. Local oracle: `solve.sh` → `test.sh` → reward **`1`**; NOP → reward **`0`**.

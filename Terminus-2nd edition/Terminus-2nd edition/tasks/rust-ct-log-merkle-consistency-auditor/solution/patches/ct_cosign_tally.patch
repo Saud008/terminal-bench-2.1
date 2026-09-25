@@ -1,0 +1,37 @@
+--- src/cosign/vote_tally.rs
++++ src/cosign/vote_tally.rs
+@@ -1,16 +1,28 @@
+ use crate::ledgerfmt::hex_norm::WitnessCheckpoint;
+ 
+-pub fn quorum_met(log_id: &str, tree_size: u64, root_hash: &str, checkpoints: &[WitnessCheckpoint]) -> bool {
++fn quorum_threshold() -> u32 {
++    2
++}
++
++fn witness_matches(cp: &WitnessCheckpoint, log_id: &str, tree_size: u64, root_hash: &str) -> bool {
++    cp.log_id == log_id
++        && cp.tree_size == tree_size
++        && cp.sha256_root_hash.eq_ignore_ascii_case(root_hash)
++}
++
++fn tally_agreements(log_id: &str, tree_size: u64, root_hash: &str, checkpoints: &[WitnessCheckpoint]) -> u32 {
+     let mut agree = 0u32;
+     for cp in checkpoints {
+-        if cp.log_id != log_id {
+-            continue;
+-        }
+-        if cp.tree_size == tree_size && cp.sha256_root_hash.eq_ignore_ascii_case(root_hash) {
++        if witness_matches(cp, log_id, tree_size, root_hash) {
+             agree += 1;
+         }
+     }
+-    agree >= 1
++    agree
++}
++
++pub fn quorum_met(log_id: &str, tree_size: u64, root_hash: &str, checkpoints: &[WitnessCheckpoint]) -> bool {
++    let agree = tally_agreements(log_id, tree_size, root_hash, checkpoints);
++    agree >= quorum_threshold()
+ }
+ 
+ pub fn witness_set_hash(log_id: &str, tree_size: u64, root_hash: &str, checkpoints: &[WitnessCheckpoint]) -> String {

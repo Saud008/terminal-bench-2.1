@@ -1,0 +1,30 @@
+--- lib/rspamd/fuzzy_index.sh	2026-07-06 18:40:04.534884100 +0000
++++ lib/rspamd/fuzzy_index.sh	2026-07-06 18:40:04.936799200 +0000
+@@ -21,9 +21,24 @@
+   local key_epoch="$1"
+   local checksum_algo_id="$2"
+   rf_ensure_index
+-  sqlite3 "${RF_INDEX_DB}" <<SQL
+-UPDATE fuzzy_hashes SET key_epoch=${key_epoch};
+-SQL
++  python3 - "${RF_INDEX_DB}" "${key_epoch}" "${checksum_algo_id}" <<'PY'
++import hashlib
++import sqlite3
++import sys
++
++db, ke, algo = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
++conn = sqlite3.connect(db)
++rows = conn.execute("SELECT mail_id, shingle, key_epoch, checksum_algo_id FROM fuzzy_hashes").fetchall()
++for mail_id, shingle, old_ke, old_algo in rows:
++    new_hash = hashlib.sha256(f"{ke}:{algo}:{shingle}".encode()).hexdigest()[:16]
++    conn.execute("DELETE FROM fuzzy_hashes WHERE mail_id=? AND shingle=?", (mail_id, shingle))
++    conn.execute(
++        "INSERT INTO fuzzy_hashes(hash, mail_id, shingle, key_epoch, checksum_algo_id) VALUES (?,?,?,?,?)",
++        (new_hash, mail_id, shingle, ke, algo),
++    )
++conn.commit()
++conn.close()
++PY
+ }
+ 
+ rf_index_insert_shingle() {

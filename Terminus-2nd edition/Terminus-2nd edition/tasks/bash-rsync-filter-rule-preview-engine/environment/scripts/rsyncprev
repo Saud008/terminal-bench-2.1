@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+APP_ROOT="/app"
+LIB="${APP_ROOT}/internal/rsfp93"
+
+usage() {
+  echo "usage: rsyncprev ingest|inventory|compile|export|preview ..." >&2
+  exit 2
+}
+
+cmd="${1:-}"
+shift || true
+case "$cmd" in
+  ingest|inventory)
+    exec bash "${LIB}/ingest/ingest_tree.sh" "$@"
+    ;;
+  compile)
+    exec bash "${LIB}/compile/compile_filters.sh" "$@"
+    ;;
+  export|preview)
+    exec bash "${LIB}/atlas/preview_atlas.sh" "$@"
+    ;;
+  *)
+    usage
+    ;;
+esac

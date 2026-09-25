@@ -1,0 +1,1 @@
+load-shift-dose reads shift bundles and writes dose ledger artifacts. export-breach-atlas reads ledger artifacts only and must not re-open shift bundle files. Verifier pytest may write breach atlas samples under /app/output/ including /app/output/tb3-safety.json for hidden shift probes.

@@ -1,0 +1,43 @@
+{
+  "scenario_id": "tb3-fork-reach",
+  "blocks": [
+    {"block_id": "blk-f0", "kilometer": 0.0},
+    {"block_id": "blk-f1", "kilometer": 1.0},
+    {"block_id": "blk-f2", "kilometer": 1.0},
+    {"block_id": "blk-f3", "kilometer": 2.0}
+  ],
+  "adjacency": [
+    ["blk-f0", "blk-f1"],
+    ["blk-f0", "blk-f2"],
+    ["blk-f1", "blk-f3"],
+    ["blk-f2", "blk-f3"]
+  ],
+  "possessions": [
+    {
+      "claim_id": "pos-fork-a",
+      "blocks": ["blk-f1"],
+      "start_min": 5,
+      "end_min": 95,
+      "priority": 2
+    }
+  ],
+  "signals": [
+    {
+      "signal_id": "sig-fork-guard",
+      "block_id": "blk-f0",
+      "aspect": "restrict",
+      "start_min": 10,
+      "end_min": 80
+    }
+  ],
+  "reservations": [
+    {
+      "train_id": "trn-fork-77",
+      "blocks": ["blk-f3"],
+      "start_min": 20,
+      "end_min": 70,
+      "priority": 3
+    }
+  ],
+  "overrides": []
+}

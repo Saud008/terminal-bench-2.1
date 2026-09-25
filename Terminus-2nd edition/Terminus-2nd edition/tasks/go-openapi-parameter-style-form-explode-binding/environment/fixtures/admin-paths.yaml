@@ -1,0 +1,32 @@
+openapi: 3.0.3
+info:
+  title: Paramgate admin extension
+  version: 1.0.0
+paths:
+  /v1/admin/audit:
+    get:
+      operationId: adminAuditLedger
+      parameters:
+        - name: scopes
+          in: query
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+        - name: window
+          in: query
+          required: false
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+        - name: actor
+          in: query
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string

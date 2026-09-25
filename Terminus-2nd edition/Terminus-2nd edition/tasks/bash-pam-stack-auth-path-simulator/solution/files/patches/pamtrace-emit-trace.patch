@@ -1,0 +1,53 @@
+--- a/internal/pamcore/emit/emit_trace.sh
++++ b/internal/pamcore/emit/emit_trace.sh
+@@ -30,7 +30,7 @@
+ walk_json="$(walk_auth_stack "$modules_json" "$outcomes_json" "$subject")"
+ 
+ python3 - "$run_id" "$service" "$subject" "$walk_json" "$subjects_json" "$output" <<'PY'
+-import json, sys, hashlib
++import json, sys, hashlib, subprocess
+ from pathlib import Path
+ 
+ run_id, service, subject = sys.argv[1:4]
+@@ -41,13 +41,37 @@
+ def subject_groups(doc, subject):
+     users = doc.get("users", {})
+     groups = doc.get("groups", {})
+-    direct = set(users.get(subject, {}).get("groups", []))
+-    return sorted(direct)
++
++    def member_closure(name, seen=None):
++        seen = seen or set()
++        if name in seen:
++            return set()
++        seen.add(name)
++        out = {name}
++        for child in groups.get(name, []):
++            if child in groups:
++                out |= member_closure(child, seen)
++            else:
++                out.add(child)
++        return out
++
++    direct = users.get(subject, {}).get("groups", [])
++    effective = set(direct) | {subject}
++    for g in direct:
++        effective |= member_closure(g)
++    changed = True
++    while changed:
++        changed = False
++        for gname, members in groups.items():
++            if gname in effective:
++                continue
++            if any(m in effective for m in members):
++                effective.add(gname)
++                changed = True
++    return sorted(effective)
+ 
+ groups = subject_groups(subjects, subject)
+ steps = walk["steps"]
+-# trace sequence uses module lexicographic key
+-steps = sorted(steps, key=lambda s: s["module"])
+ 
+ report = {
+     "run_id": run_id,

@@ -1,0 +1,10 @@
+--- gap_evaluator/feasible.rs
++++ gap_evaluator/feasible.rs
+@@ -20,7 +20,7 @@ pub fn connection_feasible(hub: &HubLatch, inbound: &str, outbound: &str) -> bo
+     });
+     let min_mct = crate::mct_override().or_else(|| rule.map(|r| r.min_connect_minutes)).unwrap_or(0);
+     let gap = outbound_f.dep_minute.saturating_sub(inbound_f.arr_minute);
+-    gap > min_mct
++    gap >= min_mct
+ }
+ 

@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="/app"
+input_path=""
+config_path="${ROOT}/config/normalize.json"
+output_path="${ROOT}/output/normalized.hosts"
+
+usage() {
+  echo "usage: kh-normalize --input <file> [--config path] [--output path]" >&2
+  exit 2
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --input)
+      input_path="$2"
+      shift 2
+      ;;
+    --config)
+      config_path="$2"
+      shift 2
+      ;;
+    --output)
+      output_path="$2"
+      shift 2
+      ;;
+    *)
+      usage
+      ;;
+  esac
+done
+
+if [[ -z "${input_path}" || ! -f "${input_path}" ]]; then
+  echo "kh-normalize: missing or unreadable input file: ${input_path}" >&2
+  exit 1
+fi
+
+if [[ ! -f "${config_path}" ]]; then
+  echo "kh-normalize: missing config: ${config_path}" >&2
+  exit 1
+fi
+
+eval "$(python3 - "${config_path}" <<'PY'
+import json
+import sys
+
+cfg = json.load(open(sys.argv[1], encoding="utf-8"))
+merge = bool(cfg.get("merge_duplicates", True))
+comments = bool(cfg.get("include_comments", True))
+print(f"export KH_MERGE_DUPLICATES={'1' if merge else '0'}")
+print(f"export KH_INCLUDE_COMMENTS={'1' if comments else '0'}")
+PY
+)"
+
+# shellcheck source=/app/lib/parse/kh_parse.sh
+source "${ROOT}/lib/parse/kh_parse.sh"
+# shellcheck source=/app/lib/ledger/kh_ledger.sh
+source "${ROOT}/lib/ledger/kh_ledger.sh"
+# shellcheck source=/app/lib/merge/kh_merge.sh
+source "${ROOT}/lib/merge/kh_merge.sh"
+# shellcheck source=/app/lib/emit/kh_emit.sh
+source "${ROOT}/lib/emit/kh_emit.sh"
+
+mkdir -p "$(dirname "${output_path}")"
+
+kh_ledger_reset
+while IFS= read -r line || [[ -n "$line" ]]; do
+  rec=""
+  if rec="$(kh_parse_line "$line")"; then
+    kh_ledger_append "$rec"
+  fi
+done < "${input_path}"
+
+kh_ledger_seal "${input_path}"
+export KH_VERIFY_INPUT="${input_path}"
+kh_ledger_verify
+
+mapfile -t records < <(kh_ledger_read_records)
+if [[ ${#records[@]} -eq 0 ]]; then
+  : > "${output_path}"
+  exit 0
+fi
+
+mapfile -t merged < <(kh_merge_records "${records[@]}")
+{
+  printf '%s\n' "${merged[@]}" | kh_emit_records
+} > "${output_path}"
+
+exit 0

@@ -1,0 +1,61 @@
+--- lib/zq7/m05.sh
++++ lib/zq7/m05.sh
+@@ -12,22 +12,25 @@
+   local sim_end
+   sim_end="$(echo "$doc" | jq -r '.simulation.window_end // empty')"
+   [[ -n "$sim_end" ]] || { echo "S3LC:SIM_MISSING" >&2; return 2; }
+-  local wstart="$sim_end" wend="$sim_end"
++  local wstart wend
+   wstart="$(echo "$doc" | jq -r '.simulation.window_start')"
+   wend="$sim_end"
+-  local dim
++  local dim bill_days
+   dim="$(days_in_month "$wstart")"
+-  dim=30
+-  local objs billable
++  bill_days="$(days_between "$wstart" "$wend")"
++  bill_days=$((bill_days + 1))
++  local objs
+   objs="$(echo "$doc" | jq -c '.objects')"
+   local -A class_bytes=()
+-  local row cls sz
++  local row cls sz key vid
+   while IFS= read -r row; do
+     [[ -z "$row" ]] && continue
+-    local key vid
+     key="$(echo "$row" | jq -r '.key')"
+     vid="$(echo "$row" | jq -r '.version_id')"
+     if echo "$doc" | jq -e --arg k "$key" --arg v "$vid" '.simulation.expired_versions[]|select(.key==$k and .version_id==$v)' >/dev/null; then
++      continue
++    fi
++    if [[ "$(echo "$row" | jq -r '.multipart_complete')" == "false" && "$(echo "$row" | jq -r '.multipart_id')" != "null" ]]; then
+       continue
+     fi
+     cls="$(echo "$row" | jq -r '.storage_class')"
+@@ -43,11 +46,11 @@
+     b="${class_bytes[$c]}"
+     gb="$(echo "scale=10; $b / 1073741824" | bc)"
+     rate="$(echo "$rates" | jq -r --arg c "$c" '.[$c] // 0')"
+-    usd="$(echo "scale=10; $gb * $rate * ($dim / $dim)" | bc)"
++    usd="$(echo "scale=10; $gb * $rate * ($bill_days / $dim)" | bc)"
+     total="$(echo "scale=10; $total + $usd" | bc)"
+     report_classes["$c"]="$gb|$usd"
+   done
+-  mpu_usd="$(echo "scale=10; ($mpu_bytes / 1073741824) * $(echo "$rates" | jq -r '.STANDARD') * ($dim / $dim)" | bc)"
++  mpu_usd="$(echo "scale=10; ($mpu_bytes / 1073741824) * $(echo "$rates" | jq -r '.STANDARD') * ($bill_days / $dim)" | bc)"
+   total="$(echo "scale=10; $total + $mpu_usd" | bc)"
+   local sup_count orphan
+   sup_count="$(echo "$doc" | jq '.simulation.suppressed_keys|length')"
+@@ -61,8 +64,10 @@
+     by_class_json+="\"$c\":{\"gb_months\":\"$(money2 "$gb")\",\"usd\":\"$(money2 "$usd")\"}"
+   done
+   by_class_json+="}"
+-  local dig
+-  dig="$(sha256_hex "${wstart}|${wend}|${by_class_json}|${mpu_usd}")"
++  local dig_payload mpu_fmt
++  mpu_fmt="$(printf '%.10f' "$mpu_usd")"
++  dig_payload="${wstart}|${wend}|${by_class_json}|${mpu_fmt}"
++  dig="$(sha256_hex "$dig_payload")"
+   jq -n --arg bucket "$(echo "$doc" | jq -r '.bucket')" --arg ws "$wstart" --arg we "$wend" \
+     --arg total "$(money2 "$total")" --argjson by "$(echo "$by_class_json")" \
+     --arg mpu "$(money2 "$mpu_usd")" --argjson sup "$sup_count" --argjson orphan "$orphan" --arg dig "$dig" \

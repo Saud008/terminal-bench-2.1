@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${NETIFD_APP_ROOT:-/app}"
+LIB="${APP_ROOT}/lib/netifd"
+
+# shellcheck source=common.sh
+source "${LIB}/common.sh"
+# shellcheck source=proto.sh
+source "${LIB}/proto.sh"
+# shellcheck source=export.sh
+source "${LIB}/export.sh"
+
+usage() {
+  echo "usage: netifd-ctl apply|reload|export|teardown [options]" >&2
+  exit 2
+}
+
+cmd_apply() {
+  local scenario="" root="${APP_ROOT}/fixtures/scenarios"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --scenario) scenario="$2"; shift 2 ;;
+      --fixtures-root) root="$2"; shift 2 ;;
+      *) usage ;;
+    esac
+  done
+  [[ -z "$scenario" ]] && usage
+  netifd_proto_apply "${root}/${scenario}.json"
+}
+
+cmd_reload() {
+  local scenario="" root="${APP_ROOT}/fixtures/scenarios"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --scenario) scenario="$2"; shift 2 ;;
+      --fixtures-root) root="$2"; shift 2 ;;
+      *) usage ;;
+    esac
+  done
+  [[ -z "$scenario" ]] && usage
+  netifd_proto_reload "${root}/${scenario}.json"
+}
+
+cmd_export() {
+  local output=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --output) output="$2"; shift 2 ;;
+      *) usage ;;
+    esac
+  done
+  [[ -z "$output" ]] && usage
+  netifd_write_export "$output"
+}
+
+cmd_teardown() {
+  local scenario="" root="${APP_ROOT}/fixtures/scenarios"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --scenario) scenario="$2"; shift 2 ;;
+      --fixtures-root) root="$2"; shift 2 ;;
+      *) usage ;;
+    esac
+  done
+  [[ -z "$scenario" ]] && usage
+  netifd_proto_teardown "${root}/${scenario}.json"
+}
+
+main() {
+  [[ $# -lt 1 ]] && usage
+  case "$1" in
+    apply) shift; cmd_apply "$@" ;;
+    reload) shift; cmd_reload "$@" ;;
+    export) shift; cmd_export "$@" ;;
+    teardown) shift; cmd_teardown "$@" ;;
+    *) usage ;;
+  esac
+}
+
+main "$@"

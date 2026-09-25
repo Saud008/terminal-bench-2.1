@@ -1,0 +1,18 @@
+--- lib/sshdmatch/scope_resolver.sh	2026-07-05 03:47:20.042445600 +0000
++++ solution/files/lib/sshdmatch/scope_resolver.sh	2026-07-05 03:47:20.457337800 +0000
+@@ -18,13 +18,11 @@
+         [[ -n "$mu" ]] && cur_rank=$((cur_rank + 1))
+         [[ -n "$mh" ]] && cur_rank=$((cur_rank + 1))
+       elif [[ "$line" =~ AuthorizedPrincipalsFile ]]; then
+-        cur="$(echo "$line" | awk '{print $2}')"
+-        cur="${cur#/app/fixtures/principals/}"
+-        cur="${cur%.principals}"
++        cur="$(basename "$(echo "$line" | awk '{print $2}')" .principals)"
+       fi
+       if [[ -n "$cur" && -n "$mu" && -n "$mh" ]]; then
+         if fnmatch_case "$mu" "$user" && fnmatch_case "$mh" "$host"; then
+-          if [[ "$cur_rank" -le "$best_rank" || "$best_rank" -eq 0 ]]; then
++          if [[ "$cur_rank" -ge "$best_rank" ]]; then
+             best_rank="$cur_rank"
+             scope="$cur"
+           fi

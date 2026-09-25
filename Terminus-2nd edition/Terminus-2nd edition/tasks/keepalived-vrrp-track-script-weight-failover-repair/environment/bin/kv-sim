@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="/app"
+STATE="${ROOT}/state"
+WORK="${STATE}/work-staging.json"
+EVENTS_JSON="${STATE}/events.json"
+EVENT_LINES="${STATE}/event-lines.jsonl"
+SNAPSHOT="${STATE}/staging-snapshot.json"
+MANIFEST="${STATE}/staging-manifest.json"
+
+usage() {
+  echo "usage: kv-sim replay --events <file> [--config path] [--output path]" >&2
+  echo "       kv-sim config-check --config <keepalived.conf> [--vrrp-json path] [--output path]" >&2
+  exit 2
+}
+
+cmd="${1:-}"
+shift || usage
+
+case "${cmd}" in
+  replay)
+    events_path=""
+    config_path="${ROOT}/config/vrrp.json"
+    output_path="${ROOT}/output/vrrp-state.json"
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --events) events_path="$2"; shift 2 ;;
+        --config) config_path="$2"; shift 2 ;;
+        --output) output_path="$2"; shift 2 ;;
+        *) usage ;;
+      esac
+    done
+    [[ -n "${events_path}" && -f "${events_path}" ]] || {
+      echo "kv-sim: missing events file" >&2
+      exit 1
+    }
+    # shellcheck source=/app/lib/kv_ingest.sh
+    source "${ROOT}/lib/kv_ingest.sh"
+    # shellcheck source=/app/lib/kv_staging.sh
+    source "${ROOT}/lib/kv_staging.sh"
+    # shellcheck source=/app/lib/kv_replay.sh
+    source "${ROOT}/lib/kv_replay.sh"
+    # shellcheck source=/app/lib/kv_race.sh
+    source "${ROOT}/lib/kv_race.sh"
+    # shellcheck source=/app/lib/kv_weight.sh
+    source "${ROOT}/lib/kv_weight.sh"
+    # shellcheck source=/app/lib/kv_priority.sh
+    source "${ROOT}/lib/kv_priority.sh"
+    # shellcheck source=/app/lib/kv_advert.sh
+    source "${ROOT}/lib/kv_advert.sh"
+    # shellcheck source=/app/lib/kv_notify.sh
+    source "${ROOT}/lib/kv_notify.sh"
+    # shellcheck source=/app/lib/kv_export.sh
+    source "${ROOT}/lib/kv_export.sh"
+
+    mkdir -p "${STATE}" "$(dirname "${output_path}")"
+    kv_init_staging "${config_path}" "${WORK}"
+    kv_ingest_events "${events_path}" "${EVENTS_JSON}"
+    python3 - "${EVENTS_JSON}" "${EVENT_LINES}" <<'PY'
+import json, sys
+events = json.load(open(sys.argv[1], encoding="utf-8"))
+with open(sys.argv[2], "w", encoding="utf-8") as fh:
+    for ev in events:
+        fh.write(json.dumps(ev, separators=(",", ":")) + "\n")
+PY
+
+    last_id=""
+    while IFS= read -r line; do
+      KV_EID="$(echo "${line}" | python3 -c 'import json,sys; print(json.load(sys.stdin)["event_id"])')"
+      KV_TS="$(echo "${line}" | python3 -c 'import json,sys; print(json.load(sys.stdin)["ts"])')"
+      KV_TRACK="$(echo "${line}" | python3 -c 'import json,sys; print(json.load(sys.stdin)["track"])')"
+      KV_STATUS="$(echo "${line}" | python3 -c 'import json,sys; print(json.load(sys.stdin)["status"])')"
+      skip="$(kv_replay_should_skip "${KV_EID}" "${WORK}")"
+      if [[ "${skip}" == "1" ]]; then
+        continue
+      fi
+      kv_apply_track_event "${WORK}" "${config_path}" "${KV_TRACK}" "${KV_STATUS}"
+      race_activated="$(kv_apply_fall_race "${WORK}" "${config_path}" "${KV_TS}")"
+      if [[ "${KV_STATUS}" == "fail" || "${race_activated}" == "1" ]]; then
+        kv_compute_effective "${WORK}"
+      fi
+      kv_update_role "${WORK}"
+      kv_bump_advert "${WORK}"
+      kv_replay_mark_applied "${KV_EID}" "${WORK}"
+      last_id="${KV_EID}"
+      if python3 - "${WORK}" <<'PY' | grep -q pending; then
+import json, sys
+print("pending" if json.load(open(sys.argv[1], encoding="utf-8")).get("notify_pending") else "ok")
+PY
+        kv_run_notify "${WORK}"
+      fi
+    done < "${EVENT_LINES}"
+
+    kv_write_staging_snapshot "${WORK}" "${SNAPSHOT}" "${MANIFEST}" "${events_path}"
+    kv_export_state "${WORK}" "${output_path}" "${last_id}"
+    exit 0
+    ;;
+  config-check)
+    conf_path=""
+    cfg_path="${ROOT}/config/vrrp.json"
+    output_path="${ROOT}/output/config-report.json"
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --config) conf_path="$2"; shift 2 ;;
+        --vrrp-json) cfg_path="$2"; shift 2 ;;
+        --output) output_path="$2"; shift 2 ;;
+        *) usage ;;
+      esac
+    done
+    [[ -n "${conf_path}" && -f "${conf_path}" ]] || {
+      echo "kv-sim: missing keepalived config" >&2
+      exit 1
+    }
+    # shellcheck source=/app/lib/kv_export.sh
+    source "${ROOT}/lib/kv_export.sh"
+    kv_config_check "${conf_path}" "${cfg_path}" "${output_path}"
+    exit 0
+    ;;
+  *)
+    usage
+    ;;
+esac

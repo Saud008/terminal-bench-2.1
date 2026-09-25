@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+APP_ROOT="/app"
+LIB="${APP_ROOT}/internal/wgpa91"
+
+usage() {
+  echo "usage: wgpatlas ingest|analyze|export ..." >&2
+  exit 2
+}
+
+cmd="${1:-}"
+shift || true
+case "$cmd" in
+  ingest)
+    exec bash "${LIB}/ingest/ingest_site.sh" "$@"
+    ;;
+  analyze)
+    exec bash "${LIB}/analyze/analyze_run.sh" "$@"
+    ;;
+  export)
+    exec bash "${LIB}/export/export_atlas.sh" "$@"
+    ;;
+  *)
+    usage
+    ;;
+esac

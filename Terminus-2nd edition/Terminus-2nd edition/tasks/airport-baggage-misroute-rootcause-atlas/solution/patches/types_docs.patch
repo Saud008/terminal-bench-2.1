@@ -1,0 +1,73 @@
+--- model/hub_records.rs
++++ model/hub_records.rs
+@@ -9,6 +9,7 @@ pub struct Config {
+     pub output_dir: String,
+ }
+ 
++/// Hub latch snapshot with belts, flights, connections, and outage windows.
+ #[derive(Debug, Clone, Serialize, Deserialize)]
+ pub struct HubLatch {
+     pub hub_id: String,
+@@ -19,6 +20,7 @@ pub struct HubLatch {
+     pub outages: Vec<OutageSpec>,
+ }
+ 
++/// Sortation belt segment bound to a station and outbound flight target.
+ #[derive(Debug, Clone, Serialize, Deserialize)]
+ pub struct BeltSpec {
+     pub belt_id: String,
+@@ -27,6 +29,7 @@ pub struct BeltSpec {
+     pub target_flight_id: String,
+ }
+ 
++/// Scheduled flight arrival and departure minute markers for MCT evaluation.
+ #[derive(Debug, Clone, Serialize, Deserialize)]
+ pub struct FlightSpec {
+     pub flight_id: String,
+@@ -34,6 +37,7 @@ pub struct FlightSpec {
+     pub arr_minute: u64,
+ }
+ 
++/// Published minimum connect interval between inbound and outbound flights.
+ #[derive(Debug, Clone, Serialize, Deserialize)]
+ pub struct ConnectionSpec {
+     pub inbound_flight: String,
+@@ -41,6 +45,7 @@ pub struct ConnectionSpec {
+     pub min_connect_minutes: u64,
+ }
+ 
++/// Station sortation outage window with half-open end boundary semantics.
+ #[derive(Debug, Clone, Serialize, Deserialize)]
+ pub struct OutageSpec {
+     pub station_code: String,
+@@ -48,6 +53,7 @@ pub struct OutageSpec {
+     pub end_minute: u64,
+ }
+ 
++/// Normalized bag-tag scan row after seq-scans dedupe and ordering.
+ #[derive(Debug, Clone, Serialize, Deserialize)]
+ pub struct ScanRow {
+     pub bag_tag: String,
+@@ -58,6 +64,7 @@ pub struct ScanRow {
+     pub relay_pass: u64,
+ }
+ 
++/// Route lattice row after belt selection, MCT gate, and outage mask.
+ #[derive(Debug, Clone, Serialize, Deserialize)]
+ pub struct RouteRow {
+     pub bag_tag: String,
+@@ -71,6 +78,14 @@ pub struct RouteRow {
+     pub misroute_cause: String,
+ }
+ 
++/// Atlas histogram keys align with misroute-class-stack.md cause labels.
++/// Suppressed rows may appear in route lattice without incrementing misroute totals.
++/// audit_digest uses hashlib sha256 over bag_tag scan_seq misroute_cause target_flight_id scan_minute.
++/// TB3 overlays load tb3-outage-edge from verifier-fixtures bag-atlas hubs tree.
++/// hub-delta relay_pass 2 exercises duplicate scan_seq supersession contract.
++/// hub-epsilon equal scan_minute rows exercise scan_seq tie-break ordering.
++/// estimate_weight_kg remains in weight_decoy forecast helper only.
++/// Root-cause atlas JSON document emitted by emit-rootcause.
+ #[derive(Debug, Clone, Serialize, Deserialize)]
+ pub struct AtlasDoc {
+     pub hub_id: String,

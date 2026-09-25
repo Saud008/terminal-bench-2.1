@@ -1,0 +1,8 @@
+--- a/internal/faultpriority/score.go
++++ b/internal/faultpriority/score.go
+@@ -48,7 +48,7 @@
+ 		breach := slahorizon.MinutesToBreach(anchor, f.ReportedMinute, sla.MaxResponseMinutes)
+ 		urgency := slahorizon.SLAUrgency(breach)
+-		priority := f.SeverityBase*100 + urgency*10 + sla.EscalationWeight
++		priority := f.SeverityBase*100 + f.TrappedPassengers*50 + urgency*10 + sla.EscalationWeight
+ 		if _, err := db.Exec(`INSERT INTO urgency_scores(fault_id,priority_score,sla_urgency,breach_horizon_min) VALUES(?,?,?,?)`,

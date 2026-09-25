@@ -1,0 +1,10 @@
+*mangle
+:PREROUTING ACCEPT [0:0]
+-A PREROUTING -m conntrack --ctstate NEW -j CT --notrack
+-A PREROUTING -j MARK --set-mark 0x20
+COMMIT
+*nat
+:PREROUTING ACCEPT [0:0]
+-A PREROUTING -m mark --mark 0x20/0xff -j DNAT --to-destination 10.0.0.5 [3:180]
+-A PREROUTING -m mark --mark 0x40/0xff -j DNAT --to-destination 10.0.0.9 [1:60]
+COMMIT

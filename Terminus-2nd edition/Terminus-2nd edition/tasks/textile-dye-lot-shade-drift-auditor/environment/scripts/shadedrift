@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+APP_ROOT="/app"
+LIB="${APP_ROOT}/lib/shadeaudit"
+
+usage() {
+  echo "usage: shadedrift ingest-scenario|correlate|export-report ..." >&2
+  exit 2
+}
+
+cmd="${1:-}"
+shift || true
+case "$cmd" in
+  ingest-scenario)
+    exec bash "${LIB}/sa06/ingest_scenario.sh" "$@"
+    ;;
+  correlate)
+    exec bash "${LIB}/sa07/correlate_rows.sh" "$@"
+    ;;
+  export-report)
+    exec bash "${LIB}/sa08/export_report.sh" "$@"
+    ;;
+  *)
+    usage
+    ;;
+esac

@@ -1,0 +1,39 @@
+{
+  "pack_name": "core-lineage",
+  "generated_at": "2026-03-10T08:00:00Z",
+  "evaluated_at": "2026-03-10T09:00:00Z",
+  "models": [
+    {
+      "unique_id": "model.analytics.stg_orders",
+      "depends_on": [
+        "source.analytics.raw_orders"
+      ],
+      "enabled": true,
+      "last_built_at": "2026-03-10T08:30:00Z"
+    },
+    {
+      "unique_id": "model.analytics.fct_orders",
+      "depends_on": [
+        "model.analytics.stg_orders"
+      ],
+      "enabled": true,
+      "last_built_at": "2026-03-10T08:45:00Z"
+    }
+  ],
+  "sources": [
+    {
+      "unique_id": "source.analytics.raw_orders",
+      "loaded_at": "2026-03-10T08:50:00Z",
+      "warn_after_minutes": 30,
+      "error_after_minutes": 120
+    }
+  ],
+  "exposures": [
+    {
+      "unique_id": "exposure.analytics.orders_dashboard",
+      "depends_on": [
+        "model.analytics.fct_orders"
+      ]
+    }
+  ]
+}

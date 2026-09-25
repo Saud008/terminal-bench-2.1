@@ -1,0 +1,64 @@
+"""Catalog admission and sprite prepare."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from PIL import Image
+
+from atlas import seed as seed_mod
+
+
+def load_catalog(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_entries(catalog: dict, set_name: str) -> list[dict]:
+    for pack_set in catalog["pack_sets"]:
+        if pack_set["name"] == set_name:
+            by_glyph: dict[str, dict] = {}
+            for sprite in pack_set["sprites"]:
+                by_glyph[sprite["glyph_id"]] = sprite
+            return list(by_glyph.values())
+    raise KeyError(set_name)
+
+
+def rotate_cw(img: Image.Image) -> Image.Image:
+    return img.transpose(Image.Transpose.ROTATE_270)
+
+
+def resize_nearest(img: Image.Image, nw: int, nh: int) -> Image.Image:
+    return img.resize((nw, nh), Image.Resampling.NEAREST)
+
+
+def prepare_sprites(
+    catalog: dict,
+    entries: list[dict],
+    sprites_dir: Path,
+    seed: int,
+    pad: int,
+) -> list[dict]:
+    scale = seed_mod.scale_factor(catalog, seed)
+    prepared: list[dict] = []
+    for entry in entries:
+        img = Image.open(sprites_dir / entry["file"]).convert("RGBA")
+        if entry["glyph_id"] in catalog["scalable"]:
+            nw = seed_mod.scaled_dim(img.width, scale)
+            nh = seed_mod.scaled_dim(img.height, scale)
+            img = resize_nearest(img, nw, nh)
+        cw, ch = img.size
+        prepared.append(
+            {
+                "glyph_id": entry["glyph_id"],
+                "frame": entry["frame"],
+                "rotate": entry["rotate"],
+                "content_w": cw,
+                "content_h": ch,
+                "padded_w": cw + 2 * pad,
+                "padded_h": ch + 2 * pad,
+                "image": img,
+            }
+        )
+    prepared.sort(key=lambda s: (s["glyph_id"], s["frame"]))
+    return prepared

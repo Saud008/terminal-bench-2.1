@@ -1,0 +1,3 @@
+{"seq":1,"op":"XADD","stream":"jobs","id":"3000-0","timestamp_ms":3000,"fields":{"job":"x"}}
+{"seq":2,"op":"XREADGROUP","stream":"jobs","group":"g1","consumer":"slow","ids":["3000-0"],"timestamp_ms":3000}
+{"seq":3,"op":"XAUTOCLAIM","stream":"jobs","group":"g1","consumer":"fast","min_idle_ms":5000,"timestamp_ms":8000,"count":10}

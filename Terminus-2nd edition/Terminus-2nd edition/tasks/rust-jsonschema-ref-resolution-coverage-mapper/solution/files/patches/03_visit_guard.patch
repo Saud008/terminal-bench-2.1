@@ -1,0 +1,33 @@
+--- environment/crates/visit_guard/src/lib.rs
++++ solution/oracle/golden/crates/visit_guard/src/lib.rs
+@@ -2,7 +2,7 @@
+ 
+ #[derive(Debug, Default)]
+ pub struct VisitGuard {
+-    seen: BTreeSet<String>,
++    seen: BTreeSet<(String, String)>,
+ }
+ 
+ impl VisitGuard {
+@@ -10,15 +10,16 @@
+         Self::default()
+     }
+ 
+-    pub fn enter(&mut self, doc_id: &str, _pointer: &str) -> bool {
+-        if self.seen.contains(doc_id) {
++    pub fn enter(&mut self, doc_id: &str, pointer: &str) -> bool {
++        let key = (doc_id.to_string(), pointer.to_string());
++        if self.seen.contains(&key) {
+             return false;
+         }
+-        self.seen.insert(doc_id.to_string());
++        self.seen.insert(key);
+         true
+     }
+ 
+-    pub fn leave(&mut self, doc_id: &str, _pointer: &str) {
+-        self.seen.remove(doc_id);
++    pub fn leave(&mut self, doc_id: &str, pointer: &str) {
++        self.seen.remove(&(doc_id.to_string(), pointer.to_string()));
+     }
+ }

@@ -1,0 +1,30 @@
+{
+  "scenario_name": "dataset-pin-mismatch",
+  "experiment_id": "exp-tab",
+  "focus_run_id": "run-tabular",
+  "dataset_manifests": {
+    "house-prices": {
+      "version_hash": "hp-manifest-11",
+      "row_count": 1460
+    },
+    "house-prices-augmented": {
+      "version_hash": "hp-aug-22",
+      "row_count": 2920
+    }
+  },
+  "runs": [
+    {
+      "run_id": "run-tabular",
+      "parent_run_id": "",
+      "params": {"solver": "lbfgs"},
+      "metrics": [
+        {"key": "rmse", "step": 1, "value": 0.14, "epoch": 1}
+      ],
+      "artifacts": [],
+      "dataset_pins": [
+        {"name": "house-prices", "version_hash": "hp-wrong-pin"},
+        {"name": "house-prices-augmented", "version_hash": "hp-aug-22"}
+      ]
+    }
+  ]
+}

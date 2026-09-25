@@ -1,0 +1,92 @@
+{
+  "oracle_frontier": [
+    {
+      "path": "internal/scenpair/scenario_bind.go",
+      "fix_symbols": ["LoadPair"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/routewin/pick_tier.go",
+      "fix_symbols": ["RouteScore", "SelectWinningRoutes"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/epwscale/scale_slice.go",
+      "fix_symbols": ["WeightScale", "NormalizeEndpoints"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/lischain/tier_sort.go",
+      "fix_symbols": ["OrderFilters"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/secbind/ref_bind.go",
+      "fix_symbols": ["CanonicalSecretID", "ResolveSecrets"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/sealio/persist_stage.go",
+      "fix_symbols": ["WriteStage", "ReadStage", "computeDigest"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/chgledger/emit_chg.go",
+      "fix_symbols": ["Emit", "buildChanges", "reportDigest"],
+      "co_resident_helpers": ["readSnapshot", "routeMap", "writeReport"],
+      "allowed_top_level_symbols": []
+    }
+  ],
+  "flipping_point_contract": {
+    "concentration_cap": 0.5,
+    "locations": [
+      {
+        "id": "cli",
+        "path": "cmd/xsnapctl/main.go",
+        "controls_tests": [
+          "test_xsnapctl_staging_digest_on_pair_load",
+          "test_xsnapctl_publish_blocked_before_canonicalize"
+        ]
+      },
+      {
+        "id": "staging",
+        "path": "internal/sealio/persist_stage.go",
+        "controls_tests": [
+          "test_xsnapctl_scenario_seal_digest",
+          "test_xsnapctl_staging_digest_on_pair_load"
+        ]
+      },
+      {
+        "id": "canonical",
+        "path": "internal/normalizepass/normalize_core.go",
+        "controls_tests": [
+          "test_xsnapctl_canonicalize_bumps_revision",
+          "test_xsnapctl_cluster_endpoint_weights_sum_hundred"
+        ]
+      },
+      {
+        "id": "export",
+        "path": "internal/chgledger/emit_chg.go",
+        "controls_tests": [
+          "test_xsnapctl_diff_report_matches_refmath",
+          "test_xsnapctl_idempotent_publish_bytes"
+        ]
+      }
+    ]
+  },
+  "symbol_table": [
+    {"opaque": "scenpair.LoadPair", "role": "pair ingest"},
+    {"opaque": "routewin.SelectWinningRoutes", "role": "precedence collapse"},
+    {"opaque": "epwscale.NormalizeEndpoints", "role": "weight scaling"},
+    {"opaque": "lischain.OrderFilters", "role": "filter ordering"},
+    {"opaque": "secbind.ResolveSecrets", "role": "sds canonicalization"},
+    {"opaque": "sealio.computeDigest", "role": "staging digest"},
+    {"opaque": "chgledger.Emit", "role": "diff export"}
+  ]
+}

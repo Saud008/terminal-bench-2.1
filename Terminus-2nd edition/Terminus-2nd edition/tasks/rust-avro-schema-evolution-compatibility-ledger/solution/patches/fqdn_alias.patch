@@ -1,0 +1,31 @@
+--- environment/crates/fqdn_alias/src/lib.rs	2026-07-05 06:57:10.265633100 +0000
++++ solution/oracle/golden/crates/fqdn_alias/src/lib.rs	2026-07-05 06:57:11.008505800 +0000
+@@ -1,16 +1,14 @@
+ use avsc_json::{full_name, AvroSchema};
+ 
+ pub fn resolve_type_name(writer: &AvroSchema, reader: &AvroSchema, ref_name: &str) -> bool {
+-    let writer_full = full_name(writer);
+-    let reader_full = full_name(reader);
+-    if ref_name == writer_full || ref_name == reader_full {
++    if ref_name == full_name(writer) || ref_name == full_name(reader) {
+         return true;
+     }
+-    if writer.aliases.iter().any(|a| a == ref_name) {
+-        return reader_full.ends_with(&writer.name);
++    if reader.aliases.iter().any(|a| a == ref_name) && reader.name == writer.name {
++        return true;
+     }
+-    if reader.aliases.iter().any(|a| a == ref_name) {
+-        return writer_full.ends_with(&reader.name);
++    if writer.aliases.iter().any(|a| a == ref_name) && reader.name == writer.name {
++        return true;
+     }
+     false
+ }
+@@ -21,5 +19,5 @@
+     }
+     let af = full_name(a);
+     let bf = full_name(b);
+-    b.aliases.contains(&af) || a.aliases.contains(&bf)
++    b.aliases.contains(&af) || a.aliases.contains(&bf) || af == bf
+ }

@@ -1,0 +1,16 @@
+﻿--- lib/boltlane/atlas_emit/publish_rollout_atlas.sh
++++ lib/boltlane/atlas_emit/publish_rollout_atlas.sh
+@@ -1,5 +1,4 @@
+ #!/usr/bin/env bash
+-# Baseline publish hashes digest lines in ledger order without sorting first.
+ set -euo pipefail
+ 
+ RUN_ID=""
+@@ -30,6 +29,7 @@
+     lines.append(f'{row["adapter_id"]}|{row["mac"]}|true||{row["rank"]}')
+ for row in ineligible:
+     lines.append(f'{row["adapter_id"]}|{row["mac"]}|false|{row["reason"]}|')
++lines.sort()
+ 
+ payload = "\n".join(lines)
+ digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()

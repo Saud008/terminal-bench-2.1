@@ -1,0 +1,11 @@
+--- a/internal/faceutil/capacity_margin.go
++++ b/internal/faceutil/capacity_margin.go
+@@ -3,7 +3,7 @@
+ import "github.com/terminus/whslot/internal/whmodel"
+ 
+ func EffectiveCapacity(slot whmodel.Slot, pol whmodel.Policies) int {
+-	return slot.CapacityUnits
++	return slot.CapacityUnits - pol.HeadroomMargin
+ }
+ 
+ func UnitsNeeded(sku whmodel.SKU, pol whmodel.Policies, effectiveCap int) int {

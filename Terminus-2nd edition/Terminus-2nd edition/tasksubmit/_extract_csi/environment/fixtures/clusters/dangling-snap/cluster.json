@@ -1,0 +1,72 @@
+{
+  "audit_clock_ms": 1707781330971,
+  "default_retention_days": 30,
+  "pvcs": [
+    {
+      "namespace": "ns-dangli",
+      "name": "pvc-625",
+      "storage_class_name": "sc-fast",
+      "requested_bytes": 10000000
+    },
+    {
+      "namespace": "ns-dangli",
+      "name": "pvc-1884",
+      "storage_class_name": "sc-slow",
+      "requested_bytes": 20000000
+    }
+  ],
+  "snapshots": [
+    {
+      "uid": "snap-dangling-snap-a",
+      "namespace": "ns-dangli",
+      "name": "snap-a",
+      "source_pvc": "pvc-625",
+      "restore_size_bytes": 4284040,
+      "deletion_policy": "Delete",
+      "creation_clock_ms": 1700005330971
+    },
+    {
+      "uid": "snap-dangling-snap-b",
+      "namespace": "ns-dangli",
+      "name": "snap-b",
+      "source_pvc": "pvc-1884",
+      "restore_size_bytes": 4844211,
+      "deletion_policy": "Delete",
+      "creation_clock_ms": 1700091730971
+    },
+    {
+      "uid": "snap-dangling-snap-orphan",
+      "namespace": "ns-dangli",
+      "name": "snap-orphan",
+      "source_pvc": "missing-pvc",
+      "restore_size_bytes": 1000000,
+      "deletion_policy": "Delete",
+      "creation_clock_ms": 1707349330971
+    }
+  ],
+  "storage_classes": [
+    {
+      "name": "sc-fast",
+      "retention_days": 7
+    },
+    {
+      "name": "sc-slow",
+      "retention_days": 60
+    }
+  ],
+  "backup_policies": [
+    {
+      "name": "default-backup",
+      "priority": 10,
+      "retention_days": 14,
+      "namespace_selector": ""
+    }
+  ],
+  "quotas": [
+    {
+      "namespace": "ns-dangli",
+      "max_snapshot_bytes": 50000000,
+      "used_snapshot_bytes": 0
+    }
+  ]
+}

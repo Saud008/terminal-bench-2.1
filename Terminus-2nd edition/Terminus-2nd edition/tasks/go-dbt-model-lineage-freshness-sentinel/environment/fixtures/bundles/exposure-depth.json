@@ -1,0 +1,38 @@
+{
+  "bundle_name": "exposure-depth",
+  "generated_at": "2026-03-15T06:00:00Z",
+  "evaluated_at": "2026-03-15T07:00:00Z",
+  "models": [
+    {
+      "unique_id": "model.analytics.base_a",
+      "depends_on": [],
+      "enabled": true,
+      "last_built_at": "2026-03-15T06:10:00Z"
+    },
+    {
+      "unique_id": "model.analytics.base_b",
+      "depends_on": [
+        "model.analytics.base_a"
+      ],
+      "enabled": true,
+      "last_built_at": "2026-03-15T06:20:00Z"
+    },
+    {
+      "unique_id": "model.analytics.publish",
+      "depends_on": [
+        "model.analytics.base_b"
+      ],
+      "enabled": true,
+      "last_built_at": "2026-03-15T06:30:00Z"
+    }
+  ],
+  "sources": [],
+  "exposures": [
+    {
+      "unique_id": "exposure.analytics.publish_view",
+      "depends_on": [
+        "model.analytics.publish"
+      ]
+    }
+  ]
+}

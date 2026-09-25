@@ -1,0 +1,41 @@
+--- a/walk_parent/chain_walk.rs
++++ b/walk_parent/chain_walk.rs
+@@ -4,12 +4,11 @@
+     if chain.is_empty() {
+         return Err("empty standard chain".into());
+     }
+-    let mut current = chain[0].std_id.clone();
+-    for link in chain.iter().skip(1) {
+-        if link.parent_std.as_deref() == Some(&current) {
+-            current = link.std_id.clone();
++    for link in chain {
++        if link.parent_std.is_none() {
++            return Ok(link.std_id.clone());
+         }
+     }
+-    Ok(current)
++    Err("no trace root".into())
+ }
+ 
+ pub fn chain_complete(chain: &[StandardLink]) -> bool {
+@@ -17,12 +16,17 @@
+     if chain.is_empty() {
+         return false;
+     }
+-    let mut parent: Option<&str> = None;
+-    for link in chain {
+-        if link.parent_std.as_deref() != parent {
++    let mut prev_id: Option<&str> = None;
++    for (i, link) in chain.iter().enumerate() {
++        if i == 0 {
++            if link.parent_std.is_some() {
++                return false;
++            }
++        } else if link.parent_std.as_deref() != prev_id {
+             return false;
+         }
+-        parent = Some(&link.std_id);
++        prev_id = Some(&link.std_id);
+     }
+     true
+ }

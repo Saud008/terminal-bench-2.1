@@ -1,0 +1,38 @@
+--- environment/internal/entrystamp/stay.go
++++ environment/internal/entrystamp/stay.go
+@@ -15,7 +15,6 @@
+ 	return int(end.Sub(start).Hours()/24) + 1
+ }
+ 
+-// CumulativeStayDays sums stamp durations through reference_date.
+ func CumulativeStayDays(reference string, stamps []StampRow, graceDays int) (int, error) {
+ 	ref, err := parseDay(reference)
+ 	if err != nil {
+@@ -30,17 +29,17 @@
+ 		if entry.After(ref) {
+ 			continue
+ 		}
+-		if st.ExitDate == "" {
+-			continue
++		end := ref
++		if st.ExitDate != "" {
++			exit, err := parseDay(st.ExitDate)
++			if err != nil {
++				return 0, err
++			}
++			if exit.Before(ref) {
++				end = exit
++			}
+ 		}
+-		exit, err := parseDay(st.ExitDate)
+-		if err != nil {
+-			return 0, err
+-		}
+-		if exit.After(ref) {
+-			exit = ref
+-		}
+-		total += daysInclusive(entry, exit)
++		total += daysInclusive(entry, end)
+ 	}
+ 	_ = graceDays
+ 	return total, nil

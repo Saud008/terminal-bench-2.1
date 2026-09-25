@@ -1,0 +1,12 @@
+--- a/matrix_limits/band.rs
++++ b/matrix_limits/band.rs
+@@ -6,8 +6,9 @@
+         .map(|r| {
+             let band = r.tol_plus.max(r.tol_minus);
+             let deviation = (r.value - r.nominal).abs();
+-            let within = deviation <= band;
++            let within = r.value <= r.nominal + r.tol_plus
++                && r.value >= r.nominal - r.tol_minus;
+             (r.channel.clone(), within, deviation)
+         })
+         .collect()

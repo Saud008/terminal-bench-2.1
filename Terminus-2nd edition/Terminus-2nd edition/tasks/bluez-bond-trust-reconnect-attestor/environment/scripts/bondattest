@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BONDATTEST_LIB="${BONDATTEST_LIB:-/app/lib}"
+source "${BONDATTEST_LIB}/common.sh"
+
+usage() {
+  echo "usage: bondattest absorb --trace PATH --config PATH --seed SEED [--midstate PATH]" >&2
+  echo "       bondattest seal [--midstate PATH] [--bundle PATH]" >&2
+  exit 1
+}
+
+cmd="${1:-}"; shift || usage
+case "$cmd" in
+  absorb)
+    trace="" config="" seed="" midstate="${DEFAULT_MIDSTATE_PATH}"
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --trace) trace="$2"; shift 2 ;;
+        --config) config="$2"; shift 2 ;;
+        --seed) seed="$2"; shift 2 ;;
+        --midstate) midstate="$2"; shift 2 ;;
+        *) usage ;;
+      esac
+    done
+    [[ -n "$trace" && -n "$config" && -n "$seed" ]] || usage
+    source "${BONDATTEST_LIB}/intake/pipeline.sh"
+    run_absorb "$trace" "$config" "$seed" "$midstate"
+    ;;
+  seal)
+    midstate="${DEFAULT_MIDSTATE_PATH}"
+    bundle="${DEFAULT_BUNDLE_PATH}"
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --midstate) midstate="$2"; shift 2 ;;
+        --bundle) bundle="$2"; shift 2 ;;
+        *) usage ;;
+      esac
+    done
+    source "${BONDATTEST_LIB}/finish/bundle_emit.sh"
+    run_seal "$midstate" "$bundle"
+    ;;
+  *) usage ;;
+esac

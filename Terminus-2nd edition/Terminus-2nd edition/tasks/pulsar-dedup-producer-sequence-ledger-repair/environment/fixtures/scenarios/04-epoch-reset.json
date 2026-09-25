@@ -1,0 +1,15 @@
+{
+  "tenant": "delta",
+  "dedup_window": 2,
+  "streams": [
+    {"producer": "epoch-w", "topic": "wal", "epoch": 1}
+  ],
+  "events": [
+    {"producer": "epoch-w", "topic": "wal", "epoch": 1, "sequence": 1, "msg_id": "w1", "batch_id": "b1", "broker_ack": true},
+    {"producer": "epoch-w", "topic": "wal", "epoch": 1, "sequence": 2, "msg_id": "w2", "batch_id": "b1", "broker_ack": true},
+    {"producer": "epoch-w", "topic": "wal", "epoch": 1, "sequence": 3, "msg_id": "w3", "batch_id": "b2", "broker_ack": true},
+    {"producer": "epoch-w", "topic": "wal", "epoch": 1, "sequence": 1, "msg_id": "bad-reset", "batch_id": "b3", "broker_ack": true},
+    {"producer": "epoch-w", "topic": "wal", "epoch": 2, "sequence": 1, "msg_id": "good-reset", "batch_id": "b4", "broker_ack": true},
+    {"producer": "epoch-w", "topic": "wal", "epoch": 2, "sequence": 2, "msg_id": "w4", "batch_id": "b4", "broker_ack": true}
+  ]
+}

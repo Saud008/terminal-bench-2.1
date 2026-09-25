@@ -1,0 +1,23 @@
+{
+  "mesh_id": "mesh-hidden-deadline-reconnect-trap",
+  "survey_id": "SURVEY0012345678",
+  "deadline_ms": 6000,
+  "default_ttl_ms": 2500,
+  "topology": {
+    "kind": "star",
+    "hub": "surveyor",
+    "edges": [
+      ["surveyor", "r1"],
+      ["surveyor", "r2"]
+    ]
+  },
+  "events": [
+    {"offset_ms": 0, "type": "start"},
+    {"offset_ms": 2200, "type": "reconnect", "respondent": "r2"},
+    {"offset_ms": 3000, "type": "ballot", "respondent": "r1", "vote": 6, "header_hex": "4e5353555256455930303132333435363738"},
+    {"offset_ms": 3100, "type": "pipe_drained", "respondent": "r1"},
+    {"offset_ms": 4500, "type": "ballot", "respondent": "r2", "vote": 8, "header_hex": "4e5353555256455930303132333435363738"},
+    {"offset_ms": 6000, "type": "deadline"},
+    {"offset_ms": 6100, "type": "close"}
+  ]
+}

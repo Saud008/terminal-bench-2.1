@@ -1,0 +1,11 @@
+--- environment/crates/ledger_ingest/src/lib.rs	2026-07-05 06:57:10.364692900 +0000
++++ solution/oracle/golden/crates/ledger_ingest/src/lib.rs	2026-07-05 06:57:11.296882000 +0000
+@@ -26,7 +26,7 @@
+         let reader = schema_root.join(&spec.reader);
+         rows.push(evaluate_pair(&spec.subject, &writer, &reader)?);
+     }
+-    rows.sort_by(|a, b| a.reader_path.cmp(&b.reader_path));
++    rows.sort_by(|a, b| a.subject.cmp(&b.subject));
+     let body: Vec<String> = rows
+         .into_iter()
+         .map(|r| serde_json::to_string(&r).map_err(|e| e.to_string()))

@@ -1,0 +1,11 @@
+--- internal/dirauth/acl/scope_match.sh
++++ internal/dirauth/acl/scope_match.sh
+@@ -37,7 +37,7 @@
+   case "$scope" in
+     entry) [[ "$entry" == "$ace_target" ]] ;;
+     one) [[ "$entry" == "$ace_target" ]] || is_direct_child_dn "$ace_target" "$entry" ;;
+-    subtree) is_child_dn "$ace_target" "$entry" ;;
++    subtree) [[ "$entry" == "$ace_target" ]] || is_child_dn "$ace_target" "$entry" ;;
+     *) return 1 ;;
+   esac
+ }

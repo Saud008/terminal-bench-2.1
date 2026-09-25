@@ -1,0 +1,12 @@
+--- a/budget_rss/combine.rs
++++ b/budget_rss/combine.rs
+@@ -1,7 +1,8 @@
+ use lab_calibration_chain::chain_schema::UncertaintyComponent;
+ 
+ pub fn combined_standard(components: &[UncertaintyComponent]) -> f64 {
+-    components.iter().map(|c| c.value).sum()
++    let sum_sq: f64 = components.iter().map(|c| c.value * c.value).sum();
++    sum_sq.sqrt()
+ }
+ 
+ pub fn expanded_uncertainty(combined: f64, coverage_k: f64) -> f64 {

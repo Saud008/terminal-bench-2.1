@@ -1,0 +1,30 @@
+{
+  "name": "demo-suid",
+  "eapi": 8,
+  "entries": [
+    {
+      "type": "file",
+      "src": "files/bin/demosuid",
+      "dest": "usr/bin/demosuid",
+      "mode": "0755"
+    },
+    {
+      "type": "file",
+      "src": "files/share/demo.txt",
+      "dest": "usr/share/demo.txt",
+      "mode": "0644"
+    },
+    {
+      "type": "symlink",
+      "dest": "usr/share/demo-link",
+      "target": "files/share/demo.txt"
+    }
+  ],
+  "fperms": ["4755 usr/bin/demosuid"],
+  "dosbin_paths": ["usr/bin/demosuid"],
+  "src_test": {
+    "kind": "path_test",
+    "path": "usr/bin/demosuid",
+    "executable": true
+  }
+}

@@ -1,0 +1,10 @@
+--- internal/raidops/ranking/criticality_rank.sh	2026-07-16 16:45:59.567875200 +0000
++++ internal/raidops/ranking/criticality_rank.sh	2026-07-16 14:44:17.051549100 +0000
+@@ -3,6 +3,6 @@
+ python3 -c '
+ import json, sys
+ rows = json.loads(sys.stdin.read())
+-rows.sort(key=lambda r: r["name"])
++rows.sort(key=lambda r: (int(r["criticality"]), r["name"]))
+ json.dump(rows, sys.stdout)
+ '

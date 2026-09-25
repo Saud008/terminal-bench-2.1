@@ -1,0 +1,11 @@
+--- internal/dirauth/policy/attribute_gate.sh
++++ internal/dirauth/policy/attribute_gate.sh
+@@ -7,7 +7,7 @@
+   IFS=',' read -ra arr <<< "$ace_attrs"
+   for a in "${arr[@]}"; do
+     a="$(echo "$a" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+-    :
++    [[ "$a" == "*" ]] && return 0
+     [[ "$(echo "$a" | tr '[:upper:]' '[:lower:]')" == "$(echo "$requested" | tr '[:upper:]' '[:lower:]')" ]] && return 0
+   done
+   return 1

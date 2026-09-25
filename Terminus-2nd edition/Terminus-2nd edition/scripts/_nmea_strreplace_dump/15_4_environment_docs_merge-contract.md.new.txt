@@ -1,0 +1,3 @@
+- Pending fragments merge in **ascending message-number order** (field index 1), even when the earlier run stored them in stream order.
+- When pending fragments from a saved session merge with new multipart lines for the same merge group, duplicate message numbers (field index 1) resolve by keeping the fragment that arrived **later** in the combined pending-plus-input sequence. Earlier stored fragments with the same message number are discarded before merge.
+- `rmc_date` / `rmc_time` persist across runs. Time-only sentences in a later input without an in-file RMC still attach UTC using the saved context.

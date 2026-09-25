@@ -1,0 +1,13 @@
+--- a/gate_operator/authorize.rs
++++ b/gate_operator/authorize.rs
+@@ -1,5 +1,8 @@
+ use crate::chain_schema::Technician;
+ 
+-pub fn technician_authorized(tech: &Technician, _instrument_id: &str, as_of: &str) -> bool {
+-    tech.qual_expires.as_str() >= as_of
++pub fn technician_authorized(tech: &Technician, instrument_id: &str, as_of: &str) -> bool {
++    if tech.qual_expires.as_str() < as_of {
++        return false;
++    }
++    tech.scope_instruments.iter().any(|s| s == instrument_id)
+ }

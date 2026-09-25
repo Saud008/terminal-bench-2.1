@@ -1,0 +1,157 @@
+--- internal/daycount/conventions.go	2026-07-09 16:45:11.364131100 +0000
++++ ../solution/files/oracle_daycount.go	2026-07-09 16:45:11.877200200 +0000
+@@ -11,7 +11,7 @@
+ 	switch convention {
+ 	case "ACT/360":
+ 		days := end.Sub(start).Hours() / 24
+-		return days / 365.0
++		return days / 360.0
+ 	case "30/360":
+ 		return thirt360(start, end)
+ 	case "ACT/ACT":
+--- internal/persist/store.go	2026-07-09 16:45:11.511829100 +0000
++++ ../solution/files/oracle_persist.go	2026-07-09 16:45:11.939012200 +0000
+@@ -93,7 +93,7 @@
+ 	if g.Scenario != scenario {
+ 		return fmt.Errorf("pass gate scenario mismatch")
+ 	}
+-	if g.AccrualPass <= 1 {
++	if g.AccrualPass < 2 {
+ 		return fmt.Errorf("accrual_pass not advanced")
+ 	}
+ 	return nil
+--- internal/calendar/business.go	2026-07-09 16:45:11.333396400 +0000
++++ ../solution/files/oracle_calendar.go	2026-07-09 16:45:11.842195400 +0000
+@@ -63,6 +63,16 @@
+ 	if IsBusinessDay(d, holidays) {
+ 		return d
+ 	}
+-	// Non-business dates pass through unchanged in baseline build.
+-	return d
++	fwd := d
++	for !IsBusinessDay(fwd, holidays) {
++		fwd = fwd.AddDate(0, 0, 1)
++	}
++	if modified && fwd.Month() != d.Month() {
++		back := d
++		for !IsBusinessDay(back, holidays) {
++			back = back.AddDate(0, 0, -1)
++		}
++		return back
++	}
++	return fwd
+ }
+--- internal/schedule/coupon_dates.go	2026-07-09 16:45:11.634590600 +0000
++++ ../solution/files/oracle_schedule.go	2026-07-09 16:45:11.987141900 +0000
+@@ -14,7 +14,19 @@
+ 	var out []time.Time
+ 	cur := issue
+ 	for cur.Before(maturity) {
+-		next := cur.AddDate(0, months, 0)
++		y, m, d := cur.Date()
++		nm := int(m) + months
++		ny := y
++		for nm > 12 {
++			nm -= 12
++			ny++
++		}
++		last := daysInMonth(ny, time.Month(nm))
++		day := d
++		if day > last {
++			day = last
++		}
++		next := time.Date(ny, time.Month(nm), day, 0, 0, 0, 0, time.UTC)
+ 		if !next.Before(maturity) {
+ 			break
+ 		}
+@@ -25,6 +37,10 @@
+ 	return out
+ }
+ 
++func daysInMonth(y int, m time.Month) int {
++	return time.Date(y, m+1, 0, 0, 0, 0, 0, time.UTC).Day()
++}
++
+ func PeriodContaining(settlement, issue time.Time, dates []time.Time) (start, end time.Time) {
+ 	if len(dates) == 0 {
+ 		return issue, settlement
+--- internal/exwindow/ex_coupon.go	2026-07-09 16:45:11.419795600 +0000
++++ ../solution/files/oracle_exwindow.go	2026-07-09 16:45:11.902493200 +0000
+@@ -5,10 +5,10 @@
+ )
+ 
+ func ExCouponDate(couponDate time.Time, exDays int) time.Time {
+-	return couponDate.AddDate(0, 0, -exDays+1)
++	return couponDate.AddDate(0, 0, -exDays)
+ }
+ 
+ func TradeInExWindow(tradeDate, couponDate time.Time, exDays int) bool {
+ 	ex := ExCouponDate(couponDate, exDays)
+-	return tradeDate.After(ex)
++	return !tradeDate.Before(ex)
+ }
+--- internal/trade/settlement.go	2026-07-09 16:45:11.664904700 +0000
++++ ../solution/files/oracle_trade.go	2026-07-09 16:45:12.008179000 +0000
+@@ -2,8 +2,10 @@
+ 
+ import (
+ 	"time"
++
++	"github.com/terminus/bondacc/internal/calendar"
+ )
+ 
+ func SettlementDate(tradeDate time.Time, lagBDays int, holidays map[string]struct{}) time.Time {
+-	return tradeDate.AddDate(0, 0, lagBDays)
++	return calendar.AddBusinessDays(tradeDate, lagBDays, holidays)
+ }
+--- internal/accrue/engine.go	2026-07-09 16:45:11.302404600 +0000
++++ ../solution/files/oracle_accrue.go	2026-07-09 16:45:11.805785200 +0000
+@@ -7,11 +7,12 @@
+ 	"github.com/terminus/bondacc/internal/exwindow"
+ 	"github.com/terminus/bondacc/internal/model"
+ 	"github.com/terminus/bondacc/internal/schedule"
++	"github.com/terminus/bondacc/internal/trade"
+ )
+ 
+-func ComputeRow(bond model.Bond, trade model.Trade, holidays map[string]struct{}, issue time.Time, couponDates []time.Time) model.AccrualRow {
+-	tradeDt := schedule.Parse(trade.TradeDate)
+-	settle := tradeDt
++func ComputeRow(bond model.Bond, tr model.Trade, holidays map[string]struct{}, issue time.Time, couponDates []time.Time) model.AccrualRow {
++	tradeDt := schedule.Parse(tr.TradeDate)
++	settle := trade.SettlementDate(tradeDt, tr.SettleLag, holidays)
+ 	periodStart, periodEnd := schedule.PeriodContaining(settle, issue, couponDates)
+ 	yf := daycount.YearFraction(periodStart, settle, bond.DayCount)
+ 	accrued := daycount.AccruedCents(bond.FaceCents, bond.CouponBPS, yf)
+@@ -20,7 +21,7 @@
+ 		accrued = 0
+ 	}
+ 	return model.AccrualRow{
+-		TradeID:        trade.TradeID,
++		TradeID:        tr.TradeID,
+ 		ISIN:           bond.ISIN,
+ 		PeriodStart:    periodStart.Format("2006-01-02"),
+ 		PeriodEnd:      periodEnd.Format("2006-01-02"),
+--- internal/publish/atlas.go	2026-07-09 16:45:11.598911200 +0000
++++ ../solution/files/oracle_publish.go	2026-07-09 16:45:11.965123100 +0000
+@@ -12,15 +12,16 @@
+ )
+ 
+ type Atlas struct {
+-	Scenario     string             `json:"scenario"`
+-	Rows         []model.AccrualRow `json:"rows"`
+-	AtlasDigest  string             `json:"atlas_digest"`
+-	Engine       string             `json:"engine"`
++	Scenario    string             `json:"scenario"`
++	Rows        []model.AccrualRow `json:"rows"`
++	AtlasDigest string             `json:"atlas_digest"`
++	Engine      string             `json:"engine"`
+ }
+ 
+ func BuildAtlas(scenario string, rows []model.AccrualRow) Atlas {
+ 	sort.Slice(rows, func(i, j int) bool { return rows[i].TradeID < rows[j].TradeID })
+-	sum := sha256.Sum256([]byte(scenario))
++	payload, _ := json.Marshal(rows)
++	sum := sha256.Sum256(payload)
+ 	return Atlas{
+ 		Scenario:    scenario,
+ 		Rows:        rows,

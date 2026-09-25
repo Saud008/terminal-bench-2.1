@@ -1,0 +1,15 @@
+--- environment/crates/branch_set/src/lib.rs	2026-07-05 06:57:10.301675500 +0000
++++ solution/oracle/golden/crates/branch_set/src/lib.rs	2026-07-05 06:57:11.125324800 +0000
+@@ -3,7 +3,11 @@
+ 
+ pub fn union_compatible(writer: &Value, reader: &Value) -> bool {
+     match (union_branches(writer), union_branches(reader)) {
+-        (Some(w), Some(r)) => w == r,
++        (Some(mut w), Some(mut r)) => {
++            w.sort();
++            r.sort();
++            w == r
++        }
+         (None, None) => true,
+         _ => false,
+     }

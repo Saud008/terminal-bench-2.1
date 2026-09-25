@@ -1,0 +1,12 @@
+stages:
+- test
+test:
+  stage: test
+  parallel:
+    matrix:
+    - OS: linux
+      ARCH: amd64
+    - ARCH: amd64
+      OS: linux
+  script:
+  - make test

@@ -1,0 +1,99 @@
+---
+description: Snorkel Welcome changelog (Jun 2026) — mapped to repo rules; gaps called out (additive)
+alwaysApply: false
+---
+
+# Terminus — Snorkel platform changelog sync (Welcome page)
+
+**Additive index.** Maps Snorkel **Welcome to Project Terminus** changelog entries to this repo’s LOCKED rules. On conflict between **Snorkel platform** and **Sanjana repo policy**, prefer **stricter** unless noted.
+
+**Supersedes for agents:** when a row says “additive wins”, use the additive `.mdc` over older `docker.io` examples in `_accepted-tasks/` (legacy corpus only).
+
+---
+
+## Latest platform policy (no submission-quota details)
+
+| Changelog | Repo coverage | Where |
+|-----------|---------------|--------|
+| **`debugging` and `software-engineering` categories blocked** for new submissions | **Yes** | `shared/task-toml-category-gate.mdc`; use `data-processing`, `build-and-dependency-management`, `security`, etc. |
+| **`allow_internet` static validation** — `false` + solve-time network need → submit fail | **Yes** | `shared/allow-internet-gate.mdc`; G-025 `revise/oracle-fix-g025-g027.mdc` |
+| **Task gallery** — inspirations tagged **Git**, **Requires Internet** | **Yes (ideas only)** | `ideas/generate-ideas.mdc` — filter gallery; set `allow_internet = true` only when contract requires live network |
+
+---
+
+## Jun 12, 2026
+
+| Changelog | Repo coverage | Where |
+|-----------|---------------|--------|
+| **Canonical 10 ECR base images** (Python, Node, Go, Rust, Java, Ruby, GCC, Maven, Debian, Ubuntu) | **Yes** | `shared/canonical-base-image-gate.mdc` (full digest table); upload form Yes/No + justification |
+| **Non-canonical allowed with credible justification** | **Yes** | Same file + `reviewer/common-errors-reference.mdc` |
+| **Difficulty models → Opus 4.8 + GPT-5.5**; thresholds unchanged | **Yes** | `shared/difficulty-benchmark-models.mdc`, `prompts/LOCKED.md`, `prompts/trivial.md` |
+| **Stronger models → recalibrate MEDIUM/HARD** | **Yes** | `difficulty-benchmark-models.mdc`, `revise/trivial-easy-difficulty-prompt-lock.mdc` |
+| **GPT-5.5 in EC CLI** | **Yes** | `difficulty-benchmark-models.mdc` (`stb harbor run -m @openai/gpt-5.5`) |
+
+**Corpus note:** Live `tasks/**/environment/Dockerfile` files use **Snorkel ECR** digests (`canonical-base-image-gate.mdc`). Re-run `scripts/migrate_dockerfile_canonical_ecr.py` after adding tasks with legacy `docker.io` `FROM` lines.
+
+---
+
+## Jun 3, 2026
+
+| Changelog | Repo coverage | Where |
+|-----------|---------------|--------|
+| **Common Errors — Environment Problems** + feedback categories | **Yes** | `reviewer/common-errors-reference.mdc` |
+| **test.sh: `rc=$?` preferred**; CI accepts **both** `if [ $? -eq 0 ]` and `if [ $rc -eq 0 ]` | **Yes** | `shared/test-sh-reward-block.mdc` |
+| **No trailing `exit` after reward `fi`** | **Yes** | `shared/runtime-verifier.mdc`, `reviewer/reviewer-checklist.mdc` |
+| **Rubric: milestone `# Rubric 1` headers**; flat list non-milestone | **Yes** | `reviewer/reviewer-checklist.mdc` (platform rubric in chat; no local `rubric.md`) |
+| **codebase_size = `minimal` re-allowed on platform** | **Partial — repo stricter** | Platform: CI allows `minimal`. **This repo:** new tasks still **`small` or `large` only** (`create/accepted-patterns.mdc`, `shared/spec.mdc`) unless user overrides |
+
+---
+
+## May 27, 2026 and earlier (still in force)
+
+| Topic | Coverage |
+|-------|----------|
+| Dockerfile CI blocks: digest pin, sanctioned final base, 100 MiB / 50 MiB | `shared/snorkel-dockerfile-image-best-practices.mdc`, `reviewer/ci-checks-reference.mdc`, `canonical-base-image-gate.mdc` |
+| `allow_internet = false`; no runtime installs in `test.sh` | `shared/runtime-verifier.mdc`, `common-errors-reference.mdc` |
+| No hidden hints in environment / spec loophole | `reviewer/reviewer-checklist.mdc`, `create/environment-no-ai-scaffolding.mdc` |
+| Milestone `steps/milestone_N/` layout | `create/creation-rules.mdc`, `shared/spec.mdc` |
+| No canary strings | `reviewer/reviewer-checklist.mdc` |
+| 4-step review: CI, LLMaJ, peer, agents (Opus 4.8 + GPT-5.5 ×5) | `difficulty-benchmark-models.mdc`, `verify/pre-zip-audit.mdc` |
+
+---
+
+## Sanjana repo policy (not in Snorkel changelog — still LOCKED)
+
+| Policy | Rule |
+|--------|------|
+| `subcategories = []` always | `shared/task-toml-subcategories-gate.mdc` |
+| No `category` = `debugging` or `software-engineering` (platform block + repo) | `shared/task-toml-category-gate.mdc` |
+| `allow_internet` must match offline solve reality | `shared/allow-internet-gate.mdc` |
+| No backticks in `instruction.md` | `shared/instruction-prose-style.mdc` |
+| TRIVIAL/EASY → `trivial.md` + `trivial-case-6.md` + `sp-hard-create-revise.md` | `revise/trivial-easy-difficulty-prompt-lock.mdc` |
+| Pack zip only via `./scripts/pack_zip.sh` | `zip/ZIP-RULES.mdc` |
+| `author_name` / `author_email` = `anonymous` | `shared/repo-workflow.mdc` |
+
+---
+
+## Welcome page difficulty table (unchanged thresholds)
+
+| Tier | Rule |
+|------|------|
+| **Hard** | Best ≤20% **or** worst ≤20% |
+| **Medium** | Worst >20% and ≤60% |
+| **Easy** | Worst >60% and ≤80% |
+| **Not accepted** | Worst **>80%** |
+
+Full detail: `shared/difficulty-benchmark-models.mdc`.
+
+---
+
+## Agent quick check before upload
+
+1. Final `FROM` = Snorkel ECR canonical? → form **Yes** (`canonical-base-image-gate.mdc`; auto-fix: `canonical-ecr-dockerfile-auto.mdc`)
+2. `subcategories = []`? (`task-toml-subcategories-gate.mdc`)
+3. `category` not `debugging` / `software-engineering`? (`task-toml-category-gate.mdc`)
+4. `allow_internet = false` and no solve-time network need? (`allow-internet-gate.mdc`; `rg` solution/)
+5. `instruction.md` no backticks? (`instruction-prose-style.mdc`)
+6. `test.sh` reward block per `test-sh-reward-block.mdc`
+7. Oracle **1**, NOP **0**
+8. If EASY/TRIVIAL → trivial **trio** before resubmit

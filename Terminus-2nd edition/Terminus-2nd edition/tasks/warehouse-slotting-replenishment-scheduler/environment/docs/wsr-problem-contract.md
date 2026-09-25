@@ -1,0 +1,1 @@
+Warehouse slotting transforms velocity and capacity signals into wave tasks, binds crew shift windows through the whslot pipeline, and publishes a replen schedule atlas with stable task_key rows across repeated wave planning.

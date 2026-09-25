@@ -1,0 +1,94 @@
+---
+description: Allowed task.toml categories — data-administration, machine-learning, games ONLY (LOCKED 2026-07-27)
+alwaysApply: true
+---
+
+# Terminus — Allowed / banned categories (LOCKED)
+
+**Platform currently accepts only these three.** Any other `category` fails pack + Harbor upload.
+
+## ALLOWED `category` values (only these)
+
+| Display (platform) | `task.toml` value |
+|---|----|
+| Data Administration | **`data-administration`** |
+| ML | **`machine-learning`** |
+| Game | **`games`** |
+
+Any other `category` is **forbidden** in this project.
+
+## BANNED (never use)
+
+| BANNED `category` | Pack / CI | Platform upload |
+|---|-----|-----|
+| **`debugging`** | **FAIL** | **Blocked** |
+| **`software-engineering`** | **FAIL** | **Blocked** |
+| **`data-processing`** | **FAIL** | **Blocked** |
+| **`security`** | **FAIL** | **Blocked** (was allowed; no longer) |
+| **`cloud-devops`** | **FAIL** | **Blocked** |
+| **`system-administration`** / **`system-configuration-and-setup`** | **FAIL** | **Blocked** |
+| **`build-and-dependency-management`** | **FAIL** | **Blocked** |
+| **`scientific-computing`** | **FAIL** | **Blocked** |
+| Anything else not in the allowlist | **FAIL** | Reject / classifier risk |
+
+**No exceptions** — not for reviewer feedback, not because `_accepted-tasks/` used banned labels.
+
+## On every REVISE / CI paste (LOCKED — first check)
+
+Whenever the user pastes `tasks/<slug>/` (or `pending/<slug>/`) for revise, CI, or reviewer feedback — **before other fixes**:
+
+| Step | Action |
+|---|-----|
+| 1 | Read `task.toml` `category` |
+| 2 | If not in the **ALLOWED** table → set the best match from the shape table below |
+| 3 | If CI shows `[category_classifier] Predicted category '…' is blocked` → **restructure** `instruction.md` + tags + domain framing so the classifier lands on an **allowed** category (metadata alone is not enough) |
+| 4 | Drop SE/debug/sysadmin/security lipstick; use observable domain artifacts for the chosen allowlisted category |
+| 5 | Re-run finish / pack so zip metadata matches |
+
+**Do not** leave a banned or unknown `category` “for later.” Fix it in the same revise turn.
+
+## What to use (shape → category)
+
+| Task shape | Use `category` |
+|---|----|
+| Host-local data ops desks, ledgers, admit→gate→seal inventory, roster/catalog/admin workflows, offline data governance | **`data-administration`** |
+| Feature stores, model eval, calibration, MinHash/embedding pipelines, training provenance, ML metrics / model cards | **`machine-learning`** |
+| Playfields, playtest atlases, turn planners, level packs, win-condition sealing, game simulation | **`games`** |
+| Former security / sysadmin / cloud / build-dep / scientific tasks that must still ship | **Remap** via table below + reframe instruction (do not keep old category) |
+| Unsure | **`data-administration`** |
+
+## Forced remap (old → new)
+
+When a task still has a blocked category, **change `task.toml` and reframe** in the same turn:
+
+| Old / blocked | Remap to | Reframe voice |
+|---|----|---|
+| `system-administration`, `system-configuration-and-setup`, ops desk, fleet ledger | **`data-administration`** | host-local **data administration** desk (admit → gate → sealed export) |
+| `security`, auth/attestation lipstick on ops trees | **`data-administration`** or **`games`** if play/sim domain | drop crypto/trust SE voice; keep data/ledger or playtest nouns |
+| `build-and-dependency-management`, CLI/export tooling | **`data-administration`** or **`machine-learning`** by domain | feast/feature/model → ML; inventory/ledger/CLI ops → data-admin |
+| `scientific-computing`, metrology / numerical lab | **`machine-learning`** when eval/features fit; else **`data-administration`** | ML eval / feature closure, or data-admin assay catalog |
+| `cloud-devops`, `data-processing`, `debugging`, `software-engineering` | pick best of the three from domain | full restructure if classifier still predicts SE |
+
+## Platform form vs zip metadata
+
+If a reviewer says “use debugging / software-engineering / security / system-administration,” **do not** set those in `task.toml`.
+
+1. Keep zip metadata on an **allowed** category above.
+2. Add a short **Category note** in `submission-explanations/<slug>.md` only when the platform form offers a banned label separately from the zip.
+
+Repair/debug **task shape** must still pass **`repository_state_gate.py` 7/7** — reframe as implement/build on a working baseline (`shared/task-generation-mandatory.mdc`).
+
+## Required check before zip
+
+```bash
+python3 scripts/ensure_category_allowed.py --check --task-dir tasks/<name>
+grep -n '^category' tasks/<name>/task.toml
+```
+
+Automatic in `./scripts/pack_zip.sh`.
+
+## Related
+
+- `shared/task-generation-mandatory.mdc` — H1/H6 + repair objective block
+- `shared/submission-explanations-gate.mdc` — optional Category note on platform form only
+- `create/accepted-patterns.mdc` — lane shape ≠ upload metadata

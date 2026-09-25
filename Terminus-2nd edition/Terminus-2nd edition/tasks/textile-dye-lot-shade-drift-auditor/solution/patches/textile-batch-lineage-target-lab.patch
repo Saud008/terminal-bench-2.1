@@ -1,0 +1,16 @@
+--- a/lib/xk7r/b04/fc04.sh
++++ b/lib/xk7r/b04/fc04.sh
+@@ -2,8 +2,16 @@
+ set -euo pipefail
+ resolve_target_lab() {
+   local batches_json="$1"
+   local batch_id="$2"
+-  echo "$batches_json" | jq -c --arg b "$batch_id" '.batches[] | select(.batch_id == $b) | .target_lab'
++  local cur="$batch_id"
++  while [[ -n "$cur" && "$cur" != "null" ]]; do
++    tl=$(echo "$batches_json" | jq -c --arg b "$cur" '.batches[] | select(.batch_id == $b) | .target_lab')
++    if [[ "$tl" != "null" ]]; then echo "$tl"; return; fi
++    cur=$(echo "$batches_json" | jq -r --arg b "$cur" '.batches[] | select(.batch_id == $b) | .parent_batch_id // empty')
++  done
++  echo "null"
+ }

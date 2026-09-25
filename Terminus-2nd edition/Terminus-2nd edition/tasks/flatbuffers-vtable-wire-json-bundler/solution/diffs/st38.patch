@@ -1,0 +1,13 @@
+--- a/src/st38.rs
++++ b/src/st38.rs
+@@ -29,8 +29,8 @@
+ fn read_vec3_inline(buf: &[u8], table: usize) -> Result<Vec3Json> {
+     let field = vtable_field_abs(buf, table, ENTITY_POSITION_SLOT)?;
+     Ok(Vec3Json {
+-        x: read_f32(buf, field + 4)?,
+-        y: read_f32(buf, field)?,
++        x: read_f32(buf, field)?,
++        y: read_f32(buf, field + 4)?,
+         z: read_f32(buf, field + 8)?,
+     })
+ }

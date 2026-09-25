@@ -1,0 +1,72 @@
+--- internal/epwscale/scale_slice.go
++++ internal/epwscale/scale_slice.go
+@@ -1,13 +1,26 @@
+ package epwscale
+ 
+-import "github.com/terminus/xsnapctl/internal/model"
++import (
++    "os"
++    "sort"
++    "strconv"
++
++    "github.com/terminus/xsnapctl/internal/model"
++)
++
++const DefaultScale = 100
+ 
+ func WeightScale() int {
+-    return 100
++    if raw := os.Getenv("TB3_WEIGHT_SCALE"); raw != "" {
++        if v, err := strconv.Atoi(raw); err == nil && v > 0 {
++            return v
++        }
++    }
++    return DefaultScale
+ }
+ 
+-// NormalizeEndpoints scales endpoint weights to integers summing to scale.
+ func NormalizeEndpoints(endpoints []model.Endpoint) []model.Endpoint {
++    scale := WeightScale()
+     if len(endpoints) == 0 {
+         return endpoints
+     }
+@@ -18,12 +31,34 @@
+     if total == 0 {
+         return endpoints
+     }
+-    out := make([]model.Endpoint, len(endpoints))
++    type item struct {
++        host string
++        raw  float64
++        base int
++    }
++    items := make([]item, len(endpoints))
++    sum := 0
+     for i, ep := range endpoints {
+-        out[i] = model.Endpoint{
+-            Host:   ep.Host,
+-            Weight: (ep.Weight * WeightScale()) / total,
+-        }
++        raw := float64(scale*ep.Weight) / float64(total)
++        base := int(raw)
++        items[i] = item{host: ep.Host, raw: raw, base: base}
++        sum += base
++    }
++    rem := scale - sum
++    order := make([]int, len(items))
++    for i := range order {
++        order[i] = i
++    }
++    sort.Slice(order, func(i, j int) bool {
++        return items[order[i]].raw-float64(items[order[i]].base) >
++            items[order[j]].raw-float64(items[order[j]].base)
++    })
++    for i := 0; i < rem && i < len(order); i++ {
++        items[order[i]].base++
++    }
++    out := make([]model.Endpoint, len(items))
++    for i, it := range items {
++        out[i] = model.Endpoint{Host: it.host, Weight: it.base}
+     }
+     return out
+ }

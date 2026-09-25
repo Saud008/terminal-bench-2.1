@@ -1,0 +1,15 @@
+--- ${APP_ROOT:-/app}/crates/nlcore/src/snapshot_guard.rs
++++ ${APP_ROOT:-/app}/crates/nlcore/src/snapshot_guard.rs
+@@ -6,10 +6,10 @@
+ /// Stage 1b: validate bind snapshot invariants before NH normalization.
+ pub fn validate_bind_routes(routes: &[RouteOut]) -> anyhow::Result<()> {
+     for route in routes {
+-        if route.nexthops.len() == 1 {
++        if route.nexthops.len() > 1 {
+             for nh in &route.nexthops {
+                 if !nh.metrics.is_empty() {
+-                    anyhow::bail!("single-path nexthops must not carry metrics");
++                    anyhow::bail!("multipath nexthops must not carry route metrics");
+                 }
+             }
+         }

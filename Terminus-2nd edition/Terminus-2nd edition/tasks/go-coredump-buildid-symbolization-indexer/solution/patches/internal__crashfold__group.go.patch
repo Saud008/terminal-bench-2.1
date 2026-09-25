@@ -1,0 +1,22 @@
+--- internal/crashfold/group.go
++++ internal/crashfold/group.go
+@@ -4,12 +4,18 @@
+     "crypto/sha256"
+     "encoding/hex"
+     "fmt"
++    "path/filepath"
++    "strings"
+ 
+     "github.com/terminus/coreidx/internal/model"
+ )
+ 
+ func GroupKey(rec model.CrashRecord, topPC string, buildID, topSymbol string) string {
++    mod := ""
++    if len(rec.Threads) > 0 && len(rec.Threads[0].Frames) > 0 {
++        mod = filepath.Base(rec.Threads[0].Frames[0].Module)
++    }
+     h := sha256.New()
+-    h.Write([]byte(fmt.Sprintf("%d:%s", rec.Signal, topPC)))
++    h.Write([]byte(fmt.Sprintf("%s:%d:%s:%s", strings.ToUpper(buildID), rec.Signal, topSymbol, mod)))
+     return hex.EncodeToString(h.Sum(nil))
+ }

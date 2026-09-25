@@ -1,0 +1,6 @@
+table inet filter {
+  chain input { type filter hook input priority 0; policy accept;
+    ct state related,established accept
+    tcp dport { 443, 8080 } accept
+  }
+}

@@ -1,0 +1,12 @@
+[Unit]
+Description=Background worker
+After=api.service redis.service
+Wants=redis.service
+
+[Service]
+EnvironmentFile=-/etc/worker/env
+Restart=always
+
+[Container]
+Image=localhost/worker:1
+Restart=no

@@ -1,0 +1,69 @@
+{
+  "graph_id": "linear_matmul",
+  "symbol_links": [
+    [
+      "N",
+      "batch"
+    ]
+  ],
+  "inputs": [
+    {
+      "name": "X",
+      "shape": [
+        "N",
+        128
+      ],
+      "default_shape": [
+        1,
+        128
+      ]
+    },
+    {
+      "name": "B",
+      "shape": [
+        64
+      ]
+    }
+  ],
+  "initializers": [
+    {
+      "name": "W",
+      "shape": [
+        128,
+        64
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "mm1",
+      "op": "MatMul",
+      "inputs": [
+        "X",
+        "W"
+      ],
+      "outputs": [
+        "Y"
+      ]
+    },
+    {
+      "id": "add1",
+      "op": "Add",
+      "inputs": [
+        "Y",
+        "B"
+      ],
+      "outputs": [
+        "Z"
+      ]
+    }
+  ],
+  "value_infos": [
+    {
+      "name": "Y"
+    },
+    {
+      "name": "Z"
+    }
+  ]
+}

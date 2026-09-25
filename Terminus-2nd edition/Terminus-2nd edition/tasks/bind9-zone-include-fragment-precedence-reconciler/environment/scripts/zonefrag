@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${APP_ROOT:-/app}"
+source "${APP_ROOT}/lib/common.sh"
+source "${APP_ROOT}/lib/parse.sh"
+source "${APP_ROOT}/lib/include.sh"
+source "${APP_ROOT}/lib/wildcard.sh"
+source "${APP_ROOT}/lib/serial.sh"
+source "${APP_ROOT}/lib/nsec.sh"
+source "${APP_ROOT}/lib/cache.sh"
+source "${APP_ROOT}/lib/digest.sh"
+source "${APP_ROOT}/lib/staging.sh"
+source "${APP_ROOT}/lib/merge.sh"
+source "${APP_ROOT}/lib/export.sh"
+source "${APP_ROOT}/lib/compile.sh"
+
+usage() {
+  cat >&2 <<EOF
+usage:
+  zonefrag ingest --tree DIR --seed SEED --snapshot FILE.json [--reload]
+  zonefrag export --snapshot FILE.json --output FILE.json
+  zonefrag verify --snapshot FILE.json
+  zonefrag compile --tree DIR --seed SEED --output FILE.json [--reload]
+EOF
+}
+
+cmd_ingest() {
+  local tree="" seed="" snapshot="" reload=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --tree) tree="$2"; shift 2 ;;
+      --seed) seed="$2"; shift 2 ;;
+      --snapshot) snapshot="$2"; shift 2 ;;
+      --reload) reload=1; shift ;;
+      *) die "unknown arg: $1" 2 ;;
+    esac
+  done
+  [[ -n "$tree" && -n "$seed" && -n "$snapshot" ]] || usage
+  [[ -f "${tree}/manifest.json" ]] || die "missing manifest.json" 2
+  build_snapshot "$tree" "$seed" "$snapshot" "$reload"
+}
+
+cmd_export() {
+  local snapshot="" output=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --snapshot) snapshot="$2"; shift 2 ;;
+      --output) output="$2"; shift 2 ;;
+      *) die "unknown arg: $1" 2 ;;
+    esac
+  done
+  [[ -n "$snapshot" && -n "$output" ]] || usage
+  [[ -f "$snapshot" ]] || die "missing snapshot: $snapshot" 2
+  publish_export "$snapshot" "$output"
+}
+
+cmd_verify() {
+  local snapshot=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --snapshot) snapshot="$2"; shift 2 ;;
+      *) die "unknown arg: $1" 2 ;;
+    esac
+  done
+  [[ -n "$snapshot" ]] || usage
+  [[ -f "$snapshot" ]] || die "missing snapshot: $snapshot" 2
+  cmd_verify_snapshot "$snapshot"
+}
+
+cmd_compile() {
+  local tree="" seed="" output="" reload=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --tree) tree="$2"; shift 2 ;;
+      --seed) seed="$2"; shift 2 ;;
+      --output) output="$2"; shift 2 ;;
+      --reload) reload=1; shift ;;
+      *) die "unknown arg: $1" 2 ;;
+    esac
+  done
+  [[ -n "$tree" && -n "$seed" && -n "$output" ]] || usage
+  [[ -f "${tree}/manifest.json" ]] || die "missing manifest.json" 2
+  compile_zone_tree "$tree" "$seed" "$output" "$reload"
+}
+
+main() {
+  [[ $# -ge 1 ]] || { usage; exit 2; }
+  case "$1" in
+    ingest) shift; cmd_ingest "$@" ;;
+    export) shift; cmd_export "$@" ;;
+    verify) shift; cmd_verify "$@" ;;
+    compile) shift; cmd_compile "$@" ;;
+    *) die "unknown command: $1" 2 ;;
+  esac
+}
+main "$@"

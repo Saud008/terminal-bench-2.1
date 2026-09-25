@@ -1,0 +1,33 @@
+{
+  "tree": "receiver-drift",
+  "sender_paths": [
+    "configs",
+    "configs/base.yml",
+    "configs/prod.yml",
+    "reports/daily.json",
+    "reports/monthly.json",
+    "tmp",
+    "tmp/ephemeral.txt"
+  ],
+  "receiver_paths": [
+    "configs/base.yml",
+    "configs/legacy.yml",
+    "reports/monthly.json",
+    "tmp/ephemeral.txt",
+    "tmp/stale.log"
+  ],
+  "root_rules": [
+    "+ configs/**",
+    "- tmp/**",
+    "R tmp/**",
+    "P configs/legacy.yml"
+  ],
+  "cascade_overlays": {
+    "reports": [
+      "+ *.json"
+    ],
+    "tmp": [
+      "- *.txt"
+    ]
+  }
+}

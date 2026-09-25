@@ -1,0 +1,1 @@
+Minute dose mg equals flow_lpm times concentration mg/L times turbidity uplift. Turbidity uplift is 1.0 at or below target NTU. Above target, uplift is 1 plus excess over target divided by target times 0.10, capped at 1.5. Weighted concentration is sum of concentration times flow divided by sum of flow across included minutes.

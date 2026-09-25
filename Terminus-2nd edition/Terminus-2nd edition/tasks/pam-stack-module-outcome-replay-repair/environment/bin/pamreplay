@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${PAMREPLAY_APP_ROOT:-/app}"
+export PAMREPLAY_APP_ROOT="${APP_ROOT}"
+export PAMREPLAY_STACKS_ROOT="${PAMREPLAY_APP_ROOT}/fixtures/stacks"
+LIB="${APP_ROOT}/lib"
+
+# shellcheck source=common.sh
+source "${LIB}/common.sh"
+# shellcheck source=stack.sh
+source "${LIB}/stack.sh"
+# shellcheck source=runner.sh
+source "${LIB}/runner.sh"
+# shellcheck source=export.sh
+source "${LIB}/export.sh"
+# shellcheck source=staging.sh
+source "${LIB}/staging.sh"
+# shellcheck source=compose.sh
+source "${LIB}/compose.sh"
+# shellcheck source=outcome.sh
+source "${LIB}/outcome.sh"
+
+usage() {
+  echo "usage: pamreplay replay --stack PATH --user USER --export PATH" >&2
+  exit 2
+}
+
+cmd_replay() {
+  local stack="" user="" export_path=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --stack) stack="$2"; shift 2 ;;
+      --user) user="$2"; shift 2 ;;
+      --export) export_path="$2"; shift 2 ;;
+      *) usage ;;
+    esac
+  done
+
+  [[ -z "${stack}" || -z "${user}" || -z "${export_path}" ]] && usage
+  [[ ! -f "${stack}" ]] && exit 2
+
+  local flat_json audit_path
+  flat_json="$(pamreplay_flatten_stack "${stack}")" || exit 2
+  if ! python3 -c 'import json,sys; d=json.loads(sys.argv[1]); raise SystemExit(1 if "error" in d else 0)' "$flat_json"; then
+    echo "stack parse error" >&2
+    exit 2
+  fi
+
+  pamreplay_compose_reset
+  pamreplay_compose_write "${flat_json}"
+  local composed_json
+  composed_json="$(pamreplay_compose_read)" || exit 2
+
+  pamreplay_stage_reset
+  pamreplay_stage_write "${composed_json}"
+
+  pamreplay_outcome_reset
+
+  audit_path="$(pamreplay_audit_path_for "${export_path}")"
+  pamreplay_audit_set_path "${audit_path}"
+  pamreplay_execute_stack "${user}"
+
+  if [[ ${PAMREPLAY_EXIT_CODE} -eq 0 ]]; then
+    pamreplay_audit_flush "${audit_path}"
+  fi
+
+  pamreplay_write_outcome_snapshot "${stack}" "${user}" "${audit_path}" \
+    "${PAMREPLAY_EXIT_CODE}" "${PAMREPLAY_PHASES_JSON}" || exit 2
+  pamreplay_write_export "${export_path}" || exit 2
+  exit "${PAMREPLAY_EXIT_CODE}"
+}
+
+main() {
+  [[ $# -lt 1 ]] && usage
+  case "$1" in
+    replay) shift; cmd_replay "$@" ;;
+    *) usage ;;
+  esac
+}
+
+main "$@"

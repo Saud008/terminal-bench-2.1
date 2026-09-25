@@ -1,0 +1,40 @@
+﻿--- lib/boltlane/gates/reconnect_storm_gate.sh
++++ lib/boltlane/gates/reconnect_storm_gate.sh
+@@ -1,12 +1,27 @@
+ #!/usr/bin/env bash
+-# Baseline reconnect-storm gate counts every battery probe, ignoring debounce_ms.
+ set -euo pipefail
+ python3 - <<'PY'
+ import json, sys
+ from pathlib import Path
+ inv = json.loads(Path("/app/state/inventory.json").read_text())
+ cfg = json.loads(Path("/app/config/hciroll.json").read_text())
++debounce_ms = int(cfg["debounce_ms"])
+ max_reconnects = int(cfg["max_reconnects_per_window"])
++
++
++def debounced_attempts(probes, debounce):
++    if not probes:
++        return 0
++    ordered = sorted(probes)
++    count = 1
++    last = ordered[0]
++    for p in ordered[1:]:
++        if p - last >= debounce:
++            count += 1
++            last = p
++    return count
++
++
+ blocked = {}
+ attempts_map = {}
+ for adapter in inv.get("adapters", []):
+@@ -14,7 +29,7 @@
+     for dev in adapter.get("devices", []):
+         key = f'{adapter_id}|{dev["mac"]}'
+         probes = dev.get("battery_probes_ms") or []
+-        attempts = len(probes)
++        attempts = debounced_attempts(probes, debounce_ms)
+         attempts_map[key] = attempts
+         if attempts > max_reconnects:
+             blocked[key] = "ineligible_reconnect_storm"

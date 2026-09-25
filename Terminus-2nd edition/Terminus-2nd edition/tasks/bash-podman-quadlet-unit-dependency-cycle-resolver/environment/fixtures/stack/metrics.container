@@ -1,0 +1,12 @@
+[Unit]
+Description=Metrics exporter
+After=api.service
+Wants=api.service
+
+[Service]
+EnvironmentFile=-/etc/metrics/env
+Restart=on-failure
+
+[Container]
+Image=localhost/metrics:1
+Restart=no

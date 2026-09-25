@@ -1,0 +1,278 @@
+---
+description: LOCKED — no spam uploads, no templated clones, pre-submit flag avoidance (Jun 2026)
+alwaysApply: false
+---
+
+# Terminus — Anti-spam & anti-templated submissions (LOCKED)
+
+**Platform policy (Jun 2026):** bulk or **templated** submissions can be **rejected**, **flagged**, or affect **project standing**.
+
+**Canonical policy (Python):** `scripts/terminus_rules_engine.py` — hook injects; this `.mdc` is storage/reference only.
+
+**Related:** `scripts/anti_spam_pipeline.py` · `scripts/terminus_anti_spam_check.py` · `create/new-task-pipeline-A-H.mdc` Phase B
+
+On conflict, prefer the **stricter** interpretation.
+
+---
+
+## Agent must NOT create similar tasks (LOCKED — proactive)
+
+**User expectation:** similarity checks run and save automatically; agents still must **avoid building** near-duplicates — do not rely on pack gate alone.
+
+| Hook / report | Agent action |
+|---------------|--------------|
+| **FAIL** (weighted ≥0.85 or near-copy) | **Do not implement.** Drop the idea from the list. Pick a **new domain + family + verifier contract** — never keyword-swap the same skeleton. |
+| **WARN** (≥0.65) | **Do not implement** unless user explicitly approves in this chat. Regenerate with **≥2 structural diffs** vs nearest neighbor (stack, milestone, reference math, bug lattice — not instruction nouns). |
+| **PASS** but nearest neighbor same family | Prefer a **different family** for new work; do not batch another task in that lane. |
+
+**Before create:** read `jobs-local/anti-spam-hook-last.txt` or injected hook context. If post-create shows FAIL/WARN → **stop and redesign** (or ask user to pick a different slug) — **never** tell user to upload anyway.
+
+**Saved reports (automatic):** `jobs-local/anti-spam-hook-last.txt`, `anti-spam-ideas-last.json`, `anti-spam-post-create-last.json`, `anti-spam-last.txt` (pack).
+
+---
+
+## Definitions
+
+| Term | Meaning |
+|------|---------|
+| **Spam** | Many uploads in a short window that are **same family**, **same harness**, or **low-effort variants** — looks like volume farming, not distinct engineering tasks. |
+| **Templated** | Same task **skeleton** as a prior submission with **domain keyword swaps** only — instruction nouns change; pipeline, bugs, tests, and oracle shape stay plug-and-play. |
+| **Family** | Recurring lane shape (e.g. Go twin ingest/export + JSONL + SQLite + export JSON; bash merge CLI; Rust binary decoder + `TB3_*` probes). |
+| **Flag** | Platform similarity review, templated rejection, account/project standing warning, or repeated NEEDS_REVISION on clone-shaped work. |
+| **Copy task** | Whole-tree or oracle/test file-for-file clone of an existing slug with domain strings renamed only — see **COPY** in `shared/unacceptable-task-classes.mdc`. |
+| **Duplicate task** | Slug or near-title already in corpus (`tasks/`, `pending/`, zips, platform list) — **DUPLICATE**. |
+| **Sibling task** | Nearest neighbor in the **same family** with high similarity — same lane “sister” of an existing task — **SIBLING**. |
+| **Same lane** | Saturated family shape (≥3 in `tasks/`) — **SAME_LANE** / **FAMILY**. |
+| **Fabricated task** | Oracle or env pretends to solve without real `/app` logic; golden outputs in image — **FABRICATED**. |
+| **Synthetic task** | Fake hardness: filler files, decorative schema fields, test inflation without bug depth — **SYNTHETIC**. |
+
+**Full registry:** **`shared/unacceptable-task-classes.mdc`** — **never accept** any class listed there (CREATE, REVISE, TRIVIAL, zip).
+
+## Forbidden — never-accept classes (High — all phases, zero tolerance)
+
+**Not partial. Not allowed.** Any row below → **do not** create, harden, or zip. **`unacceptable_class_gate.py --pack-gate`** must show **PASS on all 8**.
+
+| Class | Not allowed |
+|-------|-------------|
+| **TEMPLATED** | Keyword-swap on same skeleton |
+| **COPY** | Renamed clone of neighbor tree |
+| **DUPLICATE** | Slug/title already in corpus |
+| **FAMILY / SAME_LANE** | ≥3 same family in `tasks/` |
+| **SIBLING** | High sim to same-family neighbor (≥0.65) |
+| **FABRICATED** | Fake oracle / golden answers in env |
+| **SYNTHETIC** | Decorative hardness, no real bugs |
+
+**TRIVIAL revise does not exempt any class.** One FAIL → no zip.
+
+Full registry: **`shared/unacceptable-task-classes.mdc`**
+
+---
+
+## Forbidden — templated (High)
+
+Do **not** create or upload when **any** row is true without **≥2 proved structural differences** (similarity table required):
+
+1. **Find-replace clone** — copy an existing `tasks/<name>/` or `_accepted-tasks/<name>/` tree; rename slug + domain strings only.
+2. **Keyword-swap instruction** — same step count, same output paths pattern, same doc layout; only industry nouns change (brewery → apiary → cement kiln).
+3. **Identical verifier semantics** — same pytest shape (`reference_*` + `assert_matches_reference` + hidden dir) with only fixture filenames changed.
+4. **Same bug lattice** — same count/modules/placement (seq sort, invert order, coalesce, strict-gap map) copied across domains.
+5. **Same oracle recipe** — copy `solution/files/` pattern file-for-file without new failure modes tied to the domain contract.
+6. **Lane saturation** — **3+ tasks in `tasks/`** already share the family (e.g. `*-custody-reconciler`, `*-ledger-repair`, Go JSONL twin-CLI + SQLite audit) unless the new task proves a **different verifier contract** (not just CSV vs JSONL label).
+7. **Batch re-skin** — packing many tasks same day/week from one generator pass (e.g. 10+ game-domain CLIs with identical harness timestamps) **without** per-task similarity proof.
+
+**Allowed:** Copy **harness files** (`Dockerfile`, `test.sh`, `task.toml` timeouts) from `_accepted-tasks/` per `shared/accepted-corpus.mdc` — that is structure, not templating. Templating is **domain + failure modes + verifier contract** cloned.
+
+---
+
+## Forbidden — spam (High)
+
+Do **not**:
+
+1. Upload **zip-only experiments** (`tasksubmit/*.zip` with no reviewed `tasks/<name>/` tree).
+2. Upload **artifact / difficulty-check zips** (`*difficulty-check*`, `difficulty_check_artifact`, rubric-only packs).
+3. Re-upload the **same slug** with trivial metadata-only changes while platform row is still REVIEW PENDING (fix in place; one coherent resubmit).
+4. Submit **>3 tasks same family** in one batch without explicit user approval and similarity tables.
+5. Submit tasks that **fail oracle/NOP**, skip audit, or skip `pack_zip.sh` verification.
+6. Keep **broken symlinks** or duplicate corpus entries (`_accepted-tasks/` → `tasksss/`) — fix corpus before using as reference.
+
+---
+
+## Saturated families — scan before create/upload
+
+**Block or require extra structural proof** when `tasks/` + `tasksubmit/` already has **3+** in the lane:
+
+| Family pattern | Scan for |
+|----------------|----------|
+| Go twin CLI + JSONL `line_crc` + SQLite + `/app/docs/` export | `*-audit-cli`, `*-reconciler`, ingest/export command pairs |
+| Custody / ledger / staging rollup | `*-custody-*`, `*-ledger-*`, `*-reconciler` |
+| Merge/export directory CLI | `*-merge`, `*-normalizer` (check `_accepted-tasks/` corpus) |
+| Game/sim score or timing auditor | sports, racing, tetris, ccg, rts, pinball, scrabble, etc. — **rotate stack**, not same pytest layout |
+| `TB3_*` env override + hidden fixtures only | probe dir swap without new contract math |
+
+**Mandatory scan paths:** `tasks/`, `tasks/_accepted-tasks/`, `tasksubmit/*.zip` — **not** `dusre-wale/`.
+
+---
+
+## Pre-submit gate (mandatory — agent must run)
+
+Before `./scripts/pack_zip.sh <name>` or telling user to upload:
+
+1. **Similarity table** — proposed task vs nearest neighbor in corpus; **≥2 structural differences** documented (not domain adjectives alone).
+2. **Family count** — same family in `tasks/` + pending zips ≤ **2** (or user explicitly overrides in message).
+3. **Not templated self-check** — answer **no** to: “Could a reviewer swap instruction nouns and recognize the same task?” If yes → redesign before upload.
+4. **Not spam self-check** — this upload is **one reviewed task**, oracle **1**, NOP **0**, not a bulk dump of same-day clones.
+5. **Diversity vs your recent uploads** — do not upload back-to-back tasks that share stack + test module shape + bug count; space by **distinct family** or **distinct primary language contract**.
+
+### Automated checker (LOCKED — **do not run manually for normal zip**)
+
+| When | How (user does nothing) |
+|------|-------------------------|
+| **Ideas** | Agent writes `jobs-local/ideas-draft.json` → hook runs **`idea_similarity_gate.py`** |
+| **Task edits** | Agent saves task files → hook runs **`post_create_audit_loop.py`** + **`unacceptable_class_gate.py`** |
+| **Every prompt** | **`beforeSubmitPrompt` hook** runs pipeline + injects latest results |
+| **Pack / zip** | `./scripts/pack_zip.sh <name>` → full pack gate chain |
+
+Manual **`./scripts/after_create.sh`** = same pipeline as hook (debug / force round 1 without waiting for debounce).
+
+**`./scripts/pack_zip.sh <name>` runs everything via `terminus_anti_spam_auto.py pack`:**
+
+- Task anti-spam/templated PASS/FAIL line (audit copy-paste)
+- Zip-only orphan warning in `tasksubmit/`
+- Same-day batch upload hint
+- Local-only not-submitted pass/warn/fail counts
+- Writes `jobs-local/anti-spam-last.txt`
+
+**`./scripts/pack_zip.sh --all`** also prints `--pack-summary` (FAIL slugs only).
+
+**Platform slug lists (automatic):**
+
+| File | Updated by |
+|------|------------|
+| `scripts/platform_submissions.txt` | Paste platform export after upload batch |
+| `scripts/packed_for_upload.txt` | **Auto** on every `./scripts/pack_zip.sh <name>` success |
+
+Anti-spam merges both — no manual register step after pack.
+
+**Blocks pack when:** spam slug pattern; family saturation (≥3 in `tasks/`); similarity ≥0.85 to nearest neighbor **in same family**; **legacy sim > 0.0** (Sanjana standing — `PACK_SIM_MUST_BE_ZERO`).
+
+**Emergency override (user explicit only):** `TERMINUS_ANTI_SPAM_SKIP=1 ./scripts/pack_zip.sh <name>`
+
+**Debug only** (not required before upload):
+
+```bash
+python3 scripts/terminus_anti_spam_check.py --all-local --not-submitted
+python3 scripts/terminus_anti_spam_check.py --list-spam-zips
+```
+
+**Audit reply must include one line** (copy from checker output):
+
+`Anti-spam/templated: PASS/FAIL — <nearest neighbor> — <2 structural diffs or blocker>`
+
+FAIL → **do not zip**, **do not say ready**, **do not use `TERMINUS_ANTI_SPAM_SKIP`** unless the user **explicitly overrides in the current message**. → **Fix in place** per **§ When FAIL → fix (LOCKED)** below, re-run `./scripts/pack_zip.sh <name>` until **PASS**.
+
+---
+
+## When FAIL → fix (LOCKED)
+
+**Trigger:** `pack_zip.sh` blocks, or checker prints `Anti-spam/templated: FAIL`, or `jobs-local/anti-spam-last.txt` lists blockers.
+
+**Agents must:** read blockers → fix **`tasks/<name>/` in place** → re-run gate until **PASS**. **Forbidden:** skip with `TERMINUS_ANTI_SPAM_SKIP`, weaken checker thresholds, or tell user “upload anyway” without a real fix.
+
+**Load with fixes:** this file + `shared/anti-trivial.mdc` + `shared/accepted-corpus.mdc` (≥2 reads) + nearest neighbor diff from checker output.
+
+### Step 1 — Triage blocker (mandatory table in reply)
+
+| Blocker (from checker) | Type | Fix class |
+|------------------------|------|-----------|
+| `spam slug pattern` | Spam | Rename slug; remove artifact/difficulty-check naming |
+| `zip-only spam` | Spam | Restore `tasks/<name>/` or delete orphan `tasksubmit/*.zip` |
+| `family saturation: <family>` | Spam / lane | See **§ Family saturation** — task must not stay in saturated lane as clone |
+| `similarity must be 0.0` | Templated / standing | Fix task completely — `shared/sanjana-standing-requirements.mdc` §K (slug/family/harness) until `sim 0.0` |
+| `templated risk: similarity … same family` | Templated | See **§ Templated similarity** — structural redesign required |
+| `high structural similarity` (WARN) | Templated risk | Add **≥2 structural diffs** before upload; prefer redesign if same family |
+
+### Step 2 — Fix by type (edit task, not metadata-only)
+
+#### Templated similarity (High)
+
+Goal: reviewer cannot swap instruction nouns and recognize the same task.
+
+**Do (≥2 required):**
+
+1. **Different verifier contract** — new reference math, new output schema or CLI subcommands, new anti-cheat probes (not renamed fixtures only).
+2. **Different bug lattice** — new failure modes tied to domain docs in `/app/docs/`; not same seq-sort / invert-order / coalesce / strict-gap pattern copied from neighbor.
+3. **Different stack or shape** when nearest neighbor shares family — e.g. game auditor on **Rust** vs prior **Go**; merge CLI → protocol decoder; drop `assert_matches_reference` clone if neighbor uses identical pytest skeleton.
+4. **Similarity table in reply** — cite nearest `tasks/<neighbor>/`; list **≥2 structural diffs** (language, milestone, test count band, family tags, Docker base, reference impl shape) with file evidence.
+
+**Do not:** instruction keyword swap only; copy `solution/files/` file-for-file from neighbor; relabel `task.toml` difficulty; use `TERMINUS_ANTI_SPAM_SKIP`.
+
+#### Family saturation (High)
+
+Goal: **≤2 active tasks** in same family under `tasks/` (excluding `_accepted-tasks/`, `tasksss/`).
+
+**Pick one path (prefer 1 or 2 before 3):**
+
+1. **Redesign out of family** — change primary stack + verifier contract so checker assigns a **different family tag** (real code/test changes, not slug rename).
+2. **Defer upload** — user uploads **one** task from that family first; other same-family WIPs stay local until accepted (do not batch).
+3. **User explicit archive** — only if user says move WIPs: relocate other same-family folders out of `tasks/` (never delete; never merge tasks).
+
+**Do not:** upload 3+ same-family tasks in one session; pack with skip override without user message.
+
+#### Spam (High)
+
+1. **One task per pack/upload** — never `./scripts/pack_zip.sh --all` for upload; pack only the task being submitted.
+2. **Same-day batch** — if checker warns `same-day zip batch`, space uploads across days/families.
+3. **Zip-only** — every `tasksubmit/*.zip` must have `tasks/<name>/` or `tasks/_accepted-tasks/<name>/`.
+4. **Oracle + audit first** — spam gate is in addition to oracle **1**, NOP **0**.
+
+### Step 3 — Re-verify (mandatory before zip)
+
+```bash
+python3 scripts/terminus_anti_spam_check.py --pack-gate --task-name <name>
+# must print: Anti-spam/templated: PASS
+./scripts/pack_zip.sh <name>
+```
+
+Report in reply:
+
+```
+Anti-spam/templated: PASS — <nearest> (sim …) — diffs: …
+Fix applied: <blocker> → <what changed in tasks/<name>/>
+```
+
+### Step 4 — Still FAIL after real redesign?
+
+Ask user **one question:** upload a different slug first, or explicitly approve `TERMINUS_ANTI_SPAM_SKIP=1` for this pack. **Do not assume approval.**
+
+---
+
+## Platform flag signals (treat as blockers until fixed)
+
+| Signal | Likely cause | Fix |
+|--------|--------------|-----|
+| **Templated** / **too similar** rejection | Keyword-swap clone | New failure modes + verifier contract; not instruction-only |
+| Similarity search hit | Near-duplicate of your or corpus task | Change family or prove structural diffs |
+| **TRIVIAL** after batch upload | Same easy bug pattern across tasks | `@prompts/trivial-case-6.md` — structural redesign |
+| Repeated NEEDS_REVISION same harness | Template churn | Stop batching; fix one task deeply |
+| Project standing / spam warning | Volume + similarity | Pause uploads; diversify; remove zip-only spam |
+
+---
+
+## What agents must do on “what should I submit?”
+
+When user asks which tasks to upload:
+
+1. List **not yet on platform** tasks from live scan (`tasks/` vs platform export if pasted).
+2. **Deprioritize** same-family clusters — pick **one per family** with best oracle/NOP/audit status.
+3. Flag **templated risk** per task (Low/Medium/High) using this file.
+4. Never recommend uploading **all** unpacked June batch tasks in one session without diversity sort.
+
+---
+
+## Copy-paste (user → agent)
+
+```text
+Before I upload <name>: anti-spam/templated check per shared/anti-spam-templated-submissions.mdc.
+If FAIL: fix in place per § When FAIL → fix — no TERMINUS_ANTI_SPAM_SKIP unless I say so.
+Similarity table vs nearest neighbor; family count; PASS/FAIL; do not say ready if FAIL.
+```

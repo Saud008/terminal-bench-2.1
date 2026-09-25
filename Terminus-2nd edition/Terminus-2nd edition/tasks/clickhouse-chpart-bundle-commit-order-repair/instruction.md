@@ -1,0 +1,5 @@
+The chparts CLI under /app/cmd/chparts simulates a ClickHouse MergeTree parts ingest and export pipeline. It reads part bundles from disk, commits merged rows into /app/data/parts.db, stages /app/state/parts-snapshot.json, and writes /app/output/parts-report.json, but checksum validation, merge ordering, commit barriers, TTL handling, idempotent replay, and export publishing disagree with the contracts in /app/docs/ingest-export-pipeline.md, /app/docs/part-bundle-format.md, /app/docs/merge-snapshot.md, /app/docs/commit-barrier.md, /app/docs/export-schema.md, and /app/docs/go-module-api.md.
+
+Align the Go implementation under /app/internal/ so ingest and export match those contracts. Export must publish from the staged snapshot only — do not re-walk part directories or query SQLite for row values during export.
+
+The read subcommand chains ingest then export with parts-dir /app/fixtures/parts, config /app/config/table.json, db /app/data/parts.db, and output /app/output/parts-report.json. Rebuild from /app with go build -mod=readonly -o /usr/local/bin/chparts ./cmd/chparts. Do not edit /app/docs/, /app/fixtures/, or /app/config/table.json.

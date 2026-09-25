@@ -1,0 +1,2 @@
+-- schema reference for harbor berth allocator
+-- runtime DDL is embedded in internal/db/store.go

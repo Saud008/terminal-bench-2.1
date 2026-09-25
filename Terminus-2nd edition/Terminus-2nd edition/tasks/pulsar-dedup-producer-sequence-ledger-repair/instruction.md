@@ -1,0 +1,5 @@
+The pulsar-dedup-replay CLI at /usr/local/bin/pulsar-dedup-replay simulates idempotent producer publishing against an embedded mock broker and writes /app/output/sequence-ledger-export.json, but replay no longer matches the contracts under /app/docs/.
+
+Operators report multiple dedup, sequence, broker-ack, and replay counter violations against the contracts in /app/docs/.
+
+Repair the Go modules under /app/internal/ so export follows /app/docs/stream-keying.md, /app/docs/dedup-window.md, /app/docs/epoch-reset.md, /app/docs/batch-ack-policy.md, /app/docs/broker-ack-barrier.md, /app/docs/replay-counter.md, /app/docs/staging-snapshot.md, /app/docs/export-ledger-schema.md, and /app/docs/cli-errors.md for export exit codes. The tool stages /app/state/dedup-snapshot.json before writing export output and persists broker ack state to /app/state/broker-ledger.json before export per /app/docs/broker-ack-barrier.md. Rebuild and reinstall pulsar-dedup-replay from /app after source edits, and run /app/scripts/reset-state.sh before local checks. Do not edit /app/docs/, /app/fixtures/, or /app/config/. The environment has no outbound network access.

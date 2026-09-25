@@ -1,0 +1,11 @@
+--- internal/raidops/policies/spare_hold_policy.sh	2026-07-16 16:45:59.543463000 +0000
++++ internal/raidops/policies/spare_hold_policy.sh	2026-07-16 14:44:17.016630800 +0000
+@@ -8,7 +8,7 @@
+ blocked = {}
+ for arr in inv.get("arrays", []):
+     spares = arr.get("spares") or []
+-    if spares and spares[0] in holds:
++    if any(s in holds for s in spares):
+         blocked[arr["name"]] = "blocked_spare_hold"
+ json.dump(blocked, sys.stdout)
+ PY

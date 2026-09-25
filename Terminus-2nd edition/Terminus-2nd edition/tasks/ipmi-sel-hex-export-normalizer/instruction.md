@@ -1,0 +1,5 @@
+The IPMI SEL toolchain at /app ingests binary System Event Log blobs, stages accepted records in SQLite, writes a staging snapshot at /app/state/sel.stage, and exports a normalized CSV to /app/output/sel-events.csv.
+
+Right now ingest and export disagree with the contracts in /app/docs/ipmi-sel.md, /app/docs/staging-format.md, /app/docs/export-format.md, and /app/docs/cli.md. Replayed SEL files report wrong staging counts, sensor names from the bundled map and spec tables fail to line up with binary payloads, corrupt records sometimes land in the database, CSV row order breaks the severity contract when timestamps cross ranks, and duplicate record ids appear after a second ingest of the same blob.
+
+Fix the shell modules under /app so sel-chain ingest and sel-chain export behave as documented. After your fixes, /app/bin/sel-chain ingest --input <sel.bin> --db /app/state/sel.db must satisfy /app/docs/ipmi-sel.md and /app/docs/staging-format.md, and /app/bin/sel-chain export --db /app/state/sel.db --out /app/output/sel-events.csv must satisfy /app/docs/export-format.md.

@@ -1,0 +1,7 @@
+# Age recipient stanza pin admission
+
+Operators run the agerecv recipient-stanza admission governor at /app/environment/bin/agerecv. The governor binds offline age-encryption.org/v1 header corpora against digest-pinned X25519 recipient fingerprints, denies forbidden stanza types and quorum misses under the loaded pin policy, stages a header witness at /app/state/age-header-witness.json, and seals an admission ledger at /app/output/age-admission-ledger.json.
+
+Admission semantics cover stanza allow-lists, fingerprint preimages, quorum_k matched-pin thresholds, max_recipients caps, and stable deny reason codes. Authoritative contracts live under /app/docs/age-header-format.md, /app/docs/recipient-fingerprint.md, /app/docs/pin-policy.md, and /app/docs/admission-ledger.md. Corpus selection honors AGE_CORPUS_DIR when set; otherwise the default fixture corpus under /app/environment/fixtures/corpus applies. Hidden verifier corpora under /opt/verifier-fixtures/age_hidden exercise the same contracts. Default corpus stems include alpha, bravo, and charlie; the hidden stem delta and synthetic malformed stems such as broken follow the same file_id rules in /app/docs/age-header-format.md.
+
+The workload is offline with bundled Rust and verifier dependencies. Protected surfaces include /app/docs/, /app/environment/fixtures/, and /tests/. Exported module entry points on the editable parse, fingerprint, policy, admit, and seal packages must remain callable for the shipping binary. Decoy telemetry must not appear in sealed outputs.

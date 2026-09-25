@@ -1,0 +1,16 @@
+--- a/energy_order/sort.rs
++++ b/energy_order/sort.rs
+@@ -2,7 +2,10 @@
+ 
+ /// Sort survivors by quantized energy ascending, tie-break channel_id ascending.
+ pub fn sort_channels(channels: &mut Vec<FluenceChannel>) {
+-    channels.sort_by(|a, b| a.channel_id.cmp(&b.channel_id));
++    channels.sort_by(|a, b| {
++        a.energy_q
++            .partial_cmp(&b.energy_q)
++            .unwrap()
++            .then_with(|| a.channel_id.cmp(&b.channel_id))
++    });
+ }
+-
+-

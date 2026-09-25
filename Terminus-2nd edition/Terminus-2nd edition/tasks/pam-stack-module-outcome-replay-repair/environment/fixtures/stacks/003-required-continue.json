@@ -1,0 +1,10 @@
+{
+  "stack_id": "003-required-continue",
+  "service": "login",
+  "entries": [
+    {"phase": "auth", "control": "required", "module": "stubs/pam_fail_auth.sh", "args": []},
+    {"phase": "auth", "control": "optional", "module": "stubs/pam_deny.sh", "args": []},
+    {"phase": "auth", "control": "required", "module": "stubs/pam_permit.sh", "args": []},
+    {"phase": "account", "control": "required", "module": "stubs/pam_permit.sh", "args": []}
+  ]
+}

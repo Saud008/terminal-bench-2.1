@@ -1,0 +1,33 @@
+--- internal/dirauth/groups/member_closure.sh
++++ internal/dirauth/groups/member_closure.sh
+@@ -28,8 +28,27 @@
+     if not line or line.startswith("#"):
+         continue
+     g, m = line.split("\t", 1)
+-    g, m = normalize_dn(g), normalize_dn(m)
+-    graph.setdefault(g, set()).add(m)
+-    print(f"{g}|{m}")
++    graph.setdefault(normalize_dn(g), set()).add(normalize_dn(m))
++
++cache = {}
++def members(node, stack):
++    if node in cache:
++        return cache[node]
++    if node in stack:
++        return set()
++    stack = set(stack)
++    stack.add(node)
++    out = set()
++    for m in graph.get(node, set()):
++        if m in graph:
++            out |= members(m, stack)
++        else:
++            out.add(m)
++    cache[node] = out
++    return out
++
++for g in sorted(graph):
++    for m in sorted(members(g, set())):
++        print(f"{g}|{m}")
+ PY
+ }

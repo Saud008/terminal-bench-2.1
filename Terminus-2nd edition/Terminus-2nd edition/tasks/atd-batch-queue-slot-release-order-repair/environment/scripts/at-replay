@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+ROOT="/app"
+# shellcheck source=lib/common.sh
+source "$ROOT/lib/common.sh"
+# shellcheck source=lib/spool.sh
+source "$ROOT/lib/spool.sh"
+# shellcheck source=lib/slots.sh
+source "$ROOT/lib/slots.sh"
+# shellcheck source=lib/mail.sh
+source "$ROOT/lib/mail.sh"
+# shellcheck source=lib/atq.sh
+source "$ROOT/lib/atq.sh"
+# shellcheck source=lib/seq.sh
+source "$ROOT/lib/seq.sh"
+# shellcheck source=lib/registry.sh
+source "$ROOT/lib/registry.sh"
+# shellcheck source=lib/export.sh
+source "$ROOT/lib/export.sh"
+# shellcheck source=lib/runner.sh
+source "$ROOT/lib/runner.sh"
+
+cmd_replay() {
+  local scenario="" seed="" clock_epoch="" out="/app/output/replay.json"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --scenario) scenario="$2"; shift 2 ;;
+      --seed) seed="$2"; shift 2 ;;
+      --clock) clock_epoch="$2"; shift 2 ;;
+      --export) out="$2"; shift 2 ;;
+      *) echo "unknown arg: $1" >&2; return 2 ;;
+    esac
+  done
+  if [[ -n "${TB3_CLOCK_EPOCH:-}" ]]; then
+    clock_epoch="${TB3_CLOCK_EPOCH}"
+  fi
+  [[ -n "$scenario" && -n "$seed" && -n "$clock_epoch" ]] || {
+    echo "usage: at-replay replay --scenario NAME --seed SEED [--clock EPOCH] [--export FILE]" >&2
+    echo "  replay instant: --clock or TB3_CLOCK_EPOCH env" >&2
+    return 2
+  }
+  mkdir -p "$(dirname "$out")"
+  run_at_replay "$scenario" "$seed" "$clock_epoch" "$out"
+}
+
+main() {
+  [[ $# -ge 1 ]] || { echo "usage: at-replay replay ..." >&2; exit 2; }
+  case "$1" in
+    replay) shift; cmd_replay "$@" ;;
+    *) echo "unknown command: $1" >&2; exit 2 ;;
+  esac
+}
+
+main "$@"

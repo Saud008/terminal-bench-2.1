@@ -1,0 +1,38 @@
+--- a/src/main/java/com/flinkskew/chain/ChainedOperatorBoundary.java
++++ b/src/main/java/com/flinkskew/chain/ChainedOperatorBoundary.java
+@@ -12,6 +12,35 @@
+     private ChainedOperatorBoundary() {}
+ 
+     public static boolean acceptReceipt(EventRecord ev, String mappedOperator, SubtaskOperatorMapper.Graph graph) {
++        OperatorSpec spec = findSpec(mappedOperator, graph.operators());
++        if (spec == null) {
++            return true;
++        }
++        if (spec.chainHead() && !spec.chainTail()) {
++            OperatorSpec next = nextInChain(spec, graph.operators());
++            if (next != null && ev.operatorId.equals(next.operatorId())) {
++                return false;
++            }
++        }
+         return true;
+     }
++
++    private static OperatorSpec findSpec(String operatorId, List<OperatorSpec> ops) {
++        for (OperatorSpec op : ops) {
++            if (op.operatorId().equals(operatorId)) {
++                return op;
++            }
++        }
++        return null;
++    }
++
++    private static OperatorSpec nextInChain(OperatorSpec head, List<OperatorSpec> ops) {
++        int idx = head.vertexIndex();
++        for (OperatorSpec op : ops) {
++            if (op.vertexIndex() == idx + 1) {
++                return op;
++            }
++        }
++        return null;
++    }
+ }

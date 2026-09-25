@@ -1,0 +1,24 @@
+stages:
+- build
+- test
+build:base:
+  stage: build
+  script:
+  - make
+  artifacts:
+    paths:
+    - out/base.zip
+test:fast:
+  stage: test
+  needs:
+  - job: build:base
+    artifacts: true
+  - job: missing:job
+    optional: true
+  script:
+  - make test
+  artifacts:
+    paths:
+    - out/test.log
+    reports:
+      junit: junit.xml

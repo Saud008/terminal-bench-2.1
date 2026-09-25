@@ -1,0 +1,17 @@
+stages:
+- prep
+- scan
+scan:matrix:
+  stage: scan
+  parallel:
+    matrix:
+    - TARGET: api
+      REGION: us
+    - REGION: eu
+      TARGET: web
+  rules:
+  - if: $CI_COMMIT_BRANCH == "main"
+    when: on_success
+  - when: never
+  script:
+  - scan

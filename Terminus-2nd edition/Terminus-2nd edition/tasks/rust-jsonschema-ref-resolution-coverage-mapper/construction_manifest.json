@@ -1,0 +1,130 @@
+{
+  "symbol_table": [
+    {"path": "environment/crates/doc_loader/src/lib.rs", "symbol": "load_directory", "kind": "function"},
+    {"path": "environment/crates/anchor_index/src/lib.rs", "symbol": "resolve_anchor", "kind": "function"},
+    {"path": "environment/crates/visit_guard/src/lib.rs", "symbol": "VisitGuard", "kind": "type"},
+    {"path": "environment/crates/ref_resolver/src/lib.rs", "symbol": "resolve_all", "kind": "function"},
+    {"path": "environment/crates/combinator_cov/src/lib.rs", "symbol": "walk_combinators", "kind": "function"},
+    {"path": "environment/crates/graph_export/src/lib.rs", "symbol": "build_graph", "kind": "function"},
+    {"path": "environment/crates/report_emit/src/lib.rs", "symbol": "publish_all", "kind": "function"},
+    {"path": "environment/crates/staging_write/src/lib.rs", "symbol": "trace", "kind": "function"}
+  ],
+  "oracle_frontier": [
+    {
+      "path": "environment/crates/doc_loader/src/lib.rs",
+      "fix_symbols": ["load_directory"],
+      "co_resident_helpers": ["SchemaDoc"],
+      "allowed_top_level_symbols": ["load_directory", "SchemaDoc"]
+    },
+    {
+      "path": "environment/crates/anchor_index/src/lib.rs",
+      "fix_symbols": ["resolve_anchor", "build_anchor_map"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": ["resolve_anchor", "build_anchor_map"]
+    },
+    {
+      "path": "environment/crates/visit_guard/src/lib.rs",
+      "fix_symbols": ["VisitGuard"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": ["VisitGuard"]
+    },
+    {
+      "path": "environment/crates/ref_resolver/src/lib.rs",
+      "fix_symbols": ["resolve_all", "resolve_ref"],
+      "co_resident_helpers": ["RefEdge"],
+      "allowed_top_level_symbols": ["resolve_all", "resolve_ref", "RefEdge"]
+    },
+    {
+      "path": "environment/crates/combinator_cov/src/lib.rs",
+      "fix_symbols": ["walk_combinators", "instance_matches"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": ["walk_combinators", "instance_matches"]
+    },
+    {
+      "path": "environment/crates/graph_export/src/lib.rs",
+      "fix_symbols": ["build_graph"],
+      "co_resident_helpers": ["RefGraph", "GraphNode", "GraphEdge"],
+      "allowed_top_level_symbols": ["build_graph", "RefGraph"]
+    },
+    {
+      "path": "environment/crates/report_emit/src/lib.rs",
+      "fix_symbols": ["publish_all", "build_report"],
+      "co_resident_helpers": ["Totals"],
+      "allowed_top_level_symbols": ["publish_all", "build_report", "Totals"]
+    }
+  ],
+  "flipping_point_contract": {
+    "locations": [
+      {
+        "id": "schema-id-loader",
+        "path": "environment/crates/doc_loader/src/lib.rs",
+        "controls_tests": [
+          "test_jscovm_z24",
+          "test_jscovm_z23"
+        ]
+      },
+      {
+        "id": "anchor-registry",
+        "path": "environment/crates/anchor_index/src/lib.rs",
+        "controls_tests": [
+          "test_jscovm_z17",
+          "test_jscovm_z05"
+        ]
+      },
+      {
+        "id": "recursive-guard",
+        "path": "environment/crates/visit_guard/src/lib.rs",
+        "controls_tests": [
+          "test_jscovm_z07",
+          "test_jscovm_z05"
+        ]
+      },
+      {
+        "id": "ref-resolver",
+        "path": "environment/crates/ref_resolver/src/lib.rs",
+        "controls_tests": [
+          "test_jscovm_z06",
+          "test_jscovm_z05"
+        ]
+      },
+      {
+        "id": "combinator-coverage",
+        "path": "environment/crates/combinator_cov/src/lib.rs",
+        "controls_tests": [
+          "test_jscovm_anyof_branch_recorded",
+          "test_jscovm_z10"
+        ]
+      },
+      {
+        "id": "graph-export",
+        "path": "environment/crates/graph_export/src/lib.rs",
+        "controls_tests": [
+          "test_jscovm_z12",
+          "test_jscovm_z11"
+        ]
+      },
+      {
+        "id": "report-emit",
+        "path": "environment/crates/report_emit/src/lib.rs",
+        "controls_tests": [
+          "test_jscovm_z04",
+          "test_jscovm_z13"
+        ]
+      },
+      {
+        "id": "build-script",
+        "path": "environment/scripts/build_all.sh",
+        "controls_tests": [
+          "test_jscovm_z01",
+          "test_jscovm_z02"
+        ]
+      }
+    ],
+    "no_single_location_flips_majority": true,
+    "concentration_cap": 0.5
+  },
+  "decoy_manifest": [
+    {"path": "environment/crates/decoy_validate/src/lib.rs", "kind": "module", "non_fix_purpose": "byte wrapper not on trace/publish hot path"}
+  ],
+  "task_slug": "rust-jsonschema-ref-resolution-coverage-mapper"
+}

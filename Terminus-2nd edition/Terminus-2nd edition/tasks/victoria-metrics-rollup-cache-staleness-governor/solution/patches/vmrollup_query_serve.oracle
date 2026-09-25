@@ -1,0 +1,105 @@
+package query
+
+import (
+	"encoding/json"
+	"os"
+
+	"github.com/chronostack/metricrollup/internal/cache"
+	"github.com/chronostack/metricrollup/internal/config"
+	"github.com/chronostack/metricrollup/internal/counter"
+	"github.com/chronostack/metricrollup/internal/histogram"
+	"github.com/chronostack/metricrollup/internal/model"
+	"github.com/chronostack/metricrollup/internal/staging"
+	"github.com/chronostack/metricrollup/internal/store"
+)
+
+func Run(metric string, windowStartMs, windowEndMs int64, cfgPath, dbPath, output string, queryMsOverride int64) error {
+	cfg, err := config.Load(cfgPath)
+	if err != nil {
+		return err
+	}
+	st, err := store.Open(dbPath)
+	if err != nil {
+		return err
+	}
+	defer st.Close()
+
+	snapBytes, err := os.ReadFile("/app/state/rollup-snapshot.json")
+	if err != nil {
+		return err
+	}
+	var snap model.RollupSnapshot
+	if err := json.Unmarshal(snapBytes, &snap); err != nil {
+		return err
+	}
+
+	queryMs := queryMsOverride
+	if queryMs <= 0 {
+		queryMs = snap.GeneratedAtMs + 1000
+	}
+
+	var chosen model.SeriesRollup
+	found := false
+	for _, series := range snap.Series {
+		if series.Metric == metric && series.WindowStartMs == windowStartMs && series.WindowEndMs == windowEndMs && series.Tier == "raw" {
+			chosen = series
+			found = true
+			break
+		}
+	}
+	if !found {
+		return os.ErrNotExist
+	}
+
+	key := cache.CacheKey(metric, chosen.Labels, windowStartMs, windowEndMs)
+	entry, ok, err := staging.LoadCacheEntry("/app/state/cache-index.json", key)
+	if err != nil || !ok {
+		entry = cache.NewEntry(metric, chosen.Labels, windowStartMs, windowEndMs, snap.GeneratedAtMs, queryMs, chosen)
+	}
+
+	latestTs, err := st.LatestMetricTs(metric)
+	if err != nil {
+		return err
+	}
+	graceMs := int64(cfg.GraceWindowSec) * 1000
+	freshRaw := latestTs > entry.LastSampleTsMs && (queryMs-latestTs) <= graceMs
+	expired := cache.IsExpired(entry, cfg.CacheTTLSec, queryMs)
+	servedFromCache := !expired && !freshRaw
+
+	report := model.QueryReport{
+		Metric:              metric,
+		WindowStartMs:       windowStartMs,
+		WindowEndMs:         windowEndMs,
+		ServedFromCache:     servedFromCache,
+		FreshRawWithinGrace: freshRaw,
+		QueryMs:             queryMs,
+		Rollup:              chosen,
+	}
+
+	if !servedFromCache {
+		samples, err := st.SamplesInWindow(metric, windowStartMs, windowEndMs)
+		if err != nil {
+			return err
+		}
+		if len(samples) > 0 {
+			last, rate := counter.ComputeRate(samples, float64(cfg.RollupIntervalSec))
+			report.Rollup.Value = last
+			report.Rollup.RatePerSec = rate
+			report.Rollup.Kind = "counter"
+		}
+		buckets, err := st.HistBucketsInWindow(metric, windowStartMs, windowEndMs)
+		if err != nil {
+			return err
+		}
+		if len(buckets) > 0 {
+			report.Rollup.Buckets = histogram.MergeBuckets(buckets)
+			report.Rollup.Kind = "histogram"
+		}
+	}
+
+	raw, err := json.MarshalIndent(report, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(output, raw, 0644)
+}

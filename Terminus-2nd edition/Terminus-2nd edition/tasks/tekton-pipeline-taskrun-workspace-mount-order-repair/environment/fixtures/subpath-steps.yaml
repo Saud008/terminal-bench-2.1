@@ -1,0 +1,33 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: subpath-steps-run
+spec:
+  pipelineSpec:
+    workspaces:
+      - name: workspace
+        optional: false
+    tasks:
+      - name: assemble
+        workspaces:
+          - name: ws
+            workspace: workspace
+        taskSpec:
+          workspaces:
+            - name: ws
+              mountPath: /workspaces/ws
+            - name: ws
+              mountPath: /workspaces/ws/output
+              subPath: output
+          steps:
+            - name: write
+            - name: pack
+              runAfter:
+                - write
+            - name: verify
+              runAfter:
+                - pack
+  workspaces:
+    - name: workspace
+      persistentVolumeClaim:
+        claimName: ws-pvc

@@ -1,0 +1,18 @@
+--- lib/trustgate/pairing_gate.sh
++++ lib/trustgate/pairing_gate.sh
+@@ -14,7 +14,14 @@
+ }
+ 
+ _reject_connect_if_needed() {
+-  local _mac="$1" _addr_type="$2"
++  local mac="$1" addr_type="$2"
++  local trusted ledger_type confirmed
++  trusted="$(read_device_field "$mac" trusted)"
++  ledger_type="$(read_device_field "$mac" addr_type)"
++  confirmed="$(read_device_field "$mac" pairing_confirmed)"
++  if [[ "$trusted" == "true" && "$addr_type" != "$ledger_type" && "$confirmed" != "true" ]]; then
++    return 0
++  fi
+   return 1
+ }
+ 

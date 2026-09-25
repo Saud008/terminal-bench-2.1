@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SSHAP_LIB="${SSHAP_LIB:-/app/lib}"
+source "${SSHAP_LIB}/common.sh"
+
+usage() {
+  echo "usage: sshap ingest|attest ..." >&2
+  exit 1
+}
+
+cmd="${1:-}"; shift || usage
+case "$cmd" in
+  ingest)
+    principals="" ca="" krl="" ledger=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --principals-dir) principals="$2"; shift 2 ;;
+        --ca-dir) ca="$2"; shift 2 ;;
+        --krl) krl="$2"; shift 2 ;;
+        --ledger) ledger="$2"; shift 2 ;;
+        *) usage ;;
+      esac
+    done
+    [[ -n "$principals" && -n "$ca" && -n "$krl" && -n "$ledger" ]] || usage
+    source "${SSHAP_LIB}/ingest/snapshot_writer.sh"
+    write_trust_ledger "$principals" "$ca" "$krl" "$ledger"
+    ;;
+  attest)
+    ledger="" match="" probes="" out=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --ledger) ledger="$2"; shift 2 ;;
+        --match-dir) match="$2"; shift 2 ;;
+        --probes) probes="$2"; shift 2 ;;
+        --out) out="$2"; shift 2 ;;
+        *) usage ;;
+      esac
+    done
+    [[ -n "$ledger" && -n "$match" && -n "$probes" && -n "$out" ]] || usage
+    source "${SSHAP_LIB}/attest/witness_binder.sh"
+    emit_principals_attestation "$ledger" "$match" "$probes" "$out"
+    ;;
+  *) usage ;;
+esac

@@ -1,0 +1,66 @@
+{
+  "seeds": ["alpha", "beta", "gamma"],
+  "cycle_config": "configs/overlay.conf",
+  "cycle_inject_base": "configs/base.conf",
+  "cycle_inject_fragment": "fragments/cycle-closer.conf",
+  "scenarios": [
+    {
+      "name": "base-latin1",
+      "config": "configs/base.conf",
+      "charset": "ISO8859-1:1987",
+      "family": "serif"
+    },
+    {
+      "name": "base-latin2",
+      "config": "configs/base.conf",
+      "charset": "ISO8859-2:1987",
+      "family": "sans"
+    },
+    {
+      "name": "revision-1998",
+      "config": "configs/revision.conf",
+      "charset": "ISO8859-1:1998",
+      "family": "mono"
+    },
+    {
+      "name": "revision-1987",
+      "config": "configs/revision.conf",
+      "charset": "ISO8859-1:1987",
+      "family": "mono"
+    },
+    {
+      "name": "encoding-hop",
+      "config": "configs/encoding-hop.conf",
+      "charset": "ISO8859-4:1988",
+      "family": "serif"
+    },
+    {
+      "name": "reject-outline",
+      "config": "configs/reject-outline.conf",
+      "charset": "ASCII:1963",
+      "family": "sans"
+    },
+    {
+      "name": "regression",
+      "config": "configs/regression.conf",
+      "charset": "UNICODE:2024",
+      "family": "serif"
+    }
+  ],
+  "inject_scenarios": [
+    {
+      "name": "inject-encoding",
+      "base": "configs/base.conf",
+      "inject": "fragments/encoding-override.conf",
+      "charset": "ISO8859-1:1987",
+      "family": "serif"
+    },
+    {
+      "name": "inject-prefer",
+      "base": "configs/base.conf",
+      "inject": "fragments/prefer-swap.conf",
+      "charset": "ISO8859-1:1987",
+      "family": "serif"
+    }
+  ]
+}

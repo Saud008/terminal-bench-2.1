@@ -1,0 +1,654 @@
+    Finished `release` profile [optimized] target(s) in 0.04s
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-9.0.3, pluggy-1.6.0
+cachedir: tmp/pytest_cache
+rootdir: /
+plugins: json-ctrf-0.5.0
+collected 39 items
+
+../tests/test_outputs.py FFFFFFFFFFF.FFFFFFF..F..F.FFsssssssssss         [100%]
+
+=================================== FAILURES ===================================
+__________________ test_resume_session_seeded_from_checkpoint __________________
+
+    def test_resume_session_seeded_from_checkpoint() -> None:
+        """Resume must seed seq guards from checkpoint rows before filtering new frames."""
+        seed = SEEDS[0]
+        cp = STATE / "session-seed.db"
+        proc_a = decode_cli(
+            "checkpoint-session-a",
+            seed,
+            checkpoint=cp,
+            export_name="session-a.json",
+        )
+        assert proc_a.returncode == 0, proc_a.stderr or proc_a.stdout
+        proc_b = decode_cli(
+            "checkpoint-resume-session-trap",
+            seed,
+            checkpoint=cp,
+            resume=True,
+            export_name="session-b.json",
+        )
+        assert proc_b.returncode == 0, proc_b.stderr or proc_b.stdout
+        expected = reference_two_pass(
+            stream_path("checkpoint-session-a"),
+            stream_path("checkpoint-resume-session-trap"),
+            seed,
+            cp,
+        )
+        got = json.loads((OUTPUT / "session-b.json").read_text(encoding="utf-8"))
+>       assert got == expected
+E       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}
+E         
+E         Omitting 5 identical items, use -vv to show
+E         Differing items:
+E         {'gps_fixes': []} != {'gps_fixes': [{'compid': 1, 'lat': 111000, 'lon': 222000, 'seq': 50, ...}]}
+E         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 1}
+E         {'valid_frame_count': 0} != {'valid_frame_count': 1}
+E         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 24, 'name': 'GPS_RAW_INT', ...}]}
+E         {'checkpoint_frame_count': 0} != {'checkpoint_frame_count': 1}
+E         Use -v to get more diff
+
+/tests/test_outputs.py:184: AssertionError
+_____________________ test_merged_regression_seed_dynamic ______________________
+
+    def test_merged_regression_seed_dynamic() -> None:
+        """Anti-cheat: merged-regression must match reference for a non-primary seed."""
+        seed = SEEDS[2]
+        expected = reference_export(stream_path("merged-regression"), seed)
+        proc = decode_cli("merged-regression", seed)
+        assert proc.returncode == 0, proc.stderr or proc.stdout
+        got = json.loads(export_path("merged-regression", seed).read_text(encoding="utf-8"))
+>       assert got == expected
+E       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}
+E         
+E         Omitting 6 identical items, use -vv to show
+E         Differing items:
+E         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 2, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 2, 'count': 1, 'msg_id': 11000, 'name': 'EVENT_LOG', ...}]}
+E         {'events': []} != {'events': [{'compid': 2, 'event_seq': 5, 'frame_seq': 10, 'sysid': 2, ...}]}
+E         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 2}
+E         {'valid_frame_count': 0} != {'valid_frame_count': 3}
+E         Use -v to get more diff
+
+/tests/test_outputs.py:195: AssertionError
+____ test_core_catalog_decode_matches_reference[merged-regression-alpha01] _____
+
+scenario_name = 'merged-regression', seed = 'alpha01'
+
+    @pytest.mark.parametrize("seed", SEEDS)
+    @pytest.mark.parametrize("scenario_name", CORE_SCENARIOS)
+    def test_core_catalog_decode_matches_reference(scenario_name: str, seed: str) -> None:
+        """Core catalog streams must match the independent reference export."""
+        expected = reference_export(stream_path(scenario_name), seed)
+        proc = decode_cli(scenario_name, seed)
+        assert proc.returncode == 0, proc.stderr or proc.stdout
+        got = json.loads(export_path(scenario_name, seed).read_text(encoding="utf-8"))
+>       assert got == expected
+E       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}
+E         
+E         Omitting 6 identical items, use -vv to show
+E         Differing items:
+E         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 2, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 2, 'count': 1, 'msg_id': 11000, 'name': 'EVENT_LOG', ...}]}
+E         {'events': []} != {'events': [{'compid': 2, 'event_seq': 5, 'frame_seq': 10, 'sysid': 2, ...}]}
+E         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 2}
+E         {'valid_frame_count': 0} != {'valid_frame_count': 3}
+E         Use -v to get more diff
+
+/tests/test_outputs.py:206: AssertionError
+____ test_core_catalog_decode_matches_reference[merged-regression-gamma99] _____
+
+scenario_name = 'merged-regression', seed = 'gamma99'
+
+    @pytest.mark.parametrize("seed", SEEDS)
+    @pytest.mark.parametrize("scenario_name", CORE_SCENARIOS)
+    def test_core_catalog_decode_matches_reference(scenario_name: str, seed: str) -> None:
+        """Core catalog streams must match the independent reference export."""
+        expected = reference_export(stream_path(scenario_name), seed)
+        proc = decode_cli(scenario_name, seed)
+        assert proc.returncode == 0, proc.stderr or proc.stdout
+        got = json.loads(export_path(scenario_name, seed).read_text(encoding="utf-8"))
+>       assert got == expected
+E       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}
+E         
+E         Omitting 6 identical items, use -vv to show
+E         Differing items:
+E         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 2, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 2, 'count': 1, 'msg_id': 11000, 'name': 'EVENT_LOG', ...}]}
+E         {'events': []} != {'events': [{'compid': 2, 'event_seq': 5, 'frame_seq': 10, 'sysid': 2, ...}]}
+E         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 2}
+E         {'valid_frame_count': 0} != {'valid_frame_count': 3}
+E         Use -v to get more diff
+
+/tests/test_outputs.py:206: AssertionError
+____ test_core_catalog_decode_matches_reference[merged-regression-delta42] _____
+
+scenario_name = 'merged-regression', seed = 'delta42'
+
+    @pytest.mark.parametrize("seed", SEEDS)
+    @pytest.mark.parametrize("scenario_name", CORE_SCENARIOS)
+    def test_core_catalog_decode_matches_reference(scenario_name: str, seed: str) -> None:
+        """Core catalog streams must match the independent reference export."""
+        expected = reference_export(stream_path(scenario_name), seed)
+        proc = decode_cli(scenario_name, seed)
+        assert proc.returncode == 0, proc.stderr or proc.stdout
+        got = json.loads(export_path(scenario_name, seed).read_text(encoding="utf-8"))
+>       assert got == expected
+E       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}
+E         
+E         Omitting 6 identical items, use -vv to show
+E         Differing items:
+E         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 2, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 2, 'count': 1, 'msg_id': 11000, 'name': 'EVENT_LOG', ...}]}
+E         {'events': []} != {'events': [{'compid': 2, 'event_seq': 5, 'frame_seq': 10, 'sysid': 2, ...}]}
+E         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 2}
+E         {'valid_frame_count': 0} != {'valid_frame_count': 3}
+E         Use -v to get more diff
+
+/tests/test_outputs.py:206: AssertionError
+____________________ test_length_edge_payload_and_event_crc ____________________
+
+    def test_length_edge_payload_and_event_crc() -> None:
+        """Short payloads and 24-bit msg_id CRC must validate together."""
+        seed = SEEDS[0]
+        expected = reference_export(stream_path("length-edge"), seed)
+        proc = decode_cli("length-edge", seed)
+        assert proc.returncode == 0, proc.stderr or proc.stdout
+        got = json.loads(export_path("length-edge", seed).read_text(encoding="utf-8"))
+>       assert got == expected
+E       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}
+E         
+E         Omitting 7 identical items, use -vv to show
+E         Differing items:
+E         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 1, 'count': 1, 'msg_id': 11000, 'name': 'EVENT_LOG', ...}]}
+E         {'events': []} != {'events': [{'compid': 1, 'event_seq': 1, 'frame_seq': 1, 'sysid': 1, ...}]}
+E         {'valid_frame_count': 0} != {'valid_frame_count': 2}
+E         Use -v to get more diff
+
+/tests/test_outputs.py:216: AssertionError
+_____________________ test_seq_rollback_drop_counts_stale ______________________
+
+    def test_seq_rollback_drop_counts_stale() -> None:
+        """Stale seq rollbacks must drop frames without rejecting u8 wrap-forward elsewhere."""
+        seed = SEEDS[0]
+        expected = reference_export(stream_path("seq-rollback-drop"), seed)
+        proc = decode_cli("seq-rollback-drop", seed)
+        assert proc.returncode == 0
+        got = json.loads(export_path("seq-rollback-drop", seed).read_text(encoding="utf-8"))
+>       assert got == expected
+E       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}
+E         
+E         Omitting 7 identical items, use -vv to show
+E         Differing items:
+E         {'routes': []} != {'routes': [{'compid': 1, 'count': 3, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 2, 'count': 2, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 1, 'count': 2, 'msg_id': 0, 'name': 'HEARTBEAT', ...}]}
+E         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 1}
+E         {'valid_frame_count': 0} != {'valid_frame_count': 7}
+E         Use -v to get more diff
+
+/tests/test_outputs.py:226: AssertionError
+_________________ test_u8_wrap_forward_not_treated_as_rollback _________________
+
+    def test_u8_wrap_forward_not_treated_as_rollback() -> None:
+        """Sequence 250,251,0 on one route must all be accepted."""
+        seed = SEEDS[1]
+        expected = reference_export(stream_path("u8-wrap-forward"), seed)
+        proc = decode_cli("u8-wrap-forward", seed)
+        assert proc.returncode == 0
+        got = json.loads(export_path("u8-wrap-forward", seed).read_text(encoding="utf-8"))
+>       assert got == expected
+E       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}
+E         
+E         Omitting 8 identical items, use -vv to show
+E         Differing items:
+E         {'routes': []} != {'routes': [{'compid': 1, 'count': 3, 'msg_id': 0, 'name': 'HEARTBEAT', ...}]}
+E         {'valid_frame_count': 0} != {'valid_frame_count': 3}
+E         Use -v to get more diff
+
+/tests/test_outputs.py:237: AssertionError
+_________________ test_dedup_replay_keeps_distinct_compid_rows _________________
+
+    def test_dedup_replay_keeps_distinct_compid_rows() -> None:
+        """Dedup must key on compid; same sysid/msg_id/seq on different compids stay distinct."""
+        seed = SEEDS[0]
+        expected = reference_export(stream_path("dedup-replay"), seed)
+        proc = decode_cli("dedup-replay", seed)
+        assert proc.returncode == 0
+        got = json.loads(export_path("dedup-replay", seed).read_text(encoding="utf-8"))
+>       assert got == expected
+E       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}
+E         
+E         Omitting 6 identical items, use -vv to show
+E         Differing items:
+E         {'gps_fixes': []} != {'gps_fixes': [{'compid': 2, 'lat': 100, 'lon': -200, 'seq': 7, ...}]}
+E         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 2, 'count': 1, 'msg_id': 24, 'name': 'GPS_RAW_INT', ...}]}
+E         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 1}
+E         {'valid_frame_count': 0} != {'valid_frame_count': 2}
+E         Use -v to get more diff
+
+/tests/test_outputs.py:248: AssertionError
+____________________ test_checkpoint_two_pass_resume_export ____________________
+
+    def test_checkpoint_two_pass_resume_export() -> None:
+        """Checkpoint resume across two decode passes must merge accepted frames."""
+        seed = SEEDS[0]
+        cp = STATE / "two-pass.db"
+        proc_a = decode_cli(
+            "checkpoint-resume-a",
+            seed,
+            checkpoint=cp,
+            export_name="pass-a.json",
+        )
+        assert proc_a.returncode == 0, proc_a.stderr or proc_a.stdout
+        proc_b = decode_cli(
+            "checkpoint-resume-b",
+            seed,
+            checkpoint=cp,
+            resume=True,
+            export_name="pass-b.json",
+        )
+        assert proc_b.returncode == 0, proc_b.stderr or proc_b.stdout
+        expected = reference_two_pass(
+            stream_path("checkpoint-resume-a"),
+            stream_path("checkpoint-resume-b"),
+            seed,
+            cp,
+        )
+        got = json.loads((OUTPUT / "pass-b.json").read_text(encoding="utf-8"))
+>       assert got == expected
+E       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}
+E         
+E         Omitting 5 identical items, use -vv to show
+E         Differing items:
+E         {'gps_fixes': []} != {'gps_fixes': [{'compid': 1, 'lat': -111, 'lon': 222, 'seq': 2, ...}]}
+E         {'valid_frame_count': 0} != {'valid_frame_count': 4}
+E         {'routes': []} != {'routes': [{'compid': 1, 'count': 2, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 1, 'count': 1, 'msg_id': 24, 'name': 'GPS_RAW_INT', ...}, {'compid': 1, 'count': 1, 'msg_id': 11000, 'name': 'EVENT_LOG', ...}]}
+E         {'checkpoint_frame_count': 0} != {'checkpoint_frame_count': 2}
+E         {'events': []} != {'events': [{'compid': 1, 'event_seq': 2, 'frame_seq': 3, 'sysid': 5, ...}]}
+E         Use -v to get more diff
+
+/tests/test_outputs.py:278: AssertionError
+______________ test_triple_checkpoint_resume_preserves_gps_order _______________
+
+    def test_triple_checkpoint_resume_preserves_gps_order() -> None:
+        """Three resume passes must keep checkpoint rows before new rows in gps_fixes."""
+        seed = SEEDS[0]
+        cp = STATE / "triple-pass.db"
+        assert decode_cli(
+            "checkpoint-resume-a",
+            seed,
+            checkpoint=cp,
+            export_name="triple-a.json",
+        ).returncode == 0
+        assert decode_cli(
+            "checkpoint-resume-b",
+            seed,
+            checkpoint=cp,
+            resume=True,
+            export_name="triple-b.json",
+        ).returncode == 0
+        proc_c = decode_cli(
+            "checkpoint-resume-c",
+            seed,
+            checkpoint=cp,
+            resume=True,
+            export_name="triple-c.json",
+        )
+        assert proc_c.returncode == 0, proc_c.stderr or proc_c.stdout
+        expected = reference_three_pass(
+            stream_path("checkpoint-resume-a"),
+            stream_path("checkpoint-resume-b"),
+            stream_path("checkpoint-resume-c"),
+            seed,
+            cp,
+        )
+        got = json.loads((OUTPUT / "triple-c.json").read_text(encoding="utf-8"))
+>       assert got == expected
+E       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...', ...}], ...}
+E         
+E         Omitting 3 identical items, use -vv to show
+E         Differing items:
+E         {'gps_fixes': []} != {'gps_fixes': [{'compid': 1, 'lat': -111, 'lon': 222, 'seq': 2, ...}, {'compid': 1, 'lat': 333000, 'lon': -444000, 'seq': 5, ...}]}
+E         {'diff_rows': []} != {'diff_rows': [{'compid': 1, 'fact_key': 'lat', 'msg_id': 24, 'new_value': '333000', ...}, {'compid': 1, 'fact_key': '...: 24, 'new_value': '-444000', ...}, {'compid': 1, 'fact_key': 'time_boot_ms', 'msg_id': 24, 'new_value': '1005', ...}]}
+E         {'changed_fact_count': 0} != {'changed_fact_count': 3}
+E         {'valid_frame_count': 0} != {'valid_frame_count': 5}...
+E         
+E         ...Full output truncated (4 lines hidden), use '-vv' to show
+
+/tests/test_outputs.py:314: AssertionError
+_________ test_resume_diff_rows_include_stringified_old_and_new_values _________
+
+    def test_resume_diff_rows_include_stringified_old_and_new_values() -> None:
+        """Resume exports must record prior and new decoded facts as JSON scalar strings."""
+        seed = SEEDS[0]
+        cp = STATE / "diff-scalar.db"
+        assert decode_cli(
+            "checkpoint-resume-a",
+            seed,
+            checkpoint=cp,
+            export_name="diff-a.json",
+        ).returncode == 0
+        assert decode_cli(
+            "checkpoint-resume-b",
+            seed,
+            checkpoint=cp,
+            resume=True,
+            export_name="diff-b.json",
+        ).returncode == 0
+        proc = decode_cli(
+            "checkpoint-resume-c",
+            seed,
+            checkpoint=cp,
+            resume=True,
+            export_name="diff-c.json",
+        )
+        assert proc.returncode == 0, proc.stderr or proc.stdout
+        expected = reference_three_pass(
+            stream_path("checkpoint-resume-a"),
+            stream_path("checkpoint-resume-b"),
+            stream_path("checkpoint-resume-c"),
+            seed,
+            cp,
+        )
+        got = json.loads((OUTPUT / "diff-c.json").read_text(encoding="utf-8"))
+>       assert got == expected
+E       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...', ...}], ...}
+E         
+E         Omitting 3 identical items, use -vv to show
+E         Differing items:
+E         {'gps_fixes': []} != {'gps_fixes': [{'compid': 1, 'lat': -111, 'lon': 222, 'seq': 2, ...}, {'compid': 1, 'lat': 333000, 'lon': -444000, 'seq': 5, ...}]}
+E         {'diff_rows': []} != {'diff_rows': [{'compid': 1, 'fact_key': 'lat', 'msg_id': 24, 'new_value': '333000', ...}, {'compid': 1, 'fact_key': '...: 24, 'new_value': '-444000', ...}, {'compid': 1, 'fact_key': 'time_boot_ms', 'msg_id': 24, 'new_value': '1005', ...}]}
+E         {'changed_fact_count': 0} != {'changed_fact_count': 3}
+E         {'valid_frame_count': 0} != {'valid_frame_count': 5}...
+E         
+E         ...Full output truncated (4 lines hidden), use '-vv' to show
+
+/tests/test_outputs.py:370: AssertionError
+__________________ test_preamble_noise_resync_decodes_frames ___________________
+
+    def test_preamble_noise_resync_decodes_frames() -> None:
+        """Leading garbage bytes must be skipped before STX resync."""
+        seed = SEEDS[0]
+        expected = reference_export(stream_path("preamble-noise"), seed)
+        proc = decode_cli("preamble-noise", seed)
+        assert proc.returncode == 0, proc.stderr or proc.stdout
+        got = json.loads(export_path("preamble-noise", seed).read_text(encoding="utf-8"))
+>       assert got == expected
+E       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}
+E         
+E         Omitting 7 identical items, use -vv to show
+E         Differing items:
+E         {'gps_fixes': []} != {'gps_fixes': [{'compid': 1, 'lat': -77777, 'lon': 88888, 'seq': 2, ...}]}
+E         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 1, 'count': 1, 'msg_id': 24, 'name': 'GPS_RAW_INT', ...}]}
+E         {'valid_frame_count': 0} != {'valid_frame_count': 2}
+E         Use -v to get more diff
+
+/tests/test_outputs.py:391: AssertionError
+____________________ test_mixed_invalid_crc_skips_bad_frame ____________________
+
+    def test_mixed_invalid_crc_skips_bad_frame() -> None:
+        """CRC mismatches must be skipped without aborting the run."""
+        seed = SEEDS[1]
+        expected = reference_export(stream_path("mixed-invalid-crc"), seed)
+        proc = decode_cli("mixed-invalid-crc", seed)
+        assert proc.returncode == 0, proc.stderr or proc.stdout
+        got = json.loads(export_path("mixed-invalid-crc", seed).read_text(encoding="utf-8"))
+>       assert got == expected
+E       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}
+E         
+E         Omitting 6 identical items, use -vv to show
+E         Differing items:
+E         {'gps_fixes': []} != {'gps_fixes': [{'compid': 1, 'lat': -500000, 'lon': 1200000, 'seq': 2, ...}]}
+E         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 24, 'name': 'GPS_RAW_INT', ...}]}
+E         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 1}
+E         {'valid_frame_count': 0} != {'valid_frame_count': 1}
+E         Use -v to get more diff
+
+/tests/test_outputs.py:401: AssertionError
+_________________ test_resume_idempotent_second_pass_no_growth _________________
+
+    def test_resume_idempotent_second_pass_no_growth() -> None:
+        """Re-running resume on the same stream must not duplicate checkpoint rows."""
+        seed = SEEDS[1]
+        cp = STATE / "idempotent.db"
+        decode_cli("checkpoint-resume-b", seed, checkpoint=cp, export_name="first.json")
+        decode_cli(
+            "checkpoint-resume-b",
+            seed,
+            checkpoint=cp,
+            resume=True,
+            export_name="second.json",
+        )
+        first = json.loads((OUTPUT / "first.json").read_text(encoding="utf-8"))
+        second = json.loads((OUTPUT / "second.json").read_text(encoding="utf-8"))
+        assert second["valid_frame_count"] == first["valid_frame_count"]
+        assert second["routes"] == first["routes"]
+        assert second["gps_fixes"] == first["gps_fixes"]
+        assert second["events"] == first["events"]
+        assert second["checkpoint_frame_count"] == first["valid_frame_count"]
+>       assert second["deduped_count"] >= 1
+E       assert 0 >= 1
+
+/tests/test_outputs.py:423: AssertionError
+______________________ test_signed_gps_lat_lon_are_signed ______________________
+
+    def test_signed_gps_lat_lon_are_signed() -> None:
+        """GPS_RAW_INT must preserve negative lat/lon from two's-complement payload."""
+        seed = SEEDS[1]
+        expected = reference_export(stream_path("signed-gps-decode"), seed)
+        proc = decode_cli("signed-gps-decode", seed)
+        assert proc.returncode == 0
+        got = json.loads(export_path("signed-gps-decode", seed).read_text(encoding="utf-8"))
+>       assert got == expected
+E       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}
+E         
+E         Omitting 7 identical items, use -vv to show
+E         Differing items:
+E         {'gps_fixes': []} != {'gps_fixes': [{'compid': 1, 'lat': -123456789, 'lon': 987654321, 'seq': 1, ...}, {'compid': 1, 'lat': 450000000, 'lon': -750000000, 'seq': 2, ...}]}
+E         {'routes': []} != {'routes': [{'compid': 1, 'count': 2, 'msg_id': 24, 'name': 'GPS_RAW_INT', ...}]}
+E         {'valid_frame_count': 0} != {'valid_frame_count': 2}
+E         Use -v to get more diff
+
+/tests/test_outputs.py:433: AssertionError
+________________________ test_event_order_by_timestamp _________________________
+
+    def test_event_order_by_timestamp() -> None:
+        """EVENT_LOG export must be sorted by timestamp_ms, not frame seq."""
+        seed = SEEDS[1]
+        expected = reference_export(stream_path("event-order"), seed)
+        proc = decode_cli("event-order", seed)
+        assert proc.returncode == 0
+        got = json.loads(export_path("event-order", seed).read_text(encoding="utf-8"))
+>       assert got == expected
+E       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}
+E         
+E         Omitting 6 identical items, use -vv to show
+E         Differing items:
+E         {'routes': []} != {'routes': [{'compid': 1, 'count': 2, 'msg_id': 11000, 'name': 'EVENT_LOG', ...}]}
+E         {'events': []} != {'events': [{'compid': 1, 'event_seq': 3, 'frame_seq': 15, 'sysid': 1, ...}, {'compid': 1, 'event_seq': 4, 'frame_seq': 20, 'sysid': 1, ...}]}
+E         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 2}
+E         {'valid_frame_count': 0} != {'valid_frame_count': 2}
+E         Use -v to get more diff
+
+/tests/test_outputs.py:445: AssertionError
+________________________ test_multi_sysid_route_counts _________________________
+
+    def test_multi_sysid_route_counts() -> None:
+        """Route counts must distinguish sysid/component pairs with independent seq guards."""
+        seed = SEEDS[0]
+        expected = reference_export(stream_path("multi-msg-routing"), seed)
+        proc = decode_cli("multi-msg-routing", seed)
+        assert proc.returncode == 0
+        got = json.loads(export_path("multi-msg-routing", seed).read_text(encoding="utf-8"))
+>       assert got == expected
+E       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}
+E         
+E         Omitting 5 identical items, use -vv to show
+E         Differing items:
+E         {'gps_fixes': []} != {'gps_fixes': [{'compid': 1, 'lat': -350000000, 'lon': 1380000000, 'seq': 20, ...}]}
+E         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 2}
+E         {'valid_frame_count': 0} != {'valid_frame_count': 3}
+E         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 11000, 'name': 'EVENT_LOG', ...}, {'compid': 1, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 1, 'count': 1, 'msg_id': 24, 'name': 'GPS_RAW_INT', ...}]}
+E         {'events': []} != {'events': [{'compid': 1, 'event_seq': 1, 'frame_seq': 30, 'sysid': 1, ...}]}
+E         Use -v to get more diff
+
+/tests/test_outputs.py:457: AssertionError
+_______________________ test_publish_reads_snapshot_only _______________________
+
+    def test_publish_reads_snapshot_only() -> None:
+        """Publish must reflect mutated snapshot bytes, not re-decoded streams."""
+        seed = SEEDS[0]
+        assert decode_cli("signed-gps-decode", seed).returncode == 0
+        snap = json.loads(SNAPSHOT.read_text(encoding="utf-8"))
+>       assert snap["frames"], "snapshot must contain frames"
+E       AssertionError: snapshot must contain frames
+E       assert []
+
+/tests/test_outputs.py:485: AssertionError
+______________ test_stream_ingest_extracts_frames_before_validate ______________
+
+    def test_stream_ingest_extracts_frames_before_validate() -> None:
+        """Stream ingest must extract GPS frames before CRC validation on signed-gps-decode."""
+        seed = SEEDS[0]
+        proc = decode_cli("signed-gps-decode", seed)
+        assert proc.returncode == 0, proc.stderr or proc.stdout
+        got = json.loads(export_path("signed-gps-decode", seed).read_text(encoding="utf-8"))
+>       assert got["gps_fixes"]
+E       assert []
+
+/tests/test_outputs.py:529: AssertionError
+__________________ test_verifier_hidden_dedup_compid_scenario __________________
+
+    def test_verifier_hidden_dedup_compid_scenario() -> None:
+        """Hidden /opt/verifier-fixtures dedup-compid stream must match reference export."""
+        fixtures_root = Path("/opt/verifier-fixtures/mavlink")
+        hidden_catalog = json.loads((fixtures_root / "catalog.json").read_text(encoding="utf-8"))
+        entry = next(s for s in hidden_catalog["scenarios"] if s["name"] == "hidden-dedup-compid")
+        stream = fixtures_root / entry["stream"]
+        seed = SEEDS[0]
+        export_path = OUTPUT / "hidden-dedup-compid.json"
+        proc = run(
+            [
+                CLI,
+                "decode",
+                "--input",
+                str(stream),
+                "--seed",
+                seed,
+                "--export",
+                str(export_path),
+            ]
+        )
+        assert proc.returncode == 0, proc.stderr or proc.stdout
+        got = json.loads(export_path.read_text(encoding="utf-8"))
+        expected = reference_export(stream, seed)
+>       assert got == expected
+E       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}
+E         
+E         Omitting 7 identical items, use -vv to show
+E         Differing items:
+E         {'gps_fixes': []} != {'gps_fixes': [{'compid': 1, 'lat': 100, 'lon': -200, 'seq': 10, ...}, {'compid': 2, 'lat': 300, 'lon': 400, 'seq': 10, ...}]}
+E         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 24, 'name': 'GPS_RAW_INT', ...}, {'compid': 2, 'count': 1, 'msg_id': 24, 'name': 'GPS_RAW_INT', ...}]}
+E         {'valid_frame_count': 0} != {'valid_frame_count': 2}
+E         Use -v to get more diff
+
+/tests/test_outputs.py:568: AssertionError
+_________________ test_verifier_hidden_session_resume_scenario _________________
+
+    def test_verifier_hidden_session_resume_scenario() -> None:
+        """Hidden /opt/verifier-fixtures session-resume trap must match two-pass reference."""
+        fixtures_root = Path("/opt/verifier-fixtures/mavlink")
+        hidden_catalog = json.loads((fixtures_root / "catalog.json").read_text(encoding="utf-8"))
+        entry = next(s for s in hidden_catalog["scenarios"] if s["name"] == "hidden-session-resume")
+        stream = fixtures_root / entry["stream"]
+        seed = SEEDS[0]
+        cp = STATE / "hidden-session.db"
+        proc_a = run(
+            [
+                CLI,
+                "decode",
+                "--input",
+                str(stream_path("checkpoint-session-a")),
+                "--seed",
+                seed,
+                "--checkpoint",
+                str(cp),
+                "--export",
+                str(OUTPUT / "hidden-session-a.json"),
+            ]
+        )
+        assert proc_a.returncode == 0, proc_a.stderr or proc_a.stdout
+        proc_b = run(
+            [
+                CLI,
+                "decode",
+                "--input",
+                str(stream),
+                "--seed",
+                seed,
+                "--checkpoint",
+                str(cp),
+                "--resume",
+                "--export",
+                str(OUTPUT / "hidden-session-b.json"),
+            ]
+        )
+        assert proc_b.returncode == 0, proc_b.stderr or proc_b.stdout
+        expected = reference_two_pass(
+            stream_path("checkpoint-session-a"),
+            stream,
+            seed,
+            cp,
+        )
+        got = json.loads((OUTPUT / "hidden-session-b.json").read_text(encoding="utf-8"))
+>       assert got == expected
+E       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}
+E         
+E         Omitting 5 identical items, use -vv to show
+E         Differing items:
+E         {'gps_fixes': []} != {'gps_fixes': [{'compid': 1, 'lat': 111000, 'lon': 222000, 'seq': 50, ...}]}
+E         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 1}
+E         {'valid_frame_count': 0} != {'valid_frame_count': 1}
+E         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 24, 'name': 'GPS_RAW_INT', ...}]}
+E         {'checkpoint_frame_count': 0} != {'checkpoint_frame_count': 1}
+E         Use -v to get more diff
+
+/tests/test_outputs.py:617: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_non_resume_export_has_empty_diff_rows
+PASSED ../tests/test_outputs.py::test_reference_independent_of_cli
+PASSED ../tests/test_outputs.py::test_decode_writes_snapshot_artifact
+PASSED ../tests/test_outputs.py::test_publish_without_snapshot_fails
+PASSED ../tests/test_outputs.py::test_contract_output_and_snapshot_paths_after_decode
+PASSED ../tests/test_outputs.py::test_snapshot_payload_stored_as_json_byte_array
+SKIPPED [1] ../tests/test_outputs.py:620: oracle golden modules not mounted
+SKIPPED [1] ../tests/test_outputs.py:633: oracle golden modules not mounted
+SKIPPED [1] ../tests/test_outputs.py:646: oracle golden modules not mounted
+SKIPPED [1] ../tests/test_outputs.py:659: oracle golden modules not mounted
+SKIPPED [1] ../tests/test_outputs.py:672: oracle golden modules not mounted
+SKIPPED [1] ../tests/test_outputs.py:685: oracle golden modules not mounted
+SKIPPED [1] ../tests/test_outputs.py:705: oracle golden modules not mounted
+SKIPPED [1] ../tests/test_outputs.py:741: oracle golden modules not mounted
+SKIPPED [1] ../tests/test_outputs.py:754: oracle golden modules not mounted
+SKIPPED [1] ../tests/test_outputs.py:790: oracle golden modules not mounted
+SKIPPED [1] ../tests/test_outputs.py:816: oracle golden modules not mounted
+FAILED ../tests/test_outputs.py::test_resume_session_seeded_from_checkpoint
+FAILED ../tests/test_outputs.py::test_merged_regression_seed_dynamic - Assert...
+FAILED ../tests/test_outputs.py::test_core_catalog_decode_matches_reference[merged-regression-alpha01]
+FAILED ../tests/test_outputs.py::test_core_catalog_decode_matches_reference[merged-regression-gamma99]
+FAILED ../tests/test_outputs.py::test_core_catalog_decode_matches_reference[merged-regression-delta42]
+FAILED ../tests/test_outputs.py::test_length_edge_payload_and_event_crc - Ass...
+FAILED ../tests/test_outputs.py::test_seq_rollback_drop_counts_stale - Assert...
+FAILED ../tests/test_outputs.py::test_u8_wrap_forward_not_treated_as_rollback
+FAILED ../tests/test_outputs.py::test_dedup_replay_keeps_distinct_compid_rows
+FAILED ../tests/test_outputs.py::test_checkpoint_two_pass_resume_export - Ass...
+FAILED ../tests/test_outputs.py::test_triple_checkpoint_resume_preserves_gps_order
+FAILED ../tests/test_outputs.py::test_resume_diff_rows_include_stringified_old_and_new_values
+FAILED ../tests/test_outputs.py::test_preamble_noise_resync_decodes_frames - ...
+FAILED ../tests/test_outputs.py::test_mixed_invalid_crc_skips_bad_frame - Ass...
+FAILED ../tests/test_outputs.py::test_resume_idempotent_second_pass_no_growth
+FAILED ../tests/test_outputs.py::test_signed_gps_lat_lon_are_signed - Asserti...
+FAILED ../tests/test_outputs.py::test_event_order_by_timestamp - AssertionErr...
+FAILED ../tests/test_outputs.py::test_multi_sysid_route_counts - AssertionErr...
+FAILED ../tests/test_outputs.py::test_publish_reads_snapshot_only - Assertion...
+FAILED ../tests/test_outputs.py::test_stream_ingest_extracts_frames_before_validate
+FAILED ../tests/test_outputs.py::test_verifier_hidden_dedup_compid_scenario
+FAILED ../tests/test_outputs.py::test_verifier_hidden_session_resume_scenario
+=================== 22 failed, 6 passed, 11 skipped in 0.64s ===================

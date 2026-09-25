@@ -1,0 +1,20 @@
+--- a/closure_rank/order.rs
++++ b/closure_rank/order.rs
+@@ -12,11 +12,14 @@
+             vetoed: false,
+         })
+         .collect();
+-    rows.sort_by(|a, b| a.channel_id.cmp(&b.channel_id));
++    rows.sort_by(|a, b| {
++        b.residual_counts
++            .partial_cmp(&a.residual_counts)
++            .unwrap()
++            .then_with(|| a.channel_id.cmp(&b.channel_id))
++    });
+     for (i, r) in rows.iter_mut().enumerate() {
+         r.rank = i + 1;
+     }
+     rows
+ }
+-
+-

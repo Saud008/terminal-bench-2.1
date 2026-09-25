@@ -1,0 +1,43 @@
+{
+  "device_id": "plant-alpha",
+  "clock_skew_ms": 3000,
+  "drift_threshold": 5.0,
+  "default_word_order": "big_endian_words",
+  "scale_epochs": [
+    {
+      "epoch_id": "epoch-v1",
+      "effective_ms": 0,
+      "factor": 0.01,
+      "offset": 0.0
+    },
+    {
+      "epoch_id": "epoch-v2",
+      "effective_ms": 1700000100000,
+      "factor": 0.02,
+      "offset": -1.0
+    }
+  ],
+  "baseline": {
+    "40001": 100.0,
+    "40002": 50.0,
+    "40003": 0.0,
+    "40010": 25.0
+  },
+  "register_overrides": {
+    "40003": {
+      "word_order": "little_endian_words"
+    },
+    "40010": {
+      "clock_skew_ms": 10000,
+      "scale_epoch": "epoch-v1"
+    }
+  },
+  "alarm_suppression": [
+    {
+      "device_id": "plant-alpha",
+      "register": 40002,
+      "start_ms": 1700000050000,
+      "end_ms": 1700000150000
+    }
+  ]
+}

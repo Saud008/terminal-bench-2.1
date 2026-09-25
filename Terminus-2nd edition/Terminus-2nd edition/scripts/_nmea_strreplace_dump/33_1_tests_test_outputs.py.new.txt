@@ -1,0 +1,19 @@
+    def test_output_artifact_paths_written(self) -> None:
+        """Merge must write report, snapshot, and session state paths from instruction."""
+        reset()
+        build()
+        seed = os.environ.get("VERIFIER_SEED", "nmea-merge")
+        part1 = build_session_part1_stream(seed)
+        try:
+            assert merge(part1, state=STATE).returncode == 0
+            assert OUT.is_file(), "missing /app/output/merge-report.json"
+            assert SNAPSHOT.is_file(), "missing /app/state/merge-snapshot.json"
+            assert STATE.is_file(), "missing /app/state/merge-session.json"
+            json.loads(OUT.read_text(encoding="utf-8"))
+            json.loads(SNAPSHOT.read_text(encoding="utf-8"))
+            json.loads(STATE.read_text(encoding="utf-8"))
+        finally:
+            if part1.exists():
+                part1.unlink()
+
+    def test_session_state_file_written(self) -> None:

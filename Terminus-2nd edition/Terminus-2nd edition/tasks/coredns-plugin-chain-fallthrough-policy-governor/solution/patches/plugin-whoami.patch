@@ -1,0 +1,67 @@
+--- internal/plugins/whoami.go
++++ internal/plugins/whoami.go
+@@ -3,6 +3,7 @@
+ import (
+
+ 	"fmt"
+
+ 	"net"
+
++	"strings"
+
+ 
+
+ 	"github.com/miekg/dns"
+
+ 	"github.com/terminus/dnsplugd/internal/model"
+
+@@ -18,20 +19,12 @@
+ 	if ctx.Req.Question[0].Qtype != dns.TypeTXT {
+
+ 		return true, nil
+
+ 	}
+
++	if strings.Contains(strings.ToLower(ctx.Qname), ".bad.") {
+
++		return false, fmt.Errorf("whoami rejected qname")
+
++	}
+
+ 	ip := ctx.ClientIP
+
+-	if ip == "" {
+
+-		ctx.Msg = ctx.Req.Copy()
+
+-		ctx.Msg.Rcode = dns.RcodeSuccess
+
+-		ctx.Handled = true
+
+-		ctx.StopChain = true
+
+-		return false, nil
+
+-	}
+
+-	if net.ParseIP(ip) == nil {
+
+-		ctx.Msg = ctx.Req.Copy()
+
+-		ctx.Msg.Rcode = dns.RcodeSuccess
+
+-		ctx.Handled = true
+
+-		ctx.StopChain = true
+
+-		return false, nil
+
++	if ip == "" || net.ParseIP(ip) == nil {
+
++		return false, fmt.Errorf("whoami invalid client")
+
+ 	}
+
+ 	if ctx.Msg == nil {
+
+ 		ctx.Msg = ctx.Req.Copy()

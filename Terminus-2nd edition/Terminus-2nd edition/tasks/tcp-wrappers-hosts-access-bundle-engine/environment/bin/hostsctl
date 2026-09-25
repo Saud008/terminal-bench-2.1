@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${APP_ROOT:-/app}"
+LIB_DIR="${APP_ROOT}/lib"
+
+# shellcheck source=common.sh
+source "${LIB_DIR}/common.sh"
+# shellcheck source=merge.sh
+source "${LIB_DIR}/merge.sh"
+# shellcheck source=decide.sh
+source "${LIB_DIR}/decide.sh"
+# shellcheck source=replay.sh
+source "${LIB_DIR}/replay.sh"
+
+usage() {
+  cat <<'EOF'
+usage:
+  hostsctl merge --bundle PATH --export PATH
+  hostsctl decide --bundle PATH --daemon NAME --ip ADDRESS --export PATH
+  hostsctl replay --bundle PATH --session PATH --export PATH
+EOF
+}
+
+cmd_merge() {
+  local bundle="" export=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --bundle) bundle="$2"; shift 2 ;;
+      --export) export="$2"; shift 2 ;;
+      *) die "unknown argument: $1" ;;
+    esac
+  done
+  [[ -n "$bundle" && -n "$export" ]] || die "missing required flags"
+  local root
+  root="$(bundle_root "$bundle")"
+  merge_bundle "$root" "$export"
+}
+
+cmd_decide() {
+  local bundle="" daemon="" ip="" export=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --bundle) bundle="$2"; shift 2 ;;
+      --daemon) daemon="$2"; shift 2 ;;
+      --ip) ip="$2"; shift 2 ;;
+      --export) export="$2"; shift 2 ;;
+      *) die "unknown argument: $1" ;;
+    esac
+  done
+  [[ -n "$bundle" && -n "$daemon" && -n "$ip" && -n "$export" ]] || die "missing required flags"
+  local root
+  root="$(bundle_root "$bundle")"
+  decide_access "$root" "$daemon" "$ip" "$export"
+}
+
+cmd_replay() {
+  local bundle="" session="" export=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --bundle) bundle="$2"; shift 2 ;;
+      --session) session="$2"; shift 2 ;;
+      --export) export="$2"; shift 2 ;;
+      *) die "unknown argument: $1" ;;
+    esac
+  done
+  [[ -n "$bundle" && -n "$session" && -n "$export" ]] || die "missing required flags"
+  local root
+  root="$(bundle_root "$bundle")"
+  replay_session "$root" "$session" "$export" || exit $?
+}
+
+main() {
+  [[ $# -ge 1 ]] || {
+    usage
+    exit 2
+  }
+  case "$1" in
+    merge)
+      shift
+      cmd_merge "$@"
+      ;;
+    decide)
+      shift
+      cmd_decide "$@"
+      ;;
+    replay)
+      shift
+      cmd_replay "$@"
+      ;;
+    *)
+      die "unknown command: $1"
+      ;;
+  esac
+}
+
+main "$@"

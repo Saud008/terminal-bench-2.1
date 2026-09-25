@@ -1,0 +1,1 @@
+auctctl exposes load-catalog, adjudicate-lots, and publish-invoices. load-catalog reads /app/fixtures/scenarios/SCENARIO.json unless --fixture-dir overrides. adjudicate-lots requires prior load-catalog for the same scenario id. publish-invoices requires adjudication_pass positive in /app/state/adjudication-pass.json.

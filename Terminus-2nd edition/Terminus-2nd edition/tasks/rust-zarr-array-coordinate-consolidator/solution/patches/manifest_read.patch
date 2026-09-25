@@ -1,0 +1,10 @@
+--- src/manifest_read/mod.rs
++++ src/manifest_read/mod.rs
+@@ -40,6 +40,6 @@
+         let raw = fs::read_to_string(&p).map_err(|_| ManifestError)?;
+         out.push(serde_json::from_str(&raw).map_err(|_| ManifestError)?);
+     }
+-    out.sort_by(|a, b| b.name.cmp(&a.name));
++    out.sort_by(|a, b| a.name.cmp(&b.name));
+     Ok(out)
+ }

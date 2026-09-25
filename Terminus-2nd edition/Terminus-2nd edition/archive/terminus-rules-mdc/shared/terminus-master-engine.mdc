@@ -1,0 +1,136 @@
+---
+description: LOCKED — Terminus 8-engine master flow; lazy-load rules per engine (ENGINE_0 hub always on)
+alwaysApply: false
+---
+
+# Terminus — Master engine flow (LOCKED)
+
+**Policy:** Single hub `.cursor/rules/terminus.mdc` (`alwaysApply: true`). All policy injected from **`scripts/terminus_rules_engine.py`**. Other `.mdc` = storage only.
+
+**Registry (code):** `scripts/terminus_engine_registry.py`  
+**Hook:** `.cursor/hooks/route-terminus-prompt.py` sets **Engine** + **Read** list on every prompt.
+
+---
+
+## ENGINE_0 — HUB (always on)
+
+| File | Role |
+|------|------|
+| `LOCKED.mdc` | Paths, forbidden shortcuts, @-tag map |
+| `shared/WORKFLOW-MAP.mdc` | Lifecycle A–F navigation |
+| `shared/terminus-master-engine.mdc` | This file — engine map |
+| `shared/prompt-router.mdc` | Summary → router + case (auto) |
+| `shared/problem-rule-loader.mdc` | Problem → which engine + conflict winners |
+| `shared/core.mdc` | Anti-hallucination, evidence, self-check |
+| `shared/repo-workflow.mdc` | `tasks/` → `tasksubmit/`, anonymous author |
+
+**Agent:** HUB is already in context. On every task message, **activate one engine below** and **`Read` its rule files** from `.cursor/rules/` (hook prints the list).
+
+---
+
+## ENGINE_1 — IDEAS
+
+**Trigger:** `@newidea`, `gen ideas`, `brainstorm`, Phase **A**, hook `phase=A`
+
+**Prompt:** `prompts/newidea.md`
+
+**Load:** `ideas/IDEAS-RULES.mdc`, `ideas/generate-ideas.mdc`, `shared/accepted-corpus.mdc`, `shared/anti-spam-templated-submissions.mdc`
+
+**Also:** ENGINE_2 runs automatically when `jobs-local/ideas-draft.json` is saved.
+
+---
+
+## ENGINE_2 — ANTI_SPAM
+
+**Trigger:** Automatic — task file saves, ideas draft, **`./scripts/pack_zip.sh`** (pack gate). User does **not** run anti-spam scripts manually.
+
+**Load:** `shared/anti-spam-templated-submissions.mdc`
+
+**Gate:** FAIL → fix in place per § When FAIL → fix; no upload until PASS.
+
+---
+
+## ENGINE_3 — CREATE
+
+**Trigger:** `@CREATE`, new task, Phase **B**, `new-task-pipeline-A-H`, implement under `tasks/<new-name>/`
+
+**Prompts:** `prompts/sp-hard-create-revise.md` when target HARD
+
+**Load:** `create/` folder + `create/first-submit-acceptance-gate.mdc` + `revise/trivial-hardening-probes.mdc` + `shared/accepted-corpus.mdc`, `shared/spec.mdc`, `shared/first-pass-blueprint.mdc`, `shared/anti-trivial.mdc`, `shared/dockerfile.mdc`, `shared/snorkel-dockerfile-image-best-practices.mdc`, `shared/runtime-verifier.mdc`, `shared/platform-preferences.mdc`, `shared/canonical-ecr-dockerfile-auto.mdc`, `shared/canonical-base-image-gate.mdc`, `shared/instruction-prose-style.mdc`, `shared/task-toml-*-gate.mdc`, `shared/allow-internet-gate.mdc`, `shared/test-sh-reward-block.mdc`, `shared/task-lifecycle.mdc`, `shared/anti-spam-templated-submissions.mdc`, `shared/additive-rules-lock-index.mdc`, `revise/hardness.mdc`
+
+**Pipeline:** A→H in `create/new-task-pipeline-A-H.mdc` — read accepted corpus → build → audit loop → verify → **F′ first-submit gate** → zip.
+
+---
+
+## ENGINE_4 — AUDIT
+
+**Trigger:** `@audit`, `audit tasks/`, Phase **C**, read-only review
+
+**Prompt trio:** `prompts/audit.md` + `@AUDIT RULES` + `@REVIEWER RULES`
+
+**Load:** `audit/AUDIT-RULES.mdc`, `reviewer/` checklist + CI + LLMaJ + common-errors, `shared/spec.mdc`, docker/runtime/anti-trivial gates
+
+**Do not edit** unless user asks to fix.
+
+---
+
+## ENGINE_5 — VERIFY
+
+**Trigger:** `oracle and nop`, `pre-upload`, `recheck`, Phase **E**, `@VERIFY`
+
+**Load:** `verify/VERIFY-RULES.mdc`, `verify/pre-zip-audit.mdc`, `shared/first-pass-blueprint.mdc` §0+§6, `shared/runtime-verifier.mdc`, `shared/canonical-ecr-dockerfile-auto.mdc`, `shared/difficulty-benchmark-models.mdc`, `revise/oracle-fix-g025-g027.mdc`
+
+**Automated static gate:** `python3 scripts/terminus_preflight.py --task-dir tasks/<name>` (CI + LLMaJ + category + files). Hook + `pack_zip.sh` run this automatically.
+
+**Required evidence:** Oracle **1.0**, NOP **0.0** — do not claim ready without runs.
+
+---
+
+## ENGINE_6 — ZIP
+
+**Trigger:** `pack_zip.sh`, Phase **F**, `@ZIP`, upload zip
+
+**Load:** `zip/ZIP-RULES.mdc`, `shared/anti-spam-templated-submissions.mdc`, `revise/oracle-fix-g025-g027.mdc` (G-026/G-027), `verify/pre-zip-audit.mdc`
+
+**Command (only):** `./scripts/pack_zip.sh <name>` → `tasksubmit/<name>.zip`
+
+---
+
+## ENGINE_7 — REVISE
+
+**Trigger:** Platform summary + `tasks/<name>/`, TRIVIAL/EASY/MEDIUM/HARD, oracle fail, reviewer comments, Phase **D** / **D′**
+
+**Router (auto):** `prompts/trivial.md`, `easy.md`, `medium.md`, `hard.md`, `oracleFix.md`, `reviewer.md`, `sp-hard-create-revise.md`
+
+**Base load:** `revise/REVISE-RULES.mdc`, `shared/anti-trivial.mdc`, `shared/first-pass-blueprint.mdc`, `shared/accepted-corpus.mdc`, `shared/spec.mdc`, docker/runtime/platform/canonical/instruction gates, `shared/task-lifecycle.mdc`, `shared/additive-rules-lock-index.mdc`
+
+**Extra by problem:**
+
+| Problem | Also load |
+|---------|-----------|
+| Oracle failed | `revise/oracle-fix-g025-g027.mdc`, `revise/platform-hardness-guards.mdc` |
+| TRIVIAL / EASY | `revise/trivial-easy-difficulty-prompt-lock.mdc`, `revise/trivial-hardening-probes.mdc`, `revise/hardness.mdc` + trio prompts |
+| Reviewer lines | `reviewer/REVIEWER-RULES.mdc`, `reviewer/reviewer-checklist.mdc` |
+| HARD unsolvable | `prompts/hard.md` + case file |
+
+**Default user habit:** Paste `tasks/<name>/` + platform summary — hook picks ENGINE_7 + router; user does not pick case.
+
+---
+
+## Master flow (ASCII)
+
+```
+USER → Hook classifies → ENGINE_N (not ENGINE_0)
+     → Agent Read prompts/*.md + ENGINE_N .mdc files
+     → Work on task
+     → VERIFY (ENGINE_5) → ZIP (ENGINE_6) → upload
+     → Platform reject → ENGINE_7 → VERIFY → ZIP
+```
+
+**Anti-spam (ENGINE_2)** runs on create saves and pack — not a separate user step.
+
+---
+
+## Conflict
+
+Stricter rule wins. Snorkel Jun 2026 additive > legacy. Full table: `shared/problem-rule-loader.mdc` §3.

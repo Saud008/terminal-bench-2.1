@@ -1,0 +1,50 @@
+{
+  "scenario_name": "deep-lineage-bind",
+  "experiment_id": "exp-rl",
+  "focus_run_id": "run-policy",
+  "dataset_manifests": {
+    "replay-buffer": {
+      "version_hash": "rb-h7k2m",
+      "row_count": 500000
+    },
+    "sim-env-v3": {
+      "version_hash": "env-v3-aa",
+      "row_count": 1
+    }
+  },
+  "runs": [
+    {
+      "run_id": "run-sim",
+      "parent_run_id": "",
+      "params": {"env": "cartpole"},
+      "metrics": [],
+      "artifacts": [{"rel_path": "env/config.json", "content": "{}"}],
+      "dataset_pins": [{"name": "sim-env-v3", "version_hash": "env-v3-aa"}]
+    },
+    {
+      "run_id": "run-collect",
+      "parent_run_id": "run-sim",
+      "params": {"steps": "10000"},
+      "metrics": [{"key": "episodes", "step": 1, "value": 200, "epoch": 0}],
+      "artifacts": [{"rel_path": "buffer/shard-0.parquet", "content": "PAR0"}],
+      "dataset_pins": [{"name": "replay-buffer", "version_hash": "rb-h7k2m"}]
+    },
+    {
+      "run_id": "run-policy",
+      "parent_run_id": "run-collect",
+      "params": {"gamma": "0.99"},
+      "metrics": [
+        {"key": "reward", "step": 10, "value": 195.2, "epoch": 2},
+        {"key": "reward", "step": 4, "value": 120.0, "epoch": 1}
+      ],
+      "artifacts": [
+        {"rel_path": "policy/weights.npz", "content": "POLICY"},
+        {"rel_path": "./policy/meta.json", "content": "{\"algo\":\"ppo\"}"}
+      ],
+      "dataset_pins": [
+        {"name": "replay-buffer", "version_hash": "rb-h7k2m"},
+        {"name": "sim-env-v3", "version_hash": "env-v3-aa"}
+      ]
+    }
+  ]
+}

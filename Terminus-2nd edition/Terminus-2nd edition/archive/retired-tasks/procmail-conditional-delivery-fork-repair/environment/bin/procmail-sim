@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+ROOT="/app"
+SIM_DIR="${ROOT}/lib/procmail-sim"
+# shellcheck source=/app/lib/procmail-sim/pipeline.sh
+source "${SIM_DIR}/pipeline.sh"
+
+cmd_simulate() {
+  local suite="" snap="${SNAPSHOT_DEFAULT}"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --suite) suite="$2"; shift 2 ;;
+      --snapshot) snap="$2"; shift 2 ;;
+      *) echo "unknown arg: $1" >&2; return 2 ;;
+    esac
+  done
+  [[ -n "$suite" && -d "$suite" ]] || {
+    echo "usage: procmail-sim simulate --suite DIR [--snapshot FILE]" >&2
+    return 2
+  }
+  run_simulate "$suite" "$snap"
+}
+
+cmd_audit() {
+  local snap="" out="/app/output/procmail-audit.json"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --snapshot) snap="$2"; shift 2 ;;
+      --output) out="$2"; shift 2 ;;
+      *) echo "unknown arg: $1" >&2; return 2 ;;
+    esac
+  done
+  [[ -n "$snap" && -f "$snap" ]] || {
+    echo "usage: procmail-sim audit --snapshot FILE --output FILE" >&2
+    return 2
+  }
+  run_audit "$snap" "$out"
+}
+
+main() {
+  [[ $# -ge 1 ]] || { echo "usage: procmail-sim simulate|audit ..." >&2; exit 2; }
+  case "$1" in
+    simulate) shift; cmd_simulate "$@" ;;
+    audit) shift; cmd_audit "$@" ;;
+    *) echo "unknown command: $1" >&2; exit 2 ;;
+  esac
+}
+
+main "$@"

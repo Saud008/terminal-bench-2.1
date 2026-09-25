@@ -1,0 +1,119 @@
+{
+  "task_slug": "go-vault-token-lease-renewal-risk-auditor",
+  "symbol_table": [
+    {"path": "internal/policyrev/select.go", "symbol": "Applicable", "kind": "function"},
+    {"path": "internal/policytree/inherit.go", "symbol": "Resolve", "kind": "function"},
+    {"path": "internal/ttlcascade/precedence.go", "symbol": "StaticCap", "kind": "function"},
+    {"path": "internal/budgetclamp/budget.go", "symbol": "Resolve", "kind": "function"},
+    {"path": "internal/lineagewalk/lineage.go", "symbol": "Resolve", "kind": "function"},
+    {"path": "internal/delegate/clamp.go", "symbol": "Resolve", "kind": "function"},
+    {"path": "internal/renewchain/chain.go", "symbol": "Effective", "kind": "function"},
+    {"path": "internal/ledgerbuf/io.go", "symbol": "Write", "kind": "function"},
+    {"path": "internal/riskbands/score.go", "symbol": "Score", "kind": "function"},
+    {"path": "internal/rollupfold/fold.go", "symbol": "Roots", "kind": "function"}
+  ],
+  "oracle_frontier": [
+    {"path": "internal/policyrev/select.go", "fix_symbols": ["Applicable"], "co_resident_helpers": [], "allowed_top_level_symbols": ["Applicable"]},
+    {"path": "internal/policytree/inherit.go", "fix_symbols": ["Resolve"], "co_resident_helpers": ["chainCap"], "allowed_top_level_symbols": ["Resolve"]},
+    {"path": "internal/ttlcascade/precedence.go", "fix_symbols": ["StaticCap"], "co_resident_helpers": [], "allowed_top_level_symbols": ["StaticCap"]},
+    {"path": "internal/budgetclamp/budget.go", "fix_symbols": ["Resolve"], "co_resident_helpers": [], "allowed_top_level_symbols": ["Resolve"]},
+    {"path": "internal/lineagewalk/lineage.go", "fix_symbols": ["Resolve"], "co_resident_helpers": ["BuildLatest", "BuildOrigin"], "allowed_top_level_symbols": ["Resolve", "BuildLatest", "BuildOrigin"]},
+    {"path": "internal/delegate/clamp.go", "fix_symbols": ["Resolve"], "co_resident_helpers": [], "allowed_top_level_symbols": ["Resolve"]},
+    {"path": "internal/renewchain/chain.go", "fix_symbols": ["Effective"], "co_resident_helpers": [], "allowed_top_level_symbols": ["Effective"]},
+    {"path": "internal/ledgerbuf/io.go", "fix_symbols": ["Write"], "co_resident_helpers": ["Read"], "allowed_top_level_symbols": ["Write", "Read"]},
+    {"path": "internal/riskbands/score.go", "fix_symbols": ["Score"], "co_resident_helpers": [], "allowed_top_level_symbols": ["Score"]},
+    {"path": "internal/rollupfold/fold.go", "fix_symbols": ["Roots", "Edges", "Totals"], "co_resident_helpers": [], "allowed_top_level_symbols": ["Roots", "Edges", "Totals"]}
+  ],
+  "flipping_point_contract": {
+    "concentration_cap": 0.5,
+    "locations": [
+      {
+        "id": "policy_rev",
+        "path": "policyrev/select.go",
+        "controls_tests": [
+          "test_ops_policy_revision_boundary_on_child",
+          "test_tb3_hidden_chain_override_and_depth_order"
+        ]
+      },
+      {
+        "id": "policy_override",
+        "path": "policytree/inherit.go",
+        "controls_tests": [
+          "test_tb3_hidden_chain_override_and_depth_order"
+        ]
+      },
+      {
+        "id": "ttl_cap",
+        "path": "ttlcascade/precedence.go",
+        "controls_tests": [
+          "test_root_static_cap_is_role_tightest",
+          "test_approle_mount_caps_ci_renewal"
+        ]
+      },
+      {
+        "id": "budget",
+        "path": "budgetclamp/budget.go",
+        "controls_tests": [
+          "test_svc_budget_caps_requested_lease",
+          "test_deny_second_renewal_exhausts_budget"
+        ]
+      },
+      {
+        "id": "delegate",
+        "path": "delegate/clamp.go",
+        "controls_tests": [
+          "test_child_second_renewal_clamped_by_parent_expiry",
+          "test_dchild_inherits_denied_parent_expiry",
+          "test_tb3_hidden_chain_override_and_depth_order"
+        ]
+      },
+      {
+        "id": "lineage",
+        "path": "lineagewalk/lineage.go",
+        "controls_tests": [
+          "test_orphan_token_flags_missing_parent",
+          "test_severed_orphan_flag_drops_parent_edge",
+          "test_child_resolves_lineage_root_to_parent",
+          "test_tb3_hidden_cycle_clamp_and_score"
+        ]
+      },
+      {
+        "id": "renewable",
+        "path": "renewchain/chain.go",
+        "controls_tests": [
+          "test_userpass_mount_marks_root_non_renewable",
+          "test_batch_role_marks_batch_non_renewable"
+        ]
+      },
+      {
+        "id": "staging",
+        "path": "ledgerbuf/io.go",
+        "controls_tests": [
+          "test_staging_sorted_by_depth_then_seq_then_token",
+          "test_full_staging_matches_reference_stage",
+          "test_cross_run_audit_rollup_byte_identical"
+        ]
+      },
+      {
+        "id": "risk",
+        "path": "riskbands/score.go",
+        "controls_tests": [
+          "test_denied_row_risk_score_includes_bonus",
+          "test_tb3_hidden_cycle_clamp_and_score",
+          "test_full_atlas_matches_reference_atlas"
+        ]
+      },
+      {
+        "id": "rollup",
+        "path": "rollupfold/fold.go",
+        "controls_tests": [
+          "test_atlas_lineage_roots_severity_not_alphabetical",
+          "test_full_atlas_matches_reference_atlas"
+        ]
+      }
+    ]
+  },
+  "decoy_manifest": [
+    {"path": "internal/decoy/capblend.go", "kind": "module", "non_fix_purpose": "Average and alphabetical worst-bucket heuristics not on audit/rollup hot path"}
+  ]
+}

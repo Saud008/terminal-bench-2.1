@@ -1,0 +1,49 @@
+--- src/key_ledger/mod.rs
+
++++ src/key_ledger/mod.rs
+
+@@ -20,18 +20,9 @@
+
+ pub fn absent_chunk_keys(manifest: &ArrayManifest) -> Vec<String> {
+
+     let expected: BTreeSet<String> = enumerate_chunk_keys(manifest).into_iter().collect();
+
+     let present: BTreeSet<String> = manifest.chunk_keys.iter().cloned().collect();
+
+-    let mut missing = Vec::new();
+
+-    for key in &manifest.chunk_keys {
+
+-        if expected.contains(key) {
+
+-            missing.push(key.clone());
+
+-        }
+
+-    }
+
+-    for key in expected.difference(&present) {
+
+-        missing.push(key.clone());
+
+-    }
+
+-    missing.sort();
+
+-    missing.dedup();
+
+-    missing
+
++    let mut missing: Vec<String> = expected.difference(&present).cloned().collect();
+
++    missing.sort();
+
++    missing
+
+ }
+
+ 
+
+ pub fn present_count(manifest: &ArrayManifest) -> u64 {
+
+

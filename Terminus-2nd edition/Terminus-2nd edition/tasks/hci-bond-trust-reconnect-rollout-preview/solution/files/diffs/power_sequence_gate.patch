@@ -1,0 +1,22 @@
+﻿--- lib/boltlane/gates/power_sequence_gate.sh
++++ lib/boltlane/gates/power_sequence_gate.sh
+@@ -1,8 +1,18 @@
+ #!/usr/bin/env bash
+-# Baseline power-sequence gate ignores the off_first disconnect requirement.
+ set -euo pipefail
+ python3 - <<'PY'
+ import json, sys
++from pathlib import Path
++inv = json.loads(Path("/app/state/inventory.json").read_text())
+ blocked = {}
++for adapter in inv.get("adapters", []):
++    adapter_id = adapter["adapter_id"]
++    plan = adapter.get("power_plan")
++    for dev in adapter.get("devices", []):
++        key = f'{adapter_id}|{dev["mac"]}'
++        if plan == "off_first" and not bool(dev.get("disconnect_before_power")):
++            blocked[key] = "ineligible_power_sequence"
++        elif plan not in ("cycle", "off_first"):
++            blocked[key] = "ineligible_power_sequence"
+ json.dump(blocked, sys.stdout)
+ PY

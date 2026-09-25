@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+APP_ROOT="/app"
+LIB="${APP_ROOT}/internal/zfsroll"
+
+usage() {
+  echo "usage: zfshold load|compile|publish ..." >&2
+  exit 2
+}
+
+cmd="${1:-}"
+shift || true
+case "$cmd" in
+  load|ingest)
+    exec bash "${LIB}/load/load_inventory.sh" "$@"
+    ;;
+  compile)
+    exec bash "${LIB}/compile/compile_ledger.sh" "$@"
+    ;;
+  publish|export)
+    exec bash "${LIB}/publish/publish_atlas.sh" "$@"
+    ;;
+  *)
+    usage
+    ;;
+esac

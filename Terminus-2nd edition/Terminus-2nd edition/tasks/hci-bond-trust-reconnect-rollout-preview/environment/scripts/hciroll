@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+APP_ROOT="/app"
+LIB="${APP_ROOT}/lib/boltlane"
+
+usage() {
+  echo "usage: hciroll scan|compile|publish ..." >&2
+  exit 2
+}
+
+cmd="${1:-}"
+shift || true
+case "$cmd" in
+  scan|load)
+    exec bash "${LIB}/fleet_intake/collect_fleet_snapshot.sh" "$@"
+    ;;
+  compile)
+    exec bash "${LIB}/eligibility_engine/compose_reconnect_ledger.sh" "$@"
+    ;;
+  publish)
+    exec bash "${LIB}/atlas_emit/publish_rollout_atlas.sh" "$@"
+    ;;
+  *)
+    usage
+    ;;
+esac

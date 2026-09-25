@@ -1,0 +1,148 @@
+{
+  "oracle_frontier": [
+    {
+      "path": "internal/lamportmesh/merge.go",
+      "fix_symbols": ["Merge"],
+      "co_resident_helpers": ["Increment", "HappensBefore"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/roombind/shard_pull.go",
+      "fix_symbols": ["LoadRoom", "NumericShardSort"],
+      "co_resident_helpers": ["LoadRoom"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/modgate/precedence.go",
+      "fix_symbols": ["HigherPrecedence", "Rank"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/silencewin/window.go",
+      "fix_symbols": ["Active"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/receiptcollapse/suppress.go",
+      "fix_symbols": ["SameDelivery"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/deliveryproof/validate.go",
+      "fix_symbols": ["Valid", "DominatesRef"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/clockjump/detect.go",
+      "fix_symbols": ["MaxGap", "GapBetween"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/casaudit/reconcile_core.go",
+      "fix_symbols": ["Run"],
+      "co_resident_helpers": ["analyze", "bumpGeneration", "writeFindings"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/chronicle/timeline_seal.go",
+      "fix_symbols": ["Emit", "buildRows"],
+      "co_resident_helpers": [
+        "computeTimelineDigest",
+        "suppressedReceipts",
+        "effectiveModeration",
+        "collectMutes",
+        "payloadModeration",
+        "payloadReceipt",
+        "payloadMute",
+        "reconcilePayloadModeration",
+        "reconcilePayloadReceipt"
+      ],
+      "allowed_top_level_symbols": []
+    }
+  ],
+  "flipping_point_contract": {
+    "concentration_cap": 0.5,
+    "locations": [
+      {
+        "id": "cli",
+        "path": "cmd/vcreplay/main.go",
+        "controls_tests": [
+          "test_vclmp_bootstrap_load_materializes_lamport_snapshot",
+          "test_c4e91lam_reset_zeroes_reconcile_revision",
+          "test_c4e91lam_default_output_audit_timeline_jsonl"
+        ]
+      },
+      {
+        "id": "lamportmesh",
+        "path": "internal/lamportmesh/merge.go",
+        "controls_tests": [
+          "test_c4e91lam_shard_digest_matches_lamport_refmath"
+        ]
+      },
+      {
+        "id": "roombind",
+        "path": "internal/roombind/shard_pull.go",
+        "controls_tests": [
+          "test_c4e91lam_numeric_shard_order_shard_010_after_002",
+          "test_c4e91lam_staging_path_under_app_state"
+        ]
+      },
+      {
+        "id": "modgate",
+        "path": "internal/modgate/precedence.go",
+        "controls_tests": [
+          "test_c4e91lam_mod_precedence_conflict_rows",
+          "test_c4e91lam_mod_precedence_hides_m003",
+          "test_c4e91lam_hidden_precedence_timeline_refmath"
+        ]
+      },
+      {
+        "id": "silencewin",
+        "path": "internal/silencewin/window.go",
+        "controls_tests": [
+          "test_c4e91lam_mute_half_open_leak_u002_only"
+        ]
+      },
+      {
+        "id": "receipts",
+        "path": "internal/receiptcollapse/suppress.go",
+        "controls_tests": [
+          "test_c4e91lam_dup_delivery_flags_d003",
+          "test_c4e91lam_dup_delivery_omits_d003"
+        ]
+      },
+      {
+        "id": "clockjump",
+        "path": "internal/clockjump/detect.go",
+        "controls_tests": [
+          "test_c4e91lam_clock_gap_on_large_component_jump",
+          "test_c4e91lam_hidden_gap_trap_tb3_gap_bias"
+        ]
+      },
+      {
+        "id": "casaudit",
+        "path": "internal/casaudit/reconcile_core.go",
+        "controls_tests": [
+          "test_c4e91lam_clean_room_zero_findings",
+          "test_c4e91lam_reconcile_revision_increment",
+          "test_c4e91lam_clean_room_no_receipt_mismatch",
+          "test_c4e91lam_tb3_reconcile_generation_bump"
+        ]
+      },
+      {
+        "id": "chronicle",
+        "path": "internal/chronicle/timeline_seal.go",
+        "controls_tests": [
+          "test_c4e91lam_timeline_rows_match_lamport_refmath",
+          "test_c4e91lam_emit_blocked_before_reconcile_revision",
+          "test_c4e91lam_timeline_digest_final_row_only"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "scenario_name": "stale-allocation-filter",
+  "job_id": "web",
+  "task_group": "frontend",
+  "focus_alloc_id": "alloc-current",
+  "stale_cutoff_index": 420,
+  "csi_volumes": [],
+  "allocations": [
+    {
+      "alloc_id": "alloc-old",
+      "node_id": "node-1",
+      "node_class": "compute",
+      "create_index": 500,
+      "modify_index": 400,
+      "client_status": "complete",
+      "desired_status": "stop",
+      "reschedule_attempts": 0,
+      "reschedule_failed": false,
+      "csi_mounts": [],
+      "constraints": [],
+      "affinities": [],
+      "superseded_by": ""
+    },
+    {
+      "alloc_id": "alloc-superseded",
+      "node_id": "node-2",
+      "node_class": "compute",
+      "create_index": 410,
+      "modify_index": 430,
+      "client_status": "running",
+      "desired_status": "run",
+      "reschedule_attempts": 0,
+      "reschedule_failed": false,
+      "csi_mounts": [],
+      "constraints": [],
+      "affinities": [],
+      "superseded_by": "alloc-current"
+    },
+    {
+      "alloc_id": "alloc-current",
+      "node_id": "node-3",
+      "node_class": "compute",
+      "create_index": 415,
+      "modify_index": 425,
+      "client_status": "running",
+      "desired_status": "run",
+      "reschedule_attempts": 0,
+      "reschedule_failed": false,
+      "csi_mounts": [],
+      "constraints": [],
+      "affinities": [],
+      "superseded_by": ""
+    }
+  ]
+}

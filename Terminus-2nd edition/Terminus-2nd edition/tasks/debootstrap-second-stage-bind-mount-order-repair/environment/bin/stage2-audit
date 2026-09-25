@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="/app"
+# shellcheck source=/app/lib/common.sh
+source "$ROOT/lib/common.sh"
+# shellcheck source=/app/lib/parse.sh
+source "$ROOT/lib/parse.sh"
+# shellcheck source=/app/lib/mount.sh
+source "$ROOT/lib/mount.sh"
+# shellcheck source=/app/lib/commit.sh
+source "$ROOT/lib/commit.sh"
+# shellcheck source=/app/lib/gate.sh
+source "$ROOT/lib/gate.sh"
+# shellcheck source=/app/lib/hooks.sh
+source "$ROOT/lib/hooks.sh"
+# shellcheck source=/app/lib/resolv.sh
+source "$ROOT/lib/resolv.sh"
+# shellcheck source=/app/lib/sources.sh
+source "$ROOT/lib/sources.sh"
+# shellcheck source=/app/lib/staging.sh
+source "$ROOT/lib/staging.sh"
+# shellcheck source=/app/lib/ledger.sh
+source "$ROOT/lib/ledger.sh"
+# shellcheck source=/app/lib/export.sh
+source "$ROOT/lib/export.sh"
+# shellcheck source=/app/lib/driver.sh
+source "$ROOT/lib/driver.sh"
+
+S2_SNAPSHOT_PATH=""
+S2_GATE_PATH=""
+S2_STAGING_PATH=""
+S2_HOOKS_JSON=""
+
+usage() {
+  echo "usage: stage2-audit run --rootfs <dir> --output <file>" >&2
+  exit 2
+}
+
+cmd_run() {
+  local rootfs="" output=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --rootfs) rootfs="$2"; shift 2 ;;
+      --output) output="$2"; shift 2 ;;
+      *) usage ;;
+    esac
+  done
+  [[ -n "$rootfs" && -n "$output" && -d "$rootfs" ]] || usage
+  s2_load_meta "$rootfs"
+  s2_load_mounts "$rootfs"
+  local stem
+  stem="$(basename "$rootfs")"
+  S2_SNAPSHOT_PATH="/app/state/mount-snapshots/${stem}-$$.json"
+  S2_GATE_PATH="/app/state/mount-gate/${stem}-$$.json"
+  S2_STAGING_PATH="/app/state/stage2-staging/${stem}-$$.json"
+  S2_HOOKS_JSON="/app/state/stage2-staging/${stem}-$$-hooks.json"
+  mkdir -p /app/state/mount-snapshots /app/state/mount-gate /app/state/stage2-staging
+
+  s2_write_mount_snapshot "$rootfs" "$S2_SNAPSHOT_PATH"
+  s2_write_mount_gate "$S2_SNAPSHOT_PATH" "$S2_GATE_PATH"
+  s2_post_gate_pipeline "$rootfs"
+  local resolv_target sources_digest
+  resolv_target="$(s2_seed_resolv "$rootfs")"
+  sources_digest="$(s2_update_apt_sources "$rootfs" "$S2_META_CODENAME" "$S2_META_SUITE_RETRY")"
+  s2_write_staging_manifest "$S2_SNAPSHOT_PATH" "$S2_GATE_PATH" "$S2_HOOKS_JSON" "$resolv_target" "$sources_digest" "$S2_STAGING_PATH"
+  s2_append_ledger "$S2_STAGING_PATH"
+  mkdir -p "$(dirname "$output")"
+  s2_emit_audit_manifest "$S2_STAGING_PATH" "$S2_HOOKS_JSON" "$output"
+}
+
+main() {
+  [[ $# -ge 1 ]] || usage
+  case "$1" in
+    run) shift; cmd_run "$@" ;;
+    *) usage ;;
+  esac
+}
+
+main "$@"

@@ -1,0 +1,11 @@
+--- map.rs.orig
++++ map.rs
+@@ -22,7 +22,7 @@
+ 
+ pub fn batch_for_hour(hour: u32, batches: &[MembraneBatch]) -> Option<String> {
+     for b in batches {
+-        if hour > b.active_from_hour && hour < b.active_until_hour {
++        if hour >= b.active_from_hour && hour <= b.active_until_hour {
+             return Some(b.batch_id.clone());
+         }
+     }

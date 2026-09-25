@@ -1,0 +1,105 @@
+---
+description: LOCKED — load rules by problem; conflict resolution when rules disagree
+alwaysApply: false
+---
+
+# Terminus — Problem → rule loader (conflict resolution)
+
+**LOCKED.** When rules disagree, **this file wins** for *which guidance to apply*. General policy: **stricter** + **newer Snorkel additive (Jun 2026)** > legacy corpus examples > `_legacy/`.
+
+**Do not cherry-pick one rule file.** Load the **baseline** every time, then the **problem row** below.
+
+---
+
+## 1. Baseline (ENGINE_0 — always in context)
+
+Hub only — no extra Read needed:
+
+`LOCKED.mdc` · `WORKFLOW-MAP.mdc` · `shared/terminus-master-engine.mdc` · `shared/prompt-router.mdc` · `shared/problem-rule-loader.mdc` · `shared/core.mdc` · `shared/repo-workflow.mdc`
+
+**Then activate one engine** (hook sets `ENGINE_N`) and **`Read` all rules** listed in hook output or `scripts/terminus_engine_registry.py`.
+
+---
+
+## 2. Problem → load this next
+
+Pick **one primary problem** from summary or user message. If **two** apply (e.g. oracle 0 + EASY), use §4 priority — ask user **one** question only if tie.
+
+| Problem (summary / user) | Engine | Prompt `Read` first | Rules / docs to apply |
+|--------------------------|--------|---------------------|------------------------|
+| **TRIVIAL / EASY / ≥3/5 agents / worst >60%** | **ENGINE_7** | **`prompts/trivial-fix-invoke.md`** → `prompts/trivial.md` → `prompts/trivial-case-6.md` → `prompts/sp-hard-create-revise.md` | **`shared/trivial-fix-invoke-mandatory-steps.mdc`**, `revise/trivial-easy-difficulty-prompt-lock.mdc`, `revise/REVISE-RULES.mdc`, **`shared/unacceptable-task-classes.mdc`**, `revise/trivial-hardening-probes.mdc`, `prompts/trivial-repo-wide.md`, `shared/anti-trivial.mdc`, `revise/hardness.mdc`, `shared/difficulty-benchmark-models.mdc` |
+| **Oracle solution failed / oracle 0** | **ENGINE_7** | `prompts/oracleFix.md` (repo root same text) | `revise/oracle-fix-g025-g027.mdc`, `revise/platform-hardness-guards.mdc` — **before** trivial hardening |
+| **Verifier did not run / no reward.txt** | **ENGINE_7** | `prompts/hard.md` → `hard-case-3.md` if unclear | `shared/runtime-verifier.mdc`, `shared/test-sh-reward-block.mdc`, `reviewer/common-errors-reference.mdc` § Environment |
+| **Unsolvable / unfair / one test 0% forever** | **ENGINE_7** | `prompts/hard.md` → Case 1/2/3 per router | `shared/first-pass-blueprint.mdc` §4, **not** trivial trio |
+| **Reviewer line comments** | **ENGINE_7** | `prompts/reviewer.md` → RF1–RF6 | `reviewer/REVIEWER-RULES.mdc`, `reviewer/reviewer-checklist.mdc` |
+| **Post-create audit (read-only)** | **ENGINE_4** | `prompts/audit.md` | `audit/AUDIT-RULES.mdc`, `reviewer/reviewer-checklist.mdc` |
+| **New task create** | **ENGINE_3** | `create/new-task-pipeline-A-H.mdc` | `create/CREATE-RULES.mdc`, **`shared/unacceptable-task-classes.mdc`**, **`create/post-create-audit-loop.mdc` (Phase E auto)**, **`create/first-submit-acceptance-gate.mdc` (Phase F′)**, `revise/trivial-hardening-probes.mdc`, `shared/accepted-corpus.mdc` (≥2 reads), `prompts/sp-hard-create-revise.md` |
+| **MEDIUM band / mixed agents** | **ENGINE_7** | `prompts/medium.md` → case | `revise/REVISE-RULES.mdc` |
+| **Pre-upload / zip** | **ENGINE_5** then **ENGINE_6** | — | `verify/VERIFY-RULES.mdc`, **`create/first-submit-acceptance-gate.mdc` (first upload)**, `zip/ZIP-RULES.mdc` + §3 conflict checks |
+| **New ideas** | **ENGINE_1** | `prompts/newidea.md` | `ideas/IDEAS-RULES.mdc` |
+
+**Wrong @-tag:** summary wins (`shared/prompt-router.mdc`). Example: `@HARD` + EASY 4/5 → **trivial trio**, not `hard.md`.
+
+---
+
+## 3. Conflict resolution (when two rules disagree)
+
+| Topic | Older / weaker | **Apply (wins)** |
+|-------|----------------|------------------|
+| Base image `FROM` | Legacy `docker.io` in `_accepted-tasks/` only | **`canonical-base-image-gate.mdc`** (Snorkel ECR 10 images); `platform-preferences.mdc` §6 defers here |
+| `subcategories` | Harbor allow-list in `creation-rules.mdc`, lane labels | **`task-toml-subcategories-gate.mdc`** → always **`[]`** in this repo |
+| `category` | `_accepted-tasks/` often `debugging` / `software-engineering` | **`task-toml-category-gate.mdc`** → those two **blocked** on upload |
+| `instruction.md` style | Backticks / fenced CLI OK in old examples | **`instruction-prose-style.mdc`** — prose only |
+| Benchmark models | Opus 4.6, GPT-5.2 in old text | **`difficulty-benchmark-models.mdc`** — Opus **4.8**, GPT **5.5** |
+| `test.sh` reward end | `runtime-verifier.mdc` literal `$?` only | **`test-sh-reward-block.mdc`** — `rc=$?` **preferred**; both CI-valid |
+| Trivial default case | `trivial-harden.md`, Case 4-only | **`trivial-case-6.md`** + **`sp-hard-create-revise.md`** unless `trivial.md` Step B row 8 |
+| `codebase_size` | Platform allows `minimal` | **`create/accepted-patterns.mdc`** — new tasks **`small`/`large`** unless user overrides |
+| Dockerfile CI detail | Generic §2 in old docs | **`snorkel-dockerfile-image-best-practices.mdc`** + **`canonical-base-image-gate.mdc`** |
+| Common Errors / env defects | Scattered checklist only | **`reviewer/common-errors-reference.mdc`** |
+| Changelog vs memory | Ad-hoc | **`snorkel-platform-changelog-sync.mdc`** |
+| Any active vs `_legacy/terminus-*` | Legacy copies | **Active** `.cursor/rules/` (not `_legacy/`) |
+
+**Pinning vs environment:** unpinned pip/npm/`@sha256` missing → category **`pinning`**; tmux/test.sh network/copy layout → **`environment`** (`common-errors-reference.mdc`).
+
+---
+
+## 4. Multi-problem priority (fix order)
+
+| Order | Condition | Why |
+|-------|-----------|-----|
+| **1** | Oracle 0 / G-025–G-027 | Zip meaningless without oracle pass |
+| **2** | Verifier did not run | No agent score until reward.txt |
+| **3** | Unsolvable / unfair spec | Hardening trivial broken tasks wastes time |
+| **4** | TRIVIAL / EASY | Structural hardening (trio) |
+| **5** | Reviewer cosmetic | After behavior fair |
+| **6** | Zip | Last |
+
+If **1 + 4** both present → default **fix oracle first**; say so in one line unless user says “trivial first”.
+
+---
+
+## 5. Phase → minimum load set
+
+| Phase | Load |
+|-------|------|
+| **A Ideas** | `ideas/` + `prompts/newidea.md` |
+| **B Create** | `create/` + `accepted-corpus` + **`canonical-ecr-dockerfile-auto`** + `canonical-base-image-gate` + `instruction-prose-style` + `task-toml-subcategories-gate` + `task-toml-category-gate` |
+| **C Audit** | `audit/` + `reviewer/` + `common-errors-reference` (read-only) |
+| **D Revise** | Row from §2 + `first-pass-blueprint` §0–§4 |
+| **D′ Reviewer** | `reviewer/REVIEWER-RULES` + triage |
+| **E Verify** | `verify/` + `difficulty-benchmark-models` + `test-sh-reward-block` + **`canonical-ecr-dockerfile-auto`** |
+| **F Zip** | `zip/ZIP-RULES` only after E |
+
+---
+
+## 6. Quick decision (first reply)
+
+```
+Summary fact → primary problem (§2 row)
+Conflict? → §3 winner
+Multi-problem? → §4 order
+Read prompts/*.md from §2 column
+Inspect tasks/<name>/ files before edits
+```
+
+**Hub:** `shared/additive-rules-lock-index.mdc` · **Router:** `shared/prompt-router.mdc` · **Policy:** `LOCKED.mdc`

@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -euo pipefail
+S3LC_LIB="${S3LC_LIB:-/app/lib}"
+source "${S3LC_LIB}/common.sh"
+
+usage() {
+  echo "usage: s3lc ingest|simulate|cost-report ..." >&2
+  exit 1
+}
+
+cmd="${1:-}"; shift || usage
+case "$cmd" in
+  ingest)
+    inv="" bucket="" staging=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --inventory) inv="$2"; shift 2 ;;
+        --bucket) bucket="$2"; shift 2 ;;
+        --staging) staging="$2"; shift 2 ;;
+        *) usage ;;
+      esac
+    done
+    [[ -n "$inv" && -n "$bucket" && -n "$staging" ]] || usage
+    source "${S3LC_LIB}/staging/snapshot_writer.sh"
+    write_ingest_staging "$inv" "$bucket" "$staging"
+    ;;
+  simulate)
+    staging="" rules="" holds="" wstart="" wend=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --staging) staging="$2"; shift 2 ;;
+        --rules) rules="$2"; shift 2 ;;
+        --holds) holds="$2"; shift 2 ;;
+        --window-start) wstart="$2"; shift 2 ;;
+        --window-end) wend="$2"; shift 2 ;;
+        *) usage ;;
+      esac
+    done
+    [[ -n "$staging" && -n "$rules" && -n "$holds" && -n "$wstart" && -n "$wend" ]] || usage
+    source "${S3LC_LIB}/zq7/m06.sh"
+    run_simulation "$staging" "$rules" "$holds" "$wstart" "$wend"
+    ;;
+  cost-report|export)
+    staging="" rates="" out=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --staging) staging="$2"; shift 2 ;;
+        --rates) rates="$2"; shift 2 ;;
+        --out) out="$2"; shift 2 ;;
+        *) usage ;;
+      esac
+    done
+    [[ -n "$staging" && -n "$rates" && -n "$out" ]] || usage
+    source "${S3LC_LIB}/zq7/m05.sh"
+    build_cost_report "$staging" "$rates" "$out"
+    ;;
+  *) usage ;;
+esac

@@ -1,0 +1,66 @@
+{
+  "scenario_id": "warm-setup-trap",
+  "constellation_id": "LEO-E",
+  "sensor_profile": {
+    "sensor_id": "MSI-5",
+    "default_mode": "stripmap"
+  },
+  "pass_windows": [
+    {
+      "pass_id": "P1",
+      "orbit_id": "O501",
+      "start_sec": 600,
+      "end_sec": 700,
+      "cells": [
+        "C-W1",
+        "C-W2"
+      ]
+    }
+  ],
+  "imaging_requests": [
+    {
+      "request_id": "R1",
+      "cell_id": "C-W1",
+      "mode": "stripmap",
+      "priority_tier": 2,
+      "contract_id": "K1",
+      "imaging_duration_sec": 30
+    },
+    {
+      "request_id": "R2",
+      "cell_id": "C-W2",
+      "mode": "stripmap",
+      "priority_tier": 2,
+      "contract_id": "K2",
+      "imaging_duration_sec": 30
+    }
+  ],
+  "sensor_modes": {
+    "stripmap": {
+      "cold_setup_sec": 14,
+      "warm_setup_sec": 7
+    }
+  },
+  "cloud_forecasts": [
+    {
+      "pass_id": "P1",
+      "cell_id": "C-W1",
+      "risk_score": 0.08
+    },
+    {
+      "pass_id": "P1",
+      "cell_id": "C-W2",
+      "risk_score": 0.08
+    }
+  ],
+  "priority_contracts": [
+    {
+      "contract_id": "K1",
+      "preempt_rank": 45
+    },
+    {
+      "contract_id": "K2",
+      "preempt_rank": 45
+    }
+  ]
+}

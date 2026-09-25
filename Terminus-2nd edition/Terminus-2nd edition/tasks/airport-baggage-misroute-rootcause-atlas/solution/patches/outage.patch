@@ -1,0 +1,10 @@
+--- suppress_filter/window.rs
++++ suppress_filter/window.rs
+@@ -14,5 +14,5 @@ fn outage_covers(o: &OutageSpec, station: &str, minute: u64) -> bool {
+     if o.station_code != station {
+         return false;
+     }
+-    minute >= o.start_minute && minute <= o.end_minute
++    minute >= o.start_minute && minute < o.end_minute
+ }
+ 

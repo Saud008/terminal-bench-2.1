@@ -1,0 +1,11 @@
+--- a/internal/sqlledger/store.go
++++ b/internal/sqlledger/store.go
+@@ -31,7 +31,7 @@
+     if err != nil {
+         return err
+     }
+-    stmt, err := tx.Prepare(`INSERT OR REPLACE INTO mutation_ledger
++    stmt, err := tx.Prepare(`INSERT OR IGNORE INTO mutation_ledger
+         (partition_id, mutation_id, mutation_version, readiness_state)
+         VALUES (?, ?, ?, ?)`)
+     if err != nil {

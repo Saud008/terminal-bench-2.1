@@ -1,0 +1,116 @@
+{
+  "oracle_frontier": [
+    {
+      "path": "internal/manifestload/parse.go",
+      "fix_symbols": ["ComputeOperationHash"],
+      "co_resident_helpers": ["LoadManifests", "NormalizeQuery", "ValidateManifestHashes", "ToStaged"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/schemafit/check.go",
+      "fix_symbols": ["ManifestMatchesSchema"],
+      "co_resident_helpers": ["LoadExpectedSchema", "ExpectedSchemaForManifest", "CompoundSchemaHash"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/tenantquota/account.go",
+      "fix_symbols": ["CountTowardQuota"],
+      "co_resident_helpers": ["LoadMaxActive", "Headroom", "quotaBiasFromEnv"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/expiryevict/policy.go",
+      "fix_symbols": ["ShouldEvict"],
+      "co_resident_helpers": ["ApplyExpiry", "LoadTTL", "ttlBiasFromEnv"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/stagefreeze/write.go",
+      "fix_symbols": ["WriteStage", "computeDigest", "CompactStageJSON"],
+      "co_resident_helpers": ["ReadStage"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/ledgerreconcile/run.go",
+      "fix_symbols": ["RunReconcile", "bumpRevision"],
+      "co_resident_helpers": ["countStatus", "filterStatus", "writeReport", "NowMs", "LedgerPath", "ReportPath", "RevisionPath", "ReadRevision", "EnsureRevisionGate", "OpenLedger", "enforceQuota", "loadLedgerOps", "upsertOp"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/auditexport/sqlite.go",
+      "fix_symbols": ["ExportAudit"],
+      "co_resident_helpers": ["ValidateExportMeta", "AuditPath", "writeSidecar"],
+      "allowed_top_level_symbols": []
+    }
+  ],
+  "flipping_point_contract": {
+    "concentration_cap": 0.5,
+    "locations": [
+      {
+        "id": "cli",
+        "path": "cmd/pqgov/main.go",
+        "controls_tests": [
+          "test_gqlcache_smoke_binary_requires_subcommand",
+          "test_gql_persist_export_audit_blocked_without_reconcile"
+        ]
+      },
+      {
+        "id": "manifestload",
+        "path": "internal/manifestload/parse.go",
+        "controls_tests": [
+          "test_gql_persist_staging_snapshot_matches_reference",
+          "test_gql_persist_operation_hash_whitespace_collapse"
+        ]
+      },
+      {
+        "id": "schemafit",
+        "path": "internal/schemafit/check.go",
+        "controls_tests": [
+          "test_gql_persist_schema_drift_ingest_nonzero_exit",
+          "test_gql_hidden_compound_schema_staging"
+        ]
+      },
+      {
+        "id": "tenantquota",
+        "path": "internal/tenantquota/account.go",
+        "controls_tests": [
+          "test_gql_persist_reconcile_report_counters",
+          "test_gql_hidden_quota_bias_tightens_cap"
+        ]
+      },
+      {
+        "id": "expiryevict",
+        "path": "internal/expiryevict/policy.go",
+        "controls_tests": [
+          "test_gql_persist_reconcile_report_counters"
+        ]
+      },
+      {
+        "id": "stagefreeze",
+        "path": "internal/stagefreeze/write.go",
+        "controls_tests": [
+          "test_gql_persist_staging_file_is_compact_json",
+          "test_gql_tb3_staging_artifact_location"
+        ]
+      },
+      {
+        "id": "ledgerreconcile",
+        "path": "internal/ledgerreconcile/run.go",
+        "controls_tests": [
+          "test_gql_persist_reconcile_increments_revision_counter",
+          "test_gql_persist_apq_audit_seq_monotonic_on_repeat",
+          "test_gql_tb3_revision_gate_after_reconcile"
+        ]
+      },
+      {
+        "id": "auditexport",
+        "path": "internal/auditexport/sqlite.go",
+        "controls_tests": [
+          "test_gql_persist_audit_meta_matches_reconcile_summary",
+          "test_gql_persist_audit_rows_mirror_ledger_db",
+          "test_gql_hidden_compound_schema_audit_export"
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+--- a/chrono_integral/excursion_kernel.rs
++++ b/chrono_integral/excursion_kernel.rs
+@@ -2,7 +2,7 @@
+
+ pub fn excursion_minutes(rows: &[TelemetryRow]) -> u32 {
+     rows.iter()
+-        .filter(|r| r.celsius > r.threshold_celsius && r.minute_index > r.excursion_limit_minutes)
++        .filter(|r| r.celsius > r.threshold_celsius && r.minute_index >= r.excursion_limit_minutes)
+         .map(|r| r.minute_index)
+         .max()
+         .unwrap_or(0)

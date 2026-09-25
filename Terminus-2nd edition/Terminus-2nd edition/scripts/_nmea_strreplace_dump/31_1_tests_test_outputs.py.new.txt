@@ -1,0 +1,17 @@
+    def test_session_state_file_written(self) -> None:
+        """--state must persist session JSON at /app/state/merge-session.json."""
+        reset()
+        build()
+        seed = os.environ.get("VERIFIER_SEED", "nmea-merge")
+        part1 = build_session_part1_stream(seed)
+        try:
+            assert merge(part1, state=STATE).returncode == 0
+            assert STATE.is_file(), "missing merge-session.json"
+            data = json.loads(STATE.read_text(encoding="utf-8"))
+            assert "pending" in data
+            assert "rmc_date" in data
+        finally:
+            if part1.exists():
+                part1.unlink()
+
+    def test_hidden_gsa_order_matches_reference(self) -> None:

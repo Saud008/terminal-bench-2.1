@@ -1,0 +1,9 @@
+--- a/lib/xk7r/b03/fc03.sh
++++ b/lib/xk7r/b03/fc03.sh
+@@ -8,7 +8,7 @@ pick_recipe_version() {
+     return
+   fi
+   echo "$recipes_json" | jq -c --arg n "$recipe_name" --argjson t "$as_of" \
+-    '[.recipes[] | select(.recipe_name == $n and .effective_from_epoch <= $t)] | sort_by(.effective_from_epoch) | .[0]'
++    '[.recipes[] | select(.recipe_name == $n and .effective_from_epoch <= $t)] | sort_by(.effective_from_epoch) | .[-1]'
+ }

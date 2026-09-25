@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+match_rule_for_path() {
+  local path="$1"
+  local cascaded_json="$2"
+  python3 - <<'PY' "$path" "$cascaded_json"
+import json, fnmatch, sys
+
+def matches(path, pattern):
+    anchored = False
+    if pattern.startswith("/"):
+        anchored = True
+        pattern = pattern[1:]
+    if pattern.endswith("/**"):
+        base = pattern[:-3]
+        if path == base or path.startswith(base + "/"):
+            return True
+    if anchored:
+        return fnmatch.fnmatch(path, pattern)
+    leaf = path.split("/")[-1]
+    return fnmatch.fnmatch(path, pattern) or fnmatch.fnmatch(leaf, pattern)
+
+path = sys.argv[1]
+rules = json.loads(sys.argv[2])
+picked = {"transfer": "include", "matched_rule_index": -1, "token": "+"}
+for row in rules:
+    if not matches(path, row["pattern"]):
+        continue
+    token = row["token"]
+    transfer = "exclude" if token in ("-", "P", "R") else "include"
+    picked = {"transfer": transfer, "matched_rule_index": row["index"], "token": token}
+    break
+print(json.dumps(picked))
+PY
+}

@@ -1,0 +1,11 @@
+--- lib/zq7/m03.sh
++++ lib/zq7/m03.sh
+@@ -9,7 +9,7 @@
+     [[ -z "$row" ]] && continue
+     days="$(echo "$row" | jq -r '.days')"
+     target="$(echo "$row" | jq -r '.storage_class')"
+-    if [[ "$age" -gt "$days" ]]; then
++    if [[ "$age" -ge "$days" ]]; then
+       cls="$target"
+     fi
+   done < <(echo "$rule_json" | jq -c '.transitions | sort_by(.days)[]')

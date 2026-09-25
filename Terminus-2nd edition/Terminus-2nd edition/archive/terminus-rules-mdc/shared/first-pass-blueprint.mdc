@@ -1,0 +1,223 @@
+---
+description: First-pass acceptance blueprint from Sanjana's 1–2 iteration accepted tasks — avoid trivial, unsolvable, oracle, and verifier-did-not-run revisions (LOCKED)
+alwaysApply: false
+---
+
+# Terminus — First-pass acceptance blueprint (this repo)
+
+**Lifecycle Phase B** (create) and gates in **Phase E** (§0, §6). Load with **`.cursor/rules/shared/task-lifecycle.mdc`**, **`shared/WORKFLOW-MAP.mdc`**, **`shared/accepted-corpus.mdc`**.
+
+Use when **creating**, **auditing**, or **revising** tasks under `tasks/`. Goal: **accept in 1–2 iterations max**. Same rejection twice = design failure — fix at creation, not after platform feedback.
+
+---
+
+## 0. Issues that must NOT repeat (hard block)
+
+Cursor must **not** say ready, not suggest zip, and must **stop the user** if any row is unchecked:
+
+| # | Issue (must not happen again) | Pass only when |
+|---|------------------------------|----------------|
+| A | **TRIVIAL** — agents pass too easily; one edit fixes most tests | 4+ bugs / 3+ files; independent pytest reference; mutated inputs; rebuild in test.sh |
+| B | **Unsolvable / unfair** — hidden rules; instruction ≠ tests | Every test → instruction or `/app/docs/` cited in instruction; doc reviewed before upload |
+| C | **Oracle fail** — oracle 0% or wrong on platform | Local oracle → reward **1**; patches source + build; no hardcoded golden files |
+| D | **Verifier did not run** — 0%, no reward.txt, CI static fail | §2 Dockerfile + test.sh template verified in **actual files**; oracle then verifier locally |
+| E | **Same issue in revision 2+** — trivial/verifier/oracle fixed then broken again | Re-run full §6 after **every** edit; do not upload until all rows pass |
+| F | **Spam / templated / unacceptable class** — family saturation, clone, COPY/DUPLICATE/SIBLING/FABRICATED/SYNTHETIC | `./scripts/pack_zip.sh` / `--pack-gate` → **PASS**; `shared/unacceptable-task-classes.mdc` self-check; fix **`tasks/<name>/` in place** per **`shared/anti-spam-templated-submissions.mdc` § When FAIL**; **no** `TERMINUS_ANTI_SPAM_SKIP` without user override in current message |
+| G | **First-upload TRIVIAL bounce** — audit passed but platform EASY/TRIVIAL on first submit | **`create/first-submit-acceptance-gate.mdc` Phase F′** — probe table PASS before **first** `pack_zip.sh` |
+
+**1–2 revisions OK** for minor reviewer wording or platform quirks. **Not OK:** uploading without local oracle/NOP, or re-submitting with **A–G** still present.
+
+**Reference tasks** (platform ACCEPTED — live under `tasks/_accepted-tasks/`): see `shared/accepted-corpus.mdc` — **follow exactly**. Stack refs: Go `idle-offline-accrual-normalizer`, Rust `stun-attribute-tlv-binder`, C `modbus-map-merge`, Node `order-replay-reconcile`, harness `modbus-map-merge/tests/test.sh`.
+
+On conflict with generic examples, prefer **this blueprint + stricter Terminus rules**.
+
+---
+
+## 1. Design gate (before writing files)
+
+Do **not** start implementation until all are true:
+
+| Gate | Requirement |
+|------|-------------|
+| Language | **Rust or Go first**; C/Bash/TypeScript only when scenario demands it. No new medium Python script repair. |
+| Shape | Single-container **CLI or small service**; contract in `/app/docs/*.md`; output paths in instruction. |
+| Difficulty | **4+ interacting bugs** across **3+ modules** — fixing one layer still fails independent checks. |
+| Solvable | Every test maps to instruction **or** a doc path named in instruction. No hidden test-only rules. |
+| Not trivial | Independent Python reference in tests; runtime-mutated inputs; verifier-only fixtures under `/opt/`. |
+| Not clone | Not a rename of WAL/checksum, binary-frame, order-replay, JSONL merge, or SQLite import API clones. |
+| Metadata | **`subcategories = []`**; `codebase_size = "small"` with **20+ meaningful** env files; `difficulty = "medium"` or `"hard"`. |
+
+**Accepted families** (pick one, do not blend):
+
+1. **Protocol/binary CLI** (Rust/Go): parse/decode/repair + `/app/docs/` schema + `reference_*` in pytest.
+2. **Merge/export CLI** (Go/Rust/C): directory of inputs → canonical output + summary; independent merge in pytest.
+3. **Stateful replay** (Go/TS): idempotency, rollback, persisted counters; HTTP/CLI + DB/file state checks.
+
+---
+
+## 2. Block "verifier did not run" (CI + platform)
+
+These caused **0% / no verifier output** on rejected tasks; **all accepted tasks pass this block**.
+
+**Most common root causes** (Quality Guidelines / Running Tasks):
+
+| # | Cause | Symptom | Fix |
+|---|--------|---------|-----|
+| 1 | Missing **`tmux`** / **`asciinema`** | Harness session init fails silently; no pytest | Install both in Dockerfile |
+| 2 | Early **`test.sh` exit** before reward | No `/logs/verifier/reward.txt` | Seed reward **`0`** + CTRF first; write **`0`** on every early exit |
+| 3 | Runtime **`pip`/`uvx`/npm** with **`allow_internet = false`** | Hang/crash before pytest | Verifier deps in Dockerfile only |
+
+Full detail: `shared/runtime-verifier.mdc` § **Common `verifier_did_not_run` root causes**.
+
+### Dockerfile
+
+- `WORKDIR /app` (mandatory).
+- `tmux` + `asciinema` installed.
+- Verifier venv: `pytest==9.0.3`, `pytest-json-ctrf==0.5.0` in Dockerfile only.
+- **Rust:** `FROM --platform=linux/amd64` + **amd64 manifest digest**; `ENV CARGO_INCREMENTAL=0`; `build_timeout_sec = 900.0` (1800 if heavy release build).
+- **Go:** digest-pinned `golang:*-bookworm@sha256:...`; optional `/opt/verifier-scripts/rebuild-*` helper copied at build time.
+- Pre-build app in image; **never** copy `tests/` or `solution/`.
+
+### tests/test.sh (copy this shape)
+
+```bash
+mkdir -p /logs/verifier
+echo 0 > /logs/verifier/reward.txt
+printf '%s\n' '{"version":"1.0.0","results":{"summary":{"tests":0,"passed":0,"failed":0,"pending":0,"skipped":0,"other":0}}}}' > /logs/verifier/ctrf.json
+
+cd /app || {
+    echo 0 > /logs/verifier/reward.txt
+    exit 1
+}
+
+# rebuild agent code (cargo build / go build / npm run build) — on failure:
+# echo 0 > /logs/verifier/reward.txt; exit 1
+
+set +e
+/opt/verifier-venv/bin/python -m pytest -rA -o cache_dir=/tmp/pytest_cache \
+  --ctrf /logs/verifier/ctrf.json "${TEST_DIR:-/tests}/test_outputs.py"
+if [ $? -eq 0 ]; then
+ echo 1 > /logs/verifier/reward.txt
+else
+ echo 0 > /logs/verifier/reward.txt
+fi
+```
+
+**Hard rules:** no runtime `pip`/`apt`/`curl`/`npm install`/`uvx`; seed **`0`** + CTRF **before** guards/rebuild; **`cd /app`** explicitly; **`set +e` immediately before pytest**; file **ends** with `if [ $? -eq 0 ]` block — **no lines after `fi`**.
+
+### task.toml
+
+```toml
+[agent]
+timeout_sec = 1800
+[verifier]
+timeout_sec = 900
+[environment]
+allow_internet = false
+workdir = "/app"
+build_timeout_sec = 600.0  # 900+ for Rust/Go release builds
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+```
+
+---
+
+## 3. Block trivial (post-revision TRIVIAL label)
+
+| Do (accepted pattern) | Do not |
+|------------------------|--------|
+| Independent `reference_*` / merge / decode in pytest | Grep source or assert file exists only |
+| Run built binary via `subprocess` every test | Compare agent output to bundled golden file |
+| Mutate inputs per run (`random`, seed env, `/opt/verifier-fixtures/`) | Static fixture only agents can memorize |
+| Cross-module traps (parse + validate + export + ledger) | One obvious typo in one function |
+| Rebuild in `test.sh` so unfixed code fails compile/run | Skip rebuild; trust Dockerfile-only binary |
+| Contract in `/app/docs/`; instruction cites doc paths | Long checklist in instruction.md |
+
+**Revision trap:** reviewer feedback that adds bug locations, exact operators, or golden outputs → **triage reject** (`reviewer/REVIEWER-RULES.mdc`) unless user says apply verbatim.
+
+**No merging on revision:** edit the **existing** task folder in place (`tasks/<name>/`). Never merge two tasks or zips.
+
+---
+
+## 4. Block unsolvable (fairness / alignment)
+
+- Instruction: 1–3 short paragraphs; **absolute paths**; CLI invocation; output files; env overrides (e.g. `TB3_*`, `*_SEED`) when tests use them.
+- **Every** tested field/behavior appears in instruction **or** a doc linked from instruction (`/app/docs/...`).
+- Tests must not require behavior absent from those docs.
+- Docs must not contradict tests; if unsure, **align doc + tests before submit**, not after platform reject.
+- Distractor dirs (`/app/docs/context/`) only if instruction says they are **not** source of truth.
+
+---
+
+## 5. Oracle (must pass locally before zip)
+
+- Patch **real source files** under `/app` (see `solution/files/`, `patches/`, `oracle/` trees in accepted tasks) — not `echo` final JSON/CSV.
+- `cargo build --release --locked` or `go build` after patches; optionally smoke-run CLI.
+- Deterministic; no network; idempotent re-run.
+- Oracle must survive **verifier rebuild** (same path as `test.sh`).
+
+---
+
+## 6. Mandatory pre-zip loop (do not skip — blocks upload)
+
+**New tasks:** follow **`.cursor/rules/create/new-task-pipeline-A-H.mdc` Phases F–F′–G** from **`tasks/<name>/`** in WSL:
+
+```bash
+cd tasks/<name>
+stb harbor run -a oracle -p . --debug --force-build   # reward 1.0
+stb harbor run -a nop -p . --debug --force-build      # reward 0.0
+ruff check .
+# Phase F′: probe table per create/first-submit-acceptance-gate.mdc — must PASS
+./scripts/pack_zip.sh <name>
+```
+
+**Phase H:** one final message — verification table + `tasksubmit/<name>.zip` + platform rubric block (no `rubric.md` in task folder).
+
+**Revisions / legacy path** (also valid):
+
+```bash
+harbor run -a oracle -p ./tasks/<name> --debug --force-build
+harbor run -a nop -p ./tasks/<name> --debug --force-build
+```
+
+If steps 1–3 not run → respond **"not verified yet — do not upload"**. Never guess pass/fail.
+
+---
+
+## 7. Quick self-check (creation complete)
+
+- [ ] Rust amd64 digest + `CARGO_INCREMENTAL=0` (if Rust)
+- [ ] `test.sh`: seed 0, PWD guard, rebuild, `set +e`, Harbor ending block
+- [ ] pytest: module docstring + independent reference + subprocess CLI
+- [ ] 4+ bugs across 3+ files; oracle patches source, builds, runs
+- [ ] instruction ↔ tests ↔ `/app/docs/` aligned
+- [ ] No tests/solution/golden answers in `environment/`
+- [ ] `subcategories = []`; anonymous author; no local `rubric.md`
+- [ ] Oracle + NOP executed with evidence
+
+---
+
+## 8. What triggers repeat revisions (avoid)
+
+| Symptom | Usual cause | Fix at source |
+|---------|-------------|---------------|
+| Verifier did not run | Missing WORKDIR, wrong Rust arch, runtime pip, bad `test.sh` ending | §2 |
+| TRIVIAL | One-bug fix, grep tests, static golden | §3 |
+| Unsolvable / unfair | Hidden requirements, doc/test mismatch | §4 |
+| Oracle fail on platform | arm64 Rust binary, oracle skips rebuild | §2 + §5 |
+| CI static fail | Invalid `subcategories`, nested zip, `PYTEST_RC` in test.sh | `zip/ZIP-RULES.mdc` |
+
+**Do not upload** until §6 passes locally. Prefer fixing at creation time over revision churn.
+
+---
+
+## 9. Copy-paste gate (user → Cursor before every upload)
+
+```
+Pre-upload gate — tasks/<name>. Run shared/first-pass-blueprint.mdc §0 and §6.
+Report A–E pass/fail with evidence. Oracle + NOP commands and results required.
+Do not say ready if any of: TRIVIAL risk, unsolvable mismatch, oracle fail, verifier did not run.
+```
+
+Cursor must output the §0 table with **PASS/FAIL** per row before approving zip.

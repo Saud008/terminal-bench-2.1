@@ -1,0 +1,1 @@
+score-compatibility writes /app/work/compatibility-matrix/SCENARIO.jsonl with one JSON object per patient-unit pair in unit collected_at ascending order. Rows include patient_id, unit_id, compatible flag, and failure_codes array.

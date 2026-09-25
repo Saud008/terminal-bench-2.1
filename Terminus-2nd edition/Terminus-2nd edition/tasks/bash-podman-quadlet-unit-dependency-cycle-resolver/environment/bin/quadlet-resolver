@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source /app/lib/common.sh
+source /app/lib/parse.sh
+source /app/lib/dag.sh
+source /app/lib/emit.sh
+
+usage() {
+  echo "usage: quadlet-resolver <parse|order|render> --tree DIR [--out PATH]" >&2
+  exit 1
+}
+
+TREE=""
+OUT=""
+
+cmd="${1:-}"
+shift || usage
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --tree) TREE="$2"; shift 2 ;;
+    --out) OUT="$2"; shift 2 ;;
+    *) usage ;;
+  esac
+done
+
+[[ -n "${TREE}" ]] || usage
+
+case "${cmd}" in
+  parse)
+    [[ -n "${OUT}" ]] || usage
+    run_parse "${TREE}" "${OUT}"
+    ;;
+  order)
+    [[ -n "${OUT}" ]] || usage
+    run_order "${TREE}" "${OUT}"
+    ;;
+  render)
+    [[ -n "${OUT}" ]] || usage
+    run_render "${TREE}" "${OUT}"
+    ;;
+  *)
+    usage ;;
+esac

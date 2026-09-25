@@ -1,0 +1,93 @@
+---
+description: @REVISE RULES — TRIVIAL / oracle / unsolvable / verifier (includes G-025–G-027) (LOCKED)
+alwaysApply: false
+---
+
+# @REVISE RULES — Platform rejection (Phase D) — LOCKED
+
+**LOCKED policy:** `LOCKED.mdc` · triage reviewer leaks via **@REVIEWER RULES** when comments exist.
+
+**Trigger:** **TRIVIAL**, **EASY**, **oracle fail** / **Oracle solution failed**, **unsolvable** / unfair, **verifier did not run** — without reviewer line comments.
+
+**EASY label:** `prompts/easy.md` + `revise/hardness.mdc` (G-028–G-035) — **Case 6 first**; Case 4/5 forbidden unless user overrides.
+
+For reviewer line comments → **@REVIEWER RULES** (`reviewer/`).
+
+Inspect real files. **Edit in place only — do not merge.**
+
+**Full oracle guide (same content):** `oracle-fix-g025-g027.mdc` in this folder + repo-root **`oracleFix.md`**
+
+---
+
+## Oracle solution failed — LOCKED first (G-025–G-027)
+
+Platform oracle runs **`allow_internet = false`**. Local Docker with network hides:
+
+| ID | Failure |
+|----|---------|
+| **G-025** | `solve.sh` downloads/compiles (sbt, mix deps.get, npm, …) |
+| **G-026** | Zip missing `tests/test_outputs.py` |
+| **G-027** | Zip backslash paths (`environment\Dockerfile`) |
+
+### G-025 — `solve.sh` must be offline
+
+**Forbidden in `solution/solve.sh`:** `sbt`, `gradle`, `mvn`, `mix local.hex`, `mix deps.get`, `cargo fetch`, `npm install`, `pip install`, `curl`, `wget`, `apt-get install`. Copy-only fixes without recompile when stack uses compiled artifacts.
+
+| Stack | Oracle must |
+|-------|-------------|
+| **Scala/JVM** | Prebuilt `solution/fixed/*.jar` → `/app/lib/` — **no sbt/gradle/mvn in solve.sh** |
+| **Elixir** | `MIX_OFFLINE=1`; copy fixed `.ex` → **`mix compile --force`** only |
+| **Rust** | Copy prebuilt binary from `solution/fixed/` — no network `cargo fetch` |
+| **Go** | `go build -mod=vendor` — never `go mod download` in solve.sh |
+| **Go CGO** | `export PATH="/usr/local/go/bin:/app/bin:${PATH}"` + `export CGO_ENABLED=1` in **solve.sh and build.sh** |
+
+```bash
+cd tasks/<name>
+rg -n 'sbt |mix local\.|mix deps\.|gradle |mvn |cargo fetch|npm install|pip install|curl |wget ' solution/ || true
+python scripts/terminus_verify_submit.py --task-dir .
+docker run --rm --network none -v "$(pwd)/solution:/solution:ro" <image> bash /solution/solve.sh
+```
+
+### G-026 — zip must include `tests/test_outputs.py`
+
+```bash
+unzip -l tasksubmit/<name>.zip | rg 'tests/test_outputs\.py'
+```
+
+### G-027 — no backslashes in zip
+
+Repack with **`./scripts/pack_zip.sh <name>`** only (`zip/ZIP-RULES.mdc`). Never manual `zip -r` or `Compress-Archive` for upload.
+
+```bash
+python scripts/terminus_verify_submit.py --task-dir tasks/<name> --zip tasksubmit/<name>.zip
+```
+
+### Oracle revision prompt
+
+```
+Platform: Oracle solution failed. Follow oracleFix.md (G-025–G-027).
+
+1. Inspect solution/solve.sh — remove sbt/mix deps.get/network; apply stack table.
+2. Repack zip — include tests/test_outputs.py; forward-slash paths only.
+3. Run: python scripts/terminus_verify_submit.py --task-dir tasks/<name> --zip tasksubmit/<name>.zip
+4. Re-oracle and NOP before resubmit.
+```
+
+Registry detail: `platform-hardness-guards.mdc` in this folder.
+
+---
+
+## Other rejection types
+
+| Rejection | Fix |
+|-----------|-----|
+| **TRIVIAL** / **EASY** | `../shared/anti-trivial.mdc` + `revise/hardness.mdc` + `../shared/first-pass-blueprint.mdc` §3; **EASY or 5/5** → `prompts/easy.md` or `prompts/trivial-case-6.md` + `revise/trivial-hardening-probes.mdc` |
+| **Unsolvable / unfair** | `../shared/first-pass-blueprint.mdc` §4; **`prompts/hard.md`** → `hard-case-1/2/3.md` |
+| **Verifier did not run** | `../shared/runtime-verifier.mdc`: tmux/asciinema; bootstrap reward before guards; no runtime installs |
+| **Anti-spam / templated FAIL** (pack blocked) | **`../shared/anti-spam-templated-submissions.mdc` § When FAIL → fix** + **`../shared/unacceptable-task-classes.mdc`** — redesign verifier contract / bug lattice / family; re-run `--pack-gate` until PASS; **no skip override** without user message |
+
+**Never accept (any phase — zero tolerance):** **TEMPLATED**, **COPY**, **DUPLICATE**, **FAMILY**, **SAME_LANE**, **SIBLING**, **FABRICATED**, **SYNTHETIC** — **none allowed**; see `shared/unacceptable-task-classes.mdc`. `unacceptable_class_gate.py --pack-gate` must PASS all 8 before zip. TRIVIAL hardening **does not** bypass any class.
+
+**Do not:** relabel `difficulty` only; merge tasks; claim ready without oracle **1** + NOP **0**; use `TERMINUS_ANTI_SPAM_SKIP` to bypass templated/spam fixes.
+
+After edits → **@VERIFY RULES** → **@ZIP RULES**.

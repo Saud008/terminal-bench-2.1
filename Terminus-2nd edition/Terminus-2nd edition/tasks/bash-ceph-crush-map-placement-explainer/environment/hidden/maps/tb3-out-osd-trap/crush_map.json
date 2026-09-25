@@ -1,0 +1,62 @@
+{
+  "buckets": [
+    {
+      "id": -1,
+      "name": "default",
+      "type": "root",
+      "weight": 0,
+      "children": [
+        {
+          "id": -5,
+          "weight": 4096
+        }
+      ]
+    },
+    {
+      "id": -5,
+      "name": "host-gamma",
+      "type": "host",
+      "weight": 0,
+      "children": [
+        {
+          "id": 10,
+          "weight": 2048
+        },
+        {
+          "id": 11,
+          "weight": 1024
+        },
+        {
+          "id": 12,
+          "weight": 1024
+        },
+        {
+          "id": 13,
+          "weight": 1024
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": 0,
+      "name": "rep_rule",
+      "steps": [
+        {
+          "op": "take",
+          "arg": "default"
+        },
+        {
+          "op": "chooseleaf",
+          "arg": {
+            "num": 2,
+            "type": "host"
+          }
+        },
+        {
+          "op": "emit"
+        }
+      ]
+    }
+  ]
+}

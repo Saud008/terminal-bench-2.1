@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+TSCN_APP_ROOT="${TSCN_APP_ROOT:-/app}"
+export TSCN_APP_ROOT
+LIB="${TSCN_APP_ROOT}/lib/tscn"
+
+# shellcheck source=apply.sh
+source "${LIB}/apply.sh"
+
+usage() {
+  echo "usage: sceneplay apply --tree PATH --base NAME --left NAME --right NAME --seed N --export PATH" >&2
+  exit 2
+}
+
+cmd_apply() {
+  local tree="" base="" left="" right="" seed="" export_path=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --tree) tree="$2"; shift 2 ;;
+      --base) base="$2"; shift 2 ;;
+      --left) left="$2"; shift 2 ;;
+      --right) right="$2"; shift 2 ;;
+      --seed) seed="$2"; shift 2 ;;
+      --export) export_path="$2"; shift 2 ;;
+      *) usage ;;
+    esac
+  done
+  [[ -z "${tree}" || -z "${base}" || -z "${left}" || -z "${right}" || -z "${seed}" || -z "${export_path}" ]] && usage
+  [[ -d "${tree}" ]] || { echo "tree not found: ${tree}" >&2; exit 1; }
+
+  local payload exit_code
+  payload="$(tscn_apply_merge "${tree}" "${base}" "${left}" "${right}" "${seed}")"
+  tscn_write_export "${export_path}" "${payload}"
+  exit_code="$(tscn_apply_exit_code "${payload}")"
+  exit "${exit_code}"
+}
+
+main() {
+  [[ $# -lt 1 ]] && usage
+  case "$1" in
+    apply) shift; cmd_apply "$@" ;;
+    *) usage ;;
+  esac
+}
+
+main "$@"

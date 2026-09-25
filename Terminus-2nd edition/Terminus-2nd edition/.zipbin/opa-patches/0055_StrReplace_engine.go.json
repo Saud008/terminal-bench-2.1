@@ -1,0 +1,9 @@
+{
+  "path": "d:\\Terminus-2nd edition\\Terminus-2nd edition\\tasks\\opa-bundle-signature-digest-chain-verifier-repair\\environment\\internal\\eval\\engine.go",
+  "tool": "StrReplace",
+  "old_string": "\tallow, err := evalExpr(expr, data, input)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\ttrace := BuildTrace(expr, data, input)\n\treturn &EvalResult{Allow: allow, Trace: trace}, nil\n}",
+  "new_string": "\tallow, err := evalExpr(expr, data, input)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\ttrace := BuildTrace(expr, data, input)\n\tresult := &EvalResult{Allow: allow, Trace: trace}\n\t_ = WriteEvalAudit(bundleDir, seedStr, result)\n\treturn result, nil\n}",
+  "contents_len": 0,
+  "contents": null,
+  "contents_omitted": false
+}

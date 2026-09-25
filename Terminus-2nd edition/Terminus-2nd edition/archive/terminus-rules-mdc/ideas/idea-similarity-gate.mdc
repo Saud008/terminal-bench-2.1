@@ -1,0 +1,124 @@
+---
+description: LOCKED — ideas similarity gate (block >0.10; auto CREATE when sim==0)
+alwaysApply: false
+---
+
+# Terminus — Idea similarity gate (LOCKED — ENGINE_1 → ENGINE_3)
+
+**When:** User gives **language + domain + idea** (after ASK FIRST intake). **Before** any `tasks/<name>/` folder exists.
+
+**Script (mandatory — agent runs, user does not):**
+
+```bash
+python3 scripts/idea_similarity_gate.py \
+  --language <lang> \
+  --domain "<domain>" \
+  --title "<short title>" \
+  --summary "<user idea 1–3 sentences>"
+```
+
+Reports: `jobs-local/idea-similarity-gate-last.json` · `jobs-local/anti-spam-ideas-last.json`
+
+---
+
+## Thresholds (ideas only — not pack zip)
+
+| Weighted similarity | Verdict | Agent action |
+|---------------------|---------|--------------|
+| **> 0.10** | **BLOCK** | Stop. Tell user nearest neighbor + change domain/shape. **No CREATE.** |
+| **== 0.0** (no blockers) | **PASS + AUTO_CREATE** | **Immediately** start `@CREATE` Phase A→H — **no** “say build it” |
+| **0 < sim ≤ 0.10** | **PASS** | User explicit OK or revised idea — then CREATE |
+
+Pack/post-create/zip gates still use **0.85 / 0.65** — do not confuse with ideas gate.
+
+---
+
+## Mandatory steps (no skip)
+
+### Intake (ENGINE_1)
+
+1. **ASK** — language, domain, user idea (if missing)
+2. **Repository-state / task-generation check** — idea must **not** be fix/repair/debug objective (`repository_state_gate.py` / `task-generation-mandatory.mdc`) — **before** similarity
+3. **Corpus scan** — `ls tasks/`, `pending/`, `_accepted-tasks/`, `tasksubmit/`
+4. **`idea_similarity_gate.py`** — weighted similarity **+ task uniqueness table** (`task-uniqueness-gate.mdc`) — no guessing
+5. **BLOCKED** → stop with evidence from JSON report (similarity **or** uniqueness FAIL)
+6. **AUTO_CREATE=yes** → `@CREATE` pipeline **same turn** (Phase A→H)
+7. **PASS, sim > 0** → one-line confirm or user says build → then CREATE
+
+### CREATE (ENGINE_3) — after idea PASS
+
+| Phase | Step |
+|-------|------|
+| **A** | Read ≥2 `_accepted-tasks/` + skeleton |
+| **B** | Similarity table (again vs built slug) |
+| **C** | One hard idea → implement |
+| **D** | Create `tasks/<name>/` only |
+| **E** | **Auto audit** 2–4 rounds (`post-create-audit-loop.mdc`) |
+| **F** | Oracle 1.0, NOP 0.0, ruff |
+| **F′** | Probes + `first_submit_pack_gate.py --record` |
+| **G** | `./scripts/pack_zip.sh` (anti-spam + CI + F′ hard block) |
+| **H** | One final message — table + rubric |
+
+---
+
+## Task uniqueness (LOCKED — same turn as similarity)
+
+Full rules: **`shared/task-uniqueness-gate.mdc`**. Script embeds **14-check table** in `jobs-local/idea-similarity-gate-last.json` → `uniqueness`.
+
+**No:** duplicate · copy · sibling · same-family · same-lane · template variant · fabricated benchmark · synthetic puzzle · spam
+
+**Must have:** distinct workflow · primary artifact · reasoning pattern · operational objective · industry use case
+
+Any uniqueness **FAIL** → **BLOCK** even when weighted sim ≤ 0.10.
+
+---
+
+## Forbidden
+
+**Never-accept classes:** `shared/unacceptable-task-classes.mdc` — **TEMPLATED**, **COPY**, **DUPLICATE**, **FAMILY**, **SAME_LANE**, **SIBLING**, **FABRICATED**, **SYNTHETIC**. Ideas gate blocks these + distinct-dimension gaps when sim **> 0.10** or uniqueness table FAIL.
+
+| Do not | Do instead |
+|--------|------------|
+| Guess similarity without running script | `idea_similarity_gate.py` |
+| Idea objective is fix/repair/debug/broken | Reframe per `shared/task-generation-mandatory.mdc` |
+| CREATE when weighted **> 0.10** | Block + new domain |
+| Wait for “build it” when **sim == 0** | Auto Phase A |
+| Skip Phase E audit after CREATE | `post-create-audit-loop.mdc` |
+| Skip F / F′ before zip | Evidence + probe record |
+| Skip pack anti-spam / CI | `pack_zip.sh` only |
+
+---
+
+## Agent reply shape (similarity turn)
+
+```markdown
+## Corpus check
+- tasks/: N · pending/: N · _accepted-tasks/: N
+
+## Similarity (scripted — not guessed)
+- Nearest: tasks/<slug>/
+- Weighted sim: 0.000
+- Threshold: block if > 0.10 · auto-create if == 0.0
+- Verdict: BLOCKED | PASS (auto CREATE) | PASS (confirm build)
+- Report: jobs-local/idea-similarity-gate-last.json
+
+## Task uniqueness (scripted — not guessed)
+| Check | PASS / FAIL |
+| No duplicate tasks | PASS |
+| No copy tasks | PASS |
+| … (all 14 rows from script) | |
+| **Verdict** | **PASS** |
+
+## Next
+- BLOCKED (similarity or uniqueness): change domain/workflow/artifact — I will not create.
+- sim == 0 + uniqueness PASS: starting @CREATE Phase A now.
+- 0 < sim ≤ 0.10 + uniqueness PASS: confirm or I wait.
+```
+
+---
+
+## Related
+
+- `ideas/IDEAS-ASK-FIRST.mdc` · `prompts/newidea.md`
+- `create/new-task-pipeline-A-H.mdc` · `create/post-create-audit-loop.mdc`
+- `scripts/anti_spam_pipeline.py` — `IDEA_VERDICT_FAIL`, `IDEA_AUTO_CREATE_SIM`

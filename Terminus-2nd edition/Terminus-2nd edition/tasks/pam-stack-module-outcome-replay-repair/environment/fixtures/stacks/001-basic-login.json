@@ -1,0 +1,10 @@
+{
+  "stack_id": "001-basic-login",
+  "service": "login",
+  "entries": [
+    {"phase": "auth", "control": "required", "module": "stubs/pam_permit.sh", "args": []},
+    {"phase": "account", "control": "required", "module": "stubs/pam_permit.sh", "args": []},
+    {"phase": "account", "control": "required", "module": "stubs/pam_env.sh", "args": ["ROLE=login"]},
+    {"phase": "session", "control": "required", "module": "stubs/pam_env.sh", "args": ["SHELL=/bin/bash"]}
+  ]
+}

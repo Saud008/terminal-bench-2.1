@@ -1,0 +1,19 @@
+--- environment/internal/passport/window.go
++++ environment/internal/passport/window.go
+@@ -8,7 +8,6 @@
+ 	return time.Parse(dateLayout, s)
+ }
+ 
+-// PassportValidAt reports whether reference falls inside the passport validity window.
+ func PassportValidAt(reference, issue, expiry string) (bool, error) {
+ 	ref, err := parseDay(reference)
+ 	if err != nil {
+@@ -25,7 +24,7 @@
+ 	if ref.Before(iss) {
+ 		return false, nil
+ 	}
+-	if !ref.Before(exp) {
++	if ref.After(exp) {
+ 		return false, nil
+ 	}
+ 	return true, nil

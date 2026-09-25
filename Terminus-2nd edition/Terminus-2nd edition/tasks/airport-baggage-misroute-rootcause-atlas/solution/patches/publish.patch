@@ -1,0 +1,11 @@
+--- output_facet/write_doc.rs
++++ output_facet/write_doc.rs
+@@ -81,7 +81,7 @@ pub fn write_atlas(
+         if row.outage_suppressed {
+             suppressed_count += 1;
+         }
+-        if row.misroute_cause != "ROUTED_OK" {
++        if row.misroute_cause != "ROUTED_OK" && row.misroute_cause != "OUTAGE_SUPPRESSED" {
+             misroute_count += 1;
+         }
+     }

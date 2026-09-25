@@ -1,0 +1,48 @@
+def _apply_partial_stubs(
+    *,
+    digest_stub: str | None = None,
+    trace_stub: str | None = None,
+    preview_stub: str | None = None,
+) -> tuple[dict[str, str], dict[str, bool]]:
+    """Swap stub sources; when a combined swap breaks compile, apply each stub separately."""
+    stubs = Path(__file__).parent / "stubs"
+    paths = _go_paths()
+    backups = {key: paths[key].read_text(encoding="utf-8") for key in paths}
+    mapping: dict[str, str | None] = {
+        "digest": digest_stub,
+        "trace": trace_stub,
+        "preview": preview_stub,
+    }
+    requested = [key for key, stub_name in mapping.items() if stub_name]
+
+    def _build() -> subprocess.CompletedProcess[str]:
+        return run(["go", "build", "-mod=readonly", "-o", str(CLI), "./cmd/bundlectl"], check=False)
+
+    def _write_all(stubs_to_apply: dict[str, str | None]) -> None:
+        for key in paths:
+            paths[key].write_text(backups[key], encoding="utf-8")
+        for key, stub_name in stubs_to_apply.items():
+            if stub_name:
+                shutil.copy(stubs / stub_name, paths[key])
+
+    applied = {key: False for key in requested}
+    _write_all(mapping)
+    if requested and _build().returncode == 0:
+        for key in requested:
+            applied[key] = True
+        return backups, applied
+
+    _write_all({key: None for key in paths})
+    build_install()
+    for key in requested:
+        stub_name = mapping[key]
+        assert stub_name
+        paths[key].write_text(backups[key], encoding="utf-8")
+        shutil.copy(stubs / stub_name, paths[key])
+        if _build().returncode == 0:
+            applied[key] = True
+        else:
+            paths[key].write_text(backups[key], encoding="utf-8")
+            build_install()
+    assert _build().returncode == 0, "bundlectl must compile after partial stub selection"
+    return backups, applied

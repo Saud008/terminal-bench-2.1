@@ -1,0 +1,16 @@
+--- internal/sealio/persist_stage.go
++++ internal/sealio/persist_stage.go
+@@ -49,11 +49,11 @@
+ 
+ func computeDigest(scenario string, left, right model.Snapshot) (string, error) {
+     payload := map[string]any{
+-        "scenario": scenario,
+         "left":     left,
+         "right":    right,
++        "scenario": scenario,
+     }
+-    data, err := json.MarshalIndent(payload, "", "  ")
++    data, err := json.Marshal(payload)
+     if err != nil {
+         return "", err
+     }

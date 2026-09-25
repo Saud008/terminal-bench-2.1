@@ -1,0 +1,74 @@
+{
+  "probes": [
+    {
+      "probe_id": "p_alice_mail_write",
+      "subject_dn": "cn=alice,ou=people,dc=example,dc=com",
+      "entry_dn": "cn=alice,ou=people,dc=example,dc=com",
+      "attribute": "mail",
+      "right": "write"
+    },
+    {
+      "probe_id": "p_alice_mail_deny_readers",
+      "subject_dn": "cn=bob,ou=people,dc=example,dc=com",
+      "entry_dn": "cn=alice,ou=people,dc=example,dc=com",
+      "attribute": "mail",
+      "right": "write"
+    },
+    {
+      "probe_id": "p_carol_password_deny",
+      "subject_dn": "cn=carol,ou=people,dc=example,dc=com",
+      "entry_dn": "cn=carol,ou=people,dc=example,dc=com",
+      "attribute": "userPassword",
+      "right": "write"
+    },
+    {
+      "probe_id": "p_bob_read_alice",
+      "subject_dn": "cn=bob,ou=people,dc=example,dc=com",
+      "entry_dn": "cn=alice,ou=people,dc=example,dc=com",
+      "attribute": "mail",
+      "right": "read"
+    },
+    {
+      "probe_id": "p_reader_search_ou",
+      "subject_dn": "cn=alice,ou=people,dc=example,dc=com",
+      "entry_dn": "ou=people,dc=example,dc=com",
+      "attribute": "ou",
+      "right": "search"
+    },
+    {
+      "probe_id": "p_admin_read_group",
+      "subject_dn": "cn=alice,ou=people,dc=example,dc=com",
+      "entry_dn": "cn=readers,ou=groups,dc=example,dc=com",
+      "attribute": "member",
+      "right": "read"
+    },
+    {
+      "probe_id": "p_carol_no_admin_group",
+      "subject_dn": "cn=carol,ou=people,dc=example,dc=com",
+      "entry_dn": "cn=admins,ou=groups,dc=example,dc=com",
+      "attribute": "member",
+      "right": "read"
+    },
+    {
+      "probe_id": "p_anonymous_person_deny",
+      "subject_dn": "cn=unknown,ou=people,dc=example,dc=com",
+      "entry_dn": "cn=bob,ou=people,dc=example,dc=com",
+      "attribute": "mail",
+      "right": "write"
+    },
+    {
+      "probe_id": "p_nested_reader_bob",
+      "subject_dn": "cn=bob,ou=people,dc=example,dc=com",
+      "entry_dn": "cn=carol,ou=people,dc=example,dc=com",
+      "attribute": "mail",
+      "right": "read"
+    },
+    {
+      "probe_id": "p_subtree_self_alice_read",
+      "subject_dn": "cn=alice,ou=people,dc=example,dc=com",
+      "entry_dn": "cn=alice,ou=people,dc=example,dc=com",
+      "attribute": "cn",
+      "right": "read"
+    }
+  ]
+}

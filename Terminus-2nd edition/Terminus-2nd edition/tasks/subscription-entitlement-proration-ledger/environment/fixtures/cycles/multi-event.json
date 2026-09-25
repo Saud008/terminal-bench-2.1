@@ -1,0 +1,59 @@
+{
+  "scenario_id": "multi-event",
+  "customer_id": "cust_h1c902",
+  "cycle_start": "2026-08-01",
+  "cycle_end": "2026-08-31",
+  "billing_anchor_day": 1,
+  "initial_plan": "starter",
+  "plans": {
+    "starter": {
+      "monthly_cents": 3000,
+      "included_units": 100,
+      "overage_cents": 10
+    },
+    "growth": {
+      "monthly_cents": 6000,
+      "included_units": 300,
+      "overage_cents": 8
+    },
+    "scale": {
+      "monthly_cents": 9000,
+      "included_units": 800,
+      "overage_cents": 5
+    }
+  },
+  "events": [
+    {
+      "event_type": "plan_change",
+      "event_date": "2026-08-10",
+      "from_plan": "starter",
+      "to_plan": "growth"
+    },
+    {
+      "event_type": "plan_change",
+      "event_date": "2026-08-22",
+      "from_plan": "growth",
+      "to_plan": "scale"
+    },
+    {
+      "event_type": "usage",
+      "event_date": "2026-08-05",
+      "units": 40
+    },
+    {
+      "event_type": "usage",
+      "event_date": "2026-08-18",
+      "units": 250
+    }
+  ],
+  "coupons": [
+    {
+      "coupon_id": "LOYAL5",
+      "precedence": 1,
+      "kind": "percent",
+      "value": 5,
+      "stackable": true
+    }
+  ],
+  "anchor_shifts": []
+}

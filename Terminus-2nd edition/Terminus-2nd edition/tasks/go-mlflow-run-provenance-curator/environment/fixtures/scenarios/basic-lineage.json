@@ -1,0 +1,56 @@
+{
+  "scenario_name": "basic-lineage",
+  "experiment_id": "exp-vision",
+  "focus_run_id": "run-train-child",
+  "dataset_manifests": {
+    "imagenet-subset": {
+      "version_hash": "ds-a1b2c3",
+      "row_count": 12000
+    }
+  },
+  "runs": [
+    {
+      "run_id": "run-root",
+      "parent_run_id": "",
+      "params": {"framework": "pytorch", "task": "classify"},
+      "metrics": [
+        {"key": "loss", "step": 0, "value": 2.1, "epoch": 0}
+      ],
+      "artifacts": [
+        {"rel_path": "meta/experiment.json", "content": "{\"mode\":\"train\"}"}
+      ],
+      "dataset_pins": []
+    },
+    {
+      "run_id": "run-preprocess",
+      "parent_run_id": "run-root",
+      "params": {"shuffle": "true"},
+      "metrics": [
+        {"key": "rows", "step": 1, "value": 12000, "epoch": 0}
+      ],
+      "artifacts": [
+        {"rel_path": "./pipelines/preprocess.yaml", "content": "version: 2\n"}
+      ],
+      "dataset_pins": [
+        {"name": "imagenet-subset", "version_hash": "ds-a1b2c3"}
+      ]
+    },
+    {
+      "run_id": "run-train-child",
+      "parent_run_id": "run-preprocess",
+      "params": {"lr": "0.001", "batch": "64"},
+      "metrics": [
+        {"key": "accuracy", "step": 5, "value": 0.41, "epoch": 1},
+        {"key": "loss", "step": 3, "value": 0.88, "epoch": 1},
+        {"key": "loss", "step": 1, "value": 1.05, "epoch": 1}
+      ],
+      "artifacts": [
+        {"rel_path": "model/checkpoint.bin", "content": "CKPT-v1"},
+        {"rel_path": "metrics/summary.json", "content": "{\"best\":0.41}"}
+      ],
+      "dataset_pins": [
+        {"name": "imagenet-subset", "version_hash": "ds-a1b2c3"}
+      ]
+    }
+  ]
+}

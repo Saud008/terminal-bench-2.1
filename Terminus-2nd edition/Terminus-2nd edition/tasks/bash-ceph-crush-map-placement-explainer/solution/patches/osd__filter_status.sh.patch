@@ -1,0 +1,13 @@
+--- a/internal/crpe91/osd/filter_status.sh
++++ b/internal/crpe91/osd/filter_status.sh
+@@ -6,9 +6,5 @@
+   local status in_flag
+   status=$(echo "$row" | jq -r '.status')
+   in_flag=$(echo "$row" | jq -r '.in')
+-  if [[ "$status" == "down" ]]; then
+-    echo true
+-    return
+-  fi
+-  [[ "$in_flag" == "true" ]]
++  [[ "$status" == "up" && "$in_flag" == "true" ]]
+ }

@@ -1,0 +1,28 @@
+--- a/src/zq81.rs
++++ b/src/zq81.rs
+@@ -1,12 +1,20 @@
+ use anyhow::Result;
+ 
+-use crate::kx42_snapshot::StagingEnvelope;
++use crate::mp93::{export_digest, verify_ledger_envelope};
++use crate::kx42_snapshot::{read_envelope, StagingEnvelope};
+ 
+-/// Verify staging envelope and ledger head alignment before export.
+-pub fn verify_export_binding(_envelope: &StagingEnvelope) -> Result<()> {
+-    Ok(())
++pub fn verify_export_binding(envelope: &StagingEnvelope) -> Result<()> {
++    verify_ledger_envelope(
++        &envelope.wire_digest,
++        &export_digest(&envelope.scene),
++        envelope.scene.revision,
++    )
+ }
+ 
+ pub fn run_verify() -> Result<bool> {
+-    Ok(true)
++    let envelope = read_envelope()?;
++    match verify_export_binding(&envelope) {
++        Ok(()) => Ok(true),
++        Err(_) => Ok(false),
++    }
+ }

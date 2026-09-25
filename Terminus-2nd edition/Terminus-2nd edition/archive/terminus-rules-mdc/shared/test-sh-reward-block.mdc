@@ -1,0 +1,64 @@
+---
+description: tests/test.sh reward block — rc=$? preferred; CI accepts $? or $rc (Jun 2026 Snorkel)
+alwaysApply: false
+---
+
+# Terminus — `tests/test.sh` reward block (Snorkel Jun 3, 2026)
+
+**Additive rule.** Snorkel **Writing Tests** / Welcome changelog (Jun 3, 2026): Harbor `check_test_sh` accepts **both** forms; **`rc=$?` immediately after pytest is preferred** because any command between pytest and the conditional clobbers `$?`.
+
+Older repo text that forbids `rc=$?` in the **final** reward block is **superseded by this file** for new/revised tasks. Legacy `_legacy/` copies are archive only.
+
+## Required shape
+
+1. Bootstrap `/logs/verifier` — seed reward **`0`** + minimal `ctrf.json` **before** guards/rebuild (`shared/runtime-verifier.mdc`).
+2. **`set +e`** immediately before pytest.
+3. Capture exit code **on the next line** after pytest (preferred) **or** use inline `$?` with **nothing** between pytest and `if`.
+4. Write **`0` or `1`** to `/logs/verifier/reward.txt`.
+5. File **ends** at closing `fi` — **no trailing `exit`** (Harbor reads reward file, not script exit code).
+
+## Preferred (defensive)
+
+```bash
+set +e
+/opt/verifier-venv/bin/python -m pytest -rA -o cache_dir=/tmp/pytest_cache \
+  --ctrf /logs/verifier/ctrf.json "${TEST_DIR:-/tests}/test_outputs.py"
+rc=$?
+if [ "$rc" -eq 0 ]; then
+  echo 1 > /logs/verifier/reward.txt
+else
+  echo 0 > /logs/verifier/reward.txt
+fi
+```
+
+## Also CI-valid (no lines between pytest and if)
+
+```bash
+set +e
+/opt/verifier-venv/bin/python -m pytest -rA -o cache_dir=/tmp/pytest_cache \
+  --ctrf /logs/verifier/ctrf.json "${TEST_DIR:-/tests}/test_outputs.py"
+if [ $? -eq 0 ]; then
+  echo 1 > /logs/verifier/reward.txt
+else
+  echo 0 > /logs/verifier/reward.txt
+fi
+```
+
+## Forbidden
+
+| Pattern | Why |
+|---------|-----|
+| `PYTEST_RC=`, `pytest_status=`, other names not from `$?` on prior line | CI may reject |
+| Commands/logs between pytest and reward `if` when using `$?` | Silent wrong reward |
+| `exit` after final `fi` | Reviewers must not require it; gate forbids |
+| Runtime `pip`/`apt`/`curl`/`uvx`/`npm` before pytest | `allow_internet = false` |
+
+## Milestone tasks
+
+Same rule per `steps/milestone_N/tests/test.sh`.
+
+## Related
+
+- `shared/runtime-verifier.mdc` — bootstrap, offline deps
+- `reviewer/common-errors-reference.mdc` — environment / test.sh network installs
+- `shared/snorkel-platform-changelog-sync.mdc` — changelog map

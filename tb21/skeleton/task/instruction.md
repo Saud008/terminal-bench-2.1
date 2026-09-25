@@ -1,0 +1,1 @@
+<<REPLACE: 1 sentence to 3 short paragraphs, written the way you'd actually prompt a coding agent. State the outcome and every output file as an absolute path in backticks. No steps, no hints, no task name, no mention of tests. Under 1500 tokens.>>

@@ -1,0 +1,26 @@
+--- a/src/pyenv_clause.rs
++++ b/src/pyenv_clause.rs
+@@ -8,6 +8,13 @@
+     m
+ }
+ 
++fn py_tuple(v: &str) -> (u32, u32) {
++    let parts: Vec<_> = v.split('.').collect();
++    let maj = parts.first().and_then(|s| s.parse().ok()).unwrap_or(0);
++    let min = parts.get(1).and_then(|s| s.parse().ok()).unwrap_or(0);
++    (maj, min)
++}
++
+ pub fn eval_marker(expr: &str, env: &HashMap<String, String>) -> bool {
+     let expr = expr.trim();
+     if expr.is_empty() {
+@@ -16,8 +23,7 @@
+     if let Some(rest) = expr.strip_prefix("python_version>=") {
+         let need = rest.trim().trim_matches('"').trim_matches('\'');
+         let have = env.get("python_version").map(|s| s.as_str()).unwrap_or("");
+-        // NOTE: compare path for python_version markers
+-        return have >= need;
++        return py_tuple(have) >= py_tuple(need);
+     }
+     if let Some(rest) = expr.strip_prefix("sys_platform==") {
+         let need = rest.trim().trim_matches('"').trim_matches('\'');

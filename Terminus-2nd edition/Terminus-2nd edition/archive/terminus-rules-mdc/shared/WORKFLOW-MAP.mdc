@@ -1,0 +1,102 @@
+---
+description: Terminus — main hub (ENGINE_0). Lazy-load ENGINE_1–7 per terminus-master-engine.mdc.
+alwaysApply: false
+---
+
+# Terminus Edition 2 — Main hub (LOCKED)
+
+**ENGINE_0 hub (always on):** `LOCKED.mdc`, this file, `shared/terminus-master-engine.mdc`, `shared/prompt-router.mdc`, `shared/problem-rule-loader.mdc`, `shared/core.mdc`, `shared/repo-workflow.mdc`. **All other** `.mdc` rules lazy-load per **ENGINE_1–7** — see **`shared/terminus-master-engine.mdc`** and `scripts/terminus_engine_registry.py`.
+
+**Jun 2026 Snorkel sync (LOCKED):** `shared/additive-rules-lock-index.mdc` · changelog map: `shared/snorkel-platform-changelog-sync.mdc`
+
+**Summary paste = auto-analyze (DEFAULT — user never repeats this):** Any message with `tasks/<name>/` + platform summary → agent **immediately** analyzes, picks `prompts/*.md` router + case, `Read`s files, fixes task. No need to say “analyze” or “use prompt”. Hook: `.cursor/hooks/route-terminus-prompt.py` · rule: `shared/prompt-router.mdc`. **`oracleFix.md` only for oracle failures.** Summary beats wrong @-tag.
+
+**Canonical ECR `FROM` = auto-apply (DEFAULT — user never repeats this):** Any work under `tasks/<name>/` → agent **automatically** ensures `environment/Dockerfile` uses `public.ecr.aws/docker/library/…` digests from **`shared/canonical-base-image-gate.mdc`**. No need to say “use canonical images” or “migrate docker.io”. Rule: **`shared/canonical-ecr-dockerfile-auto.mdc`**.
+
+**LOCKED policy:** All `.cursor/rules/` and `prompts/` files are canonical — see **`LOCKED.mdc`** (rules index) and **`prompts/LOCKED.md`** (prompt pairings). Do not bypass `@` tags, weaken difficulty, or pack zips by hand unless the user explicitly overrides in this message.
+
+**Paths (LOCKED):** `tasks/<name>/` → `./scripts/pack_zip.sh <name>` → `tasksubmit/<name>.zip` · `author_name` / `author_email` = `anonymous` · no `rubric.md` in zips · scan `tasks/`, `tasks/_accepted-tasks/`, `tasksubmit/` only (no `dusre-wale/`).
+
+**Harbor runs:** store under `jobs-local/` (gitignored) — do not commit `jobs/` at repo root or inside tasks.
+
+On conflict, prefer the **stricter** rule.
+
+---
+
+## LOCKED index
+
+| Doc | Role |
+|-----|------|
+| **`LOCKED.mdc`** | Rules policy + @ tag map + forbidden shortcuts |
+| **`shared/terminus-master-engine.mdc`** | **8-engine flow** — ENGINE_0 hub + ENGINE_1–7 lazy load |
+| **`shared/problem-rule-loader.mdc`** | **Conflicts** — problem → which rules to load |
+| **`prompts/LOCKED.md`** | Prompt pairings + routers |
+| **`prompts/README.md`** | Full prompt index |
+| **`shared/snorkel-dockerfile-image-best-practices.mdc`** | **LOCKED** — Snorkel Dockerfile & Image Best Practices (verbatim §1–15 + CI blocking checks) |
+| **`shared/dockerfile.mdc`** | Terminus Dockerfile integration (verifier, Rust amd64, checklist) |
+| **`create/first-submit-acceptance-gate.mdc`** | **Phase F′** — probes + hardness before **first** zip (hard block in `pack_zip.sh`) |
+
+---
+
+## Rule folders (`.cursor/rules/`)
+
+| @ tag | Folder | When to load |
+|-------|--------|----------------|
+| **@IDEAS RULES** | `ideas/` | Brainstorm / generate task ideas |
+| **@CREATE RULES** | `create/` | New task A→H pipeline |
+| **@AUDIT RULES** | `audit/` | Post-create audit (read-only) |
+| **@REVIEWER RULES** | `reviewer/` | Reviewer comments, checklist, CI/LLMaJ/agent-review refs |
+| **@REVISE RULES** | `revise/` | Platform reject, trivial/hard/unsolvable, oracle G-025–G-027 |
+| **@VERIFY RULES** | `verify/` | Oracle/NOP, pre-zip audit |
+| **@ZIP RULES** | `zip/` | Pack `tasksubmit/<name>.zip` |
+| **@LOCKED** | `LOCKED.mdc` | Full rules + prompts policy index |
+
+**Always load with task work:** `shared/repo-workflow.mdc`, `shared/runtime-verifier.mdc`, `shared/spec.mdc`, `shared/core.mdc`, **`shared/anti-spam-templated-submissions.mdc`** (before upload)
+
+**Snorkel verbatim (audit / revise / submit):** `shared/snorkel-dockerfile-image-best-practices.mdc` (Dockerfile & Image Best Practices page), `reviewer/reviewer-checklist.mdc`, `reviewer/ci-checks-reference.mdc`, `reviewer/llmaj-checks-reference.mdc`, `reviewer/agent-review-reference.mdc`
+
+**Oracle failed:** `revise/oracle-fix-g025-g027.mdc` + repo-root `oracleFix.md`
+
+---
+
+## Prompts — **user chooses** tag or automated (equal)
+
+| Path | You do | Agent does |
+|------|--------|------------|
+| **Tag** | `@` one prompt + paste summary | **Analyze summary first**; apply prompt **per summary** (tag = hint); override wrong tag |
+| **Automated** | Paste task path + summary only | Hook + `prompt-router` analyze; auto-pick router + case |
+
+**@ tags:** `@TRIVIAL PROMPT` · `@MEDIUM PROMPT` · `@HARD PROMPT` · `@REVIEWER PROMPT` · `@AUDIT PROMPT` · `@ORACLE PROMPT` · `@NEWIDEA PROMPT` · `@PROMPTS` (index)
+
+Same outcome either way — `prompts/HOW-TO-USE.md`
+
+---
+
+## Lifecycle (quick)
+
+| Phase | Action | Load |
+|-------|--------|------|
+| A Ideas | Generate | `@prompts/newidea.md` + **@IDEAS RULES** |
+| B Create | Build task | **@CREATE RULES** · hard SP: `@prompts/sp-hard-create-revise.md` CREATE |
+| C Audit | Read-only review (user-invoked) | `@prompts/audit.md` + **@AUDIT RULES** + **@REVIEWER RULES** |
+| C′ Auto audit | **After CREATE Phase D** — no user ask | **`create/post-create-audit-loop.mdc`** + audit trio |
+| D Revise | Platform / trivial / **easy** / medium / hard | `@prompts/easy.md` (EASY), `@prompts/trivial.md` (TRIVIAL), `@prompts/medium.md`, `@prompts/hard.md`, or **`@prompts/sp-hard-create-revise.md`** + **@REVISE RULES** + **`revise/hardness.mdc`** |
+| D′ Reviewer | Line comments | `@prompts/reviewer.md` + **@REVIEWER RULES** |
+| E Verify | Oracle 1, NOP 0 | **@VERIFY RULES** |
+| F′ First-submit | Probes + record PASS (first upload) | **`create/first-submit-acceptance-gate.mdc`** + `revise/trivial-hardening-probes.mdc` |
+| F Zip | Upload pack | **@ZIP RULES** → `./scripts/pack_zip.sh <name>` only (no zip until F′ PASS on first upload) |
+
+Detail: `shared/task-lifecycle.mdc`
+
+---
+
+## Non-negotiable gates
+
+- `allow_internet = false` · `workdir = "/app"` · verifier deps in Dockerfile only
+- **Final runtime `FROM` = Snorkel ECR canonical** — auto-fix per `shared/canonical-ecr-dockerfile-auto.mdc` (no user reminder)
+- `test.sh` ends with Harbor `if [ $? -eq 0 ]` reward block — nothing after `fi`
+- Oracle offline (G-025) · zip includes `tests/test_outputs.py` (G-026) · no `\` in zip paths (G-027)
+- Oracle **1**, NOP **0** before zip — evidence required, do not claim ready without runs
+- **First upload:** Phase **F′** PASS recorded (`first_submit_pack_gate.py --record`) — **`pack_zip.sh` writes no zip until PASS** (skip: milestone; slug in `platform_submissions.txt`)
+- **Zip only via** `./scripts/pack_zip.sh <name>` (or `pack_zip.ps1` / `pack-all-upload-zips.sh`) — **never** manual `zip -r` for upload
+- **Ask, don't hallucinate** — missing summary, task path, oracle/NOP evidence, or file contents → **one question**; never invent platform results or pick a case by guess (`shared/prompt-router.mdc`)

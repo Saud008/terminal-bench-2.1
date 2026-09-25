@@ -1,0 +1,166 @@
+---
+description: LOCKED — paste summary → analyze → router → best case file (no @prompts tag needed)
+alwaysApply: false
+---
+
+# Terminus prompt router (LOCKED)
+
+## DEFAULT — every chat, no reminder needed (LOCKED)
+
+**Sanjana does not repeat this each time.** If the message has **`tasks/<name>/`** and/or a **platform summary** (Difficulty, Status, agent scores, per-test table, reviewer paste) — you **automatically**:
+
+1. **Analyze** the full summary  
+2. **Pick** router + best case (`trivial` / `medium` / `hard` / `reviewer` / `audit` / `oracleFix`)  
+3. **`Read`** `prompts/<router>.md` + case file + **ENGINE_N** rule list from hook (`shared/terminus-master-engine.mdc`)  
+4. **Work** on `tasks/<name>/` or `pending/<name>/`
+
+Do **not** wait for “analyze”, “use prompt”, or “route this”. Do **not** ask which case. Start with summary analysis in your **first reply**.
+
+**Canonical ECR `FROM` (same default — no reminder):** When working on `tasks/<name>/`, **automatically** ensure `environment/Dockerfile` uses Snorkel ECR digests (`shared/canonical-ecr-dockerfile-auto.mdc`). User does not say “use canonical images” each chat.
+
+**CREATE → auto audit (no reminder):** After Phase D, agent **immediately** runs Phase E audit-fix — **same turn**, **no** “should I audit?”. Policy: `shared/sanjana-standing-requirements.mdc` + `create/post-create-audit-loop.mdc`.
+
+**Reviewer instruction (no reminder):** Never add solve hints to `instruction.md` — fix via docs/tests. Policy: `reviewer/REVIEWER-RULES.mdc`.
+
+**Anti-spam (same default — no reminder):** Cursor hooks **execute** checks on task file saves and prompt submit; `pack_zip.sh` runs pack gate. **Never ask the user** to run scripts manually.
+
+**First-submit gate (same default — no reminder):** Before **first** platform upload on a new task → **Phase F′** per `create/first-submit-acceptance-gate.mdc` — probe table PASS before `pack_zip.sh`. ENGINE_3 / ENGINE_5 / ENGINE_6 inject this automatically.
+
+**When you @-tag AND paste summary:** still **analyze the summary first** — tag is a hint only. **Apply the prompt that matches the summary**, not the tag blindly. Wrong tag → override in one line, then use the correct router + case.
+
+No tag = same automated flow.
+
+**Can't @ tag `prompts/*.md`?** Normal — those files are not in Cursor's @ menu. Use **Rules → `HARD PROMPT`** etc., or **skip tag** (summary only works fully).
+
+---
+
+When the user pastes a **platform summary** for `tasks/<name>/`, you run **three steps**. Do **not** ask which case — **you** pick from the summary.
+
+**User chooses each time:**
+
+| Path | Behavior |
+|------|----------|
+| **@ tag + summary** | **Analyze summary first.** Tag = hint only. Pick router + case from **summary**; override wrong tag. |
+| **Summary only (no tag)** | Same — analyze summary → router + case → `Read` `prompts/`. |
+
+Never ask user to pick a case. Same 3-step flow both paths.
+
+**Hook:** `.cursor/hooks/route-terminus-prompt.py` — follow `## TERMINUS PROMPT ROUTER (hook)` if present.
+
+---
+
+## Step 1 — Analyze the summary (mandatory)
+
+Extract and **quote 2–3 facts**:
+
+| Field | Examples |
+|-------|----------|
+| Difficulty | medium, hard, TRIVIAL, EASY |
+| Status | solvable, not solvable, unsolvable |
+| Oracle | Oracle solution failed, oracle **0** (platform) |
+| Agents | Claude 3/5, GPT 5/5, per-test 0% forever |
+| Feedback type | reviewer bullets vs platform label only |
+
+If fields missing → **one** clarifying question. **Do not guess.**
+
+---
+
+## Ask — do not hallucinate (LOCKED)
+
+**Stop and ask the user one question** when you would otherwise invent facts:
+
+| If you don't have… | Do not… | Ask instead |
+|--------------------|---------|-------------|
+| Platform summary pasted | Assume TRIVIAL / oracle / scores | "Paste Difficulty, Status, agent scores, per-test table" |
+| Task path | Pick a random `tasks/` folder | "Which task — `tasks/<name>/`?" |
+| Oracle vs unsolvable vs trivial | Route to oracleFix or hard by guess | "Did platform say **Oracle solution failed** or **not solvable**?" |
+| Reviewer vs platform label only | Open `reviewer.md` on label alone | "Line comments paste karo ya sirf platform label?" |
+| Local oracle/NOP not run | Say "verified" / "ready to submit" | "Harbor run nahi hua — run karun?" |
+| File contents unread | Claim test/instruction/oracle bugs | Read files first; if blocked, ask |
+
+**Never:** fake platform metrics, invent reviewer comments, assume zip/oracle passed, or pick a case without summary evidence.
+
+If **two** problems could apply (e.g. oracle 0 + TRIVIAL) → state both, ask **which to fix first** (one question).
+
+---
+
+## Step 2 — Pick router by **problem type**
+
+| Problem in summary | Router |
+|--------------------|--------|
+| **CREATE** new hard task / `@sp-hard-create-revise` | **`prompts/sp-hard-create-revise.md`** |
+| TRIVIAL / EASY platform label (or worst **>60%**, either **≥3/5**) | **`prompts/trivial-fix-invoke.md`** first → trio → **`shared/trivial-fix-invoke-mandatory-steps.mdc` (14 steps)** — **Case 6 only** (hook overrides Case 4/5) |
+| TRIVIAL / agents pass too easily (no full summary) | **`prompts/trivial.md`** — ask for invoke §1 paste if summary incomplete |
+| Claude **0%** + oracle **OK** + fair docs | **`prompts/sp-hard-create-revise.md`** (quality-only — no weaken) |
+| difficulty = **medium** | **`prompts/medium.md`** |
+| HARD + not solvable / 0%-forever / unfair | **`prompts/hard.md`** — **Solvable ≠ Trivial**; parse summary exactly; Case 1 = fairness only |
+| Reviewer **line comments** | **`prompts/reviewer.md`** |
+| Post-create audit | **`prompts/audit.md`** |
+| **Oracle failed** / G-025–027 only | **`prompts/oracleFix.md`** |
+| verifier_did_not_run only | `runtime-verifier` + `hard-case-3.md` — **not** oracleFix |
+| Ideas | **`prompts/newidea.md`** |
+
+Wrong `@hard.md` + summary TRIVIAL 5/5 → **`trivial.md`**, not hard.
+
+---
+
+## Step 3 — Pick **best case** inside that router (auto — never ask user)
+
+**Rule:** Walk the table **top to bottom**. Pick the **first row whose summary signal matches**. Quote the matching facts. **Do not** default to Case 4 or Case 6 without a matching row.
+
+### `easy.md` or `trivial.md` → one case (same priority — first match wins)
+
+**LOCKED override:** Platform label **TRIVIAL** or **EASY** with full summary → **`prompts/trivial-fix-invoke.md`** + **Case 6 only** — ignore Case 4 row below. Follow **`shared/trivial-fix-invoke-mandatory-steps.mdc`** (14 steps; Step 5 before edits).
+
+| Summary signal | Case file |
+|----------------|-----------|
+| audit only / read-only | `trivial-case-audit.md` |
+| TB3 / shallow Python / language migration / verifier instability | `trivial-tb3-hardening.md` |
+| Label **EASY**, either model **≥3/5**, worst **>40%**, all per-tests **≥6/10** | `trivial-case-6.md` |
+| Label **TRIVIAL** + both **5/5**; 2nd trivial same slug; one-file patch; probes FAIL | `trivial-case-6.md` |
+| Already flagged trivial | `trivial-case-1.md` |
+| Still trivial, both models **≤2/5** | `trivial-case-2.md` |
+| Default — any other TRIVIAL/EASY | `trivial-case-6.md` |
+
+### `medium.md` → one case
+
+| Summary signal | Case file |
+|----------------|-----------|
+| 0%-forever / not solvable | `medium-case-1.md` |
+| solvable, harden to ~1/5 | `medium-case-2.md` |
+| mixed / unclear | `medium-case-3.md` |
+
+### `hard.md` → one case
+
+**LOCKED:** Benchmark agents = **`terminus-claude-opus-4-8`**, **`terminus-gpt5-5`**. Quote Agent Performance + per-test table + Analysis before edits. Case 1 fixes **0%-forever unfair tests only** — not blanket ease. After fix: probes 1/1b/7/8 + flag if either model likely **≥3/5** → `@prompts/trivial.md` Case 6. See `prompts/hard.md` § Solvable ≠ Trivial.
+
+| Summary signal | Case file |
+|----------------|-----------|
+| one test 0% forever, others pass (incl. 13/14 + spec gap in Analysis) | `hard-case-1.md` |
+| all agents 0/5 on **full suite**, fair, no 0%-forever unfair test | `hard-case-2.md` |
+| full audit / unclear root cause | `hard-case-3.md` |
+| either model **≥3/5** or platform EASY/TRIVIAL | **`prompts/trivial.md`** — **not** hard Case 1/2 alone |
+
+### `reviewer.md` → one RF
+
+| Summary signal | Case file |
+|----------------|-----------|
+| trivializing hints / triage first | `reviewer-feedback-6.md` → then `reviewer-feedback-4.md` |
+| timeouts / metadata / CI only | `reviewer-feedback-1.md` |
+| agents OK, preserve difficulty | `reviewer-feedback-3.md` |
+| re-run oracle/NOP / quality gate | `reviewer-feedback-2.md` |
+| full checklist + difficulty recheck | `reviewer-feedback-5.md` |
+| default mixed comments | `reviewer-feedback-4.md` |
+
+---
+
+## Execute (no @prompts tag)
+
+1. Quote summary facts.
+2. Say: **Router** + **case** + **why** (one line each).
+3. **TRIVIAL/EASY:** `Read` `prompts/trivial-fix-invoke.md` → trio → `shared/trivial-fix-invoke-mandatory-steps.mdc` — **write §3 fix prompt before any edit**.
+4. **`Read` `prompts/<router>.md`, `prompts/<case>.md`, and `prompts/trivial-repo-wide.md` (TRIVIAL / SP edit cases) from disk** — first tools after routing; do not skip because user did not @-tag.
+5. **SP CREATE / REVISE:** also `shared/platform-preferences.mdc` §1b (Claude-primary; timeout @ 1800 via scope).
+6. Inspect real `tasks/<name>/` files.
+7. **TRIVIAL/EASY:** Steps 8–14 per mandatory-steps.mdc (probes → calibration → finish script → oracle/NOP → zip).
+8. Oracle **1**, NOP **0** → **Phase F′** first-submit gate PASS → `./scripts/pack_zip.sh <name>` (or `create_finish_to_zip.sh` for TRIVIAL/EASY).

@@ -1,0 +1,14 @@
+--- a/lib/xk7r/b08/fc08.sh
++++ b/lib/xk7r/b08/fc08.sh
+@@ -15,12 +15,10 @@ done
+ corr_snap="${CORR_SNAP_DIR}/${run_id}.json"
+ correlated=$(jq -r '.correlated' "$corr_snap")
+ [[ "$correlated" == "true" ]] || { echo "correlation snapshot not correlated" >&2; exit 3; }
+-drift_rows=$(jq -c '[.rows[] | {batch_id, reading_id, delta_e, drift_class, recipe_version, rework_applied}] | sort_by(.batch_id, .reading_id)' "$corr_snap" <(cat "$APP_ROOT/fixtures/scenarios"/*/readings.tsv))
++drift_rows=$(jq -c '[.rows[] | {batch_id, reading_id, delta_e, drift_class, recipe_version, rework_applied}] | sort_by(.batch_id, .reading_id)' "$corr_snap")
+ audit=$(python3 - <<'PY' "$drift_rows"
+ import hashlib, json, sys
+ rows = json.loads(sys.argv[1])
+ print(hashlib.sha256(json.dumps(rows, separators=(",", ":")).encode()).hexdigest())
+ PY
+ )

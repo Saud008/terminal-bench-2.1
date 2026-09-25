@@ -1,0 +1,43 @@
+--- a/internal/reqclose/walk.go
++++ b/internal/reqclose/walk.go
+@@ -19,6 +19,14 @@
+             direct[effective] += credits
+         }
+     }
++    children := map[string][]string{}
++    parentOf := map[string]string{}
++    for _, r := range reqs {
++        if r.ParentReqID != "" {
++            children[r.ParentReqID] = append(children[r.ParentReqID], r.ReqID)
++            parentOf[r.ReqID] = r.ParentReqID
++        }
++    }
+     status := map[string]model.ReqStatus{}
+     for _, r := range reqs {
+         sat := direct[r.ReqID]
+@@ -32,6 +40,25 @@
+             Satisfied:        sat >= r.RequiredCredits,
+         }
+     }
++    for _, r := range reqs {
++        if r.ParentReqID != "" {
++            continue
++        }
++        var walk func(string)
++        walk = func(id string) {
++            for _, child := range children[id] {
++                walk(child)
++                childSt := status[child]
++                if childSt.Satisfied {
++                    parent := status[id]
++                    parent.SatisfiedCredits += childSt.SatisfiedCredits
++                    parent.Satisfied = parent.SatisfiedCredits >= parent.RequiredCredits
++                    status[id] = parent
++                }
++            }
++        }
++        walk(r.ReqID)
++    }
+     out := make([]model.ReqStatus, 0, len(reqs))
+     for _, r := range reqs {
+         out = append(out, status[r.ReqID])

@@ -1,0 +1,13 @@
+--- a/closure_rank/rank_lots.rs
++++ b/closure_rank/rank_lots.rs
+@@ -1,5 +1,9 @@
+ use crate::win_schema::ClosureRow;
+
+ pub fn sort_rows(rows: &mut [ClosureRow]) {
+-    rows.sort_by(|a, b| a.lot_id.cmp(&b.lot_id));
++    rows.sort_by(|a, b| {
++        b.severity
++            .cmp(&a.severity)
++            .then_with(|| a.lot_id.cmp(&b.lot_id))
++    });
+ }

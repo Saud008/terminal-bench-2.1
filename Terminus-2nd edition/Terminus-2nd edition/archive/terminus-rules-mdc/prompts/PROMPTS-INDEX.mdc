@@ -1,0 +1,36 @@
+---
+description: "@PROMPTS — tag a prompt router; paste summary → agent analyzes immediately"
+alwaysApply: false
+---
+
+# @PROMPTS — Tag one (optional path)
+
+**Benchmark agents (Jun 2026 — LOCKED):** **`terminus-claude-opus-4-8`** (Claude Opus 4.8) · **`terminus-gpt5-5`** (GPT-5.5). Supersedes Opus 4.6 / GPT-5.2. Table: `prompts/LOCKED.md`.
+
+**You choose:** @-tag below **or** paste summary only (automated routing — same outcome).
+
+**If you tag:** pick one router + paste platform summary. Agent analyzes immediately — no "which case?" question.
+
+| @ tag | Router on disk |
+|-------|----------------|
+| **@TRIVIAL PROMPT** | `prompts/trivial.md` + best case |
+| **@MEDIUM PROMPT** | `prompts/medium.md` + best case |
+| **@HARD PROMPT** | `prompts/hard.md` + best case |
+| **@REVIEWER PROMPT** | `prompts/reviewer.md` + best RF |
+| **@AUDIT PROMPT** | `prompts/audit.md` |
+| **@ORACLE PROMPT** | `prompts/oracleFix.md` |
+| **@NEWIDEA PROMPT** | `prompts/newidea.md` |
+
+## Agent behavior when you @-tag (+ summary)
+
+**@ tag does NOT skip analysis.** Always:
+
+1. **Analyze** pasted summary first (Difficulty, Status, scores, per-test table).
+2. **Pick router + case from summary** — not from tag alone. Tag = hint; **summary wins** if tag is wrong (one-line override).
+3. **`Read`** the matching router + case file from `prompts/` in full (may differ from tag you picked).
+4. **Inspect** `tasks/<name>/` — do not hallucinate.
+5. Missing facts → **one question** only.
+
+Also: `@prompts/trivial.md` file path works if Cursor shows it — same behavior.
+
+Full routing logic: `shared/prompt-router.mdc` · hook: `.cursor/hooks/route-terminus-prompt.py`

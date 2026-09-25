@@ -1,0 +1,1 @@
+Dose ledger JSON at /app/work/dose-ledger/<plant-id>.json includes ledger_revision_token as the first 12 hex chars of SHA-256 over plant_id:shift:as_of, plus plant_id, shift, as_of, and chemicals array with chem_id, arc_tok, weighted_conc_mg_l, total_dose_mg, max_dose_mg, contact_excluded_minutes, override_applied.

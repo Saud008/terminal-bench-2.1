@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${APP_ROOT:-/app}"
+export APP_ROOT
+
+cmd="${1:-}"
+shift || true
+
+case "${cmd}" in
+  ingest)
+    exec bash "${APP_ROOT}/scripts/walplan-ingest.sh" "$@"
+    ;;
+  plan)
+    exec bash "${APP_ROOT}/scripts/walplan-plan.sh" "$@"
+    ;;
+  export)
+    exec bash "${APP_ROOT}/scripts/walplan-export.sh" "$@"
+    ;;
+  scan)
+    archive=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --archive) archive="$2"; shift 2 ;;
+        *) source "${APP_ROOT}/lib/common.sh"; die "unknown arg: $1" ;;
+      esac
+    done
+    source "${APP_ROOT}/lib/common.sh"
+    source "${APP_ROOT}/lib/continuity.sh"
+    [[ -n "${archive}" ]] || die "scan requires --archive"
+    gaps="$(continuity_gaps_json "${archive}")"
+    if [[ "${gaps}" != "[]" ]]; then
+      echo "${gaps}"
+      exit 2
+    fi
+    echo "ok"
+    exit 0
+    ;;
+  *)
+    echo "usage: walplan ingest|plan|export|scan" >&2
+    exit 1
+    ;;
+esac

@@ -1,0 +1,124 @@
+{
+  "task_slug": "rust-webbundle-integrity-section-verifier",
+  "symbol_table": [
+    {"path": "environment/src/reader/wble_reader.rs", "symbol": "parse_bundle", "kind": "function"},
+    {"path": "environment/src/norm/url_norm.rs", "symbol": "canonical_url", "kind": "function"},
+    {"path": "environment/src/policy/scope_guard.rs", "symbol": "url_in_scope", "kind": "function"},
+    {"path": "environment/src/headers/hdr_fold.rs", "symbol": "normalize_headers", "kind": "function"},
+    {"path": "environment/src/integrity/ihsh_digest.rs", "symbol": "exchange_digest", "kind": "function"},
+    {"path": "environment/src/variants/variant_pick.rs", "symbol": "resolve_duplicates", "kind": "function"},
+    {"path": "environment/src/policy/mime_guard.rs", "symbol": "mime_allowed", "kind": "function"},
+    {"path": "environment/src/pipeline/attestation_ledger.rs", "symbol": "ingest_bundles", "kind": "function"},
+    {"path": "environment/src/pipeline/attestation_emit.rs", "symbol": "export_evidence", "kind": "function"}
+  ],
+  "oracle_frontier": [
+    {
+      "path": "environment/src/reader/wble_reader.rs",
+      "fix_symbols": ["parse_bundle"],
+      "co_resident_helpers": ["read_bundle_dir", "read_str"],
+      "allowed_top_level_symbols": ["WbleBundle", "ExchangeRecord", "BundleError"]
+    },
+    {
+      "path": "environment/src/norm/url_norm.rs",
+      "fix_symbols": ["canonical_url"],
+      "co_resident_helpers": ["decode_path"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "environment/src/policy/scope_guard.rs",
+      "fix_symbols": ["url_in_scope", "scope_violations"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "environment/src/headers/hdr_fold.rs",
+      "fix_symbols": ["normalize_headers", "header_lines"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "environment/src/integrity/ihsh_digest.rs",
+      "fix_symbols": ["exchange_digest", "hash_matches"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "environment/src/variants/variant_pick.rs",
+      "fix_symbols": ["resolve_duplicates"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "environment/src/policy/mime_guard.rs",
+      "fix_symbols": ["mime_allowed", "find_content_type"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "environment/src/pipeline/attestation_ledger.rs",
+      "fix_symbols": ["ingest_bundles", "read_staging"],
+      "co_resident_helpers": ["stage_bundle"],
+      "allowed_top_level_symbols": ["StagedExchange"]
+    },
+    {
+      "path": "environment/src/pipeline/attestation_emit.rs",
+      "fix_symbols": ["export_evidence"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": ["EvidenceReport", "BundleEvidence", "ExchangeEvidence", "Finding", "Totals"]
+    }
+  ],
+  "decoy_manifest": [
+    {
+      "path": "environment/src/decoy/decoy_metrics.rs",
+      "kind": "module",
+      "non_fix_purpose": "audit score wrapper off ingest/export hot path"
+    }
+  ],
+  "flipping_point_contract": {
+    "concentration_cap": 0.5,
+    "locations": [
+      {
+        "id": "reader",
+        "path": "environment/src/reader/wble_reader.rs",
+        "controls_tests": [
+          "test_wble_rebuild_succeeds",
+          "test_wble_pipeline_exit_zero",
+          "test_wble_totals_exchange_count_matches_staging",
+          "test_wble_alpha_bundle_present",
+          "test_wble_bravo_bundle_present",
+          "test_wble_hash_ok_for_alpha_reference",
+          "test_wble_hidden_bundle_dir_when_present",
+          "test_wble_full_report_matches_reference"
+        ]
+      },
+      {
+        "id": "norm_scope",
+        "path": "environment/src/norm/url_norm.rs",
+        "controls_tests": [
+          "test_wble_canonical_url_lowercase_host",
+          "test_wble_staging_sorted_by_canonical_url",
+          "test_wble_duplicate_resolves_highest_variant",
+          "test_wble_bravo_scope_boundary_violation",
+          "test_wble_scope_violations_count_reference",
+          "test_wble_exchanges_sorted_within_bundle",
+          "test_wble_tb3_bundle_dir_env_override",
+          "test_wble_subprocess_independent_paths"
+        ]
+      },
+      {
+        "id": "emit_pipeline",
+        "path": "environment/scripts/build_all.sh",
+        "controls_tests": [
+          "test_wble_output_schema_top_level",
+          "test_wble_bundles_sorted_by_id",
+          "test_wble_charset_content_type_allowed",
+          "test_wble_verified_count_reference",
+          "test_wble_finding_count_includes_all_violations",
+          "test_wble_export_idempotent_bytes",
+          "test_wble_cli_ingest_only_then_export",
+          "test_wble_decoy_audit_wrap_not_in_output"
+        ]
+      }
+    ]
+  }
+}

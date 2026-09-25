@@ -1,0 +1,39 @@
+---
+description: LOCKED — jobs-local subfolders + rubrics/ at repo root
+alwaysApply: true
+---
+
+# Terminus — jobs-local layout (LOCKED)
+
+**Gitignored:** `jobs-local/` — **machine reports only.** Hooks and `create_finish_to_zip.sh` write here. **You do not edit these folders.** They are not rubrics and not uploaded.
+
+**You care about:** `tasks/<slug>/`, `tasksubmit/<slug>.zip`, and `rubrics/<slug>.md`.
+
+## Subfolders (what each is for)
+
+| Folder | Written by | Purpose (for agents / debug) |
+|--------|------------|------------------------------|
+| `jobs-local/audit/` | `post_create_audit_loop.py` | Static audit pass/fail — fix High/Medium in task |
+| `jobs-local/harbor/` | harbor verify scripts | Oracle/NOP evidence (`harbor-verify-<slug>.json`) |
+| `jobs-local/calibration/` | EASY paste + smoke | Platform scores; blocks zip until post-harden |
+| `jobs-local/probes/` | `terminus_auto_probes.py` | Case 6 probe PASS/FAIL per slug |
+| `jobs-local/first-submit/` | `first_submit_pack_gate.py` | F′ probe record before first upload |
+| `jobs-local/finish/` | `create_finish_to_zip.py` | **Ready?** read `create-finish-last.json` verdict |
+| `jobs-local/gates/` | pack_zip chain | CI, unacceptable-class, anti-spam reports |
+| `jobs-local/trivial-easy/` | `trivial_easy_auto_finish.py` | EASY pipeline last run |
+| `jobs-local/ideas/` | ideas hooks | Draft ideas + similarity gate |
+
+**Platform rubrics:** `rubrics/<slug>.md` at repo root — **separate from jobs-local.**
+
+## Scripts
+
+```bash
+python3 scripts/jobs_local_paths.py --migrate   # one-time flat → subfolders
+python3 scripts/jobs_local_paths.py --resolve harbor-verify-foo.json
+```
+
+Readers accept **legacy flat** paths until migrated.
+
+## Agent reports
+
+Cite new paths in replies, e.g. `jobs-local/finish/create-finish-last.json`, `rubrics/<slug>.md`.

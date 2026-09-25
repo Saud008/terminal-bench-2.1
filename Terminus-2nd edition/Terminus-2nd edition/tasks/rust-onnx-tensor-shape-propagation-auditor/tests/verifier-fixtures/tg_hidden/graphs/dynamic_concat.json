@@ -1,0 +1,59 @@
+{
+  "graph_id": "dynamic_concat",
+  "symbol_links": [
+    [
+      "N",
+      "batch"
+    ],
+    [
+      "K",
+      "N"
+    ]
+  ],
+  "inputs": [
+    {
+      "name": "Left",
+      "shape": [
+        "N",
+        8
+      ],
+      "default_shape": [
+        1,
+        8
+      ]
+    },
+    {
+      "name": "Right",
+      "shape": [
+        "K",
+        8
+      ],
+      "default_shape": [
+        1,
+        8
+      ]
+    }
+  ],
+  "initializers": [],
+  "nodes": [
+    {
+      "id": "cat1",
+      "op": "Concat",
+      "inputs": [
+        "Left",
+        "Right"
+      ],
+      "outputs": [
+        "Merged"
+      ],
+      "attrs": {
+        "axis": 0
+      }
+    }
+  ],
+  "value_infos": [
+    {
+      "name": "Merged"
+    }
+  ]
+}

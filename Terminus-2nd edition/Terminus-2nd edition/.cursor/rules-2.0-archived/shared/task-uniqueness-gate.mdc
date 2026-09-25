@@ -1,0 +1,114 @@
+---
+description: LOCKED — task uniqueness (similarity + distinct dimensions) — ideas and pack
+alwaysApply: true
+---
+
+# Terminus — Task uniqueness gate (LOCKED)
+
+**When:** Ideas intake (`idea_similarity_gate.py`) and pack (`task_uniqueness_gate.py` after anti-spam / unacceptable-class gates).
+
+**Scripts:**
+
+```bash
+# Ideas (automatic inside idea_similarity_gate.py)
+python3 scripts/idea_similarity_gate.py --language <lang> --domain "<domain>" --title "<title>" --summary "<idea>"
+
+# Pack (automatic in pack_zip.sh after unacceptable-class gate)
+python3 scripts/task_uniqueness_gate.py --pack-gate --task-dir tasks/<name>
+```
+
+Reports: `jobs-local/idea-similarity-gate-last.json` · `jobs-local/task-uniqueness-gate-last.json`
+
+---
+
+## TASK UNIQUENESS RULES (mandatory)
+
+Additionally — **no**:
+
+| # | Rule |
+|---|------|
+| 1 | Duplicate tasks |
+| 2 | Copy tasks |
+| 3 | Sibling tasks |
+| 4 | Same-family tasks |
+| 5 | Same-lane tasks |
+| 6 | Template-generated variants |
+| 7 | Fabricated benchmark-style problems |
+| 8 | Synthetic puzzle tasks |
+| 9 | Spam submissions |
+
+Every generated task **must** have:
+
+| Dimension | Requirement |
+|-----------|-------------|
+| **Workflow** | Distinct real-world workflow (ingest/export, attest, correlate, …) |
+| **Artifact** | Distinct primary artifact (report, ledger, manifest, atlas, … or /app/output path) |
+| **Reasoning** | Distinct reasoning pattern (provenance, checksum, closure, policy, …) |
+| **Objective** | Distinct operational objective (build/analyze/implement — not fix/repair) |
+| **Industry** | Distinct industry use case (domain field + tags — not generic language name) |
+
+Minimize similarity across **industry**, **workflow**, **artifact type**, and **reasoning structure**.
+
+---
+
+## Automation mapping
+
+| Rule | Ideas gate | Pack gate |
+|------|------------|-----------|
+| Duplicate | slug collision · `DUPLICATE` class | `DUPLICATE` class + slug |
+| Copy | weighted > 0.10 · `COPY` class | anti-spam sim + `COPY` class |
+| Sibling | `SIBLING` class | `SIBLING` class |
+| Same-family | family saturation · `FAMILY` | `FAMILY` class |
+| Same-lane | `SAME_LANE` class | `SAME_LANE` class |
+| Templated | weighted > 0.10 · `TEMPLATED` | `TEMPLATED` class |
+| Fabricated | text patterns + `FABRICATED` | instruction patterns + class |
+| Synthetic | text patterns + `SYNTHETIC` | instruction patterns + class |
+| Spam | spam slug pattern | spam slug pattern |
+| Five dimensions | domain/summary heuristics | `instruction.md` + tags |
+
+**Ideas:** weighted similarity **> 0.10** → BLOCK · **== 0.0** → auto CREATE (when uniqueness **PASS**).
+
+**Pack:** run after `unacceptable_class_gate.py` (8/8 PASS) — distinct-dimension check on built task.
+
+---
+
+## Agent reply (ideas turn)
+
+Include **Task uniqueness** table from script output (do not guess):
+
+```markdown
+## Task uniqueness (scripted)
+| Check | PASS / FAIL |
+|-------|-------------|
+| No duplicate tasks | PASS |
+| … | … |
+| Distinct industry use case | PASS |
+| **Verdict** | **PASS** |
+```
+
+Any **FAIL** → do not CREATE. Revise domain, workflow, artifact, or industry — not keyword swap on same lane.
+
+---
+
+## When FAIL → fix
+
+| Signal | Fix |
+|--------|-----|
+| Duplicate / near slug | New slug + different domain |
+| Copy / sibling / family / lane | Different stack or verifier contract — not instruction nouns only |
+| Templated / sim > 0.10 | New industry + artifact + workflow |
+| Fabricated / synthetic | Real engineering scenario — remove puzzle/benchmark framing |
+| Missing distinct dimension | Add domain, artifact, workflow, reasoning, objective to idea text |
+| Pack distinct-dimension FAIL | Rewrite instruction opening + tags; cite /app/docs contracts |
+
+**Do not** use `TERMINUS_ANTI_SPAM_SKIP` to bypass uniqueness — fix in place.
+
+---
+
+## Related
+
+- `ideas/idea-similarity-gate.mdc` — thresholds + CREATE flow
+- `shared/task-generation-mandatory.mdc` — no debugging / no SE
+- `shared/unacceptable-task-classes.mdc` — 8-class pack gate
+- `shared/anti-spam-templated-submissions.mdc` — family saturation
+- `scripts/task_uniqueness_policy.py` — check implementation

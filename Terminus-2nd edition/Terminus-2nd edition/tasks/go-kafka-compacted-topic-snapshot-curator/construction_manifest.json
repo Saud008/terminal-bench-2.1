@@ -1,0 +1,114 @@
+{
+  "oracle_frontier": [
+    {
+      "path": "internal/segpull/cold_pull.go",
+      "fix_symbols": ["NumericSegSort"],
+      "co_resident_helpers": ["LoadTopic"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/partitionorder/sort.go",
+      "fix_symbols": ["OrderRecords"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/offsetdup/dedupe.go",
+      "fix_symbols": ["Collapse"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/keyfold/fold_codec.go",
+      "fix_symbols": ["Canonical"],
+      "co_resident_helpers": ["ValidUTF8", "FoldPrefix", "NormalizeUserPrefix"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/latestmap/snap_table.go",
+      "fix_symbols": ["ComposeTable"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/tombwin/floor_mux.go",
+      "fix_symbols": ["TombstoneEligible", "RetentionMs"],
+      "co_resident_helpers": ["PartitionHighWater"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/sealpass/gate_mux.go",
+      "fix_symbols": ["Run"],
+      "co_resident_helpers": ["analyze", "dupKey", "writeFindings", "bumpGeneration"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "internal/keysout/stream_mux.go",
+      "fix_symbols": ["Emit"],
+      "co_resident_helpers": ["writeSnapshot", "writeLineage"],
+      "allowed_top_level_symbols": []
+    }
+  ],
+  "flipping_point_contract": {
+    "concentration_cap": 0.5,
+    "locations": [
+      {
+        "id": "cli",
+        "path": "cmd/kcompactctl/main.go",
+        "controls_tests": [
+          "test_kcompact_matrix_load_flag_guard",
+          "test_kcompact_matrix_staging_path_absolute"
+        ]
+      },
+      {
+        "id": "frzload",
+        "path": "internal/segpull/cold_pull.go",
+        "controls_tests": [
+          "test_kcompact_matrix_staging_digest",
+          "test_kcompact_matrix_seg_order_early_before_late"
+        ]
+      },
+      {
+        "id": "offladder",
+        "path": "internal/partitionorder/sort.go",
+        "controls_tests": ["test_kcompact_matrix_full_export_golden"]
+      },
+      {
+        "id": "clashpick",
+        "path": "internal/offsetdup/dedupe.go",
+        "controls_tests": ["test_kcompact_matrix_audit_rows"]
+      },
+      {
+        "id": "keymux",
+        "path": "internal/keyfold/fold_codec.go",
+        "controls_tests": ["test_kcompact_off_catalog_canonical_nfc_tb3"]
+      },
+      {
+        "id": "snapcore",
+        "path": "internal/latestmap/snap_table.go",
+        "controls_tests": ["test_kcompact_matrix_snapshot_field_probe"]
+      },
+      {
+        "id": "winmux",
+        "path": "internal/tombwin/floor_mux.go",
+        "controls_tests": ["test_kcompact_off_catalog_retention_bias_tb3"]
+      },
+      {
+        "id": "stampgate",
+        "path": "internal/sealpass/gate_mux.go",
+        "controls_tests": [
+          "test_kcompact_matrix_seal_increments",
+          "test_kcompact_matrix_emit_blocked_without_seal"
+        ]
+      },
+      {
+        "id": "pubcore",
+        "path": "internal/keysout/stream_mux.go",
+        "controls_tests": [
+          "test_kcompact_matrix_repeat_emit_bytes_stable",
+          "test_kcompact_matrix_snapshot_keys_sorted"
+        ]
+      }
+    ]
+  }
+}

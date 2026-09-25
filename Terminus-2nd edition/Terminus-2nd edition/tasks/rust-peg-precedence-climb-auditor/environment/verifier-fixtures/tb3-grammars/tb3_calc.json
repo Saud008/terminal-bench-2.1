@@ -1,0 +1,56 @@
+{
+  "grammar_id": "tb3_calc",
+  "start": "expr",
+  "rules": [
+    {
+      "name": "expr",
+      "decl_order": 5,
+      "prec": 10,
+      "left_recursive": true,
+      "rhs": {
+        "type": "choice",
+        "alts": [
+          {
+            "type": "seq",
+            "items": [
+              {"type": "pattern", "value": {"type": "ref", "name": "expr"}},
+              {"type": "pattern", "value": {"type": "token", "lit": "+"}},
+              {"type": "pattern", "value": {"type": "ref", "name": "term"}}
+            ]
+          },
+          {"type": "ref", "name": "term"}
+        ]
+      }
+    },
+    {
+      "name": "term",
+      "decl_order": 1,
+      "prec": 20,
+      "left_recursive": true,
+      "rhs": {
+        "type": "choice",
+        "alts": [
+          {
+            "type": "seq",
+            "items": [
+              {"type": "pattern", "value": {"type": "ref", "name": "term"}},
+              {"type": "pattern", "value": {"type": "token", "lit": "*"}},
+              {"type": "pattern", "value": {"type": "ref", "name": "atom"}}
+            ]
+          },
+          {"type": "ref", "name": "atom"}
+        ]
+      }
+    },
+    {
+      "name": "atom",
+      "decl_order": 2,
+      "prec": 30,
+      "left_recursive": false,
+      "rhs": {
+        "type": "atomic",
+        "inner": {"type": "token", "lit": "NUMBER"}
+      }
+    }
+  ]
+}

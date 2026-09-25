@@ -1,0 +1,10 @@
+--- a/geoid_shift/vector.rs
++++ b/geoid_shift/vector.rs
+@@ -4,6 +4,6 @@
+ pub fn apply_residual(vertices: &[[f64; 2]], datum: &DatumOffset) -> Vec<[f64; 2]> {
+     vertices
+         .iter()
+-        .map(|v| [v[0] + datum.lon, v[1] + datum.lat])
++        .map(|v| [v[0] - datum.lon, v[1] - datum.lat])
+         .collect()
+ }

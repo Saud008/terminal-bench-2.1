@@ -1,0 +1,36 @@
+{
+  "zone": "case.test.",
+  "soa_serial": 11,
+  "nsec3_params": {
+    "salt_hex": "cafe",
+    "iterations": 1,
+    "hash_algorithm": 1
+  },
+  "records": [
+    {
+      "owner": "case.test.",
+      "rtype": "NSEC",
+      "next": "HOSTA.case.test.",
+      "type_bitmap": ["NS", "SOA", "NSEC"]
+    },
+    {
+      "owner": "HOSTA.case.test.",
+      "rtype": "NSEC",
+      "next": "hostb.case.test.",
+      "type_bitmap": ["A", "NSEC"]
+    },
+    {
+      "owner": "hostb.case.test.",
+      "rtype": "NSEC",
+      "next": "case.test.",
+      "type_bitmap": ["AAAA", "NSEC"]
+    }
+  ],
+  "queries": [
+    {
+      "qname": "ghost.case.test.",
+      "qtype": "A",
+      "expect": "invalid"
+    }
+  ]
+}

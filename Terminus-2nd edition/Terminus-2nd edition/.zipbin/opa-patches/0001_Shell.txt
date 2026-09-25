@@ -1,0 +1,10 @@
+wsl bash -lc "python3 -c \"
+from pathlib import Path
+ROOT=Path('/mnt/d/Terminus-2nd edition/Terminus-2nd edition/tasks')
+for slug in ['vitess-vindex-lookup-cache-coalesce-engine','party-audit-staging-export-governor','go-openapi-parameter-style-form-explode-repair','opa-bundle-signature-digest-chain-verifier-repair','bash-awk-jsonl-windowed-aggregate-repair']:
+ p=ROOT/slug
+ print(slug, 'exists', p.exists())
+ if p.exists():
+  for r in ['instruction.md','task.toml','environment','tests','solution']:
+   print(' ', r, (p/r).exists())
+\""

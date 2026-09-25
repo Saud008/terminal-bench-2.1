@@ -1,0 +1,31 @@
+    def test_partial_digest_fix_still_fails_eval_trace(self) -> None:
+        """Digest-only fix must not satisfy the full eval contract acceptance trace."""
+        stubs = Path(__file__).parent / "stubs"
+        shutil.copy(stubs / "golden_digest.go", APP / "internal/verify/digest.go")
+        shutil.copy(stubs / "broken_trace.go", APP / "internal/eval/trace.go")
+        build_install()
+        export = OUTPUT / "partial-eval.json"
+        proc = eval_bundle("allow-basic", "3", export)
+        assert proc.returncode == 0, proc.stderr or proc.stdout
+        got = json.loads(proc.stdout)
+        ref = reference_eval(BUNDLES / "allow-basic", "3", BUNDLES / "allow-basic" / "input/default.json")
+        with pytest.raises(AssertionError):
+            assert_trace_matches(got, ref)
+
+    def test_partial_eval_fix_still_fails_verify(self) -> None:
+        """Trace-only fix must not make multi-scope verify succeed."""
+        stubs = Path(__file__).parent / "stubs"
+        shutil.copy(stubs / "broken_digest.go", APP / "internal/verify/digest.go")
+        shutil.copy(stubs / "golden_trace.go", APP / "internal/eval/trace.go")
+        build_install()
+        proc = verify("multi-scope")
+        assert proc.returncode != 0
+
+    def test_partial_ingest_staging_fix_still_fails_verify(self) -> None:
+        """Ingest-staging-only fix must not satisfy scoped signature checks."""
+        stubs = Path(__file__).parent / "stubs"
+        shutil.copy(stubs / "golden_preview_ledger.go", APP / "internal/bundle/preview_ledger.go")
+        shutil.copy(stubs / "broken_digest.go", APP / "internal/verify/digest.go")
+        build_install()
+        proc = verify("multi-scope")
+        assert proc.returncode != 0

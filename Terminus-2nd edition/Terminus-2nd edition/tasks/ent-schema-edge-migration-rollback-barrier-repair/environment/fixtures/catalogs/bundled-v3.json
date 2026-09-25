@@ -1,0 +1,15 @@
+{
+  "schema_version": 2,
+  "target_version": 3,
+  "edge_name": "post_author",
+  "codegen_seed": "bundled-edge-v3",
+  "sql": {
+    "add_author_nullable": "ALTER TABLE posts ADD COLUMN author_id INTEGER",
+    "set_author_not_null": "INSERT INTO schema_meta(version) SELECT 1/0 FROM posts p LEFT JOIN users u ON u.id = p.author_id WHERE p.author_id IS NOT NULL AND u.id IS NULL LIMIT 1; CREATE TABLE posts_nn (id INTEGER PRIMARY KEY, title TEXT NOT NULL, user_ref TEXT NOT NULL, author_id INTEGER NOT NULL); INSERT INTO posts_nn SELECT id, title, user_ref, author_id FROM posts; DROP TABLE posts; ALTER TABLE posts_nn RENAME TO posts",
+    "add_author_index": "CREATE INDEX IF NOT EXISTS idx_posts_author ON posts(author_id)",
+    "drop_author_index": "INSERT INTO schema_meta(version) SELECT 1/0 FROM sqlite_master WHERE type='trigger' AND name='trg_post_author_edge' LIMIT 1; DROP INDEX IF EXISTS idx_posts_author",
+    "drop_post_author_fk": "DROP TRIGGER IF EXISTS trg_post_author_edge",
+    "drop_author_not_null": "CREATE TABLE posts_null (id INTEGER PRIMARY KEY, title TEXT NOT NULL, user_ref TEXT NOT NULL, author_id INTEGER); INSERT INTO posts_null SELECT id, title, user_ref, author_id FROM posts; DROP TABLE posts; ALTER TABLE posts_null RENAME TO posts",
+    "drop_author_column": "CREATE TABLE posts_v2 (id INTEGER PRIMARY KEY, title TEXT NOT NULL, user_ref TEXT NOT NULL); INSERT INTO posts_v2 SELECT id, title, user_ref FROM posts; DROP TABLE posts; ALTER TABLE posts_v2 RENAME TO posts"
+  }
+}

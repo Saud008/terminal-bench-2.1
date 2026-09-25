@@ -1,0 +1,13 @@
+--- lib/zq7/m06.sh
++++ lib/zq7/m06.sh
+@@ -41,10 +41,6 @@
+       billable+=("$row")
+       continue
+     fi
+-    if current_is_delete_marker "$marked" "$key" && [[ "$(echo "$row" | jq -r '.current_version')" == "true" ]]; then
+-      billable+=("$row")
+-      continue
+-    fi
+     if is_incomplete_mpu "$row"; then
+       billable+=("$row")
+       continue

@@ -1,0 +1,3 @@
+# revoked key fingerprints (lowercase hex)
+fingerprint deadbeef00112233445566778899aabbccddeeff
+fingerprint aabbccddeeff0011223344556677889900112233

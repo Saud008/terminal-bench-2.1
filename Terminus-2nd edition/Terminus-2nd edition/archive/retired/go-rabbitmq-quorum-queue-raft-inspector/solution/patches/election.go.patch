@@ -1,0 +1,16 @@
+--- a/internal/ocfcore/election.go
++++ b/internal/ocfcore/election.go
+@@ -10,10 +10,12 @@
+ func ApplyElection(st *ElectionState, entry model.LogEntry) {
+     nodeID, _ := entry.Payload["node_id"].(string)
+     role, _ := entry.Payload["role"].(string)
+-    if entry.Term >= st.CurrentTerm {
++    if entry.Term > st.CurrentTerm {
+         st.CurrentTerm = entry.Term
+         if role == "leader" {
+             st.LeaderID = nodeID
+         }
++    } else if entry.Term == st.CurrentTerm && role == "leader" {
++        st.LeaderID = nodeID
+     }
+ }

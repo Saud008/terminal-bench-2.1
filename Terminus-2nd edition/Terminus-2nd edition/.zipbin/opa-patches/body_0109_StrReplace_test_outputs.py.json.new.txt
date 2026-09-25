@@ -1,0 +1,94 @@
+    def test_tampered_member_fails_verify(self) -> None:
+        """tampered-member must fail verify."""
+        proc = verify("tampered-member")
+        assert proc.returncode != 0
+
+    def test_preview_staging_ledger_written_on_verify(self) -> None:
+        """Verify ingest staging must persist preview-ledger snapshot before digest math."""
+        proc = verify("allow-basic")
+        assert proc.returncode == 0, proc.stdout + proc.stderr
+        ledger_path = PREVIEW_LEDGER
+        assert ledger_path.is_file(), "/app/state/preview-ledger.json missing"
+        ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+        assert ledger["order"] == sorted(ledger["order"])
+        assert "data/data.json" in ledger["order"]
+
+    def test_staging_snapshot_lex_order_multi_scope(self) -> None:
+        """Staging snapshot order must be lexicographic for multi-scope bundles."""
+        proc = verify("multi-scope")
+        assert proc.returncode == 0, proc.stdout + proc.stderr
+        ledger = json.loads(PREVIEW_LEDGER.read_text(encoding="utf-8"))
+        data_paths = [p for p in ledger["order"] if p.startswith("data/")]
+        assert data_paths == sorted(data_paths)
+        assert data_paths != ["data/data.json", "data/z-extra.json", "data/a-extra.json"]
+
+    def test_eval_audit_records_binding_count(self) -> None:
+        """Eval must persist audit record with full binding count."""
+        export = OUTPUT / "audit-check.json"
+        proc = eval_bundle("allow-basic", "3", export)
+        assert proc.returncode == 0, proc.stderr or proc.stdout
+        audit_path = EVAL_AUDIT
+        assert audit_path.is_file(), "/app/state/eval-audit.json missing"
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        got = json.loads(export.read_text(encoding="utf-8"))
+        assert audit["binding_count"] == len(got["trace"]["bindings"])
+        assert audit["seed"] == "3"
+
+    def test_state_artifact_paths_created(self) -> None:
+        """Instruction paths /app/state/preview-ledger.json and /app/state/eval-audit.json must exist after verify and eval."""
+        verify("allow-basic")
+        assert PREVIEW_LEDGER.is_file()
+        export = OUTPUT / "state-paths.json"
+        eval_bundle("allow-basic", "7", export)
+        assert EVAL_AUDIT.is_file()
+        audit = json.loads(EVAL_AUDIT.read_text(encoding="utf-8"))
+        assert audit["seed"] == "7"
+
+    def test_tb3_hidden_fixture_directory_present(self) -> None:
+        """Hidden verifier fixtures are mounted under /opt/verifier-fixtures/tb3-bundles."""
+        assert TB3_BUNDLES.is_dir()
+        assert (TB3_BUNDLES / "ledger-trap").is_dir()
+
+    def test_tb3_hidden_ledger_trap_verify(self) -> None:
+        """TB3 ledger-trap bundle fails verify unless preview+digest chain is lex-ordered."""
+        bundle_dir = TB3_BUNDLES / "ledger-trap"
+        proc = run(
+            [str(CLI), "verify", "--bundle", str(bundle_dir)],
+            check=False,
+        )
+        assert proc.returncode == 0, proc.stdout + proc.stderr
+        out = json.loads(proc.stdout)
+        ref = reference_verify(bundle_dir)
+        assert out["chain_root"] == ref["chain_root"]
+
+    def test_partial_digest_fix_still_fails_eval_trace(self) -> None:
+        """Digest-only fix must not satisfy the full eval contract acceptance trace."""
+        stubs = Path(__file__).parent / "stubs"
+        shutil.copy(stubs / "golden_digest.go", APP / "internal/verify/digest.go")
+        shutil.copy(stubs / "broken_trace.go", APP / "internal/eval/trace.go")
+        build_install()
+        export = OUTPUT / "partial-eval.json"
+        proc = eval_bundle("allow-basic", "3", export)
+        assert proc.returncode == 0, proc.stderr or proc.stdout
+        got = json.loads(proc.stdout)
+        ref = reference_eval(BUNDLES / "allow-basic", "3", BUNDLES / "allow-basic" / "input/default.json")
+        with pytest.raises(AssertionError):
+            assert_trace_matches(got, ref)
+
+    def test_partial_eval_fix_still_fails_verify(self) -> None:
+        """Trace-only fix must not make multi-scope verify succeed."""
+        stubs = Path(__file__).parent / "stubs"
+        shutil.copy(stubs / "broken_digest.go", APP / "internal/verify/digest.go")
+        shutil.copy(stubs / "golden_trace.go", APP / "internal/eval/trace.go")
+        build_install()
+        proc = verify("multi-scope")
+        assert proc.returncode != 0
+
+    def test_partial_ingest_staging_fix_still_fails_verify(self) -> None:
+        """Ingest-staging-only fix must not satisfy scoped signature checks."""
+        stubs = Path(__file__).parent / "stubs"
+        shutil.copy(stubs / "golden_preview_ledger.go", APP / "internal/bundle/preview_ledger.go")
+        shutil.copy(stubs / "broken_digest.go", APP / "internal/verify/digest.go")
+        build_install()
+        proc = verify("multi-scope")
+        assert proc.returncode != 0

@@ -1,0 +1,13 @@
+    pub fn merge_with_pending(&mut self, merge_key: &str, incoming: Vec<ParsedSentence>) -> Vec<ParsedSentence> {
+        let mut pending = self.take_fragments(merge_key);
+        pending.extend(incoming);
+        pending.sort_by_key(|sentence| {
+            sentence
+                .fields
+                .get(1)
+                .and_then(|v| v.parse::<u32>().ok())
+                .unwrap_or(0)
+        });
+        crate::session::reconcile::reconcile_fragments(pending)
+    }
+}

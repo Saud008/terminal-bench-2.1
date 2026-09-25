@@ -1,0 +1,56 @@
+{
+  "scenario": "exact-path",
+  "critical_prefixes": [],
+  "peer_groups": [
+    {
+      "group_id": "g",
+      "filters": [
+        {
+          "filter_id": "ex",
+          "priority": 10,
+          "match_mode": "exact",
+          "as_path": [
+            100,
+            200,
+            300
+          ],
+          "action": "accept"
+        },
+        {
+          "filter_id": "bad",
+          "priority": 5,
+          "match_mode": "origin",
+          "asn": 300,
+          "action": "deny"
+        }
+      ]
+    }
+  ],
+  "peers": [
+    {
+      "peer_id": "ex",
+      "asn": 65050,
+      "group_id": "g",
+      "wave_rank": 1,
+      "med_ceiling": 100,
+      "abort_on_critical_deny": false,
+      "community_rewrite": {},
+      "filters": []
+    }
+  ],
+  "rib": [
+    {
+      "prefix": "192.168.1.0/24",
+      "as_path": [
+        100,
+        200,
+        300
+      ],
+      "communities": [
+        "1:1"
+      ],
+      "med": 150,
+      "peer_id": "ex"
+    }
+  ]
+}

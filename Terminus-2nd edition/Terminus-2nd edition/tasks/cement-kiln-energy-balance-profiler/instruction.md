@@ -1,0 +1,5 @@
+Cement plant metrology teams use `kilnbal` for scientific-computing kiln heat-balance calibration closure on rotating-kiln pyrometer traces, alternative-fuel batch receipts, clinker tonnage windows, and shell heat-loss budgets. That closure path must reconcile thermodynamic unit normalization, per-probe calibration offsets, inclusive fuel-batch lineage, linear gap interpolation, and energy-balance residual scoring into sealed heat balance ledger JSON that matches independent reference math under the laboratory contracts in `/app/docs/` (start with `scientific-computing-workflow.md`, plus `therm-unit-contract.md`, `fuel-batch-lineage.md`, `probe-gap-interpolation.md`, `heat-balance-residual.md`, and `heat-ledger-fields.md`).
+
+Bundled kiln-run packs live under `/app/fixtures/kiln-runs/`, with scenario intent in `/app/docs/fixture-bundle-catalog.md`. Alternate calibration tables honor `TB3_CAL_TABLE`. Hidden kiln bundles honor `TB3_FIXTURE_ROOT`. Produce a release binary invocable as `kilnbal` that satisfies those laboratory contracts.
+
+Do not modify `/app/docs/`, `/app/fixtures/`, or `/tests/`.

@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${APP_ROOT:-/app}"
+export APP_ROOT
+
+cmd="${1:-}"
+shift || true
+
+case "${cmd}" in
+  ingest)
+    exec bash "${APP_ROOT}/scripts/icc-ingest.sh" "$@"
+    ;;
+  evaluate)
+    exec bash "${APP_ROOT}/scripts/icc-evaluate.sh" "$@"
+    ;;
+  export)
+    exec bash "${APP_ROOT}/scripts/icc-export.sh" "$@"
+    ;;
+  run)
+    readings=""
+    profile=""
+    paper=""
+    policy=""
+    tickets=""
+    as_of=""
+    out="/app/output/drift-report.json"
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --readings) readings="$2"; shift 2 ;;
+        --profile) profile="$2"; shift 2 ;;
+        --paper) paper="$2"; shift 2 ;;
+        --policy) policy="$2"; shift 2 ;;
+        --tickets) tickets="$2"; shift 2 ;;
+        --as-of) as_of="$2"; shift 2 ;;
+        --out) out="$2"; shift 2 ;;
+        *) source "${APP_ROOT}/lib/common.sh"; die "unknown arg: $1" ;;
+      esac
+    done
+    source "${APP_ROOT}/lib/common.sh"
+    bash "${APP_ROOT}/scripts/icc-ingest.sh" --readings "${readings}" --profile "${profile}" --paper "${paper}"
+    bash "${APP_ROOT}/scripts/icc-evaluate.sh" --readings "${readings}" --profile "${profile}" --paper "${paper}" --policy "${policy}" --tickets "${tickets}" --as-of "${as_of}"
+    exec bash "${APP_ROOT}/scripts/icc-export.sh" --readings "${readings}" --out "${out}"
+    ;;
+  *)
+    echo "usage: icc-drift-bundler ingest|evaluate|export|run" >&2
+    exit 1
+    ;;
+esac

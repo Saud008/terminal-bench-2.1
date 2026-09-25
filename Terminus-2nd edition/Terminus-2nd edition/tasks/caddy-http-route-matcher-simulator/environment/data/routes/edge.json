@@ -1,0 +1,40 @@
+{
+  "routes": [
+    {
+      "id": "wide_api",
+      "group": "edge",
+      "terminal": false,
+      "handle_path": false,
+      "match": [
+        {"path": ["/api/*"]}
+      ]
+    },
+    {
+      "id": "narrow_v1_get",
+      "group": "edge",
+      "terminal": true,
+      "handle_path": false,
+      "match": [
+        {"path": ["/api/v1/*"], "method": ["GET"]}
+      ]
+    },
+    {
+      "id": "path_strip_admin",
+      "group": "edge",
+      "terminal": false,
+      "handle_path": true,
+      "match": [
+        {"path": ["/admin"]}
+      ]
+    },
+    {
+      "id": "auth_token",
+      "group": "edge",
+      "terminal": true,
+      "handle_path": false,
+      "match": [
+        {"header": {"X-Auth": ["token"]}}
+      ]
+    }
+  ]
+}

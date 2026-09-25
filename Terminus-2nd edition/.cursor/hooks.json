@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [
+      {
+        "command": "python \"Terminus-2nd edition/.cursor/hooks/route-terminus-prompt.py\"",
+        "timeout": 90
+      }
+    ],
+    "postToolUse": [
+      {
+        "command": "python \"Terminus-2nd edition/.cursor/hooks/anti-spam-auto-run.py\"",
+        "matcher": "Write",
+        "timeout": 600
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": "python \"Terminus-2nd edition/.cursor/hooks/anti-spam-auto-run.py\"",
+        "matcher": "Write",
+        "timeout": 600
+      }
+    ]
+  }
+}

@@ -1,0 +1,33 @@
+--- a/internal/crpe91/export/export_ledger.sh
++++ b/internal/crpe91/export/export_ledger.sh
+@@ -17,13 +17,26 @@
+     row=$(trace_pg_placement "$loaded" "$pg")
+     traces=$(echo "$traces" | jq --argjson r "$row" '. + [$r]')
+   done
+-  traces=$(echo "$traces" | jq 'sort_by(.pg_num) | reverse')
++  traces=$(echo "$traces" | jq 'sort_by(.pg_num)')
+   map_name=$(jq -r '.map_name' "$loaded")
+   pool_name=$(echo "$pool" | jq -r '.name')
+   pool_id=$(echo "$pool" | jq -r '.id')
+-  digest=$(echo "$traces" | jq -c --arg rid "$run_id" --argjson pid "$pool_id" \
+-    '{run_id: $rid, pool_id: $pid, pg_traces: [.[] | {pg_id, acting_set, primary_osd}]}' \
+-    | sha256sum | awk '{print $1}')
++  digest=$(python3 - <<'PY' "$run_id" "$pool_id" "$traces"
++import hashlib, json, sys
++run_id = sys.argv[1]
++pool_id = int(sys.argv[2])
++traces = json.loads(sys.argv[3])
++body = {
++    "run_id": run_id,
++    "pool_id": pool_id,
++    "pg_traces": [
++        {"pg_id": t["pg_id"], "acting_set": t["acting_set"], "primary_osd": t["primary_osd"]}
++        for t in traces
++    ],
++}
++print(hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest())
++PY
++)
+   jq -n --arg run_id "$run_id" --arg map_name "$map_name" --arg pool "$pool_name" \
+     --argjson pool_id "$pool_id" --arg fp "$fp" --argjson traces "$traces" --arg digest "$digest" \
+     '{run_id: $run_id, map_name: $map_name, pool: $pool, pool_id: $pool_id, normalized_fingerprint: $fp, pg_traces: $traces, ledger_digest: $digest}' \

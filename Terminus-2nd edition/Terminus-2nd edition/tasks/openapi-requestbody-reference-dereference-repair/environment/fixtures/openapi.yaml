@@ -1,0 +1,114 @@
+openapi: 3.0.3
+info:
+  title: Pet API
+  version: 1.0.0
+paths:
+  /pets:
+    post:
+      operationId: createPet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PetRequest'
+  /contacts:
+    post:
+      operationId: createContact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Contact'
+  /employees:
+    post:
+      operationId: createEmployee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeRecord'
+components:
+  schemas:
+    PetRequest:
+      allOf:
+        - $ref: '#/components/schemas/TaggedRecord'
+        - $ref: '#/components/schemas/PetCore'
+    TaggedRecord:
+      $ref: '#/components/schemas/RecordLink1'
+    RecordLink1:
+      $ref: '#/components/schemas/RecordLink2'
+    RecordLink2:
+      $ref: '#/components/schemas/BaseRecord'
+    BaseRecord:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+        version:
+          type: integer
+          default: 1
+    PetCore:
+      type: object
+      required: [petType, name]
+      properties:
+        petType:
+          type: string
+        name:
+          type: string
+      discriminator:
+        propertyName: petType
+        mapping:
+          cat: '#/components/schemas/CatBody'
+          dog: '#/components/schemas/DogBody'
+    CatBody:
+      type: object
+      additionalProperties: false
+      allOf:
+        - $ref: '#/components/schemas/PetCore'
+      properties:
+        lives:
+          type: integer
+          default: 9
+    DogBody:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/PetCore'
+      properties:
+        breed:
+          type: string
+          default: mixed
+    EmployeeRecord:
+      allOf:
+        - $ref: '#/components/schemas/Person'
+        - $ref: '#/components/schemas/Employee'
+    Person:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        dept:
+          type: string
+          default: general
+    Employee:
+      type: object
+      required: [employeeId]
+      properties:
+        employeeId:
+          type: integer
+        dept:
+          type: string
+          default: engineering
+    Contact:
+      type: object
+      properties:
+        email:
+          type: [string, "null"]
+        profile:
+          $ref: '#/components/schemas/ProfileRef'
+    ProfileRef:
+      $ref: '#/components/schemas/Contact'

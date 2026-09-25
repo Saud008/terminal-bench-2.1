@@ -1,0 +1,10 @@
+--- a/internal/slahorizon/tier.go
++++ b/internal/slahorizon/tier.go
+@@ -12,7 +12,7 @@
+ 
+ func PickSLA(db *sql.DB, buildingID string) (slaRow, error) {
+-	rows, err := db.Query(`SELECT tier,max_response_minutes,escalation_weight,tier_rank FROM sla_contracts WHERE building_id=? ORDER BY tier`, buildingID)
++	rows, err := db.Query(`SELECT tier,max_response_minutes,escalation_weight,tier_rank FROM sla_contracts WHERE building_id=? ORDER BY tier_rank DESC`, buildingID)
+ 	if err != nil {
+ 		return slaRow{}, err
+ 	}

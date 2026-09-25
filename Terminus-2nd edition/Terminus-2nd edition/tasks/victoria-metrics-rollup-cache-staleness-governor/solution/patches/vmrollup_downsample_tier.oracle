@@ -1,0 +1,13 @@
+package downsample
+
+import "github.com/chronostack/metricrollup/internal/model"
+
+func ApplyTiers(raw model.SeriesRollup, tiers []string) []model.SeriesRollup {
+	out := make([]model.SeriesRollup, 0, len(tiers))
+	for _, tier := range tiers {
+		cp := raw
+		cp.Tier = tier
+		out = append(out, cp)
+	}
+	return out
+}

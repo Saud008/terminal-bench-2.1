@@ -1,0 +1,5 @@
+The ent-style schema migration CLI under /app fails when promoting SQLite schema version 2 to version 3 for the post_author edge. entmigrate up and down must follow the contracts in /app/docs/migration-pipeline.md, /app/docs/edge-post-author.md, /app/docs/rollback-barrier.md, /app/docs/codegen-gate.md, /app/docs/hook-order.md, and /app/docs/report-format.md.
+
+After a successful up run, write /app/output/migration-report.json with schema_version 3, ordered phase events, row counts, and zero orphan author_id values. A full down must restore schema version 2 without leaving idx_posts_author while the edge trigger is still attached.
+
+Use entmigrate with --catalog, --db, --seed, and --report paths under /app. Rebuild the CLI after source changes so /usr/local/bin/entmigrate reflects your fixes. Every catalog passed to --catalog must follow the same JSON schema as /app/fixtures/catalogs/bundled-v3.json, and ent_post_validate must reject catalogs that would leave orphan author_id rows after backfill.

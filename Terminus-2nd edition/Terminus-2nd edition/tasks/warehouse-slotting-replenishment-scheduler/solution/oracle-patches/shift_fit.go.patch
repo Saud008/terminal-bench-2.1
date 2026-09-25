@@ -1,0 +1,24 @@
+--- a/internal/crewwindow/shift_fit.go
++++ b/internal/crewwindow/shift_fit.go
+@@ -13,7 +13,7 @@
+ 	if tStart < wShiftStart {
+ 		return false
+ 	}
+-	return tEnd < wShiftEnd
++	return tEnd <= wShiftEnd
+ }
+ 
+ func Run() error {
+@@ -32,9 +32,9 @@
+ 	}
+ 	for _, t := range tasks {
+ 		assigned := ""
+-		for _, w := range bundle.Workers {
+-			if WorkerFits(w.ShiftStart, w.ShiftEnd, t.Start, t.End) {
+-				assigned = w.WorkerID
++		for _, worker := range bundle.Workers {
++			if WorkerFits(worker.ShiftStart, worker.ShiftEnd, t.Start, t.End) {
++				assigned = worker.WorkerID
+ 				break
+ 			}
+ 		}

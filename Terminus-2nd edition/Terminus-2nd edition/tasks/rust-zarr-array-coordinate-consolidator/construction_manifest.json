@@ -1,0 +1,58 @@
+{
+  "task_slug": "rust-zarr-array-coordinate-consolidator",
+  "symbol_table": [
+    {"path": "src/slot_math/mod.rs", "symbol": "slot_count", "kind": "function"},
+    {"path": "src/manifest_read/mod.rs", "symbol": "load_manifest_bundle", "kind": "function"},
+    {"path": "src/ax_bind/mod.rs", "symbol": "shape_matches_axes", "kind": "function"},
+    {"path": "src/key_ledger/mod.rs", "symbol": "absent_chunk_keys", "kind": "function"},
+    {"path": "src/fp_seal/mod.rs", "symbol": "seal_compressor", "kind": "function"},
+    {"path": "src/row_stage/mod.rs", "symbol": "build_staging_snapshot", "kind": "function"},
+    {"path": "src/manifest_writer/mod.rs", "symbol": "write_consolidated_manifest", "kind": "function"}
+  ],
+  "oracle_frontier": [
+    {"path": "src/slot_math/mod.rs", "fix_symbols": ["slot_count"], "co_resident_helpers": [], "allowed_top_level_symbols": ["ArrayManifest"]},
+    {"path": "src/manifest_read/mod.rs", "fix_symbols": ["load_manifest_bundle"], "co_resident_helpers": ["ArrayManifest", "CompressorSpec", "ManifestError"], "allowed_top_level_symbols": []},
+    {"path": "src/ax_bind/mod.rs", "fix_symbols": ["shape_matches_axes"], "co_resident_helpers": ["load_axes_catalog", "axis_span", "world_coord", "AxisTransform", "AxisCoordinate", "ArrayAxes", "AxesFile", "AxisError"], "allowed_top_level_symbols": []},
+    {"path": "src/key_ledger/mod.rs", "fix_symbols": ["absent_chunk_keys"], "co_resident_helpers": ["enumerate_chunk_keys", "present_count", "expected_count"], "allowed_top_level_symbols": []},
+    {"path": "src/fp_seal/mod.rs", "fix_symbols": ["seal_compressor"], "co_resident_helpers": [], "allowed_top_level_symbols": ["CompressorSpec"]},
+    {"path": "src/row_stage/mod.rs", "fix_symbols": ["build_staging_snapshot"], "co_resident_helpers": ["read_staging_snapshot", "StagedRow"], "allowed_top_level_symbols": []},
+    {"path": "src/manifest_writer/mod.rs", "fix_symbols": ["write_consolidated_manifest"], "co_resident_helpers": ["ExportedArray", "Totals", "ConsolidatedManifest"], "allowed_top_level_symbols": []}
+  ],
+  "flipping_point_contract": {
+    "concentration_cap": 0.5,
+    "no_single_location_flips_majority": true,
+    "locations": [
+      {
+        "id": "slot_math",
+        "path": "environment/slot_math/mod.rs",
+        "controls_tests": ["test_pressure_chunk_slot_enumeration", "test_aggregate_expected_slots_from_staging"]
+      },
+      {
+        "id": "ax_bind",
+        "path": "environment/ax_bind/mod.rs",
+        "controls_tests": ["test_all_arrays_pass_transform_gate", "test_temperature_latitude_affine_span"]
+      },
+      {
+        "id": "key_ledger",
+        "path": "environment/key_ledger/mod.rs",
+        "controls_tests": ["test_pressure_array_lists_missing_shard_11", "test_temperature_array_has_zero_gaps", "test_staging_payload_matches_reference_rows"]
+      },
+      {
+        "id": "fp_seal",
+        "path": "environment/fp_seal/mod.rs",
+        "controls_tests": ["test_temperature_codec_digest_matches_ref", "test_golden_manifest_equals_reference_pipeline"]
+      },
+      {
+        "id": "row_stage",
+        "path": "environment/row_stage/mod.rs",
+        "controls_tests": ["test_staging_rows_ordered_by_array_name", "test_staging_payload_matches_reference_rows"]
+      },
+      {
+        "id": "manifest_writer",
+        "path": "environment/manifest_writer/mod.rs",
+        "controls_tests": ["test_aggregate_missing_count_matches_rows", "test_array_count_field_matches_vector_length", "test_double_export_produces_identical_bytes"]
+      }
+    ]
+  },
+  "code_forbidden_tokens": []
+}

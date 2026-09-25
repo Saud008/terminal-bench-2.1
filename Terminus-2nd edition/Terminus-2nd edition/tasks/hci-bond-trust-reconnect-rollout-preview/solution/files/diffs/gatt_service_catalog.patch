@@ -1,0 +1,16 @@
+﻿--- lib/boltlane/gates/gatt_service_catalog.sh
++++ lib/boltlane/gates/gatt_service_catalog.sh
+@@ -1,5 +1,4 @@
+ #!/usr/bin/env bash
+-# Baseline GATT catalog counts raw UUID entries without lowercasing or dedupe.
+ set -euo pipefail
+ python3 - <<'PY'
+ import json, sys
+@@ -11,6 +10,6 @@
+     for dev in adapter.get("devices", []):
+         key = f'{adapter_id}|{dev["mac"]}'
+         uuids = dev.get("gatt_uuids") or []
+-        counts[key] = len(uuids)
++        counts[key] = len({u.lower() for u in uuids})
+ json.dump(counts, sys.stdout)
+ PY

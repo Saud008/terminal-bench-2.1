@@ -1,0 +1,12 @@
+--- internal/curtailmask/mask.go
++++ internal/curtailmask/mask.go
+@@ -25,8 +25,7 @@
+ 		}
+ 		start = start.UTC()
+ 		end = end.UTC()
+-		// Baseline treats end boundary as inclusive.
+-		if !when.Before(start) && !when.After(end) {
++		if !when.Before(start) && when.Before(end) {
+ 			return true, nil
+ 		}
+ 	}

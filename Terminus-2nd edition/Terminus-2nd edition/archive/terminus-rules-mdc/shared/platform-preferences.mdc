@@ -1,0 +1,307 @@
+---
+description: EC Training / platform preferred fixes — timeouts, Debian apt, oracle/NOP, language choice (LOCKED)
+alwaysApply: false
+---
+
+# Terminus — Platform preferences (EC Training)
+
+Apply these **platform-preferred** defaults when creating, revising, or debugging tasks. On conflict with generic examples elsewhere, prefer **this file** for timeouts and Debian `apt` naming; keep **app-level** pins (pip, npm, Cargo, Maven) unless CI says otherwise.
+
+## 1. `task.toml` timeouts and environment (agent / verifier timeouts)
+
+Use this baseline for non-milestone tasks unless a task has measured need to differ:
+
+```toml
+[agent]
+timeout_sec = 1800
+
+[verifier]
+timeout_sec = 900
+
+[environment]
+allow_internet = false
+build_timeout_sec = 600.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+workdir = "/app"
+```
+
+- **`build_timeout_sec`:** `600` or `900` (float OK: `600.0` / `900.0`) when image build is heavy.
+- **Agent timeout gate failures:** if real-agent runs time out before finishing, **raise `[agent] timeout_sec` first** (default **1800**), then trim slow verifier tests (avoid dozens of full CLI replays in one pytest module).
+- **Verifier:** keep **`900`** unless local oracle+verifier runs prove a lower value is safe.
+- Milestone tasks: set **`[steps.agent] timeout_sec`** and **`[steps.verifier] timeout_sec`** per step (same preferred values unless scoped smaller).
+
+### 1b. Agent timeout vs submission quality (SP design — LOCKED)
+
+**Agent timeout and task acceptance are independent.** Claude (or any benchmark agent) hitting the **`[agent] timeout_sec`** gate — commonly **1800s** — is a valid **hardness signal**. It does **not** mean the task is bad. Platform agent runs that **time out or score 0** typically **do not auto re-eval**; submission quality must be proven **before upload**, not assumed from a later agent retry.
+
+**Target shape:** agents struggle or time out under the default agent budget, while **every upload** still passes the same quality gates:
+
+**Claude 0% is a valid target (LOCKED):** For new SP submissions, **`terminus-claude-opus-4-8` at 0% full reward (0/N runs)** is an **acceptable and often desired** outcome when the task is **fair and solvable** — it satisfies the platform **Hard** band (worst ≤20%). Design for Claude to **time out, score 0, or never pass all tests** under default `[agent] timeout_sec = 1800`; do **not** weaken the task to lift Claude off 0% unless platform labels **TRIVIAL/EASY** or reviewer feedback requires a **fair** fix (`@prompts/trivial.md`, not hidden spec gaps). GPT-5.5 may also score 0% or low — both benchmark models struggling confirms **target HARD**; only **worst model >80%** blocks acceptance.
+
+**Primary benchmark — Claude Opus 4.8 (Jun 2026 SP):** Hardness design targets **`terminus-claude-opus-4-8` first**. GPT-5.5 (`terminus-gpt5-5`) is **secondary** — it often stays high even on fair HARD tasks; **do not** chase GPT 5/5 with endless trivial hardening. Platform **worst-model** band is what matters; when Claude ≪ GPT, **Claude is the design target**.
+
+**Claude timeout via scope (not clock tricks):** Claude tends to **read the full contract**, then **implement**. Fair pressure under **`[agent] timeout_sec = 1800`** (keep this default — **do not raise** agent timeout to fake hardness):
+
+- **Multi-module repair** (≥4 bugs / ≥3 files) + contracts split across `/app/docs/*.md`
+- **Stateful replay** (ledger, journal, sequence, cache, fingerprint) — accepted merge/replay families
+- **Go/Rust** with agent-path **rebuild** (`test.sh` rebuild; oracle offline G-025)
+- **~18–25 behavioral tests** with independent reference — **not** 60–80+ full CLI replays (those blow **verifier** time, not agent read/fix time fairly)
+- **20+ meaningful** `environment/` files — real modules, not filler for file count
+
+Timeout at 1800s with high partial progress = **valid HARD**. Use `@prompts/sp-hard-create-revise.md` for create/revise; Case 5 + `trivial-repo-wide.md` when GPT still passes after hardening.
+
+| Layer | Requirement |
+|-------|-------------|
+| **Hardness (agents)** | Multi-module repair (≥4 bugs / ≥3 files); Go/Rust/Bash preferred; 20+ meaningful env files; agent must read `/app/docs/` + rebuild — not one obvious edit |
+| **Fairness (agents)** | Every tested behavior in `instruction.md` or cited `/app/docs/` — no hidden test-only rules (partial pass + 0%-forever tests → `@prompts/hard.md` Case 1, not “make easier”) |
+| **Submission (you)** | Oracle **1**, NOP **0**, canonical `FROM` when possible, G-025–G-027, flat zip — **every time**, regardless of agent timeout |
+
+**Design for fair timeout pressure (do):**
+
+- **Go / Rust CLI** with compile in agent path (`test.sh` rebuild; oracle offline per G-025).
+- **Contract split across `/app/docs/*.md`** — concise `instruction.md`, schemas in docs (per-leg rounding, party order, audit hash rules, etc.).
+- **Stateful side effects** — ledger, journal, sequence, cache/fingerprint (accepted merge/replay families).
+- **~18–25 behavioral pytest cases** with independent reference — not 60+ full CLI replays that blow **verifier** time.
+- Keep **`[agent] timeout_sec = 1800`** unless measured runs show agents need more wall clock for a **fair** solvable task.
+
+**Do not (common mistakes):**
+
+- **Raise `[agent] timeout_sec`** only to avoid timeout labels — masks hardness without fixing design.
+- **Slow the verifier** (runtime installs, huge pytest loops) — agent timeout must not come at the cost of `verifier_did_not_run`.
+- **Hide requirements** to force failure — if all agents fail the **same** test for a spec gap, fix **docs**, not difficulty metadata.
+- **Confuse timeout with unsolvable** — timeout + high partial pass = likely fair hard; 0% on one test forever with 89% elsewhere = spec bug (`prompts/hard-case-1.md`).
+
+**Pre-upload mantra:** *Claude may finish at **0%**; agents may not finish in 1800s; the task must still be oracle-clean, spec-fair, and zip-valid on first submit.*
+
+### 1c. Decorative hardening — why Case 5 still gets TRIVIAL (LOCKED — Jun 2026)
+
+**Symptom:** You applied `trivial-case-5.md` + `sp-hard-create-revise.md` but platform still shows **Claude 5/5**, **GPT 5/5**, label **TRIVIAL**.
+
+**Root cause:** Hardening added **surface area** (new JSON fields, hash/fingerprint rules, extra tests) without **interaction depth**. Agents still fix **sequential** bugs in 1–2 obvious files in one session.
+
+| Decorative (does not work) | Interaction (works) |
+|---------------------------|---------------------|
+| `audit_hash` / `input_fingerprint` field + doc sentence | Poison pill: fix merge without ratio breaks **hidden** only |
+| Numeric vs lexicographic sort test on 2-item bundled data | Manifest **file order** merge + persistence gate |
+| More pytest on same root bug | Cross-run / replay fails until persistence module fixed |
+| Longer `dedupe-key.md` | ≥3 docs; hidden needs **multiple** layers correct |
+
+**Mandatory before zip:** `revise/trivial-hardening-probes.mdc` — especially **Probe 1** (single-file patch: ≥40% tests must still fail).
+
+**Escalation:** If **5/5 after Case 5** → `prompts/trivial-case-6.md` (two-stage pipeline, second CLI + ledger, or new slug) — **not** a third round of field additions.
+
+See also: `revise/trivial-hardening-probes.mdc`, `shared/anti-trivial.mdc`, `shared/first-pass-blueprint.mdc` §0–§3, `create/accepted-patterns.mdc`.
+
+## 2. Debian / `apt-get` — do not pin package versions
+
+On **Debian/bookworm** (and similar) base images:
+
+- **Do not** pin apt packages with `package=version` (e.g. `tmux=3.3a-3`, `python3=3.11.2-1+b1`).
+- **Do** install by package name only in one cleaned transaction:
+
+```dockerfile
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        asciinema \
+        ca-certificates \
+        python3 \
+        python3-pip \
+        python3-venv \
+        tmux \
+    && rm -rf /var/lib/apt/lists/*
+```
+
+Still **pin base image by digest** (`FROM ...@sha256:...`). Still **pin** language-ecosystem deps (pip, npm, Cargo, Go modules, Maven) — this rule is **apt only**.
+
+## 2b. Dockerfile — what to pin (mandatory on new/revised tasks)
+
+**Pin these in `environment/Dockerfile`** (install at **image build**, never in `test.sh`):
+
+| Layer | Pin | Dockerfile pattern |
+|-------|-----|-------------------|
+| **Base image** | Snorkel ECR canonical + `@sha256:…` digest | Full table: **`shared/canonical-base-image-gate.mdc`** |
+| **Go / Rust on platform** | ECR canonical row + digest (amd64 when CI requires) | e.g. `public.ecr.aws/docker/library/golang:1.24-bookworm@sha256:…` — see canonical gate |
+| **Verifier pytest** | Exact versions | `pytest==9.0.3`, `pytest-json-ctrf==0.5.0` |
+| **Verifier pip (preferred)** | `environment/requirements.lock` with `--hash=sha256:…` | `pip install --no-cache-dir --require-hashes -r /tmp/requirements.lock` |
+| **Node task deps** | `package-lock.json` | `COPY package.json package-lock.json` then `npm ci` |
+| **Go modules** | `go.mod` + `go.sum`; offline oracle uses `go mod vendor` in image | `go mod download` / `go mod vendor` at build; `go build -mod=vendor` in solve/rebuild |
+| **Rust crates** | `Cargo.lock` | `cargo build --release --locked` |
+| **Python app deps** | `requirements.txt` / `uv.lock` with exact versions | Same as verifier — lockfile in image, not runtime install |
+
+**Do not apt-pin** harness/OS packages (`tmux`, `asciinema`, `python3`, `ca-certificates`, …) — package name only (§2).
+
+**Canonical verifier block** (use `requirements.lock` when possible):
+
+```dockerfile
+COPY requirements.lock /tmp/requirements.lock
+RUN python3 -m venv /opt/verifier-venv \
+ && /opt/verifier-venv/bin/pip install --no-cache-dir --require-hashes -r /tmp/requirements.lock
+```
+
+Minimal `requirements.lock` (regenerate hashes with `pip hash` when upgrading):
+
+```text
+pytest==9.0.3 \
+    --hash=sha256:2c5efc453d45394fdd706ade797c0a81091eccd1d6e4bccfcd476e2b8e0ab5d9
+pytest-json-ctrf==0.5.0 \
+    --hash=sha256:e98994d5e53c6fa03de10adfa093cea7d873a849e36d0f5bdd6d697f388e1218
+```
+
+`test.sh` must call `/opt/verifier-venv/bin/python -m pytest` (or `PATH` including `/opt/verifier-venv/bin`) — **no** runtime `pip install` / `uvx` / `npm install`.
+
+## 3. Oracle and NOP not running or failing
+
+When Summary shows **oracle/NOP missing**, **verifier did not run**, or **0% with timeouts**:
+
+1. Read platform **Summary → Common Failures** for the task id.
+2. Compare against **EC Training default templates** (Harbor layout: flat zip root `task.toml`, `tests/test.sh`, `environment/Dockerfile`, `solution/solve.sh`).
+3. Verify locally (Docker or Harbor):
+   - **Oracle:** `solution/solve.sh` then `tests/test.sh` → `/logs/verifier/reward.txt` = **1**
+   - **NOP:** no solution, run `tests/test.sh` → reward **0**
+4. Checklist:
+   - `WORKDIR /app` in Dockerfile; `test.sh` errors if `PWD=/`
+   - `test.sh` writes **0 or 1** to `/logs/verifier/reward.txt` on **every** exit path (seed `0` before pytest)
+   - Verifier deps in **Dockerfile only** — no `pip`/`apt`/`curl` in `test.sh`
+   - `allow_internet = false` in `task.toml`
+   - Broken env still **exports** required symbols (e.g. `op_a`, `phase_b`) so pytest does not die with `SyntaxError` before behavioral tests
+   - Zip root is flat (`task.toml` at archive root, not nested folder)
+   - **Rust tasks:** `FROM --platform=linux/amd64` with amd64 digest; `build_timeout_sec` ≥ 900; verifier `pytest==9.0.3` / `pytest-json-ctrf==0.5.0` in Dockerfile (`shared/platform-preferences.mdc` §5)
+
+Do not claim oracle/NOP pass without actual run output.
+
+## 4. Preferred languages for new tasks (fewer revisions)
+
+**Prefer creating new tasks in Rust, Go, and Bash** when the scenario fits — these lanes currently receive **fewer revision cycles** on the platform.
+
+- **Go / Rust:** CLI, parsers, binary/log repair, deterministic pipelines.
+- **Bash:** tool chains, Make/CMake glue, local repair scripts (with behavior verified by pytest CLI, not grep-only).
+- TypeScript/Node and Java remain acceptable; use when the task is naturally that stack.
+- Python: only when genuinely **hard** (see `create/safe-languages.mdc`).
+
+When generating ideas (`ideas/generate-ideas.mdc`), **rotate Rust / Go / Bash** more often than duplicate Node replay-debug clones.
+
+## 5. Rust images — `linux/amd64`, build timeout, verifier pins (EC Training)
+
+Platform CI builds on **`linux/amd64`**. Wrong-arch Rust binaries cause **image build timeouts**, **oracle failures**, and **verifier did not run** symptoms. Use this pattern for **new or revised Rust tasks** and when debugging build/oracle issues on Rust tasks.
+
+### Dockerfile — Rust base (required shape)
+
+- Set **`FROM --platform=linux/amd64`** on the first line.
+- Pin **`rust:1.78-bookworm`** (or another explicit tag) with the **amd64 manifest digest** — not the multi-arch index digest.
+- Set **`ENV CARGO_INCREMENTAL=0`** before `cargo build`.
+- Install verifier Python packages in Dockerfile only (`/opt/verifier-venv`), never in `test.sh`.
+
+```dockerfile
+FROM --platform=linux/amd64 rust:1.78-bookworm@sha256:653bd24b9a8f9800c67df55fea5637a97152153fd744a4ef78dd41f7ddc40144
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+    asciinema \
+    ca-certificates \
+    python3 \
+    python3-pip \
+    python3-venv \
+    tmux \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN python3 -m venv /opt/verifier-venv \
+ && /opt/verifier-venv/bin/pip install --no-cache-dir \
+    pytest==9.0.3 \
+    pytest-json-ctrf==0.5.0
+
+ENV PATH="/usr/local/cargo/bin:/opt/verifier-venv/bin:${PATH}"
+ENV CARGO_INCREMENTAL=0
+```
+
+To refresh the digest: `docker buildx imagetools inspect rust:1.78-bookworm` and use the **`linux/amd64`** manifest `digest`, not the top-level index digest.
+
+Local Mac (Apple Silicon) builds with `--platform=linux/amd64` are slow under emulation — that is expected; platform runs native amd64.
+
+### `task.toml` — Rust build timeout
+
+Raise **`build_timeout_sec`** when `cargo build --release` is in the Dockerfile:
+
+```toml
+[environment]
+build_timeout_sec = 900.0
+```
+
+Use **`1800.0`** when the image also runs heavy fixture generation or large compile graphs. Do not leave **`600.0`** on Rust tasks with release builds unless measured locally.
+
+### Verifier pins (platform-preferred)
+
+For **new tasks and Rust revisions**, prefer in Dockerfile:
+
+- `pytest==9.0.3`
+- `pytest-json-ctrf==0.5.0`
+
+Older tasks may still use `8.4.1` / `0.3.5` — upgrade when touching the Dockerfile for build/oracle fixes.
+
+### Oracle / NOP checklist (Rust-specific)
+
+When oracle fails or verifier never runs after a Rust task upload:
+
+1. Confirm **`FROM --platform=linux/amd64`** and amd64 digest on `FROM`.
+2. Confirm **`cargo build --release --locked`** succeeds in image build (check build logs, not just agent logs).
+3. Confirm **`WORKDIR /app`**, **`tmux`**, **`asciinema`**, verifier venv on `PATH`.
+4. Confirm **`test.sh`** uses `/opt/verifier-venv/bin/python -m pytest` (or `PATH` includes venv) with **no** runtime `pip install`.
+5. Re-run oracle then verifier locally or via Harbor before re-upload.
+
+See also: `shared/dockerfile.mdc` § Rust / amd64, `verify/pre-zip-audit.mdc`.
+
+## 6. Platform upload form — “Approved canonical base image?” (LOCKED)
+
+On submit, the platform asks:
+
+> **Does this task use an approved canonical base image?**  
+> Select **No** if you are using a custom image that does not come from the canonical set.
+
+**Policy (Snorkel, Jun 12 2026):** one canonical base image per language/stack. Digest pinning (`@sha256:…`) is **still required**. Non-canonical final runtime bases need **credible justification** (Dockerfile comment or task README); vague justifications are **blocked**.
+
+**Authoritative digest table (LOCKED):** **`shared/canonical-base-image-gate.mdc`** — Snorkel **10 ECR** images (Python, Node, Go, Rust, Java, Ruby, GCC, Maven, Debian, Ubuntu). Copy the **exact** `FROM …@sha256:…` for the **final runtime** stage from that file — not legacy `docker.io` rows.
+
+**Answer Yes** when the final runtime `FROM` matches a row in `canonical-base-image-gate.mdc` (exact digest). **Answer No** + justification for custom registries, `scratch`-only final stage without a listed base, floating tags, or any non-canonical final image.
+
+**Before upload:**
+
+```bash
+grep '^FROM' tasks/<name>/environment/Dockerfile
+```
+
+1. Every `FROM` includes `@sha256:…`
+2. Final runtime stage matches ECR canonical table → form **Yes**
+3. `tasks/_accepted-tasks/` may still show legacy `docker.io` digests — **migrate on revise**; do not copy for new uploads
+
+**CI:** `check_pinned_images`, `check_sanctioned_base_images`, `check_build_context_size` — `reviewer/ci-checks-reference.mdc`.
+
+**Extended Dockerfile hygiene:** `shared/snorkel-dockerfile-image-best-practices.mdc`, `shared/dockerfile.mdc`.
+
+## 7. Platform difficulty benchmark agents (LOCKED — Jun 2026)
+
+**Effective immediately:** difficulty ratings (EASY / MEDIUM / HARD) use **Claude Opus 4.8** and **GPT-5.5**, not legacy Opus 4.6 / GPT-5.2. **Thresholds are unchanged** — only the models producing pass-rate results changed.
+
+| Role | Platform metric label | Harbor / EC CLI model (when available) |
+|------|----------------------|----------------------------------------|
+| Anthropic benchmark | `terminus-claude-opus-4-8` | `anthropic/@anthropic/claude-opus-4-8` |
+| OpenAI benchmark | `terminus-gpt5-5` | `openai/@openai/gpt-5.5` |
+
+**Thresholds (unchanged):**
+
+| Tier | Rule |
+|------|------|
+| **Hard** | Best model ≤20% **or** worst ≤20% |
+| **Medium** | Worst >20% and ≤60% |
+| **Easy** | Worst >60% and ≤80% |
+| **Not accepted** | Worst **>80%** |
+
+**Calibration:** stronger models pass more on the same task. After upload, if ratings drift **EASY** or **5/5** on both → `@prompts/trivial.md`. If **0%-forever** tests with high partial pass → fix spec fairness (`@prompts/hard.md` Case 1), not blanket easing.
+
+**Local smoke (optional):**
+
+```bash
+harbor run -a terminus-2 -m anthropic/@anthropic/claude-opus-4-8 -p tasks/<name> --debug
+harbor run -a terminus-2 -m openai/@openai/gpt-5.5 -p tasks/<name> --debug
+harbor tasks check tasks/<name> -m openai/@openai/gpt-5.5
+```

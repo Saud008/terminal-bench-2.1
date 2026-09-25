@@ -1,0 +1,52 @@
+{
+  "routes": [
+    {
+      "@id": "api-get",
+      "match": [{ "path": ["/api/v1/*"], "method": ["GET"] }],
+      "handle": [{ "handler": "static_response", "body": "api-get" }],
+      "terminal": true
+    },
+    {
+      "@id": "api-exact",
+      "match": [{ "path": ["/api/v1/items"], "method": ["GET"] }],
+      "handle": [{ "handler": "static_response", "body": "api-exact" }],
+      "terminal": true
+    },
+    {
+      "@id": "version-header",
+      "match": [
+        {
+          "path": ["/api/v1/*"],
+          "method": ["POST"],
+          "header": { "X-Api-Version": ["beta"] }
+        }
+      ],
+      "handle": [{ "handler": "static_response", "body": "version-beta" }],
+      "terminal": true
+    },
+    {
+      "@id": "regexp-admin",
+      "match": [{ "path_regexp": ["/admin/[0-9]+"] }],
+      "handle": [{ "handler": "static_response", "body": "admin" }],
+      "terminal": true
+    },
+    {
+      "@id": "nested-parent",
+      "match": [{ "path": ["/nested/*"] }],
+      "routes": [
+        {
+          "@id": "nested-child",
+          "match": [{ "method": ["PUT"] }],
+          "handle": [{ "handler": "static_response", "body": "nested-put" }],
+          "terminal": true
+        }
+      ]
+    },
+    {
+      "@id": "catch-all",
+      "match": [{ "path": ["/*"], "method": ["GET"] }],
+      "handle": [{ "handler": "static_response", "body": "fallback" }],
+      "terminal": false
+    }
+  ]
+}

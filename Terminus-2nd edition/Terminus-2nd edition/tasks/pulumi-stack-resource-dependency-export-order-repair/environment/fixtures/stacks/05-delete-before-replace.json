@@ -1,0 +1,36 @@
+{
+  "stack": "dev",
+  "version": 3,
+  "deployment": {
+    "resources": [
+      {
+        "urn": "urn:pulumi:dev::acme::pulumi:providers:aws::default",
+        "type": "pulumi:providers:aws",
+        "parent": "urn:pulumi:dev::acme::pulumi:stack$acme/dev"
+      },
+      {
+        "urn": "urn:pulumi:dev::acme::aws:s3/bucket:Bucket::data-old",
+        "type": "aws:s3/bucket:Bucket",
+        "parent": "urn:pulumi:dev::acme::pulumi:stack$acme/dev",
+        "provider": "urn:pulumi:dev::acme::pulumi:providers:aws::default"
+      },
+      {
+        "urn": "urn:pulumi:dev::acme::aws:s3/bucket:Bucket::data-new",
+        "type": "aws:s3/bucket:Bucket",
+        "parent": "urn:pulumi:dev::acme::pulumi:stack$acme/dev",
+        "provider": "urn:pulumi:dev::acme::pulumi:providers:aws::default",
+        "deleteBeforeReplace": true,
+        "replaces": "urn:pulumi:dev::acme::aws:s3/bucket:Bucket::data-old"
+      },
+      {
+        "urn": "urn:pulumi:dev::acme::aws:s3/bucketObject:BucketObject::data-new/meta",
+        "type": "aws:s3/bucketObject:BucketObject",
+        "parent": "urn:pulumi:dev::acme::pulumi:stack$acme/dev",
+        "provider": "urn:pulumi:dev::acme::pulumi:providers:aws::default",
+        "dependencies": [
+          "urn:pulumi:dev::acme::aws:s3/bucket:Bucket::data-new"
+        ]
+      }
+    ]
+  }
+}

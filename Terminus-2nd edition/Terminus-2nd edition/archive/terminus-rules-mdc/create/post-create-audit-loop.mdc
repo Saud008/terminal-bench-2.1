@@ -1,0 +1,155 @@
+---
+description: LOCKED — auto audit-fix loop after CREATE Phase D (no user prompt; High→Medium→Low)
+alwaysApply: false
+---
+
+# Terminus — Post-create audit loop (LOCKED — ENGINE_3)
+
+**When:** **Automatically** immediately after **Phase D** (new task tree exists under `tasks/<name>/`). **Do not ask** the user “should I audit?” — this loop is **mandatory** for every CREATE unless the user explicitly says **ideas-only** or **audit-only (no fixes)**.
+
+**Goal:** First-upload acceptance — pair with **`create/first-submit-acceptance-gate.mdc`** (Phase F′) so tasks are not zip-ready until audit + oracle + probes pass.
+
+**On conflict:** Prefer **stricter** rule. **Low** issues never block zip; **High** and **Medium** block until fixed or max rounds exhausted.
+
+---
+
+## Standing default (no user reminder)
+
+After implementing **Phase D**, the agent **must**:
+
+1. **Cursor hook (automatic):** saving `task.toml`, `instruction.md`, `tests/*`, or `environment/Dockerfile` runs **`post_create_audit_loop.py`** (static Phase E) + **`unacceptable_class_gate.py`** — see `jobs-local/post-create-audit-last.json` and `anti-spam-hook-last.txt`. Optional manual duplicate: **`./scripts/after_create.sh <name>`**.
+2. Enter **Phase E auto loop** (this file) — agent fixes **High/Medium** from static report + **`prompts/audit.md`** semantic pass — **no pause** for audit approval unless user says audit-only.
+3. Continue **Phase F → F′ → G → H** only when loop exits **CLEAN** (zero High/Medium).
+
+User does **not** need to paste `@audit` or “run audit” — hook runs static checks; agent still performs semantic audit/fix rounds in chat.
+
+---
+
+## Mandatory loads (each round)
+
+| Order | File |
+|-------|------|
+| 1 | **`prompts/audit.md`** |
+| 2 | **`audit/AUDIT-RULES.mdc`** (CREATE auto-fix mode) |
+| 3 | **`reviewer/REVIEWER-RULES.mdc`** |
+| 4 | **`reviewer/reviewer-checklist.mdc`** |
+| 5 | **`create/first-submit-acceptance-gate.mdc`** (difficulty / first-submit risk) |
+
+**CREATE exception:** Phase E is **not read-only** — fix **High** and **Medium** in place in `tasks/<name>/` only.
+
+---
+
+## Severity policy (fix order)
+
+| Severity | Blocks zip? | Fix in loop? |
+|----------|-------------|--------------|
+| **High** | **Yes** | **Always** — fix before next round |
+| **Medium** | **Yes** | **Always** — after all High fixed |
+| **Low** | **No** | **Optional** — fix only if quick (≤5 min total per round), does **not** weaken difficulty, does **not** leak solutions; else **defer** to Phase H “Low deferred” list |
+
+**Priority order within a round:** **all High → all Medium → optional Low**.
+
+**Never** weaken tests, instruction leaks, or difficulty to clear Low items.
+
+---
+
+## Loop algorithm (2–4 rounds)
+
+```
+round ← 1
+consecutive_clean ← 0
+
+WHILE round ≤ 4:
+  1. Static gate:
+     python3 scripts/post_create_audit_loop.py --task-dir tasks/<name> --round round
+  2. Semantic audit: prompts/audit.md trio + full reviewer-checklist.mdc
+  3. Merge issues into one table (severity, path, problem, fix)
+  4. If any High or Medium → fix per priority (High then Medium); optional Low
+  5. If behavior/tests/oracle/Dockerfile changed → re-run oracle + NOP (Phase F snippet)
+  6. If High=0 AND Medium=0:
+       consecutive_clean += 1
+       IF consecutive_clean ≥ 1 AND round ≥ 1: STOP loop — CLEAN
+       IF round = 1: may continue to round 2 for confirm (agent choice) OR stop if static+semantic both empty
+     ELSE:
+       consecutive_clean ← 0
+  7. round += 1
+
+IF after round 4 still High or Medium > 0:
+  STOP — report blockers; do NOT zip; do NOT claim ready
+```
+
+**Early stop (preferred):**
+
+- **Round 1** with **zero High and zero Medium** → **stop** (one clean pass enough).
+- **Round 2** with **zero High and zero Medium** after round 1 had issues → **stop** (confirmed clean).
+
+**Do not** run more than **4** rounds. **Do not** run fewer than **2** rounds if **round 1** had any High/Medium (fix then re-audit once minimum).
+
+---
+
+## Per-round report (required in agent reply)
+
+```text
+## Post-create audit — round N/4 — <slug>
+
+| Severity | Count | Blocking |
+|----------|-------|----------|
+| High     |       | yes      |
+| Medium   |       | yes      |
+| Low      |       | no       |
+
+Static gate: PASS/FAIL — jobs-local/post-create-audit-last.json
+
+### Issues (this round)
+| Sev | Path | Problem | Action |
+|-----|------|---------|--------|
+
+### Deferred Low (non-blocking)
+- …
+
+Loop: CONTINUE / CLEAN / BLOCKED (max rounds)
+```
+
+---
+
+## Automated script (static half of audit)
+
+```bash
+./scripts/after_create.sh <name>
+python3 scripts/post_create_audit_loop.py --task-dir tasks/<name> --round 1
+```
+
+Maps CI `block` → **High**, `warn` → **Medium**, failed `info` → **Low**.
+
+Reports: **`jobs-local/post-create-audit-last.json`**, **`jobs-local/post-create-audit-last.txt`**
+
+---
+
+## After loop CLEAN
+
+1. **Phase F** — oracle **1.0**, NOP **0.0**, `ruff check .`
+2. **Phase F′** — probes + `first_submit_pack_gate.py --record`
+3. **Phase G** — `./scripts/pack_zip.sh <name>`
+4. **Phase H** — one message: verification table + rubric + deferred Low list
+
+---
+
+## Forbidden (agents)
+
+| Do not | Do instead |
+|--------|------------|
+| Ask user to approve audit after CREATE | Auto-start Phase E |
+| Zip with open High/Medium | Finish loop or report BLOCKED |
+| Fix Low before High/Medium | Priority High → Medium → Low |
+| Skip loop because “structure looks fine” | Run minimum static + checklist |
+| Claim ready without oracle/NOP after fixes | Re-run Phase F |
+
+---
+
+## Related
+
+- `create/new-task-pipeline-A-H.mdc` — Phase E
+- `audit/AUDIT-RULES.mdc` — CREATE auto-fix exception
+- `prompts/audit.md` — CREATE AUTO MODE
+- `scripts/post_create_audit_loop.py` — static runner
+- `scripts/after_create.sh` — post-create entry

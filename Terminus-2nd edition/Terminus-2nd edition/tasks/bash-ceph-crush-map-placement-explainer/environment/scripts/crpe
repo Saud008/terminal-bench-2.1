@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+APP_ROOT="/app"
+LIB="${APP_ROOT}/internal/crpe91"
+usage(){ echo "usage: crpe ingest|normalize|export-ledger ..." >&2; exit 2; }
+cmd="${1:-}"; shift || true
+case "$cmd" in
+  ingest|load-map) exec bash "${LIB}/load/load_map_cmd.sh" "$@" ;;
+  normalize) exec bash "${LIB}/normalize/normalize_run.sh" "$@" ;;
+  export-ledger) exec bash "${LIB}/export/export_ledger_cmd.sh" "$@" ;;
+  *) usage ;;
+esac

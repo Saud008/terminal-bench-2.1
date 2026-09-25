@@ -1,0 +1,62 @@
+{
+  "graph_id": "reshape_chain",
+  "symbol_links": [],
+  "inputs": [
+    {
+      "name": "In",
+      "shape": [
+        -1,
+        12
+      ],
+      "default_shape": [
+        2,
+        12
+      ]
+    }
+  ],
+  "initializers": [],
+  "nodes": [
+    {
+      "id": "rs1",
+      "op": "Reshape",
+      "inputs": [
+        "In"
+      ],
+      "outputs": [
+        "Flat"
+      ],
+      "attrs": {
+        "target": [
+          -1,
+          4,
+          3
+        ]
+      }
+    },
+    {
+      "id": "tr1",
+      "op": "Transpose",
+      "inputs": [
+        "Flat"
+      ],
+      "outputs": [
+        "Out"
+      ],
+      "attrs": {
+        "perm": [
+          0,
+          2,
+          1
+        ]
+      }
+    }
+  ],
+  "value_infos": [
+    {
+      "name": "Flat"
+    },
+    {
+      "name": "Out"
+    }
+  ]
+}

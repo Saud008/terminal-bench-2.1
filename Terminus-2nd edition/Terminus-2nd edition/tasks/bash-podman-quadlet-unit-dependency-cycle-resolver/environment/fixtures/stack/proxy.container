@@ -1,0 +1,12 @@
+[Unit]
+Description=Reverse proxy
+After=api.service metrics.service
+Wants=metrics.service
+
+[Service]
+EnvironmentFile=-/etc/proxy/env
+Restart=always
+
+[Container]
+Image=localhost/proxy:3
+Restart=no

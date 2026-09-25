@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${RF_APP_ROOT:-/app}"
+RF_APP_ROOT="${APP_ROOT}"
+LIB="${APP_ROOT}/lib/rspamd"
+
+# shellcheck source=rotate.sh
+source "${LIB}/rotate.sh"
+
+usage() {
+  echo "usage: rspamd-fuzzy-audit rotate --corpus-dir DIR --key-manifest PATH \\" >&2
+  echo "  --window-size N --console-dump PATH [--dry-run] --summary-out PATH" >&2
+  exit 2
+}
+
+cmd_rotate() {
+  local corpus_dir="" key_manifest="" window_size="" console_dump="" dry_run="false" summary_path=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --corpus-dir) corpus_dir="$2"; shift 2 ;;
+      --key-manifest) key_manifest="$2"; shift 2 ;;
+      --window-size) window_size="$2"; shift 2 ;;
+      --console-dump) console_dump="$2"; shift 2 ;;
+      --dry-run) dry_run="true"; shift ;;
+      --summary-out) summary_path="$2"; shift 2 ;;
+      *) usage ;;
+    esac
+  done
+  [[ -z "${corpus_dir}" || -z "${key_manifest}" || -z "${window_size}" ]] && usage
+  [[ -z "${console_dump}" || -z "${summary_path}" ]] && usage
+  rf_rotate_run "${corpus_dir}" "${key_manifest}" "${window_size}" \
+    "${console_dump}" "${dry_run}" "${summary_path}"
+}
+
+main() {
+  [[ $# -lt 1 ]] && usage
+  case "$1" in
+    rotate) shift; cmd_rotate "$@" ;;
+    *) usage ;;
+  esac
+}
+
+main "$@"

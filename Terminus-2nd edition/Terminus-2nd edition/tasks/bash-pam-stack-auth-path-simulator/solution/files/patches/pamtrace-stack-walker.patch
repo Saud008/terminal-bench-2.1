@@ -1,0 +1,57 @@
+--- a/internal/pamcore/control/stack_walker.sh
++++ b/internal/pamcore/control/stack_walker.sh
+@@ -49,8 +49,10 @@
+ 
+ steps = []
+ required_failed = False
++first_required_code = 0
+ final_code = 0
+ final_reason = "ok"
++short_circuited = False
+ 
+ auth_modules = [m for m in modules if m.get("type") == "auth"]
+ 
+@@ -66,26 +68,30 @@
+     }
+     steps.append(step)
+ 
++    if short_circuited:
++        continue
++
+     if control == "requisite" and code != 0:
+-        # requisite failure recorded; stack continues
+-        required_failed = True
+         final_code = code
+         final_reason = "requisite_failure"
+-    elif control == "required" and code != 0:
++        short_circuited = True
++        continue
++    if control == "required" and code != 0:
+         required_failed = True
+-        if final_code == 0:
+-            final_code = code
+-            final_reason = "required_failure"
+-    elif control == "sufficient" and code == 0:
+-        # sufficient success clears prior required state
++        if first_required_code == 0:
++            first_required_code = code
++    if control == "sufficient" and code == 0 and not required_failed:
+         final_code = 0
+         final_reason = "sufficient_success"
+-        break
+-    elif control == "optional":
+-        pass
++        short_circuited = True
+ 
+-if required_failed and final_reason == "ok":
+-    final_reason = "required_failure"
++if not short_circuited:
++    if required_failed:
++        final_code = first_required_code
++        final_reason = "required_failure"
++    else:
++        final_code = 0
++        final_reason = "ok"
+ 
+ print(json.dumps({
+     "steps": steps,

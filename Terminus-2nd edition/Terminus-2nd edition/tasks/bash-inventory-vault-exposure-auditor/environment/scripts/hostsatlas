@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${APP_ROOT:-/app}"
+
+usage() {
+  echo "usage: hostsatlas scan --tree <manifest.json>" >&2
+  echo "       hostsatlas emit --tree <tree_id> --output <path>" >&2
+  exit 2
+}
+
+cmd="${1:-}"
+shift || usage
+
+case "${cmd}" in
+  scan|ingest)
+    exec bash "${APP_ROOT}/lib/scan_inventory.sh" "$@"
+    ;;
+  emit|export)
+    exec bash "${APP_ROOT}/lib/emit_atlas.sh" "$@"
+    ;;
+  *)
+    usage
+    ;;
+esac

@@ -1,0 +1,79 @@
+{
+  "scenario": "wave-tie",
+  "critical_prefixes": [],
+  "peer_groups": [
+    {
+      "group_id": "g",
+      "filters": [
+        {
+          "filter_id": "any-origin",
+          "priority": 1,
+          "match_mode": "origin",
+          "asn": 1,
+          "action": "accept"
+        }
+      ]
+    }
+  ],
+  "peers": [
+    {
+      "peer_id": "z-peer",
+      "asn": 65002,
+      "group_id": "g",
+      "wave_rank": 1,
+      "med_ceiling": null,
+      "abort_on_critical_deny": false,
+      "community_rewrite": {},
+      "filters": []
+    },
+    {
+      "peer_id": "a-peer",
+      "asn": 65001,
+      "group_id": "g",
+      "wave_rank": 1,
+      "med_ceiling": null,
+      "abort_on_critical_deny": false,
+      "community_rewrite": {},
+      "filters": []
+    },
+    {
+      "peer_id": "m-peer",
+      "asn": 65001,
+      "group_id": "g",
+      "wave_rank": 1,
+      "med_ceiling": null,
+      "abort_on_critical_deny": false,
+      "community_rewrite": {},
+      "filters": []
+    }
+  ],
+  "rib": [
+    {
+      "prefix": "10.0.1.0/24",
+      "as_path": [
+        1
+      ],
+      "communities": [],
+      "med": 1,
+      "peer_id": "z-peer"
+    },
+    {
+      "prefix": "10.0.2.0/24",
+      "as_path": [
+        1
+      ],
+      "communities": [],
+      "med": 1,
+      "peer_id": "a-peer"
+    },
+    {
+      "prefix": "10.0.3.0/24",
+      "as_path": [
+        1
+      ],
+      "communities": [],
+      "med": 1,
+      "peer_id": "m-peer"
+    }
+  ]
+}

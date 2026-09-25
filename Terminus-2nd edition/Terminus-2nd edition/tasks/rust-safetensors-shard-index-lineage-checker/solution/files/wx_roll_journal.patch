@@ -1,0 +1,18 @@
+--- /mnt/d/Terminus---liora-main/tasks/rust-safetensors-shard-index-lineage-checker/environment/src/wx_roll_journal.rs	2026-07-07 12:22:49.287233200 +0000
++++ /mnt/d/Terminus---liora-main/tasks/rust-safetensors-shard-index-lineage-checker/solution/files/wx_roll_journal.rs	2026-07-07 12:22:49.456457700 +0000
+@@ -1,4 +1,4 @@
+-use crate::wx_bundle_read::{read_manifest_dir, ManifestDoc, TensorSpec};
++use crate::wx_bundle_read::read_manifest_dir;
+ use crate::wx_width_table::wx_payload_units;
+ use crate::wx_parent_bind::wx_anchor_fold;
+ use crate::wx_digest_seal::wx_seal_slice;
+@@ -30,8 +30,8 @@
+ ) -> Result<(), String> {
+     let docs = read_manifest_dir(manifest_dir)?;
+     let mut lines = Vec::new();
++    let mut run_seq = 0u32;
+     for doc in docs {
+-        let mut run_seq = 0u32;
+         for shard in &doc.shards {
+             let shard_path = shard_root.join(&shard.shard_file);
+             let parsed = parse_shard_file(&shard_path)?;

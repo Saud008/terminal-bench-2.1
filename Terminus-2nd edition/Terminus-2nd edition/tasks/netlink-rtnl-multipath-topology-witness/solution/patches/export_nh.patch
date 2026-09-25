@@ -1,0 +1,23 @@
+--- ${APP_ROOT:-/app}/crates/nlcore/src/export_nh.rs
++++ ${APP_ROOT:-/app}/crates/nlcore/src/export_nh.rs
+@@ -5,16 +5,16 @@
+ 
+ /// Stage 2a: normalize nexthops on each bound route before export doc assembly.
+ pub fn normalize_route_nexthops(nexthops: &mut [NexthopOut]) {
+-    nexthops.sort_by_key(|nh| nh.weight);
++    nexthops.sort_by_key(|nh| nh.id);
+ }
+ 
+ pub fn write_nh_snapshot(bind_snapshot_path: &Path) -> anyhow::Result<PathBuf> {
+     let body = fs::read_to_string(bind_snapshot_path)?;
+     let bind: BindSnapshotDoc = serde_json::from_str(&body)?;
+-    let mut snapshot_routes = bind.routes.clone();
+-    for route in &mut snapshot_routes {
+-        route.nexthops.sort_by_key(|nh| nh.weight);
++    if bind.version != 1 {
++        anyhow::bail!("unsupported bind snapshot version");
+     }
++    let snapshot_routes = bind.routes.clone();
+     let mut routes = bind.routes;
+     for route in &mut routes {
+         normalize_route_nexthops(&mut route.nexthops);

@@ -1,0 +1,9 @@
+{
+  "path": "d:\\Terminus-2nd edition\\Terminus-2nd edition\\tasks\\opa-bundle-signature-digest-chain-verifier-repair\\environment\\internal\\verify\\verify.go",
+  "tool": "StrReplace",
+  "old_string": "\tchainMembers := make([]bundle.Member, 0)\n\tfor _, m := range members {\n\t\tif m.Canonical != \"MANIFEST.json\" && m.Canonical != \".signatures.json\" {\n\t\t\tchainMembers = append(chainMembers, m)\n\t\t}\n\t}\n\troot, digests := ChainRoot(chainMembers, manifest.Members)",
+  "new_string": "\tchainMembers := make([]bundle.Member, 0)\n\tfor _, m := range members {\n\t\tif m.Canonical != \"MANIFEST.json\" && m.Canonical != \".signatures.json\" {\n\t\t\tchainMembers = append(chainMembers, m)\n\t\t}\n\t}\n\tif err := bundle.WritePreviewLedger(bundleDir, chainMembers, manifest.Members); err != nil {\n\t\treturn nil, err\n\t}\n\troot, digests := ChainRoot(chainMembers, manifest.Members)",
+  "contents_len": 0,
+  "contents": null,
+  "contents_omitted": false
+}

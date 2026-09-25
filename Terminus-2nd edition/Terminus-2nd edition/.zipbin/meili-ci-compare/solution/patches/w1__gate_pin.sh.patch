@@ -1,0 +1,11 @@
+--- a/internal/mbx7/w1/gate_pin.sh
++++ b/internal/mbx7/w1/gate_pin.sh
+@@ -6,7 +6,7 @@
+ inv = json.loads(Path("/app/state/level-roster.json").read_text())
+ blocked = {}
+ for doc in inv.get("documents", []):
+-    if doc.get("kind") == "shard_marker" and (doc.get("filter_pins") or []):
++    if doc.get("kind") == "document" and (doc.get("filter_pins") or []):
+         blocked[doc["doc_id"]] = "blocked_pin"
+ json.dump(blocked, sys.stdout)
+ PY

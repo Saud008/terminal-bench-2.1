@@ -1,0 +1,1 @@
+seal-releases emits /app/output/release-ledger.json with scenario_id, screening_pass, releases sorted by patient_id then unit_id, and ledger_digest as sha256 hex of stable-order releases JSON. Republish for the same screening_pass must not duplicate ledger rows.

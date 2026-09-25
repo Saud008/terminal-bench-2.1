@@ -1,0 +1,34 @@
+{
+  "process_id": "incident-gate",
+  "partition_id": 2,
+  "broker_clock_ms": 8000,
+  "process_clock_ms": 8000,
+  "job_timeout_ms": 1500,
+  "incidents": [
+    {
+      "incident_key": "inc-42",
+      "element_id": "task-verify",
+      "job_key": "job-verify",
+      "resolved_at_ms": 200,
+      "marker_persisted_at_ms": 350
+    }
+  ],
+  "jobs": [
+    {
+      "job_key": "job-verify",
+      "element_id": "task-verify",
+      "type": "verify-payment",
+      "intent_at_ms": 300,
+      "activating_until_ms": 340
+    }
+  ],
+  "boundaries": [],
+  "variables": {
+    "inputs": {"attempt": 1},
+    "output_mapping": {"verified": "attempt"},
+    "incident_overlay": {"attempt": 2}
+  },
+  "replay_batches": [
+    {"batch_id": "rb-inc", "job_keys": ["job-verify"], "idempotent": false}
+  ]
+}

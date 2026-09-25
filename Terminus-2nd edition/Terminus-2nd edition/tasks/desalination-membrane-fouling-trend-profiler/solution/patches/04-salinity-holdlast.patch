@@ -1,0 +1,18 @@
+--- bridge.rs.orig
++++ bridge.rs
+@@ -6,13 +6,9 @@
+     let mut out = Vec::new();
+     for (idx, row) in sorted.iter().enumerate() {
+         let mut r = row.clone();
+         if row.sensor_flags.contains("salinity_dropout") {
+-            let prev = sorted.get(idx.saturating_sub(1));
+-            let next = sorted.get(idx + 1);
+-            if let (Some(a), Some(b)) = (prev, next) {
+-                let span = (b.hour_index - a.hour_index) as f64;
+-                let frac = (row.hour_index - a.hour_index) as f64 / span;
+-                r.salinity_ppt = a.salinity_ppt + frac * (b.salinity_ppt - a.salinity_ppt);
++            if let Some(prev) = sorted.get(idx.saturating_sub(1)) {
++                r.salinity_ppt = prev.salinity_ppt;
+             }
+         }
+         if row.sensor_flags.contains("pressure_dropout") {

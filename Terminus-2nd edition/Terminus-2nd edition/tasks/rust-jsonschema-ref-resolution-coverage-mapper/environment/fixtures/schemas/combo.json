@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.example/combo.json",
+  "allOf": [
+    {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ]
+    },
+    {
+      "anyOf": [
+        {
+          "properties": {
+            "kind": {
+              "const": "alpha"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "beta"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        }
+      ]
+    }
+  ]
+}

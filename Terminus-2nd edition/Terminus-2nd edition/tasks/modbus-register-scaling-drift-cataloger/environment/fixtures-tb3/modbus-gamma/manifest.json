@@ -1,0 +1,31 @@
+{
+  "device_id": "plant-gamma",
+  "clock_skew_ms": 1500,
+  "drift_threshold": 3.0,
+  "default_word_order": "big_endian_words",
+  "scale_epochs": [
+    {
+      "epoch_id": "g-epoch-a",
+      "effective_ms": 0,
+      "factor": 0.1,
+      "offset": 0.0
+    },
+    {
+      "epoch_id": "g-epoch-b",
+      "effective_ms": 1800000000000,
+      "factor": 0.5,
+      "offset": 2.0
+    }
+  ],
+  "baseline": {
+    "50001": 10.0,
+    "50002": -5.0
+  },
+  "register_overrides": {
+    "50002": {
+      "word_order": "little_endian_words",
+      "scale_epoch": "g-epoch-a"
+    }
+  },
+  "alarm_suppression": []
+}

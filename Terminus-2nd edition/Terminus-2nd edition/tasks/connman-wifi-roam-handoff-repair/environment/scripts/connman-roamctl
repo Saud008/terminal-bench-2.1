@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${ROAM_APP_ROOT:-/app}"
+export ROAM_APP_ROOT="${APP_ROOT}"
+LIB="${APP_ROOT}/lib/roam"
+
+# shellcheck source=common.sh
+source "${LIB}/common.sh"
+# shellcheck source=export.sh
+source "${LIB}/export.sh"
+# shellcheck source=simulate.sh
+source "${LIB}/simulate.sh"
+
+usage() {
+  echo "usage: connman-roamctl simulate --scenario PATH --seed N --export PATH" >&2
+  exit 2
+}
+
+cmd_simulate() {
+  local scenario="" seed="" export_path=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --scenario) scenario="$2"; shift 2 ;;
+      --seed) seed="$2"; shift 2 ;;
+      --export) export_path="$2"; shift 2 ;;
+      *) usage ;;
+    esac
+  done
+  [[ -z "${scenario}" || -z "${seed}" || -z "${export_path}" ]] && usage
+  [[ -f "${scenario}" ]] || { echo "missing scenario: ${scenario}" >&2; exit 2; }
+
+  local payload
+  payload="$(roam_simulate "${scenario}" "${seed}")" || exit 2
+  roam_write_export "${export_path}" "${payload}"
+}
+
+main() {
+  [[ $# -lt 1 ]] && usage
+  case "$1" in
+    simulate) shift; cmd_simulate "$@" ;;
+    *) usage ;;
+  esac
+}
+
+main "$@"

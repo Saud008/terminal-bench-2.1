@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${APP_ROOT:-/app}"
+source "${APP_ROOT}/lib/common.sh"
+source "${APP_ROOT}/lib/digest.sh"
+source "${APP_ROOT}/lib/parse.sh"
+source "${APP_ROOT}/lib/normalize.sh"
+source "${APP_ROOT}/lib/tree.sh"
+source "${APP_ROOT}/lib/staging.sh"
+source "${APP_ROOT}/lib/replay.sh"
+source "${APP_ROOT}/lib/guard.sh"
+source "${APP_ROOT}/lib/merge.sh"
+source "${APP_ROOT}/lib/export.sh"
+
+usage() {
+  cat >&2 <<EOF
+usage:
+  sysctlmerge apply --tree DIR --seed SEED --output FILE.json
+  sysctlmerge ingest --tree DIR --seed SEED --snapshot FILE.json
+  sysctlmerge export --snapshot FILE.json --output FILE.json
+  sysctlmerge verify --snapshot FILE.json
+EOF
+}
+
+cmd_ingest() {
+  local tree="" seed="" snapshot=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --tree) tree="$2"; shift 2 ;;
+      --seed) seed="$2"; shift 2 ;;
+      --snapshot) snapshot="$2"; shift 2 ;;
+      *) die "unknown arg: $1" 2 ;;
+    esac
+  done
+  [[ -n "$tree" && -n "$seed" && -n "$snapshot" ]] || usage
+  [[ -f "${tree}/manifest.json" ]] || die "missing manifest.json" 2
+  build_snapshot "$tree" "$seed" "$snapshot"
+}
+
+cmd_export() {
+  local snapshot="" output=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --snapshot) snapshot="$2"; shift 2 ;;
+      --output) output="$2"; shift 2 ;;
+      *) die "unknown arg: $1" 2 ;;
+    esac
+  done
+  [[ -n "$snapshot" && -n "$output" ]] || usage
+  [[ -f "$snapshot" ]] || die "missing snapshot: $snapshot" 2
+  publish_export "$snapshot" "$output"
+}
+
+cmd_verify() {
+  local snapshot=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --snapshot) snapshot="$2"; shift 2 ;;
+      *) die "unknown arg: $1" 2 ;;
+    esac
+  done
+  [[ -n "$snapshot" ]] || usage
+  [[ -f "$snapshot" ]] || die "missing snapshot: $snapshot" 2
+  cmd_verify_snapshot "$snapshot"
+}
+
+cmd_apply() {
+  local tree="" seed="" output=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --tree) tree="$2"; shift 2 ;;
+      --seed) seed="$2"; shift 2 ;;
+      --output) output="$2"; shift 2 ;;
+      *) die "unknown arg: $1" 2 ;;
+    esac
+  done
+  [[ -n "$tree" && -n "$seed" && -n "$output" ]] || usage
+  [[ -f "${tree}/manifest.json" ]] || die "missing manifest.json" 2
+  export_apply "$tree" "$seed" "$output"
+}
+
+main() {
+  [[ $# -ge 1 ]] || { usage; exit 2; }
+  case "$1" in
+    apply) shift; cmd_apply "$@" ;;
+    ingest) shift; cmd_ingest "$@" ;;
+    export) shift; cmd_export "$@" ;;
+    verify) shift; cmd_verify "$@" ;;
+    *) die "unknown command: $1" 2 ;;
+  esac
+}
+main "$@"

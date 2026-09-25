@@ -1,0 +1,17 @@
+--- environment/src/wx_plan_seal.rs	2026-07-09 18:38:47.370444100 +0000
++++ solution/files/wx_plan_seal.rs	2026-07-09 18:38:47.385593000 +0000
+@@ -10,11 +10,12 @@
+         "scenario_id": manifest.scenario_id,
+         "assignment_count": manifest.assignment_count,
+         "assignments": manifest.assignments,
++        "preemption_trace": manifest.preemption_trace,
+         "mean_cloud_risk": manifest.mean_cloud_risk,
+-        "preemption_count": manifest.preemption_count,
+     });
++    let body = payload.to_string();
+     let mut hasher = Sha256::new();
+-    hasher.update(payload.to_string().as_bytes());
++    hasher.update(body.as_bytes());
+     format!("sha256:{:x}", hasher.finalize())
+ }
+ 

@@ -1,0 +1,27 @@
+{
+  "process_id": "dedup-replay",
+  "partition_id": 6,
+  "broker_clock_ms": 4000,
+  "process_clock_ms": 4000,
+  "job_timeout_ms": 500,
+  "incidents": [],
+  "jobs": [
+    {
+      "job_key": "job-index",
+      "element_id": "task-index",
+      "type": "index-doc",
+      "intent_at_ms": 20,
+      "activating_until_ms": 60
+    }
+  ],
+  "boundaries": [],
+  "variables": {
+    "inputs": {"doc": 10},
+    "output_mapping": {"indexed_doc": "doc"},
+    "incident_overlay": {}
+  },
+  "replay_batches": [
+    {"batch_id": "dup-1", "job_keys": ["job-index"], "idempotent": true},
+    {"batch_id": "dup-1", "job_keys": ["job-index"], "idempotent": true}
+  ]
+}

@@ -1,0 +1,12 @@
+--- ingress_normalizer/ingress.rs
++++ ingress_normalizer/ingress.rs
+@@ -16,7 +16,8 @@ pub fn dedupe_scans(rows: Vec<ScanRow>) -> Vec<ScanRow> {
+         }
+     }
+     let mut out: Vec<_> = best.into_values().collect();
+-    out.sort_by_key(|r| r.scan_minute);
++    out.sort_by_key(|r| (r.scan_minute, r.scan_seq));
++    out.shrink_to_fit();
+     out
+ }
+ 

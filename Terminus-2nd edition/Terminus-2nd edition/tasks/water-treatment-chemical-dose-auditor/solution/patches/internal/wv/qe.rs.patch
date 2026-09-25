@@ -1,0 +1,10 @@
+--- a/internal/wv/qe.rs
++++ b/internal/wv/qe.rs
+@@ -2,5 +2,6 @@
+     if denylist.iter().any(|d| d == user) {
+         return false;
+     }
+-    authorized_roles.iter().any(|r| r == role)
++    let role_lower = role.to_ascii_lowercase();
++    authorized_roles.iter().any(|r| r.to_ascii_lowercase() == role_lower)
+ }

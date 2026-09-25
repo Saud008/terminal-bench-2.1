@@ -1,0 +1,5 @@
+The syslog-ng replay driver at /app/bin/syslogctl is mis-routing log lines through the filter graph. Repair the pipeline so graph pruning, boolean filter evaluation, rewrite templates, dead-branch detection, and config reload caching all follow the contract in /app/docs/spec.md.
+
+Use /app/bin/syslogctl replay with --config-dir, --messages, --seed, and --export to load filters, graph routes, and rewrite rules from the config directory, process the message file, write /app/state/routing-snapshot.json, and emit the delivery report JSON at the export path. Optional --reload full or --reload partial must invalidate cached graph state when configuration inputs change as described in /app/docs/reload-cache.md.
+
+Routing must honor filter graph pruning in /app/docs/filter-graph.md, boolean precedence in /app/docs/boolean-precedence.md, rewrite ordering in /app/docs/rewrite-order.md, and fallback branch retention in /app/docs/branch-fallback.md. Exported delivery counts must match /app/docs/report-schema.md. Replaying the same inputs with the same seed must be byte-identical.

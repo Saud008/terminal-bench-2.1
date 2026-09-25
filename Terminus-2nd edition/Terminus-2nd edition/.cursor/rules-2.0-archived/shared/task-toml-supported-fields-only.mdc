@@ -1,0 +1,64 @@
+---
+description: task.toml — only official/skeleton fields; no invented metadata (LOCKED)
+alwaysApply: true
+---
+
+# Terminus — Unsupported `task.toml` fields are NOT allowed (LOCKED)
+
+**Platform reminder (enforce immediately):** submissions must not contain made-up or undocumented metadata in `task.toml`.
+
+**On conflict:** this file wins over AI suggestions, other submissions, private repos, and local scripts that invent fields.
+
+---
+
+## Do not
+
+| Forbidden | Why |
+|-----------|-----|
+| Add undocumented fields to `task.toml` | Reviewers/platform reject unknown metadata |
+| Invent metadata from assumptions or AI suggestions | Spreads incorrect authoring practice |
+| Copy unsupported fields from other submissions | Neighbor zips are not the schema |
+| Justify undocumented fields via private repos, local scripts, or internal tooling outside official authoring guidelines | Not an authority for upload metadata |
+
+## Do
+
+| Required | How |
+|----------|-----|
+| Use **only** fields defined in official documentation and task skeletons | Copy shape from `shared/accepted-corpus.mdc` / official skeleton |
+| If unsure whether a field is supported | **Ask the user before submitting** — not after rejection |
+| Keep repo value locks | `subcategories = []`; banned categories; `number_of_milestones = 0` (single-step) — those are **documented** fields with restricted values, not new keys |
+
+---
+
+## Allowed keys (non-milestone skeleton — this project)
+
+Top-level: `version`, `[metadata]`, `[agent]`, `[verifier]`, `[environment]` only.
+
+| Section | Allowed keys |
+|---------|----------------|
+| **root** | `version` |
+| **`[metadata]`** | `author_name`, `author_email`, `difficulty`, `category`, `subcategories`, `number_of_milestones`, `codebase_size`, `languages`, `tags`, `expert_time_estimate_min`, `junior_time_estimate_min` |
+| **`[metadata]` (compose only)** | `custom_docker_compose`, `is_multi_container` — **only** when `environment/docker-compose.yaml` (or `.yml`) exists |
+| **`[agent]`** | `timeout_sec` |
+| **`[verifier]`** | `timeout_sec` |
+| **`[environment]`** | `build_timeout_sec`, `cpus`, `memory_mb`, `storage_mb`, `workdir`, `allow_internet`, `docker_flags`, `gpus`, `gpu_types` |
+
+**Not allowed in this project (even if older docs mention them):** `[[steps]]`, root `[steps]`, milestone-only layouts. Set `number_of_milestones = 0` and ship a single-step task.
+
+**Any other key or table → remove before zip.** Do not invent replacements.
+
+---
+
+## Pack gate (automatic)
+
+```bash
+python3 scripts/ensure_task_toml_supported_fields.py --check --task-dir tasks/<name>
+```
+
+Wired in `./scripts/pack_zip.sh`. Override only if user explicitly sets `TERMINUS_TASK_TOML_FIELDS_SKIP=1` in **that** message.
+
+## Related
+
+- `shared/task-toml-category-gate.mdc` · `shared/task-toml-subcategories-gate.mdc` (archive)
+- `shared/accepted-corpus.mdc` — reference `task.toml` shape
+- `sanjana-standing-requirements.mdc` §F

@@ -1,0 +1,3 @@
+# task-plan-manifest-schema.md
+
+plan_digest hashes scenario_id, assignment_count, assignments, preemption_trace, mean_cloud_risk. Manifest includes run_token echoing resolve --token, scenario_id, constellation_id such as LEO-A, assignment_count, preemption_count, assignments array with pass_id request_id orbit_id cell_id mode setup_sec effective_start_sec effective_end_sec cloud_composite preempt_rank, preemption_trace array with displaced_request_id winner_request_id pass_id, mean_cloud_risk rounded to four decimals, plan_digest sha256 prefix. Resolve writes caller --dest manifest paths under /app/output/ using token-derived filenames. Subprocess rebuild probe writes /app/output/subproc-check.json per verifier-contract-math.md.

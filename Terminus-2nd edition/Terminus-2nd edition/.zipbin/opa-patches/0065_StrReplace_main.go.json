@@ -1,0 +1,9 @@
+{
+  "path": "d:\\Terminus-2nd edition\\Terminus-2nd edition\\tasks\\opa-bundle-signature-digest-chain-verifier-repair\\environment\\cmd\\bundlectl\\main.go",
+  "tool": "StrReplace",
+  "old_string": "func runVerify(args []string) {\n\tfs := flag.NewFlagSet(\"verify\", flag.ExitOnError)\n\tbundle := fs.String(\"bundle\", \"\", \"bundle directory\")\n\t_ = fs.Parse(args)",
+  "new_string": "func runVerify(args []string) {\n\tif len(args) > 0 {\n\t\tfor _, a := range args {\n\t\t\tif a == \"--seed\" || strings.HasPrefix(a, \"--seed=\") {\n\t\t\t\tfmt.Fprintln(os.Stderr, \"verify does not accept --seed\")\n\t\t\t\tos.Exit(2)\n\t\t\t}\n\t\t}\n\t}\n\tfs := flag.NewFlagSet(\"verify\", flag.ExitOnError)\n\tbundle := fs.String(\"bundle\", \"\", \"bundle directory\")\n\t_ = fs.Parse(args)",
+  "contents_len": 0,
+  "contents": null,
+  "contents_omitted": false
+}

@@ -1,0 +1,11 @@
+--- a/arc_cache/dose_ledger.rs
++++ b/arc_cache/dose_ledger.rs
+@@ -14,7 +14,7 @@ pub fn write_ledger(
+     chemicals: Vec<ChemicalDoseRow>,
+ ) -> Result<(), String> {
+     let ledger = DoseLedger {
+-        ledger_revision_token: prev_generation,
++        ledger_revision_token: prev_generation + 1,
+         plant_id: plant_id.to_string(),
+         shift: shift.to_string(),
+         as_of: as_of.to_string(),

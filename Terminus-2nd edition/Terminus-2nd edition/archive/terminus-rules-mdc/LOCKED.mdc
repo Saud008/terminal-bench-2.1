@@ -1,0 +1,130 @@
+---
+description: "LOCKED — canonical rules index; do not bypass WORKFLOW-MAP or @ tags"
+alwaysApply: false
+---
+
+# LOCKED — Rules & prompts policy
+
+**All files under `.cursor/rules/` and `prompts/` are LOCKED canonical guidance** for this repo unless the user explicitly overrides in the current message.
+
+**ENGINE_0 hub only (always on):** seven `.mdc` files in `shared/terminus-master-engine.mdc` — `LOCKED.mdc`, `WORKFLOW-MAP`, `terminus-master-engine`, `prompt-router`, `problem-rule-loader`, `core`, `repo-workflow`. **All other** active `.cursor/rules/**/*.mdc` use `alwaysApply: false` and load per **ENGINE_1–7** (lazy). Archive: `_legacy/**`, `prompts/*.mdc`, `tag-prompts/*.mdc` (`alwaysApply: false`). **Navigation:** `shared/terminus-master-engine.mdc` · **Registry:** `scripts/terminus_engine_registry.py`.
+
+**Standing default (no reminder):** User pastes `tasks/<name>/` + platform summary → agent auto-analyzes summary, picks prompt router + case, reads `prompts/*.md`, works task. User does not repeat this instruction each chat (`shared/prompt-router.mdc`).
+
+**Canonical ECR `FROM` (no reminder):** Any `tasks/<name>/` work → agent auto-ensures Snorkel ECR `FROM` per `shared/canonical-ecr-dockerfile-auto.mdc` + `shared/canonical-base-image-gate.mdc`. User does not repeat “use canonical images” each chat.
+
+---
+
+## Paths (LOCKED)
+
+| Live | Zip |
+|------|-----|
+| `tasks/<name>/` | `tasksubmit/<name>.zip` via **`./scripts/pack_zip.sh <name>`** only |
+
+- `author_name` / `author_email` = `anonymous`
+- No `rubric.md` in task folders or zips
+- Scan `tasks/`, `tasks/_accepted-tasks/`, `tasksubmit/` only — **no** `dusre-wale/`
+- Harbor job output → `jobs-local/` (gitignored)
+
+---
+
+## Rule folders (LOCKED @ tags)
+
+| @ tag | Folder | Hub file |
+|-------|--------|----------|
+| **@IDEAS RULES** | `ideas/` | `IDEAS-RULES.mdc` |
+| **@CREATE RULES** | `create/` | `CREATE-RULES.mdc` |
+| **@AUDIT RULES** | `audit/` | `AUDIT-RULES.mdc` |
+| **@REVIEWER RULES** | `reviewer/` | `REVIEWER-RULES.mdc` |
+| **@REVISE RULES** | `revise/` | `REVISE-RULES.mdc` |
+| **@VERIFY RULES** | `verify/` | `VERIFY-RULES.mdc` |
+| **@ZIP RULES** | `zip/` | `ZIP-RULES.mdc` |
+
+**Always with task work (via engine — not all in context):** ENGINE_3 CREATE or ENGINE_7 REVISE loads `shared/spec.mdc`, `shared/runtime-verifier.mdc`, etc. See `shared/terminus-master-engine.mdc`.
+
+**Dockerfile / image CI (LOCKED):** `shared/snorkel-dockerfile-image-best-practices.mdc` (Snorkel verbatim §1–15) · **Snorkel ECR canonical `FROM`:** `shared/canonical-base-image-gate.mdc` (`platform-preferences.mdc` §6 defers here) · Terminus extensions: `shared/dockerfile.mdc`
+
+**Oracle failed:** `revise/oracle-fix-g025-g027.mdc` + `prompts/oracleFix.md`
+
+**EASY / TRIVIAL (LOCKED trio):** `prompts/trivial.md` → `prompts/trivial-case-6.md` → `prompts/sp-hard-create-revise.md` + **@REVISE RULES** — see `revise/trivial-easy-difficulty-prompt-lock.mdc`. Pick other cases from `trivial.md` Step B only when summary matches.
+
+**Jun 2026 Snorkel additive (lazy — load with CREATE / REVISE / ZIP):** `shared/additive-rules-lock-index.mdc`
+
+**Legacy archive:** `rules/_legacy/` — superseded copies (`alwaysApply: false`). On conflict: **additive Snorkel Jun 2026 rules** > legacy docker.io corpus > `_legacy/`.
+
+---
+
+## Jun 2026 additive rules (LOCKED — lazy per engine)
+
+Loaded by **ENGINE_3 CREATE**, **ENGINE_7 REVISE**, or **ENGINE_6 ZIP** — not ENGINE_0 hub. Index: `shared/additive-rules-lock-index.mdc`.
+
+| File | Purpose |
+|------|---------|
+| `shared/additive-rules-lock-index.mdc` | **Master index** — lock policy + trivial trio |
+| `shared/snorkel-platform-changelog-sync.mdc` | Welcome changelog → rule map |
+| `shared/canonical-base-image-gate.mdc` | Snorkel ECR 10 base images + upload form |
+| `shared/canonical-ecr-dockerfile-auto.mdc` | **Auto-apply** ECR `FROM` on every task touch — no user reminder |
+| `shared/difficulty-benchmark-models.mdc` | Opus 4.8 + GPT-5.5 thresholds |
+| `shared/task-toml-subcategories-gate.mdc` | `subcategories = []` always |
+| `shared/task-toml-category-gate.mdc` | Blocked `category` values (platform: no debugging / software-engineering) |
+| `shared/allow-internet-gate.mdc` | `allow_internet` must match solve-time network need |
+| `shared/instruction-prose-style.mdc` | No backticks in `instruction.md` |
+| `shared/test-sh-reward-block.mdc` | `rc=$?` preferred reward block |
+| `reviewer/common-errors-reference.mdc` | Common Errors + feedback categories |
+| `revise/trivial-easy-difficulty-prompt-lock.mdc` | TRIVIAL/EASY prompt trio |
+| `shared/problem-rule-loader.mdc` | **Problem → load set; conflict resolution** |
+| `shared/anti-spam-templated-submissions.mdc` | **No spam / no templated tasks** — platform flag avoidance, family saturation, pre-upload gate, **§ When FAIL → fix (LOCKED)** |
+| `shared/unacceptable-task-classes.mdc` | **Never-accept registry** — templated, copy, duplicate, family, same lane, sibling, fabricated, synthetic (CREATE + REVISE + zip) |
+| `create/first-submit-acceptance-gate.mdc` | **First-upload hardness** — Phase F′ probes before first zip (ENGINE_3 / 5 / 6) |
+| `shared/sanjana-standing-requirements.mdc` | **Standing defaults** — auto audit after CREATE, no hints on reviewer instruction, no repeat asks |
+| `create/post-create-audit-loop.mdc` | **CREATE Phase E** — auto audit-fix loop (2–4 rounds; no user ask) |
+
+**Repo-only (stricter than platform where noted):** empty subcategories; blocked `category` (`debugging`, `software-engineering` — now also **platform-wide** for new tasks); no `minimal` codebase for new tasks (`create/accepted-patterns.mdc`); **anti-spam/templated PASS/FAIL** before zip (`anti-spam-templated-submissions.mdc`); default **`allow_internet = false`** with static check if solve needs network (`shared/allow-internet-gate.mdc`).
+
+**Conflicts:** `shared/problem-rule-loader.mdc` §3 — additive Snorkel Jun 2026 wins over docker.io corpus.
+
+---
+
+## Prompts (LOCKED entrypoints)
+
+| Phase | Prompt |
+|-------|--------|
+| A Ideas | `prompts/newidea.md` + **@IDEAS RULES** |
+| C Audit | `prompts/audit.md` + **@AUDIT RULES** + **@REVIEWER RULES** |
+| D Trivial | `prompts/trivial.md` + **@REVISE RULES** |
+| D Easy | `prompts/easy.md` + **@REVISE RULES** + `revise/hardness.mdc` |
+| D Medium | `prompts/medium.md` + **@REVISE RULES** |
+| D Hard | `prompts/hard.md` + **@REVISE RULES** |
+| D′ Reviewer | `prompts/reviewer.md` + **@REVIEWER RULES** |
+| E Verify | **@VERIFY RULES** |
+| F Zip | **@ZIP RULES** → `./scripts/pack_zip.sh <name>` |
+
+Full index: `prompts/README.md` · policy: `prompts/LOCKED.md`
+
+---
+
+## Conflict resolution (LOCKED)
+
+1. On conflict between rules → prefer the **stricter** rule (fairness, difficulty, offline oracle, no runtime installs).
+2. Do **not** merge tasks, folders, or zips — revise **in place** in `tasks/<name>/`.
+3. Do **not** implement reviewer feedback blindly — triage first (`REVIEWER-RULES.mdc`).
+4. Do **not** pack upload zips by hand — use `scripts/pack_zip.sh` only.
+5. Do **not** claim ready without Oracle **1** + NOP **0** evidence.
+6. Do **not** weaken `shared/snorkel-dockerfile-image-best-practices.mdc` (digest pin, final-runtime sanctioned base, 100 MiB / 50 MiB build context, offline deps, `tmux`/`asciinema`) unless the user explicitly overrides in this message.
+7. On Snorkel vs legacy conflict → **`shared/problem-rule-loader.mdc` §3** (additive Jun 2026 > docker.io corpus > `_legacy/`).
+
+---
+
+## Forbidden (agents)
+
+| Do not | Use instead |
+|--------|-------------|
+| Manual `zip -r` / `Compress-Archive` for upload | `./scripts/pack_zip.sh <name>` |
+| Runtime `pip`/`apt`/`npm` in `test.sh` | Dockerfile `/opt/verifier-venv` |
+| `sbt` / `mix deps.get` / network in `solve.sh` | G-025 offline oracle patterns |
+| Cherry-pick one rule file | `@` tag hub + WORKFLOW-MAP lifecycle |
+| Leave legacy `docker.io` `FROM` when editing a task | **`shared/canonical-ecr-dockerfile-auto.mdc`** — fix to ECR automatically |
+| Weaken tests/instruction to pass feedback | Triage: accept / reject / partial |
+| `pack_zip` on first upload without F′ record | `python3 scripts/first_submit_pack_gate.py --record ...` then pack — **no zip created until PASS** |
+| Manual zip to bypass F′ | `./scripts/pack_zip.sh` only — gate runs inside script |
+| `TERMINUS_FIRST_SUBMIT_SKIP` without user override | Fix probes per `create/first-submit-acceptance-gate.mdc` |

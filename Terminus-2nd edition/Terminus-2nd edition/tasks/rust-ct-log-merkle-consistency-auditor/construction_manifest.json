@@ -1,0 +1,75 @@
+{
+  "task_slug": "rust-ct-log-merkle-consistency-auditor",
+  "symbol_table": [
+    {"path": "src/ctpath/leaf_body.rs", "symbol": "leaf_digest", "kind": "function"},
+    {"path": "src/cosign/vote_tally.rs", "symbol": "quorum_met", "kind": "function"},
+    {"path": "src/cosign/chron_order.rs", "symbol": "timestamps_monotonic", "kind": "function"},
+    {"path": "src/ledgerfmt/hex_norm.rs", "symbol": "normalize_root", "kind": "function"},
+    {"path": "src/exportkit/snapshot_lines.rs", "symbol": "materialize_checkpoint_rows", "kind": "function"},
+    {"path": "src/exportkit/capsule_emit.rs", "symbol": "seal_digest", "kind": "function"}
+  ],
+  "oracle_frontier": [
+    {
+      "path": "src/ctpath/leaf_body.rs",
+      "fix_symbols": ["leaf_digest"],
+      "co_resident_helpers": ["canonical_leaf_prefix", "leaf_prefix_bytes", "hash_leaf_body"],
+      "allowed_top_level_symbols": ["ProofStep", "node_digest", "verify_inclusion"]
+    },
+    {
+      "path": "src/cosign/vote_tally.rs",
+      "fix_symbols": ["quorum_met"],
+      "co_resident_helpers": ["quorum_threshold", "witness_matches", "tally_agreements", "witness_set_hash", "md5_stub"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "src/cosign/chron_order.rs",
+      "fix_symbols": ["timestamps_monotonic"],
+      "co_resident_helpers": ["chron_ok", "size_advances"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "src/ledgerfmt/hex_norm.rs",
+      "fix_symbols": ["normalize_root"],
+      "co_resident_helpers": ["strip_root_prefix", "hex_is_normalized"],
+      "allowed_top_level_symbols": ["WitnessCheckpoint", "AuditBundle", "ProofStepJson", "load_bundles_from_index", "load_witness_file", "SignedTreeHead", "InclusionProof", "ConsistencyProof", "ParseError", "load_audit_bundle", "Wrap", "IndexEntry", "IndexFile"]
+    },
+    {
+      "path": "src/exportkit/snapshot_lines.rs",
+      "fix_symbols": ["materialize_checkpoint_rows"],
+      "co_resident_helpers": ["steps_from_json", "evaluate_bundle", "read_staging_snapshot", "row_inclusion_flag"],
+      "allowed_top_level_symbols": ["StagedAuditRow"]
+    },
+    {
+      "path": "src/exportkit/capsule_emit.rs",
+      "fix_symbols": ["seal_digest"],
+      "co_resident_helpers": ["write_sealed_archive", "digest_field_order"],
+      "allowed_top_level_symbols": ["AuditExport", "EvidenceBundle"]
+    }
+  ],
+  "flipping_point_contract": {
+    "locations": [
+      {
+        "id": "ctpath_leaf",
+        "path": "environment/ctpath/leaf_body.rs",
+        "controls_tests": ["test_ctwitness_alpha_inclusion_rfc6962", "test_ctwitness_tb3_gamma_inclusion_hidden_index"]
+      },
+      {
+        "id": "cosign_ballot",
+        "path": "environment/cosign/vote_tally.rs",
+        "controls_tests": ["test_ctwitness_snapshot_track_independent_material", "test_ctwitness_tb3_gamma_witness_quorum"]
+      },
+      {
+        "id": "ledgerfmt_root",
+        "path": "environment/ledgerfmt/hex_norm.rs",
+        "controls_tests": ["test_ctwitness_snapshot_track_independent_material", "test_ctwitness_archive_matches_independent_bundle"]
+      },
+      {
+        "id": "exportkit_seal",
+        "path": "environment/exportkit/capsule_emit.rs",
+        "controls_tests": ["test_ctwitness_seal_bundle_row_contract", "test_ctwitness_archive_matches_independent_bundle", "test_ctwitness_repeated_seal_is_idempotent"]
+      }
+    ],
+    "no_single_location_flips_majority": true,
+    "concentration_cap": 0.5
+  }
+}

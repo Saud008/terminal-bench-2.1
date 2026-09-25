@@ -1,0 +1,41 @@
+{
+  "format_version": "1.2",
+  "resource_changes": [
+    {
+      "address": "aws_lambda_function.metrics",
+      "previous_address": null,
+      "module_address": "",
+      "provider_key": "aws",
+      "change": {
+        "actions": ["update"],
+        "before": {
+          "tags": {
+            "CostCenter": "CC-OBS-500",
+            "Environment": "prod"
+          }
+        },
+        "after": {
+          "tags": {
+            "CostCenter": "(known after apply)",
+            "Environment": "prod"
+          }
+        }
+      }
+    },
+    {
+      "address": "module.data.aws_rds_cluster.analytics",
+      "previous_address": null,
+      "module_address": "module.data",
+      "provider_key": "aws",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {
+          "tags": {
+            "Environment": "(known after apply)"
+          }
+        }
+      }
+    }
+  ]
+}

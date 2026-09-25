@@ -1,0 +1,61 @@
+---
+description: allow_internet static check — metadata must match offline solve/agent reality (additive)
+alwaysApply: false
+---
+
+# Terminus — `allow_internet` consistency gate
+
+**Additive rule (Snorkel static check).** Platform validates that `[environment] allow_internet` in `task.toml` matches what the task actually needs at **agent/oracle solve time**.
+
+## Default (this repo)
+
+```toml
+[environment]
+allow_internet = false
+```
+
+**Prefer `false`** for all new and revised tasks. All verifier deps belong in `environment/Dockerfile`; `tests/test.sh` must not download at runtime (`shared/runtime-verifier.mdc`).
+
+## New static check (fail submission)
+
+If `allow_internet = false` but the task **requires network during solve** (agent or oracle), static checks **fail** and the task cannot be submitted.
+
+| Forbidden with `allow_internet = false` | Examples |
+|----------------------------------------|----------|
+| Runtime package installs in `solution/solve.sh` | `pip install`, `npm install`, `cargo fetch`, `mix deps.get`, `apt-get install`, `curl`/`wget` to registries |
+| Runtime model/data downloads in solve or agent path | HuggingFace hub pulls, `git clone`, fetching fixtures from URLs |
+| Agent-visible scripts that assume live network | Solve steps that only work when PyPI/Hex/Maven is reachable |
+
+**Oracle offline (G-025):** With `false`, `solve.sh` must pass with `--network none` / platform `allow_internet = false`. See `revise/oracle-fix-g025-g027.mdc`.
+
+## When `allow_internet = true` is correct
+
+Set **`allow_internet = true` only** when the task **genuinely** requires live internet for the agent to complete the work (e.g. gallery inspirations tagged **Requires Internet** — Git remotes, live API, hub downloads that cannot be baked into the image).
+
+If you set `true`:
+
+- Document why in the task design (not a step-by-step hint in `instruction.md`).
+- Still preinstall **verifier** deps in the Dockerfile — do not use runtime `pip`/`npm` in `test.sh`.
+- Oracle must remain deterministic; avoid solve-time network unless the task contract explicitly requires it.
+
+## Pre-submit audit
+
+```bash
+# G-025 — no network patterns in solution/
+rg -n 'pip install|npm install|curl |wget |apt-get install|cargo fetch|mix deps\.|git clone|huggingface' \
+  tasks/<name>/solution/ || true
+
+grep allow_internet tasks/<name>/task.toml
+```
+
+| Finding | Severity |
+|---------|----------|
+| `allow_internet = false` + network in `solve.sh` | **High** — static check + oracle platform fail |
+| `allow_internet = false` + agent must download to pass | **High** — mislabeled metadata |
+| `allow_internet = true` without genuine need | **Medium** — prefer offline + image-baked deps |
+
+## Related
+
+- `shared/runtime-verifier.mdc` — verifier offline
+- `revise/oracle-fix-g025-g027.mdc` — G-025 oracle offline
+- `shared/snorkel-platform-changelog-sync.mdc` — platform changelog map

@@ -1,0 +1,159 @@
+--- environment/crates/doc_loader/src/lib.rs
++++ solution/oracle/golden/crates/doc_loader/src/lib.rs
+@@ -4,7 +4,6 @@
+ use std::fs;
+ use std::path::{Path, PathBuf};
+ 
+-/// Ingest pass: load schema documents from a directory tree for trace staging.
+ #[derive(Debug, Clone)]
+ pub struct SchemaDoc {
+     pub id: String,
+--- environment/crates/anchor_index/src/lib.rs
++++ solution/oracle/golden/crates/anchor_index/src/lib.rs
+@@ -15,7 +15,7 @@
+ 
+ fn walk(doc_id: &str, node: &Value, pointer: &str, idx: &mut AnchorIndex) {
+     if let Some(anchor) = object_get(node, "$anchor").and_then(|v| v.as_str()) {
+-        idx.anchors.insert(format!("#{anchor}"), format!("{doc_id}{pointer}"));
++        idx.anchors.insert(anchor.to_string(), format!("{doc_id}{pointer}"));
+     }
+     if let Some(obj) = node.as_object() {
+         for (k, v) in obj {
+--- environment/crates/visit_guard/src/lib.rs
++++ solution/oracle/golden/crates/visit_guard/src/lib.rs
+@@ -2,7 +2,7 @@
+ 
+ #[derive(Debug, Default)]
+ pub struct VisitGuard {
+-    seen: BTreeSet<String>,
++    seen: BTreeSet<(String, String)>,
+ }
+ 
+ impl VisitGuard {
+@@ -10,15 +10,16 @@
+         Self::default()
+     }
+ 
+-    pub fn enter(&mut self, doc_id: &str, _pointer: &str) -> bool {
+-        if self.seen.contains(doc_id) {
++    pub fn enter(&mut self, doc_id: &str, pointer: &str) -> bool {
++        let key = (doc_id.to_string(), pointer.to_string());
++        if self.seen.contains(&key) {
+             return false;
+         }
+-        self.seen.insert(doc_id.to_string());
++        self.seen.insert(key);
+         true
+     }
+ 
+-    pub fn leave(&mut self, doc_id: &str, _pointer: &str) {
+-        self.seen.remove(doc_id);
++    pub fn leave(&mut self, doc_id: &str, pointer: &str) {
++        self.seen.remove(&(doc_id.to_string(), pointer.to_string()));
+     }
+ }
+--- environment/crates/combinator_cov/src/lib.rs
++++ solution/oracle/golden/crates/combinator_cov/src/lib.rs
+@@ -23,7 +23,6 @@
+         }
+     }
+     if let Some(any) = object_get(node, "anyOf").and_then(|v| v.as_array()) {
+-        let mut any_hit = false;
+         for (i, branch) in any.iter().enumerate() {
+             let bp = if pointer.is_empty() {
+                 format!("/anyOf/{i}")
+@@ -31,19 +30,9 @@
+                 format!("{pointer}/anyOf/{i}")
+             };
+             if instance_matches(branch, instance) {
+-                any_hit = true;
++                cov.any_of.insert(bp.clone());
+             }
+             walk_combinators(branch, &bp, instance, cov);
+-        }
+-        if any_hit {
+-            for i in 0..any.len() {
+-                let bp = if pointer.is_empty() {
+-                    format!("/anyOf/{i}")
+-                } else {
+-                    format!("{pointer}/anyOf/{i}")
+-                };
+-                cov.any_of.insert(bp);
+-            }
+         }
+     }
+     if let Some(props) = object_get(node, "properties").and_then(|v| v.as_object()) {
+@@ -63,11 +52,35 @@
+ }
+ 
+ fn instance_matches(schema: &Value, instance: &Value) -> bool {
++    if let Some(c) = object_get(schema, "const") {
++        return c == instance;
++    }
++    if let Some(props) = object_get(schema, "properties").and_then(|v| v.as_object()) {
++        if let Some(inst_obj) = instance.as_object() {
++            for (key, subschema) in props {
++                if let Some(child) = inst_obj.get(key) {
++                    if let Some(const_v) = object_get(subschema, "const") {
++                        if const_v != child {
++                            return false;
++                        }
++                    } else if !instance_matches(subschema, child) {
++                        return false;
++                    }
++                }
++            }
++            if let Some(required) = object_get(schema, "required").and_then(|v| v.as_array()) {
++                for req in required {
++                    if let Some(name) = req.as_str() {
++                        if !inst_obj.contains_key(name) {
++                            return false;
++                        }
++                    }
++                }
++            }
++        }
++    }
+     if let Some(t) = object_get(schema, "type").and_then(|v| v.as_str()) {
+         return type_matches(t, instance);
+-    }
+-    if object_get(schema, "const").is_some() {
+-        return object_get(schema, "const") == Some(instance);
+     }
+     true
+ }
+--- environment/crates/graph_export/src/lib.rs
++++ solution/oracle/golden/crates/graph_export/src/lib.rs
+@@ -33,6 +33,10 @@
+             ref_kind: e.status.clone(),
+         });
+     }
++    graph_edges.sort_by(|a, b| {
++        (a.from.as_str(), a.to.as_str(), a.ref_kind.as_str())
++            .cmp(&(b.from.as_str(), b.to.as_str(), b.ref_kind.as_str()))
++    });
+     let nodes: Vec<GraphNode> = node_set
+         .into_iter()
+         .map(|id| GraphNode {
+--- environment/crates/report_emit/src/lib.rs
++++ solution/oracle/golden/crates/report_emit/src/lib.rs
+@@ -39,7 +39,7 @@
+     }
+     let totals = CoverageTotals {
+         schema_count: schema_ids.len() as u32,
+-        resolved_ref_count: ref_edges.len() as u32,
++        resolved_ref_count: ref_edges.iter().filter(|e| e.status == "resolved").count() as u32,
+         unresolved_ref_count: unresolved.len() as u32,
+         recursive_ref_count: ref_edges.iter().filter(|e| e.status == "recursive").count() as u32,
+         example_count: example_coverage.len() as u32,
+--- environment/crates/pointer_walk/src/lib.rs
++++ solution/oracle/golden/crates/pointer_walk/src/lib.rs
+@@ -13,7 +13,7 @@
+     }
+     let mut cur = root;
+     for part in p.trim_start_matches('/').split('/') {
+-        let part = part.replace("~0", "~").replace("~1", "/");
++        let part = part.replace("~1", "/").replace("~0", "~");
+         if part.chars().all(|c| c.is_ascii_digit()) {
+             let idx: usize = part.parse().ok()?;
+             cur = cur.get(idx)?;

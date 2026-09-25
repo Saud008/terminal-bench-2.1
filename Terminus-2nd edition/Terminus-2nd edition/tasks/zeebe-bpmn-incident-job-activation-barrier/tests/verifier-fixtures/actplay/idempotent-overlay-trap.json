@@ -1,0 +1,27 @@
+{
+  "process_id": "tb3-idempotent-overlay-trap",
+  "partition_id": 11,
+  "broker_clock_ms": 8000,
+  "process_clock_ms": 7800,
+  "job_timeout_ms": 1200,
+  "incidents": [],
+  "jobs": [
+    {
+      "job_key": "job-pack",
+      "element_id": "task-pack",
+      "type": "pack-step",
+      "intent_at_ms": 80,
+      "activating_until_ms": 150
+    }
+  ],
+  "boundaries": [],
+  "variables": {
+    "inputs": {"units": 4, "lane": 1},
+    "output_mapping": {"packed_units": "units", "pack_lane": "lane"},
+    "incident_overlay": {"units": 99, "lane": 7}
+  },
+  "replay_batches": [
+    {"batch_id": "p1", "job_keys": ["job-pack"], "idempotent": true},
+    {"batch_id": "p1", "job_keys": ["job-pack"], "idempotent": true}
+  ]
+}

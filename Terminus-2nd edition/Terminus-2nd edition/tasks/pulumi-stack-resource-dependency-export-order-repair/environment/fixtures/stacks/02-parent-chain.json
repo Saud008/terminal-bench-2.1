@@ -1,0 +1,32 @@
+{
+  "stack": "dev",
+  "version": 3,
+  "deployment": {
+    "resources": [
+      {
+        "urn": "urn:pulumi:dev::acme::pulumi:providers:aws::default",
+        "type": "pulumi:providers:aws",
+        "parent": "urn:pulumi:dev::acme::pulumi:stack$acme/dev"
+      },
+      {
+        "urn": "urn:pulumi:dev::acme::aws:ec2/vpc:Vpc::main",
+        "type": "aws:ec2/vpc:Vpc",
+        "parent": "urn:pulumi:dev::acme::pulumi:stack$acme/dev",
+        "provider": "urn:pulumi:dev::acme::pulumi:providers:aws::default",
+        "component": true
+      },
+      {
+        "urn": "urn:pulumi:dev::acme::aws:ec2/subnet:Subnet::main/public",
+        "type": "aws:ec2/subnet:Subnet",
+        "parent": "urn:pulumi:dev::acme::aws:ec2/vpc:Vpc::main",
+        "provider": "urn:pulumi:dev::acme::pulumi:providers:aws::default"
+      },
+      {
+        "urn": "urn:pulumi:dev::acme::aws:ec2/instance:Instance::main/public-a",
+        "type": "aws:ec2/instance:Instance",
+        "parent": "urn:pulumi:dev::acme::aws:ec2/subnet:Subnet::main/public",
+        "provider": "urn:pulumi:dev::acme::pulumi:providers:aws::default"
+      }
+    ]
+  }
+}

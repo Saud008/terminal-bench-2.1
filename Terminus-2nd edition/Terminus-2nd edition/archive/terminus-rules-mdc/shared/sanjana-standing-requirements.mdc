@@ -1,0 +1,329 @@
+---
+description: LOCKED — Sanjana standing defaults (always on — user never repeats)
+alwaysApply: true
+---
+
+# Sanjana standing requirements (LOCKED — always on)
+
+**User does not repeat these every chat.** Treat as **mandatory** on every task touch. On conflict with a generic example, **this file wins**.
+
+---
+
+## 0. NEW TASK / ANY TASK EDIT — agent runs ALL phases (no permission)
+
+**User says nothing extra.** Paste platform summary and/or `tasks/<name>/` — engines + hooks drive the rest.
+
+**Trigger (automatic — user never says again):**
+
+- New folder under `tasks/<name>/` or `pending/<name>/`
+- Any edit to task files (`task.toml`, `instruction.md`, `Dockerfile`, `tests/`, `solution/`, `environment/`)
+- User pastes `tasks/<name>/` or `pending/<name>/` without saying “read only”
+
+**Agent must in the same turn (or until `jobs-local/finish/create-finish-last.json` verdict PASS):**
+
+1. **Router → Read prompts** (`shared/workflow-prompt-automation-lock.mdc`) — reviewer / trivial / audit file **before** edits
+2. Phase E static audit → fix **High → Medium** in place (max 4 rounds)
+3. Harbor oracle **1.0** + NOP **0.0** (or `jobs-local/harbor/harbor-verify-<slug>.json` if PASS)
+4. Probes + F′ record (`first_submit_pack_gate.py --record`)
+5. **`./scripts/create_finish_to_zip.sh <name>`** — one command, **no skip flags**
+6. **`rubrics/<name>.md`** via `write_platform_rubric.py` **or** same block in chat (`shared/rubric-storage-lock.mdc`)
+7. **`submission-explanations/<name>.md`** via `write_submission_explanations.py --draft` — edit in your words, paste on platform (`shared/submission-explanations-gate.mdc`)
+8. Reply with `tasksubmit/<name>.zip` path **or** `BLOCKED_*` + what was fixed
+
+**Never ask:** “run harbor?” · “pack zip?” · “audit?” · “use canonical images?” — all **automatic**.
+
+**Read-only exception (only):** user says audit only / read only / do not edit / no changes.
+
+**Hook on save:** `anti-spam-auto-run.py` → audit → 8/8 → `create_finish_to_zip --hook-mode` (debounced 45s).
+
+---
+
+## A. CREATE → zip (full pipeline — **all phases A→H — LOCKED**)
+
+**Policy:** `shared/workflow-prompt-automation-lock.mdc` + `create/new-task-pipeline-A-H.mdc`
+
+| Phase | Deliverable | Skip? |
+|-------|-------------|-------|
+| A | ≥2 accepted reads cited | **No** |
+| B | Corpus scan + similarity table | **No** |
+| C | One idea → implement | **No** |
+| D | `tasks/<name>/` tree | **No** |
+| E | Audit High/Medium = 0 | **No** |
+| F | Oracle 1.0, NOP 0.0, ruff | **No** |
+| G | `tasksubmit/<name>.zip` | **No** |
+| H | Verification table + **`rubrics/<name>.md`** + **`submission-explanations/<name>.md`** (slug in header) | **No** |
+
+| Always | Never |
+|--------|-------|
+| Phase D done → **same turn** finish script until exit **0** | Stop at “task created” without zip |
+| Final reply includes zip **and** rubric path | Ask “should I audit?” / “run harbor?” / “pack?” |
+
+**One command:**
+
+```bash
+./scripts/create_finish_to_zip.sh <name>
+```
+
+WSL harbor already run:
+
+```bash
+./scripts/create_finish_to_zip.sh <name> --skip-harbor --oracle 1.0 --nop 0.0
+```
+
+---
+
+## B. Hook automation (user runs nothing)
+
+On **every task file save** (debounced ~45s), hook runs:
+
+1. `post_create_audit_loop.py` (static Phase E)
+2. `unacceptable_class_gate.py` (**8/8**)
+3. `create_finish_to_zip.py --hook-mode` → ruff → **F′ record** → **`pack_zip.sh`**
+4. Harbor: cache `jobs-local/harbor-verify-<slug>.json` if PASS; else try; else **background** (`finish-bg-<slug>.log`)
+
+Reports: `jobs-local/anti-spam-hook-last.txt`, `create-finish-last.json`
+
+**Never ask** user to run: `terminus_anti_spam_auto.py`, `after_create.sh`, manual harbor, manual `first_submit_pack_gate --record`, manual `zip -r`.
+
+---
+
+## C. Phase E audit (conditions — no permission)
+
+- Read `jobs-local/post-create-audit-last.json` + semantic **`prompts/audit.md`** + AUDIT + REVIEWER
+- Fix **High → Medium** (Low optional, never blocks zip)
+- Stop when **High=0, Medium=0** (min **2** rounds if round 1 had blockers; max **4**)
+- Re-run finish after behavior/tests/oracle/Dockerfile change
+
+---
+
+## D. Platform summary → auto route + prompts + automation
+
+Paste summary (+ optional `tasks/<name>/`) → **auto** pick router + case → **`Read` prompt files** → edit → hooks on save.
+
+**Reviewer line comments:** hook runs **`reviewer_feedback_gate.py`** (accepted A-001…A-010 + trivial-risk) on paste; **audit only** until you save fixes; then full finish (sim **0.0**).
+
+**Revise feedback:** `prompts/reviewer.md` triage first. **EASY/TRIVIAL:** trivial-fix-invoke trio + Case 6. **No case quiz.**
+
+**Category first (every revise):** read `task.toml` `category`. **Allowed only:** `data-administration`, `machine-learning`, `games`. Banned = `debugging`, `software-engineering`, `data-processing`, `security`, `system-administration`, `build-and-dependency-management`, `scientific-computing`, `cloud-devops` (and any other value). If CI `category_classifier` predicts a banned label, reframe `instruction.md` + tags in the same turn (`shared/task-toml-category-gate.mdc`).
+
+Oracle fail only → `oracleFix.md` / G-025–G-027 first.
+
+Full order: `shared/workflow-prompt-automation-lock.mdc`.
+
+---
+
+## D2. Rubrics (LOCKED — per task slug)
+
+| Store | Path |
+|-------|------|
+| **File (preferred)** | `rubrics/<slug>.md` — header must say `tasks/<slug>/` |
+| **Chat** | Same lines at Phase H — first line names slug |
+
+**Never** `tasks/<slug>/rubric.md` or inside zip. Use `scripts/write_platform_rubric.py`.
+
+Policy: `shared/rubric-storage-lock.mdc`.
+
+---
+
+## D2b. Submission explanations (LOCKED — platform form)
+
+| Store | Path |
+|-------|------|
+| **File (required before pack)** | `submission-explanations/<slug>.md` |
+| **Platform** | Copy three paragraphs — Difficulty · Solution · Verification |
+
+**Never** in zip. Draft: `write_submission_explanations.py --slug <slug> --draft` — **edit in your own words** before paste.
+
+**Zero tolerance (Terminus):** Each field must answer its platform label exactly — Difficulty = *why hard*, not verification/oracle/CI; Solution = *approach + insight*; Verification = *how tests prove correctness*. LLM paste on the form is a critical violation.
+
+**Length cap:** **4–6 sentences**, **≤6 prose lines**, **~≤120 words** per section — trim agent drafts before paste (`shared/submission-explanations-gate.mdc`).
+
+**Prose style:** plain Indian English — avoid semicolons, colons, dashes, digits, and path dumps unless unavoidable; spell counts in words.
+
+Policy: `shared/submission-explanations-gate.mdc`.
+
+---
+
+## D2c. Task generation — no debugging, no software-engineering (LOCKED)
+
+**Every** idea and **every** pack must pass **hard acceptance 7/7**:
+
+1. NOT debugging · 2. NOT intentionally broken repo · 3. NOT fixing existing functionality
+4. NEW capability framing · 5. NOT "find bug, make tests pass"
+6. Accepted category (not debugging / not software-engineering)
+7. NOT repair/patch/correction/restoration workflow
+
+**No zip** until `repository_state_gate.py --pack-gate` → **7/7 PASS** (REGENERATE if repair/debug objective).
+
+Ideas: `idea_similarity_gate.py` runs same policy **before** similarity.
+
+Policy: `shared/repository-state-requirement.mdc` · Report: `jobs-local/repository-state-gate-last.json` (also `jobs-local/task-generation-gate-last.json`)
+
+Override (user explicit only): `TERMINUS_TASK_GENERATION_SKIP=1` on pack.
+
+---
+
+## D3. jobs-local layout (LOCKED)
+
+Artifacts in subfolders — see `shared/jobs-local-layout-lock.mdc`. Migrate once:
+
+```bash
+python3 scripts/jobs_local_paths.py --migrate
+```
+
+---
+
+## E. Reviewer instruction fixes → no hints
+
+| Do | Do not |
+|----|--------|
+| Fix via **`/app/docs/`** + **tests** | Bug files, fix order, test checklist in `instruction.md` |
+| Triage RF6 — reject trivializing comments | Blind reviewer implementation |
+
+---
+
+## F. Zip / metadata / Docker (automatic)
+
+| Item | Rule |
+|------|------|
+| Zip | **`./scripts/pack_zip.sh <name>`** only — never manual `zip -r` |
+| ECR `FROM` | Auto-fix per canonical gate on every task touch |
+| **Canonical base image** | **Always** use Snorkel ECR canonical `FROM` with exact `@sha256:` digest from `archive/terminus-rules-mdc/shared/canonical-base-image-gate.mdc` — **every task** user gives you (create, revise, verify, zip). Never leave `docker.io`, floating tags, or legacy digests. Run `migrate_dockerfile_canonical_ecr.py --ensure` before pack. |
+| **Platform form** | User answers **Yes** to “Approved canonical base image?” on upload — agent must ensure Dockerfile qualifies so **Yes** is correct (no justification needed). |
+| Stack pick | Go→golang ECR · Rust→rust ECR · Python→python ECR · Node→node ECR · **Bash/shell/C/Make→debian:bookworm-slim ECR** (not non-ECR python when agent work is shell) |
+| `subcategories` | Always **`[]`** |
+| `category` | **ALLOWED only:** `data-administration`, `machine-learning`, `games`. **BANNED:** `debugging`, `software-engineering`, `data-processing`, `security`, `system-administration`, `build-and-dependency-management`, … (`shared/task-toml-category-gate.mdc`) |
+| `task.toml` keys | **Only official skeleton fields** — no invented/undocumented metadata (`shared/task-toml-supported-fields-only.mdc`) |
+| `instruction.md` | No backticks; absolute paths |
+| `author_name` / `author_email` | `anonymous` |
+| `allow_internet` | Default **`false`** |
+
+---
+
+## G. Gates before upload (all must pass)
+
+| Gate | Evidence |
+|------|----------|
+| Oracle | **1.0** · NOP **0.0** (`harbor-verify-<slug>.json` or finish record) |
+| **Unacceptable-class 8/8** | TEMPLATED · COPY · DUPLICATE · FAMILY · SAME_LANE · SIBLING · FABRICATED · SYNTHETIC — all PASS |
+| **Anti-spam/templated** | PASS · **legacy sim 0.0** (nearest none) in `pack_zip.sh` |
+| **Phase F′** | `jobs-local/first-submit-<slug>.json` verdict PASS (first upload) |
+| **Trivial shape** | `preupload_trivial_shape_gate.py` PASS — `jobs-local/gates/trivial-shape-last.txt` |
+| **Agent calibration** | `jobs-local/calibration/agent-smoke-<slug>.json` worst **≤20%** |
+| **CI / audit** | No High/Medium blockers |
+
+Do not claim **ready** without **`create-finish-last.json` verdict PASS** + zip path.
+
+---
+
+## H. TRIVIAL / EASY — first upload must not bounce (LOCKED)
+
+**Root cause:** shallow tasks pass audit + oracle → platform **TRIVIAL** → many revise rounds.
+
+**Always load:** `shared/trivial-fix-invoke-mandatory-steps.mdc` + `shared/trivial-first-upload-lock.mdc` + `create/first-submit-acceptance-gate.mdc`
+
+| When | Action |
+|------|--------|
+| **CREATE** (new slug) | **Case 6 shape at CREATE** — ingest→staging→export, decoy, ≥5 bugs, ≥18 tests if hard |
+| Platform **TRIVIAL** / **EASY** pasted | **`prompts/trivial-fix-invoke.md`** + **14 mandatory steps** — **no skips** (§H table below) |
+| Vague “fix task” / `@trivial` only | **One ask** — paste `trivial-fix-invoke.md` §1 |
+
+### TRIVIAL/EASY pasted — 14 steps (LOCKED — agent must not skip any)
+
+See **`shared/trivial-fix-invoke-mandatory-steps.mdc`**. Summary:
+
+- Steps **1–7**: agent (read invoke + trio, **§3 fix prompt before edits**, Case 6 code).
+- Steps **8–14**: **AUTOMATIC on file save** when TRIVIAL/EASY context exists (`trivial_easy_auto_finish.sh`). First EASY paste saves context + gate report only — **not** finish before edits.
+
+1. Quote summary facts → 2. Read invoke → 3. Read trio → 4. Read probes contract → **5. Write §3 fix prompt BEFORE edits** → 6. List real files → 7. Case 6 structural edits → 8. `terminus_auto_probes.py` → 9. agent calibration record → 10. probe table → 11. `create_finish_to_zip.sh` → 12. oracle/NOP → 13. zip → 14. ready only if all PASS.
+
+**Forbidden:** edit before step 5; Case 4/5 only; skip probes or finish script.
+
+| Before zip | `terminus_auto_probes.py` **must exit 0** — no manual `--probe PASS` if auto FAIL |
+
+**Forbidden:** Case 4/5 as CREATE strategy; decorative hash fields; one-file-fix depth; `TERMINUS_FIRST_SUBMIT_SKIP` without user override in message.
+
+---
+
+## I. Forbidden (agents)
+
+- Stop after CREATE without finish script attempt
+- Ask permission for standing defaults (audit, harbor, zip, ECR, gates)
+- Weaken tests/instruction to pass feedback
+- `TERMINUS_ANTI_SPAM_SKIP` unless user **explicitly overrides in that message**
+- Manual pack / skip unacceptable-class / skip F′ on first upload
+- Invent undocumented `task.toml` metadata fields (`shared/task-toml-supported-fields-only.mdc`)
+
+---
+
+## J. Ask user only when (one question)
+
+- **BLOCKED_HARBOR** and no WSL/Docker path
+- Audit blocked **after 4 rounds** and ambiguous product decision
+- Task path or platform summary truly missing
+
+---
+
+## K. Similarity must be 0.0 before zip (LOCKED)
+
+**Pack line must show:** `Anti-spam/templated: PASS — nearest none (sim 0.0) …`
+
+If **`sim > 0`** → **do not zip** — fix the **whole task** in place until sim is **0.0**:
+
+```bash
+python3 scripts/terminus_anti_spam_check.py --pack-gate --task-name <name>
+```
+
+| If blocker shows | Fix (task redesign, not metadata-only) |
+|------------------|----------------------------------------|
+| Same **family** tag as neighbor | Change slug tokens (no substring false family, e.g. quest**frame** ≠ frame), or different primary stack so family matcher does not tag both |
+| **Near-duplicate slug** (jaccard ≥ 0.72) | Rename slug / domain tokens — generic shared words (rollup, certificate, replay) alone must not pair tasks |
+| Harness overlap + shared family | Change languages in `task.toml`, test harness shape (reference/TB3/rebuild), or verifier contract so fingerprint diverges |
+| Pipeline weighted only | OK when **legacy sim 0.0** — pipeline does not inflate displayed sim |
+
+Re-run **`create_finish_to_zip.sh`** after fixes. **No** `TERMINUS_ANTI_SPAM_SKIP` for sim > 0.
+
+---
+
+## L. Full pipeline — agents never skip steps (LOCKED)
+
+**One command (no flags unless user explicitly overrides in that message):**
+
+```bash
+./scripts/create_finish_to_zip.sh <name>
+```
+
+| # | Step | Runs in | Agent may skip? |
+|---|------|---------|-----------------|
+| 1 | Static audit (High/Medium → 0) | `create_finish_to_zip` | **No** — never `--skip-audit` |
+| 2 | Harbor oracle **1.0** + NOP **0.0** | same | **No** — never `--skip-harbor` without user override |
+| 3 | `ruff check` tests | same | **No** |
+| 4 | F′ probes + `first_submit_pack_gate --record` | same | **No** |
+| 4b | Platform rubric **10–40** positive cumulative + gate | `platform_rubric_gate.py` | **No** — before pack |
+| 4c | Submission explanations draft + gate | same | **No** — auto before pack |
+| 5 | Canonical ECR `FROM` | `pack_zip.sh` | **Auto** |
+| 6 | `subcategories = []` + category allow-list + **supported `task.toml` fields only** | `pack_zip.sh` | **Auto** |
+| 6b | Repository-state **hard acceptance 7/7** (functional baseline + new capability; REGENERATE if repair/debug) | `repository_state_gate.py` | **No** — **no zip** until PASS |
+| 7 | Anti-spam + **legacy sim 0.0** (`PACK_SIM_MUST_BE_ZERO`) | `pack_zip.sh` | **No** — never `TERMINUS_ANTI_SPAM_SKIP` |
+| 8 | Unacceptable-class **8/8 PASS** | `pack_zip.sh` | **No** |
+| 8b | Task-uniqueness **14-check** (distinct workflow/artifact/industry) | `task_uniqueness_gate.py` | **No** |
+| 9 | First-submit F′ pack gate | `pack_zip.sh` | **No** — never `TERMINUS_FIRST_SUBMIT_SKIP` |
+| 9b | Agent calibration (worst ≤20% HARD + `--post-harden` if platform EASY) | `preupload_agent_calibration.py` | **No** |
+| 9c | Difficulty design (hard metadata, per-test surface) | `preupload_difficulty_design_gate.py` | **No** |
+| 9d | Trivial shape (modules, hidden traps, auto-probes live) | `preupload_trivial_shape_gate.py` | **No** |
+| 10 | CI preflight (local static + quality heuristics) | `pack_zip.sh` | **No** — harbor GPT LLMaJ **not** in pack path |
+| 11 | Zip flat root + G-026/G-027 | `pack_zip.sh` | **No** |
+| 11a | Platform rubric file (10–40 positive per block) | `platform_rubric_gate.py` | **No** |
+| 11b | Submission explanations file | `submission_explanations_gate.py` | **No** |
+| 12 | `terminus_verify_submit.py` task + zip | `pack_zip.sh` | **No** |
+
+**Hook (on save):** `post_create_audit_loop.py` → `unacceptable_class_gate.py` (8/8) → `repository_state_gate.py` (7/7) → optional reviewer/TRIVIAL context → `create_finish_to_zip --hook-mode` or `trivial_easy_auto_finish.py` (hook **cannot** use skip flags).
+
+**Claim “ready” only when:** `jobs-local/finish/create-finish-last.json` has `"verdict": "PASS"`, `tasksubmit/<name>.zip` exists, **`rubrics/<name>.md`**, and **`submission-explanations/<name>.md`** (or chat copies with slug header).
+
+**Forbidden for agents:** manual `zip -r`; stopping after CREATE without finish script; any `TERMINUS_*_SKIP` unless user **explicitly** overrides in the **current** message.
+
+---
+
+**Scripts:** `create_finish_to_zip.sh` · `pack_zip.sh` · `post_create_audit_loop.py` · `unacceptable_class_gate.py` · `repository_state_gate.py` · `task_uniqueness_gate.py` · `anti_spam_hook_runner.py`  
+**Archive copy (ENGINE bundles):** `archive/terminus-rules-mdc/shared/sanjana-standing-requirements.mdc`

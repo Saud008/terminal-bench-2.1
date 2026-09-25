@@ -1,0 +1,10 @@
+--- belt_matrix/select.rs
++++ belt_matrix/select.rs
+@@ -9,6 +9,6 @@ pub fn pick_belt(hub: &HubLatch, row: &ScanRow) -> Option<BeltSpec> {
+     if candidates.is_empty() {
+         return None;
+     }
+-    candidates.sort_by_key(|b| b.belt_id.clone());
++    candidates.sort_by_key(|b| std::cmp::Reverse(b.priority));
+     candidates.first().cloned().cloned()
+ }

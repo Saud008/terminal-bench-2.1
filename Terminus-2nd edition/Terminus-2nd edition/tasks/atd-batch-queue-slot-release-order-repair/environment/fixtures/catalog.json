@@ -1,0 +1,163 @@
+{
+  "scenarios": [
+    {
+      "name": "001-basic-due",
+      "focus": "job due at clock runs",
+      "_conf": {
+        "system_timezone": "UTC",
+        "batches": [
+          {
+            "batch_id": "ops",
+            "jobs": [
+              {
+                "job_id": "worker",
+                "atq_epoch": 1700000000,
+                "script": "worker.sh",
+                "start_letter": "a",
+                "umask": "0022",
+                "exit_code": 0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "002-not-yet",
+      "focus": "job not yet due skipped",
+      "_conf": {
+        "system_timezone": "UTC",
+        "batches": [
+          {
+            "batch_id": "ops",
+            "jobs": [
+              {
+                "job_id": "later",
+                "atq_epoch": 1700003600,
+                "script": "worker.sh",
+                "start_letter": "a",
+                "umask": "0022",
+                "exit_code": 0
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "003-slot-hold",
+      "focus": "batch slot held until spool removed",
+      "_conf": {
+        "system_timezone": "UTC",
+        "batches": [
+          {
+            "batch_id": "batch",
+            "jobs": [
+              {
+                "job_id": "first",
+                "atq_epoch": 1700000000,
+                "script": "worker.sh",
+                "start_letter": "b",
+                "umask": "0022",
+                "exit_code": 0
+              },
+              {
+                "job_id": "second",
+                "atq_epoch": 1700000000,
+                "script": "worker.sh",
+                "start_letter": "b",
+                "umask": "0022",
+                "exit_code": 0
+              }
+            ]
+          }
+        ],
+        "leave_pending": [
+          "batch:first"
+        ]
+      }
+    },
+    {
+      "name": "004-letter-retry",
+      "focus": "letter advances when a spool file occupies start letter",
+      "_conf": {
+        "system_timezone": "UTC",
+        "batches": [
+          {
+            "batch_id": "retry",
+            "jobs": [
+              {
+                "job_id": "main",
+                "atq_epoch": 1700000000,
+                "script": "worker.sh",
+                "start_letter": "a",
+                "umask": "0022",
+                "exit_code": 0
+              }
+            ]
+          }
+        ]
+      },
+      "_preexisting_spool": {
+        "a0000000099": "ATQ_EPOCH=1699999999 BATCH=ghost JOB=old\n#!/bin/sh\necho ghost\n"
+      }
+    },
+    {
+      "name": "005-mail-fail-order",
+      "focus": "failure mail after registry delete",
+      "_conf": {
+        "system_timezone": "UTC",
+        "batches": [
+          {
+            "batch_id": "ops",
+            "jobs": [
+              {
+                "job_id": "fail",
+                "atq_epoch": 1700000000,
+                "script": "worker.sh",
+                "start_letter": "c",
+                "umask": "0022",
+                "exit_code": 7
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "006-atq-seq",
+      "focus": "atq sorted by ATQ_EPOCH and seq atomic bump",
+      "_conf": {
+        "system_timezone": "UTC",
+        "batches": [
+          {
+            "batch_id": "queue",
+            "jobs": [
+              {
+                "job_id": "late",
+                "atq_epoch": 1700000000,
+                "script": "worker.sh",
+                "start_letter": "a",
+                "umask": "0022",
+                "exit_code": 0
+              },
+              {
+                "job_id": "early",
+                "atq_epoch": 1699999999,
+                "script": "worker.sh",
+                "start_letter": "d",
+                "umask": "0022",
+                "exit_code": 0
+              }
+            ]
+          }
+        ],
+        "leave_pending": [
+          "queue:late",
+          "queue:early"
+        ]
+      },
+      "_partial_seq": "42\n"
+    }
+  ]
+}

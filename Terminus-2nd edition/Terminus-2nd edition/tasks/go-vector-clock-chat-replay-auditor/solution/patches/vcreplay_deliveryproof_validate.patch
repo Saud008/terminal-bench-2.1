@@ -1,0 +1,16 @@
+--- a/internal/deliveryproof/validate.go
++++ b/internal/deliveryproof/validate.go
+@@ -2,12 +2,11 @@
+ 
+ import "github.com/terminus/vcreplay/internal/lamportmesh"
+ 
+-// Valid checks receipt delivery clock against referenced event clock.
+ func Valid(refClock, delivered map[string]int) bool {
+ 	if refClock == nil || delivered == nil {
+ 		return false
+ 	}
+-	return len(refClock) > 0
++	return DominatesRef(refClock, delivered)
+ }
+ 
+ func DominatesRef(refClock, delivered map[string]int) bool {

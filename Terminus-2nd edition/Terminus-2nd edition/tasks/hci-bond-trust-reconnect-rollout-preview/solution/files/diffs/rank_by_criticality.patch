@@ -1,0 +1,13 @@
+﻿--- lib/boltlane/criticality_lane/rank_by_criticality.sh
++++ lib/boltlane/criticality_lane/rank_by_criticality.sh
+@@ -1,9 +1,8 @@
+ #!/usr/bin/env bash
+-# Baseline sort is mac-only ascending, ignoring criticality.
+ set -euo pipefail
+ python3 -c '
+ import json, sys
+ rows = json.loads(sys.stdin.read())
+-rows.sort(key=lambda r: r["mac"])
++rows.sort(key=lambda r: (int(r["criticality"]), r["mac"]))
+ json.dump(rows, sys.stdout)
+ '

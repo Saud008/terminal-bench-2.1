@@ -1,0 +1,235 @@
+--- a/src/m07.rs
++++ b/src/m07.rs
+@@ -1,121 +1,120 @@
+-        use crate::m04::IndexRow;
+-        use crate::m02::{eval_marker, marker_env};
+-        use crate::m01::pep440_gt;
+-        use crate::m06::{QueryRow, SnapshotDoc};
+-        use crate::m05::matches_spec;
+-        use crate::m03::best_wheel_tag;
+-        use serde::Serialize;
+-        use sha2::{Digest, Sha256};
+-        use std::fs;
+-        use std::path::Path;
++use crate::m04::IndexRow;
++use crate::m02::{eval_marker, marker_env};
++use crate::m01::pep440_gt;
++use crate::m06::{QueryRow, SnapshotDoc};
++use crate::m05::matches_spec;
++use crate::m03::best_wheel_tag;
++use serde::Serialize;
++use sha2::{Digest, Sha256};
++use std::fs;
++use std::path::Path;
+ 
+-        #[derive(Debug, Serialize, Clone)]
+-        pub struct CandidateRow {
+-            pub package: String,
+-            pub selected_version: Option<String>,
+-            pub wheel_tag: Option<String>,
+-            pub source_id: Option<String>,
+-            pub reason: String,
++#[derive(Debug, Serialize, Clone)]
++pub struct CandidateRow {
++    pub package: String,
++    pub selected_version: Option<String>,
++    pub wheel_tag: Option<String>,
++    pub source_id: Option<String>,
++    pub reason: String,
++}
++
++#[derive(Debug, Serialize)]
++pub struct ReportDoc {
++    pub run_id: String,
++    pub candidates: Vec<CandidateRow>,
++    pub summary: Summary,
++    pub audit_digest: String,
++}
++
++#[derive(Debug, Serialize)]
++pub struct Summary {
++    pub query_count: u32,
++}
++
++pub fn select_candidate(
++    packages: &[IndexRow],
++    q: &QueryRow,
++    python: &str,
++    platform: &str,
++    arch: &str,
++) -> CandidateRow {
++    let env = marker_env(python, platform, arch);
++    let mut best: Option<&IndexRow> = None;
++    for row in packages {
++        if row.package != q.package || row.yanked {
++            continue;
+         }
+-
+-        #[derive(Debug, Serialize)]
+-        pub struct ReportDoc {
+-            pub run_id: String,
+-            pub candidates: Vec<CandidateRow>,
+-            pub summary: Summary,
+-            pub audit_digest: String,
++        if let Some(rp) = &row.requires_python {
++            if !eval_marker(rp, &env) {
++                continue;
++            }
+         }
+-
+-        #[derive(Debug, Serialize)]
+-        pub struct Summary {
+-            pub query_count: u32,
++        if !matches_spec(&row.version, &q.spec) {
++            continue;
+         }
+-
+-        pub fn select_candidate(
+-            packages: &[IndexRow],
+-            q: &QueryRow,
+-            python: &str,
+-            platform: &str,
+-            arch: &str,
+-        ) -> CandidateRow {
+-            let env = marker_env(python, platform, arch);
+-            let mut best: Option<&IndexRow> = None;
+-            for row in packages {
+-                if row.package != q.package {
+-                    continue;
+-                }
+-                if let Some(rp) = &row.requires_python {
+-                    if !eval_marker(rp, &env) {
+-                        continue;
+-                    }
+-                }
+-                if !matches_spec(&row.version, &q.spec) {
+-                    continue;
+-                }
+-                let tags: Vec<String> = row.wheels.iter().map(|w| w.tag.clone()).collect();
+-                if best_wheel_tag(&tags, python, platform, arch).is_none() {
+-                    continue;
+-                }
+-                match best {
+-                    None => best = Some(row),
+-                    Some(cur) => {
+-                        // NOTE: tie-break uses first matching row
+-                        if pep440_gt(&row.version, &cur.version) {
+-                            best = Some(row);
+-                        }
+-                    }
+-                }
+-            }
+-            match best {
+-                None => CandidateRow {
+-                    package: q.package.clone(),
+-                    selected_version: None,
+-                    wheel_tag: None,
+-                    source_id: None,
+-                    reason: "no_candidate".into(),
+-                },
+-                Some(row) => {
+-                    let tags: Vec<String> = row.wheels.iter().map(|w| w.tag.clone()).collect();
+-                    let tag = best_wheel_tag(&tags, python, platform, arch);
+-                    CandidateRow {
+-                        package: q.package.clone(),
+-                        selected_version: Some(row.version.clone()),
+-                        wheel_tag: tag,
+-                        source_id: row.source_id.clone(),
+-                        reason: "wheel_match".into(),
+-                    }
++        let tags: Vec<String> = row.wheels.iter().map(|w| w.tag.clone()).collect();
++        if best_wheel_tag(&tags, python, platform, arch).is_none() {
++            continue;
++        }
++        match best {
++            None => best = Some(row),
++            Some(cur) => {
++                if pep440_gt(&row.version, &cur.version) {
++                    best = Some(row);
+                 }
+             }
+         }
+-
+-        pub fn emit_report(snap_doc: &SnapshotDoc, out: &Path) -> Result<(), String> {
+-            let mut candidates = Vec::new();
+-            for q in &snap_doc.queries {
+-                candidates.push(select_candidate(
+-                    &snap_doc.packages,
+-                    q,
+-                    &snap_doc.target_python,
+-                    &snap_doc.target_platform,
+-                    &snap_doc.target_arch,
+-                ));
+-            }
+-            candidates.sort_by(|a, b| a.package.cmp(&b.package));
+-            let audit_raw = serde_json::to_string(&candidates).unwrap_or_default();
+-            let audit = hex::encode(Sha256::digest(audit_raw.as_bytes()));
+-            let doc = ReportDoc {
+-                run_id: snap_doc.run_id.clone(),
+-                candidates,
+-                summary: Summary {
+-                    query_count: snap_doc.queries.len() as u32,
+-                },
+-                audit_digest: audit,
+-            };
+-            let json = serde_json::to_string_pretty(&doc).map_err(|e| e.to_string())?;
+-            fs::write(out, format!("{json}\n")).map_err(|e| e.to_string())
+-        }
+-
+-        mod hex {
+-            pub fn encode(bytes: impl AsRef<[u8]>) -> String {
+-                bytes.as_ref().iter().map(|b| format!("{b:02x}")).collect()
++    }
++    match best {
++        None => CandidateRow {
++            package: q.package.clone(),
++            selected_version: None,
++            wheel_tag: None,
++            source_id: None,
++            reason: "no_candidate".into(),
++        },
++        Some(row) => {
++            let tags: Vec<String> = row.wheels.iter().map(|w| w.tag.clone()).collect();
++            let tag = best_wheel_tag(&tags, python, platform, arch);
++            CandidateRow {
++                package: q.package.clone(),
++                selected_version: Some(row.version.clone()),
++                wheel_tag: tag,
++                source_id: row.source_id.clone(),
++                reason: "wheel_match".into(),
+             }
+         }
++    }
++}
++
++pub fn emit_report(snap_doc: &SnapshotDoc, out: &Path) -> Result<(), String> {
++    let mut candidates = Vec::new();
++    for q in &snap_doc.queries {
++        candidates.push(select_candidate(
++            &snap_doc.packages,
++            q,
++            &snap_doc.target_python,
++            &snap_doc.target_platform,
++            &snap_doc.target_arch,
++        ));
++    }
++    candidates.sort_by(|a, b| a.package.cmp(&b.package));
++    let audit_raw = serde_json::to_string(&candidates).unwrap_or_default();
++    let audit = hex::encode(Sha256::digest(audit_raw.as_bytes()));
++    let doc = ReportDoc {
++        run_id: snap_doc.run_id.clone(),
++        candidates,
++        summary: Summary {
++            query_count: snap_doc.queries.len() as u32,
++        },
++        audit_digest: audit,
++    };
++    let json = serde_json::to_string_pretty(&doc).map_err(|e| e.to_string())?;
++    fs::write(out, format!("{json}\n")).map_err(|e| e.to_string())
++}
++
++mod hex {
++    pub fn encode(bytes: impl AsRef<[u8]>) -> String {
++        bytes.as_ref().iter().map(|b| format!("{b:02x}")).collect()
++    }
++}

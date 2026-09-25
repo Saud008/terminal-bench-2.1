@@ -1,0 +1,10 @@
+Pharmaceutical cold-chain QC operators use reagentwin for scientific-computing reagent-lot stability window laboratory closure. Session bundles must fuse into one correlated stability artifact, then a ranked closure atlas must be published from that artifact alone, without reopening bundle inputs. The working tree under `/app` is broken relative to the lab contracts in `/app/docs/` (start with `lab-stability-workflow.md` and `stability-closure-atlas.md`).
+
+`reagentwin` at `/app/bin/reagentwin` must support:
+
+- `reagentwin correlate --session <sid> --bundle <name>`: load the named session bundle, compute lot certificate digests, integrate cold-chain chronology into thermal excursion peaks, couple assay telemetry to registered lot identifiers, apply calendar extension under stability bonus policy, and write `/app/work/stability-correlation/<session-id>.json`. `correlate_generation` monotonicity and correlated lot field names follow `/app/docs/correlation-artifact-schema.md`.
+- `reagentwin publish-closure --session <sid> --output <path>`: read only that correlated stability artifact for the session id and write stability closure atlas JSON to `--output`. Closure row rank ladder, summary counters, and `closure_digest` rules follow `/app/docs/stability-closure-atlas.md`.
+
+Lot certificate hash composition follows `/app/docs/lot-certificate-hash.md`. Thermal excursion peak minute selection follows `/app/docs/thermal-excursion-lemma.md`. Lot-to-assay telemetry coupling follows `/app/docs/assay-lot-coupling.md`. Calendar extension from cold-chain and stability bonus days follows `/app/docs/calendar-extension-policy.md`.
+
+Session bundles and correlation session ids live under `/app/fixtures/lab_sessions/`. Bundled inventory and exercised behaviors appear in `/app/docs/session-bundle-catalog.md`. Runtime-supplied bundle overlays follow those same contracts. The decoy chromatogram plotter is not on the correlate or publish-closure path. Do not modify `/app/docs/`, `/app/fixtures/`, or `/tests/`.

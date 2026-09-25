@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package fault.v1;
+
+option go_package = "faultserver/api/faultv1";
+
+service Admin {
+  rpc ConfigureCatalog(ConfigureCatalogRequest) returns (ConfigureCatalogResponse);
+}
+
+service Inject {
+  rpc UnaryInject(InjectRequest) returns (InjectResponse);
+  rpc ServerStream(InjectRequest) returns (stream InjectResponse);
+}
+
+message ConfigureCatalogRequest {
+  string seed = 1;
+}
+
+message ConfigureCatalogResponse {
+  int32 case_count = 1;
+}
+
+message InjectRequest {
+  string case_id = 1;
+  bytes payload = 2;
+  int32 stream_count = 3;
+}
+
+message InjectResponse {
+  string echo = 1;
+}

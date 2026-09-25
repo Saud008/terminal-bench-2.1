@@ -1,0 +1,12 @@
+--- a/src/main/java/com/flinkskew/align/BarrierAligner.java
++++ b/src/main/java/com/flinkskew/align/BarrierAligner.java
+@@ -90,8 +90,7 @@
+             int timeout = timeouts.getOrDefault(gkey, DEFAULT_TIMEOUT);
+             String clazz;
+             if (unaligned) {
+-                skew = 0;
+-                clazz = "ALIGNED_OK";
++                clazz = "UNALIGNED_DECLARED";
+             } else if (received < expected) {
+                 clazz = "INCOMPLETE";
+             } else if (skew > timeout) {

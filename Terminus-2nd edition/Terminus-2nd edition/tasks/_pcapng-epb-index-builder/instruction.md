@@ -1,0 +1,5 @@
+The PCAPng EPB index builder at `/app` ingests `.pcapng` captures, validates Enhanced Packet Blocks per `/app/docs/pcapng-contract.md`, writes a packet index to `/app/state/pcap.idx`, and exports a capture summary JSON to `/app/output/capture-summary.json` per `/app/docs/export-format.md`.
+
+Ingest and export currently disagree with those contracts on multi-interface captures. After replaying bundled and shifted captures, block traversal, interface assignment, CRC gating, index rows, per-interface counts, and the export `packet_count` do not match the documented behavior.
+
+Fix the Rust service so `pcap-index ingest --input <capture.pcapng> --db /app/state/index.db` and `pcap-index export --db /app/state/index.db --out /app/output/capture-summary.json` behave as documented. Rebuild the release binary after source changes so `/app/bin/pcap-index` reflects your fixes. The on-disk index schema is defined in `/app/docs/index-format.md`. Export `index_digest` must be the lowercase hex SHA-256 of the exact `/app/state/pcap.idx` bytes at export time.

@@ -1,0 +1,170 @@
+---
+description: Terminus Edition 2 accepted task patterns, lanes, avoid list, difficulty design, idea diversity (LOCKED)
+alwaysApply: false
+---
+
+# Terminus Edition 2 — Accepted Task Patterns
+
+## `subcategories` in `task.toml` (LOCKED)
+
+Always **`subcategories = []`**. Lane notes below describe task **shape** only — do not copy Harbor subcategory labels into `task.toml`.
+
+## `category` in `task.toml` (LOCKED — this repo)
+
+**Do not** use **`debugging`** or **`software-engineering`** — **platform block** on new submissions (CodeBuild also fails). Lane examples below that say “Category: debugging” describe **shape only**; on upload use **`data-processing`**, **`build-and-dependency-management`**, **`security`**, etc. Full mapping: **`shared/task-toml-category-gate.mdc`**.
+
+## Accepted task patterns
+
+When creating a new Terminus task, prefer realistic engineering work with enough hidden complexity for frontier agents to struggle.
+
+The safest accepted pattern is:
+
+- Single-container task.
+- Primary language from the **safe language tiers** below (full list in `create/safe-languages.mdc`).
+- `codebase_size = "small"` or `"large"`, never `"minimal"` for new submissions.
+- `difficulty = "medium"` or `"hard"` for non-Python tasks.
+- Python only if the task is genuinely hard (not medium script repair).
+
+### Safe languages for task ideas
+
+**Best:** Go, Rust, Bash (platform-preferred — fewer revisions), TypeScript/Node, Java.
+
+**Also okay:** C, C++, C#, Kotlin, Ruby, PHP, AWK, SQL, Make/CMake, shell tooling.
+
+**Python:** allowed only if genuinely **hard**; avoid simple Python medium tasks and one-bug script fixes.
+- 20+ meaningful environment files for small codebase, not filler.
+- Multiple related bugs or behaviors, not one obvious bug.
+- Tests verify real behavior through CLI, API, DB, or output artifacts.
+- Oracle passes 100%, NOP fails, and real agents do not all pass.
+- Instruction is short and user-like, but output paths and schemas are fully specified.
+- No hidden behavior in tests that instruction does not mention.
+- No leaked answers, expected outputs, or solution hints in environment files.
+
+## Most accepted task lanes
+
+### 1. TypeScript or Node API + SQLite task
+
+- Category: `software-engineering` or `debugging`
+- Subcategories: `api_integration`, `db_interaction`
+- Good behaviors: request validation, pagination, idempotency, transaction rollback, duplicate handling, report generation, malformed input handling.
+
+### 2. Go CLI or service debugging task
+
+- Category: `debugging` or `data-processing`
+- Subcategories: `tool_specific` only if a real tool is central
+- Good behaviors: log replay, checksum repair, binary or JSONL decoding, restart handling, malformed record recovery, deterministic export.
+
+### 3. Rust parser or binary decoder task
+
+- Category: `debugging`
+- Good behaviors: byte offsets, checksum validation, streaming decode, strict CLI output, error handling, deterministic artifact generation.
+
+### 4. Java service, config, or migration task
+
+- Category: `software-engineering`
+- Subcategories: `api_integration` or `db_interaction` if applicable
+- Good behaviors: config precedence, schema migration, validation, retry policy, audit export.
+
+### 5. Tool-specific local pipeline task
+
+- Category: `build-and-dependency-management` or `data-processing`
+- Subcategories: `tool_specific`
+- Good tools: FFmpeg, ImageMagick, Graphviz, jq, SQLite, Make, CMake, Cargo, npm build tools.
+- Good behaviors: repair command pipeline, validate generated artifacts semantically, generate structured metadata, produce deterministic output.
+
+### 6. DB interaction task
+
+- Category: `software-engineering` or `data-processing`
+- Subcategories: `db_interaction`
+- Preferred DB: SQLite for single-container tasks.
+- Good behaviors: migrations, constraints, indexes, backfill, rollback, query correctness, persisted reports.
+- Avoid plain CSV-only tasks unless the logic is genuinely complex.
+
+### 7. Milestone debugging task
+
+- Category: `debugging` or `software-engineering`
+- Use 2–4 milestones. Each milestone must be a prerequisite for the next.
+- Good flow: M1 ingestion/parsing → M2 state/DB consistency → M3 reporting/export.
+
+### 8. Long-context task
+
+- Subcategory: `long_context`
+- Only when the provided document is 50k+ tokens and requires semantic understanding.
+- Avoid long files solvable by grep, simple parsing, or small table lookup.
+
+## Task ideas to avoid
+
+- Simple Python script repair.
+- Python medium task.
+- One failing unit test with one obvious bug.
+- Pure CSV conversion.
+- Basic JSON formatting.
+- "Read files and calculate answer" with no code repair.
+- UI-building task unless explicitly approved.
+- New multi-container task unless explicitly approved.
+- FastAPI-only task unless unusually strong.
+- Tasks where tests reveal the exact expected output.
+- Tasks where the oracle just writes hardcoded output files.
+- Tasks where difficulty comes only from many edge cases in instruction.
+- Tasks where the prompt is long and checklist-like.
+- Tasks that require internet data or external APIs.
+- Latency or performance optimization tasks with timing thresholds.
+- Tasks copied from common TerminalBench patterns with only names changed.
+- Any task where a frontier model can likely solve it in one short edit.
+
+## Difficulty design
+
+Make the task hard because the agent must discover and connect multiple pieces of state, not because the prompt is confusing.
+
+**Good difficulty sources:** multiple interacting bugs; persistent state across runs; DB constraints and rollback; malformed input recovery; duplicate/replayed events; cross-file schema mismatch; deterministic report generation with computed fields; anti-cheat via mutated fixtures; need to inspect docs, source, sample data, and runtime behavior.
+
+**Bad difficulty sources:** vague instruction; too many random edge cases; brittle formatting; performance timing; secret exact strings not in instruction; tests enforcing unstated behavior; requiring a specific implementation instead of behavior.
+
+## Generating task ideas (mandatory)
+
+**Anyone** who asks to generate task ideas — full workflow in **`.cursor/rules/ideas/generate-ideas.mdc`**.
+
+When **creating or revising** tasks:
+
+1. Read **`shared/accepted-corpus.mdc`** (LOCKED — follow exactly).
+2. Open **≥2** folders under **`tasks/_accepted-tasks/`** for your stack.
+3. **Copy each file type verbatim** from the closest reference; change only task names, binaries, and doc paths.
+
+**Do not** invent Dockerfile/`test.sh` layouts. **Do not** use active `tasks/` WIP as template. If a file diverges from its accepted reference, fix the divergence before claiming ready.
+
+When the user asks for **task ideas** (not a named task to implement):
+
+- **Step 1:** No reference → offer **A: user gives reference** or **B: `aap gen karo` / varied** (you auto-generate, no quiz); if reference given → **distinct subdomains** under that theme.
+- **Step 2:** **10 ideas = 10 different domains**; same canned tasks **not encouraged**; assume common AI ideas are **taken** by others.
+- **Spread** languages/industries unless user locked one; lanes = **shape only**; **scan all corpus paths** (`tasks/`, `tasks/_accepted-tasks/`, `tasksubmit/`) — no slug, **family**, or near-title duplicates; **never merge** tasks or owners.
+- **No templated submissions (platform LOCKED):** each task must differ substantively from your prior work — not instruction keyword swaps on the same bash/Rust/Node skeleton, test names, or oracle copy pattern. Rejected templated tasks may affect project standing. **Full gate:** `shared/anti-spam-templated-submissions.mdc`.
+- **No spam uploads:** do not batch many same-family tasks; no zip-only artifact dumps — see **`shared/anti-spam-templated-submissions.mdc`**.
+- **Implement with no idea** → ask reference or **three novel** options.
+
+## Large Codebase Task Gallery
+
+- Claim/download the task bundle first.
+- Inspect real files before making claims.
+- Do not assume bundled task is automatically ready.
+- Still check task.toml, Dockerfile, tests, oracle, instruction alignment, dependency pins, reward writing; rubric only if present or user asks (this repo: usually no `rubric.md`).
+- Large codebase tasks still require `allow_internet = false` and no runtime internet in verifier.
+
+## Difficulty threshold rule
+
+**Agent timeout vs quality:** See **`shared/platform-preferences.mdc` §1b** — design tasks so benchmark agents may **time out or score low (Claude 0/N is OK)** under `[agent] timeout_sec = 1800`, while **oracle 1 / NOP 0 / fair docs** stay consistent on every submit. Do not weaken verifier or hide spec gaps to “fix” Claude 0%.
+
+**Benchmark agents (Jun 2026):** platform difficulty uses **Claude Opus 4.8** (`terminus-claude-opus-4-8`) and **GPT-5.5** (`terminus-gpt5-5`). **Design target = Claude first** (GPT may stay high on fair HARD). Thresholds below are unchanged. Create/revise SP path: `@prompts/sp-hard-create-revise.md`. Recalibrate TRIVIAL with `@prompts/trivial.md` Case 5 + `trivial-repo-wide.md`. See `shared/platform-preferences.mdc` §1b + §7.
+
+Evaluate in order: Hard → Medium → Easy. Stop at first match.
+
+**Hard:**
+- Best model accuracy ≤ 20%, OR
+- Best model > 20% AND worst model accuracy ≤ 20%.
+
+**Medium:**
+- Hard does not apply AND worst model accuracy > 20% and ≤ 60%.
+
+**Easy:**
+- Medium does not apply AND worst model accuracy > 60% and ≤ 80%.
+
+If no agent run results exist, use **target difficulty** only, not confirmed.

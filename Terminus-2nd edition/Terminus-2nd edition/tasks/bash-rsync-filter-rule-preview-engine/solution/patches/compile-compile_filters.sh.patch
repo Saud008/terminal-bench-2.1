@@ -1,0 +1,19 @@
+--- a/internal/rsfp93/compile/compile_filters.sh
++++ b/internal/rsfp93/compile/compile_filters.sh
+@@ -37,10 +37,15 @@
+   transfer=$(echo "$matched" | jq -r '.transfer')
+   token=$(echo "$matched" | jq -r '.token')
+   idx=$(echo "$matched" | jq -r '.matched_rule_index')
++  if ! echo "$sender" | jq -e --arg p "$p" '.[] | select(. == $p)' >/dev/null; then
++    transfer="exclude"
++  fi
+   prune=$(should_prune_directory "$p" "$transfer" "$token")
+-  risk=$(classify_delete_risk "$p" "$transfer" "$token" "$receiver")
++  risk=$(classify_delete_risk "$p" "$transfer" "$parsed" "$receiver" "$sender")
+   path_verdicts=$(echo "$path_verdicts" | jq --arg p "$p" --arg tr "$transfer" --arg dr "$risk" --argjson md "$cascade_depth" --argjson idx "$idx" --argjson prune "$prune" '. + [{path: $p, transfer: $tr, delete_risk: $dr, cascade_depth: $md, matched_rule_index: $idx, prune: $prune}]')
+ done < <(jq -r '.sender_paths[], .receiver_paths[]' <<<"$data" | sort -u)
++
++path_verdicts=$(echo "$path_verdicts" | jq 'sort_by(.path)')
+ 
+ mkdir -p "${APP_ROOT}/state"
+ jq -n --arg run_id "$run_id" --arg tree "$(echo "$data" | jq -r '.tree')" --argjson receiver "$receiver" --argjson path_verdicts "$path_verdicts" --argjson rule_cascade "$rule_cascade" \

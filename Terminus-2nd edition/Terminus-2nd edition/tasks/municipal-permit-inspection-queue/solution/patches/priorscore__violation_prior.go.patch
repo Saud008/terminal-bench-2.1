@@ -1,0 +1,14 @@
+--- a/internal/priorscore/violation_prior.go
++++ b/internal/priorscore/violation_prior.go
+@@ -4,7 +4,10 @@
+ 	if daysAgo <= 0 {
+ 		return 10
+ 	}
+-	return 10 / daysAgo
++	if daysAgo >= 10 {
++		return 1
++	}
++	return 10 - daysAgo
+ }
+ 
+ func CompositeScore(basePriority, violationSum int) int {

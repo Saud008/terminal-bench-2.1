@@ -1,0 +1,72 @@
+{
+  "scenarios": [
+    {
+      "name": "linear-breach-repair",
+      "base_token": "player",
+      "base_session": "sess-a",
+      "base_client_ms": 10000,
+      "beats": [
+        {"seq": 1, "client_delta": 0},
+        {"seq": 4, "client_delta": 1200},
+        {"seq": 2, "client_delta": 400},
+        {"seq": 3, "client_delta": 800}
+      ],
+      "mono_schedule": [0, 500, 1500, 2000, 2500]
+    },
+    {
+      "name": "wrap-edge",
+      "base_token": "player",
+      "base_session": "sess-wrap",
+      "base_client_ms": 50000,
+      "beats": [
+        {"seq": 4294967294, "client_delta": 0},
+        {"seq": 4294967295, "client_delta": 100},
+        {"seq": 0, "client_delta": 200},
+        {"seq": 1, "client_delta": 300}
+      ],
+      "mono_schedule": [0, 100, 200, 300, 400]
+    },
+    {
+      "name": "session-rebind",
+      "base_token": "player",
+      "base_session": "sess-old",
+      "rebind_session": "sess-new",
+      "base_client_ms": 20000,
+      "beats_old": [
+        {"seq": 10, "client_delta": 0},
+        {"seq": 11, "client_delta": 200}
+      ],
+      "beats_new": [
+        {"seq": 10, "client_delta": 0},
+        {"seq": 11, "client_delta": 200}
+      ],
+      "mono_schedule": [0, 100, 200, 300, 400]
+    },
+    {
+      "name": "skew-anchor",
+      "base_token": "player",
+      "base_session": "sess-skew",
+      "base_client_ms": 30000,
+      "beats": [
+        {"seq": 1, "client_delta": 0},
+        {"seq": 2, "client_delta": 500}
+      ],
+      "mono_schedule": [0, 0, 600],
+      "skew_fail_beat": {"seq": 3, "client_delta": 5000}
+    },
+    {
+      "name": "late-outside-grace",
+      "base_token": "player",
+      "base_session": "sess-late",
+      "base_client_ms": 40000,
+      "beats": [
+        {"seq": 1, "client_delta": 0},
+        {"seq": 5, "client_delta": 7000},
+        {"seq": 2, "client_delta": 12001},
+        {"seq": 3, "client_delta": 12100},
+        {"seq": 4, "client_delta": 12200}
+      ],
+      "mono_schedule": [0, 100, 7000, 12001, 12100, 12200]
+    }
+  ]
+}

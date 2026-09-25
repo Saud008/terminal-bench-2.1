@@ -1,0 +1,5 @@
+The COSE Sign1 countersignature unwind tool under /app/crates/cose-audit is mis-verifying nested counter-signature chains on device attestation bundles. Repair it so ingest and export behave per the contracts in /app/docs/cose-sign1.md, /app/docs/countersign-unwind.md, /app/docs/staging-schema.md, /app/docs/manifest-schema.md, and /app/docs/cli.md.
+
+Use cose-audit ingest with --input pointing at a .cose bundle, --ledger at /app/state/audit.db, and --staging at /app/state/cose-stage.json. Use cose-audit export with the same ledger and staging paths plus --manifest at /app/output/chain-manifest.json. Public bundles live under /app/fixtures/cose/. Re-ingesting the same file must not duplicate ledger rows. Export must retain partial chains that still verify at the outer Sign1 layer even when inner counter-signatures fail, matching the manifest schema.
+
+When TB3_COSE_DIR is set to an absolute directory, ingest must resolve --input basenames only from that directory per /app/docs/cli.md. Do not edit bundled files under /app/fixtures/cose/ or contract docs under /app/docs/.

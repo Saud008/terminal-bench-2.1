@@ -1,0 +1,35 @@
+{
+  "zone": "cache.lab.",
+  "soa_serial": 300,
+  "nsec3_params": {
+    "salt_hex": "dead",
+    "iterations": 1,
+    "hash_algorithm": 1
+  },
+  "records": [
+    {
+      "owner": "cache.lab.",
+      "rtype": "NSEC",
+      "next": "x.cache.lab.",
+      "type_bitmap": ["NS", "SOA", "NSEC"]
+    },
+    {
+      "owner": "x.cache.lab.",
+      "rtype": "NSEC",
+      "next": "cache.lab.",
+      "type_bitmap": ["A", "NSEC"]
+    }
+  ],
+  "queries": [
+    {
+      "qname": "slot.cache.lab.",
+      "qtype": "A",
+      "expect": "invalid"
+    },
+    {
+      "qname": "slot.cache.lab.",
+      "qtype": "MX",
+      "expect": "invalid"
+    }
+  ]
+}

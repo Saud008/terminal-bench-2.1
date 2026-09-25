@@ -1,0 +1,12 @@
+--- a/internal/atlasemit/schedule_writer.go
++++ b/internal/atlasemit/schedule_writer.go
+@@ -14,6 +14,9 @@
+ )
+ 
+ func Publish(outPath string) error {
++	if err := PassGate(); err != nil {
++		return err
++	}
+ 	bundle, err := yardfeed.ReadActive()
+ 	if err != nil {
+ 		return err

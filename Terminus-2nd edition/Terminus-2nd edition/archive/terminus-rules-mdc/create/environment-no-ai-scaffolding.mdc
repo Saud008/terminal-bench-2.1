@@ -1,0 +1,37 @@
+---
+description: "LOCKED High — no AI-framework scaffolding filenames in task environment/"
+alwaysApply: false
+---
+
+# Terminus — No AI-framework scaffolding in environment (High)
+
+**Source:** Snorkel Terminal Bench Edition 2 Reviewer Checklist (Environment, May 2026). **Severity: High** — any violation blocks acceptance.
+
+## Rule
+
+Filenames that look like **AI agent / framework scaffolding** must **not** appear under `environment/` (including subdirectories). All agent-visible files should be **task-specific and professionally named**.
+
+## Forbidden examples (not exhaustive)
+
+- `CLAUDE.md`, `claude.md`
+- `skills.md`, `SKILL.md`, `AGENTS.md` (when used as generic agent instructions, not as a real product file required by the task)
+- `.cursorrules`, `cursor.md`, `copilot-instructions.md`
+- Generic `PROMPT.md`, `system-prompt.md`, `assistant-context.md` unless the task scenario genuinely ships that artifact as product documentation
+
+## What to do
+
+- **Before zip / submit:** search `tasks/<task-name>/environment/` for the patterns above and remove or rename to task-specific docs (e.g. `/app/docs/api.md`, `/app/README.md`).
+- **Audits:** flag as **High** if found; do not accept until removed.
+- **Do not** copy verifier, solution, or hidden-test paths into `environment/`.
+
+## Allowed
+
+- Normal engineering docs: `README.md`, `architecture.md`, `api.md`, `export-format.md` under `/app/docs/` or `/app/`
+- Tooling config required by the stack: `package.json`, `tsconfig.json`, `Cargo.toml`, `.dockerignore`
+
+## Related rules
+
+- Full environment hygiene: `create/creation-rules.mdc`, `shared/dockerfile.mdc`
+- No solution/tests in image: `shared/runtime-verifier.mdc`, `verify/pre-zip-audit.mdc`
+
+On conflict, prefer the **stricter** interpretation.

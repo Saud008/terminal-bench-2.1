@@ -1,0 +1,11 @@
+--- a/internal/mbx7/w2/gate_rect.sh
++++ b/internal/mbx7/w2/gate_rect.sh
+@@ -9,7 +9,7 @@
+     if doc.get("kind") != "document":
+         continue
+     lon, lat = float(doc["lon"]), float(doc["lat"])
+-    inside = float(w["min_lat"]) <= lon <= float(w["max_lat"]) and float(w["min_lon"]) <= lat <= float(w["max_lon"])
++    inside = float(w["min_lon"]) <= lon <= float(w["max_lon"]) and float(w["min_lat"]) <= lat <= float(w["max_lat"])
+     if not inside:
+         blocked[doc["doc_id"]] = "blocked_bbox"
+ json.dump(blocked, sys.stdout)

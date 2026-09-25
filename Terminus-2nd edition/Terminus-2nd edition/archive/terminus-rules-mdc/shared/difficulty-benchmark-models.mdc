@@ -1,0 +1,106 @@
+---
+description: Snorkel difficulty benchmark — Opus 4.8 + GPT-5.5, unchanged thresholds (additive)
+alwaysApply: false
+---
+
+# Terminus — Difficulty benchmark models (Snorkel)
+
+**Additive rule.** **Source of truth:** Snorkel platform docs — *Difficulty Guidelines*. Thresholds for EASY / MEDIUM / HARD are **unchanged**; only the evaluation models changed (Jun 2026).
+
+Older references to Claude Opus 4.6, GPT-5.2, or `terminus-gpt5-2` in legacy rules or prompts are **superseded for platform rating** by this file.
+
+## Evaluation models (5 runs each)
+
+| Role | Platform metric | Harbor / EC CLI (when available) |
+|------|-----------------|----------------------------------|
+| OpenAI benchmark | `terminus-gpt5-5` | `openai/@openai/gpt-5.5` with Codex agent |
+| Anthropic benchmark | `terminus-claude-opus-4-8` | `anthropic/@anthropic/claude-opus-4-8` with Claude Code agent |
+
+**GPT-5.5** is available in the EC CLI (`stb harbor run -m @openai/gpt-5.5`).
+
+Both models run on every task. **Worst-model** accuracy sets the floor for Easy/Medium; **best-model** ≤20% can still earn Hard when the strongest model struggles.
+
+## Difficulty tiers (unchanged thresholds)
+
+Evaluate in order: **Hard → Medium → Easy**. Stop at first match.
+
+| Tier | Rule |
+|------|------|
+| **Hard** | Best model accuracy **≤ 20%**, **OR** worst model accuracy **≤ 20%** |
+| **Medium** | Hard does not apply **and** worst model **> 20%** and **≤ 60%** |
+| **Easy** | Medium does not apply **and** worst model **> 60%** and **≤ 80%** |
+| **Not accepted** | Worst model **> 80%** — too easy for training signal |
+
+Platform label **EASY — requires at least MEDIUM** means worst model landed in the Easy band; harden before resubmit (`prompts/trivial.md` / `prompts/easy.md` / medium Case 2 per `shared/prompt-router.mdc`).
+
+## Stronger models → recalibrate
+
+Opus 4.8 and GPT-5.5 are **stronger** than Opus 4.6 and GPT-5.2. Tasks that previously rated MEDIUM or HARD may land **EASY** or **MEDIUM** without any task change. After hardening or resubmit:
+
+- Do **not** assume old agent stats still apply.
+- Wait for **new** platform eval before calling difficulty confirmed.
+- Until then use **target difficulty** only (`shared/core.mdc`).
+
+## Pre-submit local smoke (optional)
+
+Oracle must pass first:
+
+```bash
+harbor run -a oracle -p tasks/<name> --debug --force-build
+harbor run -a nop -p tasks/<name> --debug --force-build
+```
+
+Gauge agent pass rate (2–3 runs per model minimum):
+
+```bash
+stb harbor run -m @openai/gpt-5.5 -p tasks/<name>
+stb harbor run -m @anthropic/claude-opus-4-8 -p tasks/<name>
+```
+
+Static checks:
+
+```bash
+harbor tasks check tasks/<name> -m openai/@openai/gpt-5.5
+```
+
+## Revision routing (platform summary)
+
+| Platform signal | Action |
+|-----------------|--------|
+| Worst **> 80%** | Block submit — harden (`shared/anti-trivial.mdc`) |
+| **EASY** (60–80% worst) | `@prompts/easy.md` or `@prompts/trivial.md` — deepen traps, not instruction leaks |
+| **MEDIUM** target, agents ~40–60% | Optional polish; verify fairness |
+| **0% forever** on one test, others pass | `@prompts/hard.md` Case 1 — fairness, not blanket ease |
+| **5/5** both models | `@prompts/trivial.md` — structural hardening |
+
+## Good vs bad agent failures
+
+| Good (difficulty) | Bad (unfair / fix task) |
+|-------------------|-------------------------|
+| Missed edge case, subtle bug interaction | Ambiguous instruction |
+| Wrong multi-file diagnosis | Environment flake, missing doc |
+| Niche contract misread | Hidden test-only requirement |
+
+## Designing toward tier
+
+| Target | Techniques (from Snorkel guidelines) |
+|--------|----------------------------------------|
+| **Hard** | 4+ interacting bugs, 3+ modules, independent pytest reference, niche tool/protocol, non-obvious root cause |
+| **Medium** | 5–10 steps, combined familiar concepts, edge cases in contract docs |
+| **Avoid Easy** | One obvious edit, grep-only tests, tutorial-shaped oracle |
+
+**Do not** make tasks unfair: impossible requirements, ambiguous instructions, time-dependent output, runtime network deps.
+
+## Verify report line
+
+Before zip, state:
+
+- **Benchmark models:** Opus 4.8 + GPT-5.5
+- **Difficulty:** confirmed from platform **or** target only + local smoke results if run
+
+## Related
+
+- `shared/platform-preferences.mdc` §7 — legacy mirror (may cite older model names)
+- `create/accepted-patterns.mdc` — difficulty threshold table
+- `shared/prompt-router.mdc` — TRIVIAL / EASY / MEDIUM / HARD routing
+- `verify/pre-zip-audit.mdc` — optional agent runs in Phase E

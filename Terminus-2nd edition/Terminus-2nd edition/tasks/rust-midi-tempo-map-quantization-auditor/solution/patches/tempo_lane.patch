@@ -1,0 +1,11 @@
+--- a/bline_pl/order.rs
++++ b/bline_pl/order.rs
+@@ -4,7 +4,7 @@
+ 
+ pub fn stage_tempo(cfg: &Config, run_id: &str, events: &[TempoEvent]) -> Result<(), String> {
+     let mut ordered = events.to_vec();
+-    ordered.sort_by_key(|e| e.microseconds_per_quarter);
++    ordered.sort_by_key(|e| e.tick);
+     let out = format!("{}/{}.jsonl", cfg.tempo_stage_dir, run_id);
+     let mut f = fs::File::create(&out).map_err(|e| e.to_string())?;
+     writeln!(f, "{{\"run_id\":\"{run_id}\",\"row_type\":\"header\"}}").map_err(|e| e.to_string())?;

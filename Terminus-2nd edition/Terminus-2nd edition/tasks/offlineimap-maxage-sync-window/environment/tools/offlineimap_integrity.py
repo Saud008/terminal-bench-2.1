@@ -1,0 +1,18 @@
+PROTECTED_SHA256: dict[str, str] = {
+    "docs/cache-ledger.md": "5c65b2255b374aa3bcd94259d57beb326dfe5490bdfc3f6a3bada0b236d01a54",
+    "docs/export-summary.md": "d72e959eb0e7a8e8ca0cff0621c2e3498a25f7ba23d0f7bf5de407d98c707fae",
+    "docs/folder-filter.md": "ef8f8ffcf0ab2cf922136c19528c1e17f9839c97c9140b9bd9a6c8baa9b878a7",
+    "docs/maxage-window.md": "b140511970d9e147bab893595edb092e95500ea7e425ccf42718bba9e6f6c6ae",
+    "docs/spec.md": "5a494bcc3454dd512cccbb6f82feddebfe68005181376e7900ad7458589374d1",
+    "docs/staging-snapshot.md": "ff4d7ec62f4ca9cf5498cbc72ae79908ea6e7ceb415594467ba4894516a459c5",
+    "fixtures/catalog.json": "fe2844ce05872cd97f0ae060302ebb6fd54902402fb74bf46dfce9a7ac55174a",
+    "fixtures/scenarios/basic-inbox/folder.rules": "2de3406d8e58bec451ea8ccac2b3ee719e827e79057b513c113abb29c3461347",
+    "fixtures/scenarios/basic-inbox/imap-meta.json": "b0c76635f9dc23491a0f025785bb56013c66cd2866118b4dd0baa11ef20f7540",
+    "fixtures/scenarios/basic-inbox/messages.tsv": "51d4aad46afb47835ea7d685db201754c090ea88a6d036542831c32c87efb299",
+    "fixtures/scenarios/tz-offset/folder.rules": "2de3406d8e58bec451ea8ccac2b3ee719e827e79057b513c113abb29c3461347",
+    "fixtures/scenarios/tz-offset/imap-meta.json": "585767e16d333642656279e598fc5bedcec881772e897f471dc2649b58b122ad",
+    "fixtures/scenarios/tz-offset/messages.tsv": "7d409a2543486a233226a602762f8d8c651a8f8a640a5db6cc7152dd19b29ba6",
+    "fixtures/scenarios/work-exclude/folder.rules": "636ac3bf946255bd981f9f4ac5b1bbb285ab2ec58d90f2e5957dd819147f7665",
+    "fixtures/scenarios/work-exclude/imap-meta.json": "2f8499dd420624c0ad6d9da32910ee83810dd3353a29bf73e5ec909b81c36126",
+    "fixtures/scenarios/work-exclude/messages.tsv": "c2995c3d037ef890b77fdb86086b6ab1dbadf46bc496f50eacf447b2c871cd9e",
+}

@@ -1,0 +1,18 @@
+--- internal/chgledger/emit_chg.go
++++ internal/chgledger/emit_chg.go
+@@ -1,6 +1,5 @@
+ package chgledger
+ 
+-// Export stage writes stable xds-diff-report.json after normalize revision seal.
+ import (
+     "crypto/sha256"
+     "encoding/hex"
+@@ -45,7 +44,7 @@
+         changes = []model.DiffChange{}
+     }
+     sort.Slice(changes, func(i, j int) bool {
+-        return changes[i].Path > changes[j].Path
++        return changes[i].Path < changes[j].Path
+     })
+     report := model.DiffReport{
+         Scenario:    scenario,

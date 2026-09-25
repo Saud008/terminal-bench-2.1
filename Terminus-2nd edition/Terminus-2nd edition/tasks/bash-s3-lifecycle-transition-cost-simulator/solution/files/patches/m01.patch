@@ -1,0 +1,10 @@
+--- lib/zq7/m01.sh
++++ lib/zq7/m01.sh
+@@ -15,6 +15,6 @@
+     val="$(echo "$tags_json" | jq -r --arg k "$key" '.[$k] // empty')"
+     [[ "$val" == "$prefix"* ]] || return 1
+     ok=$((ok + 1))
+-  done < <(echo "$tags_json" | jq -r 'keys[]')
++  done < <(echo "$prefixes_json" | jq -r 'keys[]')
+   [[ "$ok" -ge "$count" ]]
+ }

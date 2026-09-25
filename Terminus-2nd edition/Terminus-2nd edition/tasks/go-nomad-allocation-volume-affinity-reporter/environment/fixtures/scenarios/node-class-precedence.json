@@ -1,0 +1,97 @@
+{
+  "scenario_name": "node-class-precedence",
+  "job_id": "analytics",
+  "task_group": "worker",
+  "focus_alloc_id": "alloc-gpu-a",
+  "stale_cutoff_index": 0,
+  "csi_volumes": [],
+  "allocations": [
+    {
+      "alloc_id": "alloc-gpu-a",
+      "node_id": "node-gpu-1",
+      "node_class": "gpu",
+      "create_index": 200,
+      "modify_index": 205,
+      "client_status": "running",
+      "desired_status": "run",
+      "reschedule_attempts": 0,
+      "reschedule_failed": false,
+      "csi_mounts": [],
+      "constraints": [
+        {
+          "attribute": "${node.class}",
+          "operator": "=",
+          "value": "gpu",
+          "hard": true
+        }
+      ],
+      "affinities": [
+        {
+          "attribute": "${node.pool}",
+          "operator": "!=",
+          "value": "batch",
+          "weight": 50
+        }
+      ],
+      "superseded_by": ""
+    },
+    {
+      "alloc_id": "alloc-batch-b",
+      "node_id": "node-batch-1",
+      "node_class": "batch",
+      "create_index": 201,
+      "modify_index": 206,
+      "client_status": "running",
+      "desired_status": "run",
+      "reschedule_attempts": 0,
+      "reschedule_failed": false,
+      "csi_mounts": [],
+      "constraints": [
+        {
+          "attribute": "${node.class}",
+          "operator": "=",
+          "value": "gpu",
+          "hard": true
+        }
+      ],
+      "affinities": [
+        {
+          "attribute": "${node.pool}",
+          "operator": "=",
+          "value": "batch",
+          "weight": 80
+        }
+      ],
+      "superseded_by": ""
+    },
+    {
+      "alloc_id": "alloc-gpu-c",
+      "node_id": "node-gpu-2",
+      "node_class": "gpu",
+      "create_index": 202,
+      "modify_index": 207,
+      "client_status": "running",
+      "desired_status": "run",
+      "reschedule_attempts": 0,
+      "reschedule_failed": false,
+      "csi_mounts": [],
+      "constraints": [
+        {
+          "attribute": "${node.class}",
+          "operator": "=",
+          "value": "gpu",
+          "hard": true
+        }
+      ],
+      "affinities": [
+        {
+          "attribute": "${node.pool}",
+          "operator": "!=",
+          "value": "batch",
+          "weight": 30
+        }
+      ],
+      "superseded_by": ""
+    }
+  ]
+}

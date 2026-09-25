@@ -1,0 +1,93 @@
+---
+description: LOCKED — zero tolerance; all 8 unacceptable classes block CREATE, REVISE, and zip
+alwaysApply: false
+---
+
+# Terminus — Unacceptable task classes (LOCKED — zero tolerance)
+
+**Not partial. Not allowed.** If a task **is** any class below, it **must not** be created, hardened, or zipped. Platform will reject; this repo **blocks zip** before upload.
+
+**Applies to:** **IDEAS**, **CREATE** (A→H), **TRIVIAL / EASY revise**, **every** `pack_zip.sh` run — **first upload and resubmit**.
+
+**Hard gate (mandatory):**
+
+```bash
+python3 scripts/unacceptable_class_gate.py --pack-gate --task-dir tasks/<name>
+```
+
+`pack_zip.sh` runs this **after** anti-spam. **Any class FAIL → exit 1, no zip file.**
+
+Reports: `jobs-local/unacceptable-class-gate-last.json` · `jobs-local/unacceptable-class-gate-last.txt`
+
+**Override (user explicit only in current message):** `TERMINUS_ANTI_SPAM_SKIP=1` (same skip covers this gate).
+
+---
+
+## All 8 classes — none allowed
+
+| Class | **Not allowed** means | Gate |
+|-------|----------------------|------|
+| **TEMPLATED** | Keyword-swap on same harness, bug lattice, verifier, oracle shape | Anti-spam FAIL/WARN; sim ≥0.65; ideas sim >0.10 |
+| **COPY** | Renamed whole-tree / file-for-file clone of corpus neighbor | sim ≥0.75 or sim ≥0.50 with <2 structural diffs |
+| **DUPLICATE** | Slug or near-duplicate title already in corpus / platform | `slug already exists`; jaccard ≥0.72 |
+| **FAMILY** | **3+** tasks same family in `tasks/` | `family saturation:` blocker |
+| **SAME_LANE** | Saturated lane (custody, ledger, Go twin CLI+SQLite export, merge CLI, game-auditor clone) | Same as FAMILY when saturated |
+| **SIBLING** | Same-family nearest neighbor with high similarity | shared family + sim ≥0.65 |
+| **FABRICATED** | Oracle echoes golden files; no real patch/build; BUG/TODO/answers in `environment/` | `unacceptable_class_gate.py` solve.sh + env scan |
+| **SYNTHETIC** | Decorative fields, filler, inflated pytest, metadata-only hardening, probe-1 shallow | F′ record + probe 1 PASS; ≥3 docs; `reference_*` tests |
+
+**All 8 must show PASS** in gate report. **One FAIL = blocked.** No “warn and upload anyway.” No “mostly unique.”
+
+---
+
+## Phase gates (no skip, no partial)
+
+| Phase | Rule |
+|-------|------|
+| **Ideas** | `idea_similarity_gate.py` — weighted **> 0.10** → **do not CREATE** |
+| **Post-create** | Anti-spam post-create + unacceptable-class self-check |
+| **TRIVIAL / EASY** | Case 6 + probes — **still** all 8 classes PASS before zip |
+| **Pack** | `unacceptable_class_gate.py --pack-gate` — **required** |
+
+---
+
+## Agent reply before zip (mandatory)
+
+```text
+Unacceptable-class: PASS — all 8 clear
+  TEMPLATED PASS · COPY PASS · DUPLICATE PASS · FAMILY PASS · SAME_LANE PASS
+  SIBLING PASS · FABRICATED PASS · SYNTHETIC PASS
+```
+
+If any line is **FAIL** → **do not zip**; redesign in place or new slug/family — **not** metadata-only fix.
+
+---
+
+## TRIVIAL revise (LOCKED)
+
+Hardening **does not** exempt any class:
+
+- Extra tests/fields on a **TEMPLATED / COPY / SIBLING** task → **still blocked**
+- **FABRICATED** oracle or **SYNTHETIC** decorative hardening → **still blocked**
+- `difficulty = "hard"` relabel alone → **SYNTHETIC** — blocked
+
+---
+
+## Self-check (any yes = do not upload)
+
+1. Reviewer could swap instruction nouns and recognize the same task? → **TEMPLATED — not allowed**
+2. Renamed copy of one neighbor tree? → **COPY — not allowed**
+3. Slug/title exists in corpus? → **DUPLICATE — not allowed**
+4. ≥3 tasks same family in `tasks/`? → **FAMILY / SAME_LANE — not allowed**
+5. Nearest neighbor same family, sim ≥0.65? → **SIBLING — not allowed**
+6. Oracle only writes expected output without `/app` logic? → **FABRICATED — not allowed**
+7. Hardening added surface area without new bug layers? → **SYNTHETIC — not allowed**
+
+---
+
+## Related
+
+- `shared/anti-spam-templated-submissions.mdc`
+- `ideas/idea-similarity-gate.mdc`
+- `create/first-submit-acceptance-gate.mdc` (SYNTHETIC / probe depth)
+- `revise/trivial-easy-difficulty-prompt-lock.mdc`

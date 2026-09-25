@@ -1,0 +1,36 @@
+--- a/internal/pamcore/ledger/ledger_build.sh
++++ b/internal/pamcore/ledger/ledger_build.sh
+@@ -7,7 +7,7 @@
+   local run_id="$1"
+   local load_json="$2"
+   python3 - "$run_id" "$load_json" <<'PY'
+-import json, sys, hashlib
++import json, sys, hashlib, subprocess
+ from pathlib import Path
+ 
+ run_id = sys.argv[1]
+@@ -17,7 +17,6 @@
+ for svc_file in sorted((scenario / "services").glob("*")):
+     if not svc_file.is_file():
+         continue
+-    import subprocess
+     expanded = json.loads(subprocess.check_output(
+         ["bash", "-c", f'source /app/internal/pamcore/include/expand_includes.sh; expand_service_file "{svc_file}"'],
+         text=True,
+@@ -29,14 +28,12 @@
+         "modules": auth_modules,
+         "service_fingerprint": fp,
+     }
+-outcomes = json.loads((scenario / "modules.json").read_text(encoding="utf-8"))
+-subjects = json.loads((scenario / "subjects.json").read_text(encoding="utf-8"))
+ body = {
+     "run_id": run_id,
+     "scenario": load["scenario"],
+     "services": services,
+-    "outcomes": outcomes,
+-    "subjects": subjects,
++    "outcomes": json.loads((scenario / "modules.json").read_text(encoding="utf-8")),
++    "subjects": json.loads((scenario / "subjects.json").read_text(encoding="utf-8")),
+ }
+ fp_src = json.dumps({"run_id": run_id, "services": {k: v["service_fingerprint"] for k, v in services.items()}}, sort_keys=True)
+ body["ledger_fingerprint"] = hashlib.sha256(fp_src.encode()).hexdigest()

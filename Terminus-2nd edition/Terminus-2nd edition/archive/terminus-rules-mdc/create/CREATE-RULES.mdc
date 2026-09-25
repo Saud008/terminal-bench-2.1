@@ -1,0 +1,42 @@
+---
+description: @CREATE RULES — new task A→H; read all files in create/ folder (LOCKED)
+alwaysApply: false
+---
+
+# @CREATE RULES — New task (`create/` folder) — LOCKED
+
+**Trigger:** Build a **new** task under `tasks/<name>/` → `./scripts/pack_zip.sh <name>` → `tasksubmit/<name>.zip`.
+
+**LOCKED:** Follow **`new-task-pipeline-A-H.mdc`** in this folder **A→H in order**. Do not mix A→H letters with lifecycle A–F. Policy: **`LOCKED.mdc`** + **`shared/WORKFLOW-MAP.mdc`**.
+
+**Read-only during create:** `tasks/_accepted-tasks/`, other `tasks/*`, `Default_Task_Skeleton/`. Only edit the one new `tasks/<new-name>/`.
+
+---
+
+## Files in this folder (all required)
+
+| File | Purpose |
+|------|---------|
+| `new-task-pipeline-A-H.mdc` | **LOCKED** phases A→H step-by-step |
+| `post-create-audit-loop.mdc` | **LOCKED** Phase E auto audit-fix loop (2–4 rounds; no user ask) |
+| `first-submit-acceptance-gate.mdc` | **LOCKED** Phase F′ — probes + hardness before **first** zip |
+| `creation-rules.mdc` | instruction, tests, oracle structure |
+| `environment-no-ai-scaffolding.mdc` | no CLAUDE.md etc. in env |
+| `safe-languages.mdc` | language tiers |
+| `accepted-patterns.mdc` | lanes, avoid list |
+
+## From `shared/` (required)
+
+`spec.mdc`, `accepted-corpus.mdc` (≥2 `_accepted-tasks/` reads), `first-pass-blueprint.mdc`, `anti-trivial.mdc`, `dockerfile.mdc`, `runtime-verifier.mdc`, `platform-preferences.mdc`, `repo-workflow.mdc`, `core.mdc`
+
+---
+
+## Gates before done
+
+- Scan `tasks/`, `tasksubmit/` zips for collisions
+- Oracle **1**, NOP **0**
+- **`first-submit-acceptance-gate.mdc` Phase F′ PASS** — probe table before **first** zip (prevents TRIVIAL bounce)
+- `first-pass-blueprint.mdc` §0 (A–E) + `core.mdc` self-check
+- Real file inspection — not ready without evidence
+
+Then → **@AUDIT RULES** → **@VERIFY RULES** → **F′** → **@ZIP RULES**.

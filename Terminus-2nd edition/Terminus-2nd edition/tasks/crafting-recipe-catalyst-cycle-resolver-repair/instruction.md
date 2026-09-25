@@ -1,0 +1,5 @@
+The crafting workstation CLI at `/usr/local/bin/crafter` manages recipe previews, committed crafts, catalyst handling, substitute ingredients, stackable output placement, and recipe dependency cycles against a SQLite inventory. Its preview, apply, graph validation, seeding, and export behavior must match `/app/docs/crafter-contract.md`, `/app/docs/recipe-format.md`, `/app/docs/inventory-schema.md`, `/app/docs/cycle-detection.md`, `/app/docs/substitute-rules.md`, and `/app/docs/export-schema.md` for bundled fixtures and seed-derived recipe overlays.
+
+Preview must stay read-only on inventory, apply must commit or roll back atomically, catalyst and substitute rules must match the docs, stackable outputs must respect overflow limits, and graph validation must detect cycles including catalyst producer edges. Fix the Rust sources under `/app/crates/craft-core/src/`, `/app/crates/inventory-db/src/`, and `/app/crates/craft-cli/src/main.rs`.
+
+Do not edit `/app/docs/`, `/app/fixtures/`, `/app/config/`, or `/tests/`.

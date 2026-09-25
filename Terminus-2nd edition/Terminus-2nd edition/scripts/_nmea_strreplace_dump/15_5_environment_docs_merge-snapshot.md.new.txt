@@ -1,0 +1,5 @@
+## Export gate
+
+`export::staging::publish_export` reads the snapshot, verifies `snapshot_digest` via `export::writer::verify_digest`, runs `export::validate::validate_snapshot`, and writes the merge report through `export::wrap::build_report` using snapshot fields only. The report must not be rebuilt by re-parsing the input stream.
+
+`export::validate::validate_snapshot` rejects snapshots where any group has `fragments_merged < multipart_total` or where `merge_key` does not begin with the group's canonical `talker` prefix.

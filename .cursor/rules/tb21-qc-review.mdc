@@ -1,0 +1,50 @@
+---
+description: TB 2.1 QC review — reviewer checklist severities + QC rubric (1–5) per artifact. Use when reviewing/auditing a task bundle before submit or as peer reviewer.
+alwaysApply: false
+---
+
+# TB 2.1 — QC review / audit
+
+Two different things: the **per-task `rubric.txt`** (grades agent traces) vs the **QC rubric** (grades bundle quality). Never confuse them.
+
+For shipping decisions the pool's **Master Ship Checklist** (`tb21-ship-checklist.mdc`) is final: zero open findings of any severity. Where the QC rubric below disagrees with it (task.toml schema, timeouts 7200, `allow_internet = true`, delivery layout) the ship checklist wins.
+
+## Severity (reviewer checklist)
+
+- **High** fail → reject. **Medium**: one fail OK (note it in acceptance comment), two+ → reject. **Low**: never blocks; fix alongside any revision.
+- Review comprehensively: report **all** issues in one pass, each with what / where / how to fix.
+- Old tasks are judged by the rules at their submission time.
+
+## QC rubric scale
+
+Each criterion 1–5: **1–2 Major** (blocks) · **3–4 Minor** · **5 clean**. Record score + concrete evidence (file:line / quote), re-derived from disk now, not from memory.
+
+## Checklist by artifact (condensed)
+
+**instruction.md** — human-authored, outcome-focused, absolute paths, names every output, within length; every requirement ↔ test both ways; no tooling words (grader/verifier/pytest/test suite); constants/tolerances/paths/schema exactness match tests and env; no self-contradiction; no diagnosis narration; no canary; no task name. (High: concise, specified, interesting, no hints, unique, absolute paths; Medium: canary, task name.)
+
+**environment** — no dead files, defect-revealing or instruction-paraphrasing comments, defect-itemizing lore, misleading names, unused answer-key modules, authoring-machine metadata; authoritative docs consistent; no tests/solution in any layer; decoys fair and unlabeled; grading paths unreachable. (High: no web content, pinned deps, context inside environment/, no ground truth, no dangerous ops, no reserved mounts, no AI scaffolding filenames, pinned base, sanctioned final base, context ≤100 MiB; Medium: clean apt, .dockerignore; Low: no heredocs.)
+
+**solution** — full diff enumerated; each change ↔ real defect; no scope creep; independently verified correctness; convergent-agent disagreement investigated; no orphan copies; per-defect ablation done; cold build OK; no dead code/leakage/meta commentary; literal instruction fidelity. (High: consistent pass, no internet, reflects instruction.)
+
+**tests** — NOP per-test zero; guards coupled; assertions match names/docstrings; no agent-editable ground truth or shared-fixture bias; held-out cases truly differ; exactness literal; tolerances match; no scanner-evasion or dead code; rejection tests with positive controls; captured test count = current suite; independent reference; deterministic; diagnostic messages; independent tests; thresholds calibrated against measured baseline; no PATH shim; conforming accept fixtures; valid ratio assertions; hand-rolled parsers executed; resource-limit tests platform-guarded; collection scope consistent; precedence tests create the adverse state; wall-clock bounded waits; NOP measured post-build. (High: reward always written, identical oracle/agent logic, no web, binary reward, aligned with instructions, checks correctness not format.)
+
+**task.toml** — first line `schema_version = "1.1"` (pool override); `[task]` description/keywords/authors real (no placeholders); all three timeouts 7200; no pipeline metadata or `reference_pattern`; `allow_internet = true` (pool override); difficulty = measured rate and consistent with time estimates; name without process history (`hardened`, `fixed`, `patched`, round numbers, codenames); category/tags/languages accurate; no local paths; compose flags set. (High: all fields, compose flags; Medium: tags/languages/category fit.)
+
+**rubric.txt** — every line maps to real behavior; enough lines for the behaviors; strict format; no contradictions or double counting; arithmetic consistent; cited mechanisms exist; positives + ≥3 negatives; weights proportional. (High: no test logic, no metadata/instruction refs, ≥3 negatives, scores in ±{1,2,3,5}, one-per-line format, precise criteria; Medium: importance mapping, positive phrasing, no oracle/NOP mention.)
+
+**trajectories** — summary exactly two data lines; score files pure data + citations, distinct per run; rewards agree across sources; bundle sha freshly recomputed AND timestamps newer than graded files; failure causes read from each run's own transcript; honest "undetermined" verdicts; personal-info scrub; paths normalized; raw fields untouched; consistent file set per run; xhigh confirmed per run; no infra-invalidated runs kept; per-run reward-hacking scan (grading paths, hand-written outputs, truncation, abandonment); reruns update everything atomically; complete logs; zero-pass fairness review; no cherry-picked reruns.
+
+**Reward-hacking / corpus** — similarity checked + manual read; perturbations move expected outputs; hardcode / force-success / partial-fix / stub attacks all fail; no answer reachable in build context; partial-fix cases verified by actually building with one defect left.
+
+**oracle-nop-evidence** — exactly 3 oracle + 2 NOP runs with standard files; oracle every test passes; NOP every test fails genuinely (not crash); evidence newer than graded files; runs genuinely independent (distinct timestamps/ids).
+
+**Cross-artifact** — difficulty from real reasoning/engineering, not obscurity/transcription/unfair decoys/hidden requirements/compliance walls; exact delivery layout with no `.DS_Store`/`__MACOSX`/caches/`.git`; scrubs (personal paths, internal tool names) re-run after the last edit; name reveals no process history.
+
+## Test-quality eval flags (verify each; helper, not replacement)
+
+`req-gap` · `weak-assertion` · `phantom-spec` · `flaky-execution` · `vacuous-test`.
+
+## Review report shape
+
+Status (PASS / WARNING / FAIL) · Summary · Critical ❌ · Warnings ⚠️ · Suggestions 💡 · Overall assessment · Recommendation: READY / NEEDS FIXES / REQUIRES REVISION.

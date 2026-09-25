@@ -1,0 +1,83 @@
+openapi: 3.0.3
+info:
+  title: Paramgate catalog
+  version: 1.0.0
+paths:
+  /v1/catalog/items:
+    get:
+      operationId: listCatalogItems
+      parameters:
+        - name: tags
+          in: query
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              type: string
+        - name: filter
+          in: query
+          required: false
+          style: deepObject
+          explode: true
+          schema:
+            type: object
+        - name: meta
+          in: query
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: object
+        - name: since
+          in: query
+          required: false
+          style: form
+          explode: false
+          schema:
+            type: string
+            format: date
+        - name: tenant
+          in: query
+          required: true
+          style: form
+          explode: false
+          schema:
+            type: string
+  /v1/catalog/items/{sku}:
+    get:
+      operationId: getCatalogItem
+      parameters:
+        - name: sku
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: include
+          in: query
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+  /v1/catalog/notes:
+    post:
+      operationId: createCatalogNote
+      parameters:
+        - name: X-Request-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string

@@ -1,0 +1,5 @@
+Implement the offline LogQL pipeline evaluator lokictl under /app. The working baseline ingests log line batches and query text, materializes the parsed query AST and evaluated vector samples into /app/state/logql-stage.json, and supports lokictl eval and lokictl export subcommands.
+
+Eval must run pipeline stages in the order defined in /app/docs/logql-pipeline-stage-order.md. Label matchers filter before json parsing per /app/docs/label-matcher-contract.md. line_format must normalize escape sequences in structured fields per /app/docs/line-format-escapes.md. Histogram unwrap retains _sum and _count sibling labels per /app/docs/histogram-unwrap-labels.md. Vector grouping checksums use label key insertion order from the first sample in each group, not sorted keys. Export reads the stage snapshot only and writes /app/output/query-fingerprint.json using the canonical fingerprint rules in /app/docs/query-fingerprint-export.md.
+
+The internal/decoy package is not on the eval or export hot path. Rebuild lokictl and verify with bundled fixtures under /app/data.

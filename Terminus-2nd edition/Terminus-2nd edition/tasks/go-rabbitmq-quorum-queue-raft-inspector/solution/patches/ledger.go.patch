@@ -1,0 +1,27 @@
+--- a/internal/walcommit/ledger.go
++++ b/internal/walcommit/ledger.go
+@@ -12,6 +12,9 @@
+ func ExportLedger(st model.Staging, ledgerPath, sealPath string) error {
+     var rows []model.ExportRow
+     for qid, msgs := range st.QueueStates {
++        if qid == "" {
++            continue
++        }
+         rows = append(rows, model.ExportRow{
+             QueueID: qid, Messages: msgs, LeaderID: st.LeaderID,
+             Term: st.CurrentTerm, CommitIndex: st.CommitIndex,
+@@ -19,11 +22,11 @@
+         })
+     }
+     sort.Slice(rows, func(i, j int) bool {
+-        if rows[i].Term != rows[j].Term {
+-            return rows[i].Term > rows[j].Term
+-        }
+         return rows[i].QueueID < rows[j].QueueID
+     })
++    for i := range rows {
++        sort.Strings(rows[i].Replicas)
++    }
+     f, err := os.Create(ledgerPath)
+     if err != nil {
+         return err

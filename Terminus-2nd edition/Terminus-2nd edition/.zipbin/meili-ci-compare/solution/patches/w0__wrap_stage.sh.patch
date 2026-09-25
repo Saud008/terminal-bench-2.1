@@ -1,0 +1,23 @@
+--- a/internal/mbx7/w0/wrap_stage.sh
++++ b/internal/mbx7/w0/wrap_stage.sh
+@@ -23,9 +23,16 @@
+     pins = doc.get("filter_pins") or []
+     if salt:
+         doc["filter_pins"] = [p + salt for p in pins]
+-inv["load_seq"] = 1
+ state = Path(cfg["state_dir"]); state.mkdir(parents=True, exist_ok=True)
+-(state / "level-roster.json").write_text(json.dumps(inv, indent=2) + "\n")
+-(state / "run-meta.json").write_text(json.dumps({"level": level, "run_id": run_id, "load_seq": 1}, indent=2) + "\n")
+-print(json.dumps({"ok": True, "load_seq": 1}))
++prev = state / "level-roster.json"
++load_seq = 1
++if prev.exists():
++    try:
++        load_seq = int(json.loads(prev.read_text()).get("load_seq", 0)) + 1
++    except Exception:
++        load_seq = 1
++inv["load_seq"] = load_seq
++prev.write_text(json.dumps(inv, indent=2) + "\n")
++(state / "run-meta.json").write_text(json.dumps({"level": level, "run_id": run_id, "load_seq": load_seq}, indent=2) + "\n")
++print(json.dumps({"ok": True, "load_seq": load_seq}))
+ PY

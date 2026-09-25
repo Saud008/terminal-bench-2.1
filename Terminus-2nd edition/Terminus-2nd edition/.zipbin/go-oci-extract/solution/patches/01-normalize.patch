@@ -1,0 +1,34 @@
+--- environment/internal/normalize/path.go	2026-07-02 12:33:26.768257700 +0000
++++ solution/files/normalize/normpath.go	2026-07-02 10:28:58.432686000 +0000
+@@ -1,17 +1,28 @@
+ package normalize
+ 
+ import (
++	"path"
+ 	"strings"
+ )
+ 
+-// CleanPath normalizes OCI layer paths for staging ledger records.
++// CleanPath normalizes OCI layer paths for staging.
+ func CleanPath(raw string) string {
+ 	p := strings.TrimSpace(raw)
+-	if p == "" {
++	if p == "" || p == "." {
+ 		return "/"
+ 	}
+ 	if !strings.HasPrefix(p, "/") {
+ 		p = "/" + p
+ 	}
+-	return strings.TrimRight(p, "/")
++	cleaned := path.Clean(p)
++	if cleaned == "." {
++		return "/"
++	}
++	if !strings.HasPrefix(cleaned, "/") {
++		cleaned = "/" + cleaned
++	}
++	if cleaned != "/" {
++		cleaned = strings.TrimRight(cleaned, "/")
++	}
++	return cleaned
+ }

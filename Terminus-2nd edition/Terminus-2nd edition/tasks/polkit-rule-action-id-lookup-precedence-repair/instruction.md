@@ -1,0 +1,3 @@
+The polkit decision driver at /app/bin/pkctl merges JavaScript-style rule drops under /app/fixtures/rules/, resolves action definitions from /app/fixtures/actions/, evaluates subjects, and applies implicit authorization caching. Decisions from pkctl evaluate do not match the contracts in /app/docs/polkit-evaluation.md, /app/docs/rule-precedence.md, /app/docs/action-registry.md, /app/docs/subject-matching.md, /app/docs/auth-cache.md, and /app/docs/challenge-types.md.
+
+Repair the Bash libraries under /app/lib/ so every scenario listed in /app/fixtures/catalog.json passes, including stacks selected by TB3_RULES_DIR when that environment variable points at an absolute directory under /opt/verifier-fixtures/. Do not edit /app/docs/, /app/fixtures/, or /tests/.

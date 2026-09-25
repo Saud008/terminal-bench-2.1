@@ -1,0 +1,8 @@
+*filter
+:INPUT ACCEPT [1200:98400]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [50:6000]
+-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -p tcp -m multiport --dports 22,80 -j ACCEPT
+-A INPUT -j DROP
+COMMIT

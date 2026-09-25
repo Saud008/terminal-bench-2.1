@@ -1,0 +1,20 @@
+--- internal/chain/build.go
++++ internal/chain/build.go
+@@ -8,9 +8,6 @@
+ 
+
+ func Build(block model.ServerBlock) []plugin.Plugin {
+
+ 	names := append([]string(nil), block.PluginNames...)
+
+-	for i, j := 0, len(names)-1; i < j; i, j = i+1, j-1 {
+
+-		names[i], names[j] = names[j], names[i]
+
+-	}
+
+ 	var out []plugin.Plugin
+
+ 	for _, n := range names {
+
+ 		switch n {

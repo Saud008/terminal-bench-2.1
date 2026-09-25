@@ -1,0 +1,30 @@
+{
+  "scenario_name": "metric-epoch-order",
+  "experiment_id": "exp-nlp",
+  "focus_run_id": "run-finetune",
+  "dataset_manifests": {
+    "corpus-v2": {
+      "version_hash": "cv-9f8e7d",
+      "row_count": 800000
+    }
+  },
+  "runs": [
+    {
+      "run_id": "run-finetune",
+      "parent_run_id": "",
+      "params": {"model": "bert-base"},
+      "metrics": [
+        {"key": "f1", "step": 12, "value": 0.72, "epoch": 2},
+        {"key": "loss", "step": 2, "value": 0.55, "epoch": 1},
+        {"key": "loss", "step": 8, "value": 0.31, "epoch": 2},
+        {"key": "f1", "step": 4, "value": 0.61, "epoch": 1}
+      ],
+      "artifacts": [
+        {"rel_path": "tokenizer/vocab.txt", "content": "tok"}
+      ],
+      "dataset_pins": [
+        {"name": "corpus-v2", "version_hash": "cv-9f8e7d"}
+      ]
+    }
+  ]
+}

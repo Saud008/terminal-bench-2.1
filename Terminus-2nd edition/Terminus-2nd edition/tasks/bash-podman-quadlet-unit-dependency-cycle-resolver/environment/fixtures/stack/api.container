@@ -1,0 +1,12 @@
+[Unit]
+Description=API gateway
+After=network-online.target
+Wants=redis.service
+
+[Service]
+EnvironmentFile=-/etc/api/env
+Restart=always
+
+[Container]
+Image=localhost/api:2
+Restart=no

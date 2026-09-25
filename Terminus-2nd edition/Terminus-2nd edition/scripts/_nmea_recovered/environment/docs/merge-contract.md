@@ -1,0 +1,2 @@
+- Pending fragments merge in **ascending message-number order** (field index 1), even when the earlier run stored them in stream order.
+- When pending fragments from a saved session merge with new mul

@@ -1,0 +1,116 @@
+services:
+  - name: catalog-svc
+    url: http://127.0.0.1:8000/upstream/catalog
+    plugins:
+      - name: response-transformer
+        config:
+          add:
+            headers:
+              - "X-Service-Layer:catalog"
+  - name: orders-svc
+    url: http://127.0.0.1:8000/upstream/orders
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 3
+
+routes:
+  - name: catalog-root-get
+    service: catalog-svc
+    paths:
+      - /api/v2/catalog
+    methods:
+      - GET
+    scope_tags:
+      - catalog:read
+    tags:
+      - public
+      - metrics
+    plugins:
+      - name: response-transformer
+        config:
+          add:
+            headers:
+              - "X-Route-Layer:root-get"
+      - name: rate-limiting
+        config:
+          minute: 5
+
+  - name: catalog-items-get
+    service: catalog-svc
+    paths:
+      - /api/v2/catalog/items
+    methods:
+      - GET
+    scope_tags:
+      - catalog:read
+    tags:
+      - public
+    plugins:
+      - name: jwt
+      - name: response-transformer
+        config:
+          add:
+            headers:
+              - "X-Route-Layer:items-get"
+
+  - name: catalog-items-post
+    service: catalog-svc
+    paths:
+      - /api/v2/catalog/items
+    methods:
+      - POST
+    scope_tags:
+      - catalog:write
+    tags:
+      - internal
+    plugins:
+      - name: jwt
+      - name: response-transformer
+        config:
+          add:
+            headers:
+              - "X-Route-Layer:items-post"
+
+  - name: catalog-special-post
+    service: catalog-svc
+    paths:
+      - /api/v2/catalog/items/special
+    methods:
+      - POST
+    scope_tags:
+      - catalog:write
+    tags:
+      - internal
+    plugins:
+      - name: jwt
+
+  - name: orders-list-get
+    service: orders-svc
+    paths:
+      - /api/v2/orders
+    methods:
+      - GET
+    scope_tags:
+      - orders:read
+    tags:
+      - public
+    plugins:
+      - name: jwt
+      - name: rate-limiting
+        config:
+          minute: 3
+
+consumers:
+  - username: reader
+    jwt:
+      key: deck-reader-key-bundled
+      scopes:
+        - catalog:read
+        - orders:read
+  - username: writer
+    jwt:
+      key: deck-writer-key-bundled
+      scopes:
+        - catalog:write
+        - catalog:read

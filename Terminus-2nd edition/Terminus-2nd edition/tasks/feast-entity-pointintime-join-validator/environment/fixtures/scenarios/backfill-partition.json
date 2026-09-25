@@ -1,0 +1,46 @@
+{
+  "scenario_id": "backfill-partition",
+  "entity_keys": [
+    "user_id"
+  ],
+  "ttl_seconds": 86400,
+  "partitions": [
+    "2024-05-a",
+    "2024-05-b"
+  ],
+  "as_of_entries": [
+    {
+      "as_of_ts": 1712000000,
+      "active_partition": "2024-05-a"
+    }
+  ],
+  "events": [
+    {
+      "entity_base": "u4",
+      "event_ts": 1711990000,
+      "feature": "score",
+      "value": 7.0,
+      "source": "offline",
+      "partition": "2024-05-a",
+      "seq": 1
+    },
+    {
+      "entity_base": "u4",
+      "event_ts": 1711990000,
+      "feature": "score",
+      "value": 7.0,
+      "source": "online",
+      "partition": "2024-05-a",
+      "seq": 1
+    },
+    {
+      "entity_base": "u5",
+      "event_ts": 1711990000,
+      "feature": "score",
+      "value": 1.0,
+      "source": "offline",
+      "partition": "2024-05-b",
+      "seq": 1
+    }
+  ]
+}

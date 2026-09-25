@@ -1,0 +1,57 @@
+--- ${APP_ROOT:-/app}/crates/nlcore/src/decode.rs
++++ ${APP_ROOT:-/app}/crates/nlcore/src/decode.rs
+@@ -80,14 +80,14 @@
+             RTA_NH_ID if alen == 4 => route.nh_id_hint = Some(u32::from_le_bytes(payload.try_into()?)),
+             RTA_OIF if alen == 4 => route.oif = Some(u32::from_le_bytes(payload.try_into()?)),
+             RTA_GATEWAY => {
+-                let take = payload.len().min(4);
+-                route.gateway = Some(payload[..take].to_vec());
++                let need = if family == AF_INET { 4 } else { 16 };
++                if payload.len() < need {
++                    bail!("gateway length");
++                }
++                route.gateway = Some(payload[..need].to_vec());
+             }
+             RTA_MULTIPATH => parse_multipath(payload, &mut route.multipath)?,
+-            RTA_METRICS if payload.len() >= 7 => {
+-                let v = u32::from_le_bytes(payload[3..7].try_into()?);
+-                route.metrics.insert("mtu".into(), v);
+-            }
++            RTA_METRICS => parse_metrics(payload, &mut route.metrics)?,
+             _ => {}
+         }
+     }
+@@ -115,8 +115,7 @@
+             if payload.len() < pos + gw_len {
+                 bail!("truncated gw");
+             }
+-            let read_len = if gw_family == AF_INET { 4 } else { 4 };
+-            let gw = payload[pos..pos + read_len].to_vec();
++            let gw = payload[pos..pos + gw_len].to_vec();
+             pos += gw_len;
+             Some(gw)
+         };
+@@ -129,3 +128,23 @@
+     }
+     Ok(())
+ }
++
++fn parse_metrics(payload: &[u8], out: &mut BTreeMap<String, u32>) -> Result<()> {
++    if payload.is_empty() {
++        return Ok(());
++    }
++    let count = payload[0] as usize;
++    let mut pos = 1;
++    for _ in 0..count {
++        if payload.len() < pos + 6 {
++            bail!("truncated metric");
++        }
++        let mtype = u16::from_le_bytes(payload[pos..pos + 2].try_into()?);
++        let value = u32::from_le_bytes(payload[pos + 2..pos + 6].try_into()?);
++        pos += 6;
++        if let Some(name) = metric_name(mtype) {
++            out.insert(name.to_string(), value);
++        }
++    }
++    Ok(())
++}

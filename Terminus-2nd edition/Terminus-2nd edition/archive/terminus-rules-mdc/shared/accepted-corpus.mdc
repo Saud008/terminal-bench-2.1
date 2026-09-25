@@ -1,0 +1,362 @@
+---
+description: Gold reference corpus from platform ACCEPTED tasks — read before new tasks (LOCKED)
+alwaysApply: false
+---
+
+# Terminus — Accepted task corpus (this repo)
+
+**Source of truth (LOCKED):** **`tasks/_accepted-tasks/`** (~59 platform-ACCEPTED folders). New and revised tasks must **follow exactly** — pick the **closest stack match** in the corpus, open those real files, and copy **structure verbatim** (only rename task-specific paths, binaries, and docs). Do **not** improvise Dockerfile/`test.sh`/`task.toml` from memory or from active WIP in `tasks/`.
+
+**Do not copy domain/title** — copy **files and layout exactly** from the reference task.
+
+**Stack → copy these files exactly (starting points):**
+
+| Stack | Reference task | Copy from |
+|-------|----------------|-----------|
+| Go CLI | `idle-offline-accrual-normalizer` | Dockerfile, `test.sh`, `solve.sh`, `task.toml` |
+| Go + tools | `cue-schema-unification-evaluator` | Dockerfile (`requirements-verifier.txt` + hashes), `test.sh` |
+| Rust CLI | `stun-attribute-tlv-binder` or `cargo-workspace-feature-resolver` | Dockerfile, `test.sh`, `solve.sh` |
+| C / Make | `modbus-map-merge` | Dockerfile, `test.sh` (canonical harness shape) |
+| Node / TS | `order-replay-reconcile` | Dockerfile, `test.sh` (`npm run build` before pytest) |
+| Milestone | `rack-session-blob-migration` | `task.toml` + `steps/milestone_N/` layout only |
+
+---
+
+## Corpus location
+
+| Path | Contents |
+|------|----------|
+| `tasks/_accepted-tasks/<name>/` | Platform-accepted gold reference (read-only pattern source) |
+| `tasks/<name>/` | Active work — REVIEW_PENDING, NEEDS_REVISION, unsubmitted WIP |
+
+When citing references in design or audit replies, use paths like `tasks/_accepted-tasks/stun-attribute-tlv-binder/`.
+
+---
+
+## Mandatory read before new task ideas or implementation
+
+Before generating ideas **or** creating/editing any task under `tasks/`:
+
+1. **Read ≥2 real tasks** from `tasks/_accepted-tasks/` (pick different shapes: e.g. Rust protocol CLI + merge/export CLI, or TS API + tool-specific).
+2. **Summarize structural match** — not just domain swap — against those files:
+   - `task.toml` (timeouts, `allow_internet = false`, `workdir = "/app"`, **`subcategories = []`**, `difficulty` medium/hard)
+   - `instruction.md` (concise, absolute paths, cites `/app/docs/` contracts)
+   - `environment/Dockerfile` (digest-pinned `FROM`, `tmux` + `asciinema`, verifier venv with pinned pytest)
+   - `tests/test.sh` (no runtime installs; seed `0`; rebuild agent code; Harbor ending `if [ $? -eq 0 ]`)
+   - `tests/test_outputs.py` (module docstring, subprocess/HTTP, independent `reference_*` math)
+   - `solution/solve.sh` (patches `/app` source, rebuilds — not echo-only golden files)
+3. **Do not** mirror failure patterns from NEEDS_REVISION tasks still in `tasks/` (see comparison below).
+
+---
+
+## Follow exactly — per-file rules (from real ACCEPTED files)
+
+**Workflow:** `ls tasks/_accepted-tasks/` → open reference task for your stack → copy each file type → rename only task-specific symbols. If your task already exists, **diff each file** against the reference and fix deltas before zip.
+
+### `task.toml` — copy from `modbus-map-merge` or `idle-offline-accrual-normalizer`
+
+Exact fields present in corpus (do not add fields the reference omits unless Harbor requires them).
+
+**Repo upload policy:** `_accepted-tasks/` may show `category = "debugging"` — **do not copy** for new tasks. Use `data-processing` (or another allowed category); never `debugging` or `software-engineering` (`shared/task-toml-category-gate.mdc`).
+
+```toml
+version = "2.0"
+
+[metadata]
+author_name = "anonymous"
+author_email = "anonymous@gmail.com"
+difficulty = "hard"
+category = "data-processing"
+subcategories = []
+number_of_milestones = 0
+codebase_size = "small"
+languages = ["go"]
+tags = ["..."]
+expert_time_estimate_min = 120
+junior_time_estimate_min = 240
+
+[verifier]
+timeout_sec = 900.0
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 600.0   # 900.0 when image compiles (Rust/Go/Node build in Dockerfile)
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+allow_internet = false
+```
+
+Corpus note: **53/59** accepted tasks include `workdir = "/app"`; **6 omit it** (e.g. `modbus-map-merge`, `idle-offline`) — when copying a reference **without** `workdir`, match that reference exactly; when platform static check requires it, add `workdir = "/app"` only if CI fails.
+
+### `environment/Dockerfile` — copy from stack reference
+
+**`FROM` digest (new/revised uploads):** copy **exact** ECR canonical row from **`shared/canonical-base-image-gate.mdc`** — not legacy `docker.io` lines below. `_accepted-tasks/` may still show old digests; migrate `FROM` on revise.
+
+**Go** (`idle-offline-accrual-normalizer` — harness shape; ECR `FROM` from canonical gate):
+
+- `FROM public.ecr.aws/docker/library/golang:1.24-bookworm@sha256:1a6d4452c65dea36aac2e2d606b01b4a029ec90cc1ae53890540ce6173ea77ac` (see `canonical-base-image-gate.mdc`)
+- Single apt transaction: `asciinema`, `ca-certificates`, `python3`, `python3-pip`, `python3-venv`, `tmux` — **by name** (corpus majority; 50/59 unpinned)
+- Inline `pytest==9.0.3` + `pytest-json-ctrf==0.5.0` in `/opt/verifier-venv`
+- `/opt/verifier-scripts/rebuild-<task>` from `scripts/verifier-rebuild.sh`
+- `WORKDIR /app`; build `/app/bin/…` in image
+
+**Rust** (`stun-attribute-tlv-binder` / `cargo-workspace-feature-resolver` — harness shape; ECR `FROM` from canonical gate):
+
+- `FROM public.ecr.aws/docker/library/rust:1.85-slim@sha256:9f841bbe9e7d8e37ceb96ed907265a3a0df7f44e3737d0b100e7907a679acb36` (see `canonical-base-image-gate.mdc`)
+- Same harness apt list (unpinned)
+- `ENV CARGO_INCREMENTAL=0`
+- `cargo build --release --locked` in Dockerfile when agent binary ships prebuilt
+
+**Node** (`order-replay-reconcile` — harness shape; ECR `FROM` from canonical gate):
+
+- `FROM public.ecr.aws/docker/library/node:22-bookworm-slim@sha256:f3a68cf41a855d227d1b0ab832bed9749469ef38cf4f58182fb8c893bc462383` (see `canonical-base-image-gate.mdc`)
+- `npm ci` from `package-lock.json`; `npm run build` in image
+
+**Hashed verifier lockfile** (`cue-schema-unification-evaluator`): `requirements-verifier.txt` + `pip install --require-hashes` — use when reference task uses it.
+
+### `environment/.dockerignore` — copy from `idle-offline-accrual-normalizer`
+
+Exact minimum from accepted Go reference:
+
+```
+.git
+.gitignore
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/node_modules/
+**/bin/
+output/
+solution/
+tests/
+```
+
+### `tests/test.sh` — copy from `modbus-map-merge` (canonical ACCEPTED harness)
+
+This is the **exact** shape used by accepted merge/CLI tasks (46/56 use `PWD` guard; 52/56 seed reward `0` before pytest):
+
+```bash
+#!/bin/bash
+
+# Verifier packages preinstalled in environment/Dockerfile (no runtime installs).
+
+export PATH="/opt/verifier-scripts:/opt/verifier-venv/bin:${PATH}"
+
+mkdir -p /logs/verifier
+echo 0 > /logs/verifier/reward.txt
+echo '{"version":"1.0.0","results":{"tool":{"name":"pytest"},"summary":{"tests":0,"passed":0,"failed":0,"skipped":0},"tests":[]}}' > /logs/verifier/ctrf.json
+
+if [ "$PWD" = "/" ]; then
+    echo "Error: No working directory set. Please set a WORKDIR in your Dockerfile before running this script."
+    echo 0 > /logs/verifier/reward.txt
+    exit 1
+fi
+
+TEST_DIR="${TEST_DIR:-/tests}"
+
+if [ -f /app/Makefile ]; then
+    rebuild-<task> || {
+        echo 0 > /logs/verifier/reward.txt
+        exit 1
+    }
+fi
+
+set +e
+python3 -m pytest -o cache_dir=/tmp/pytest_cache \
+  --ctrf /logs/verifier/ctrf.json "${TEST_DIR}/test_outputs.py" -rA
+
+if [ $? -eq 0 ]; then
+    echo 1 > /logs/verifier/reward.txt
+else
+    echo 0 > /logs/verifier/reward.txt
+fi
+```
+
+**Stack swaps (only these deltas):**
+
+| Stack | Rebuild guard | Pytest invocation |
+|-------|---------------|-------------------|
+| Go | `if [ -f /app/go.mod ]; then rebuild-<task> …` | same |
+| Rust | `cargo build --release --locked` in `test.sh` (see `stun-attribute-tlv-binder`) | same or venv python |
+| Node | `npm --prefix /app run build` (see `order-replay-reconcile`) | `python -m pytest` on PATH |
+
+**Hard rules (all accepted):** no runtime `pip`/`apt`/`curl`/`npm install`; file ends with `if [ $? -eq 0 ]` block; **nothing after closing `fi`**.
+
+### `solution/solve.sh` — copy from `idle-offline-accrual-normalizer`
+
+```bash
+#!/bin/bash
+set -euo pipefail
+
+APP_ROOT="${APP_ROOT:-/app}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PATCHES="${SCRIPT_DIR}/patches"   # or files/
+
+# cp patches into /app
+cd "${APP_ROOT}"
+rebuild-<task>
+mkdir -p /app/output
+```
+
+No network; no echo-only golden writes.
+
+### `instruction.md` — copy from `fix-resend-journal-reconciler`
+
+- Opening: broken behavior + absolute `/app` paths
+- Lists `/app/docs/*.md` contracts (not a test checklist)
+- No bug-file names; no golden outputs
+- Optional example CLI in fenced `text`
+
+### `tests/test_outputs.py` — copy shape from `stun-attribute-tlv-binder` or `modbus-map-merge`
+
+- Module docstring
+- `subprocess` CLI / file / DB checks
+- Independent reference implementation in test module
+- Hidden inputs under `/opt/verifier-fixtures/` when reference task uses them
+
+---
+
+## What ACCEPTED tasks DO (evidence from corpus)
+
+Verified from real files under `tasks/_accepted-tasks/`:
+
+### Metadata (`task.toml`)
+
+- `version = "2.0"`, `author_name` / `author_email` = `anonymous` (this repo)
+- `allow_internet = false`; `workdir = "/app"` on non-milestone tasks
+- Preferred timeouts: `[agent] timeout_sec = 1800`, `[verifier] timeout_sec = 900`
+- `build_timeout_sec = 600` or `900` (Rust/ heavy compile → `900`)
+- `difficulty = "hard"` or `"medium"` — non-Python accepted tasks are usually **hard**
+- `codebase_size = "small"` with **20+ meaningful** `environment/` files (not filler)
+- `subcategories = []` always (this repo — do not populate Harbor subcategory labels)
+
+### Instruction
+
+- 1–3 short paragraphs; user tone; **every path absolute** (`/app/...`)
+- Behaviors and output schemas delegated to **`/app/docs/*.md`** linked from instruction — not a test checklist
+- States CLI subcommands or HTTP contract at a high level; does not name bug files or fix steps
+
+### Environment
+
+- Single-container; no tests/solution/ground truth in `environment/`
+- Pinned app deps (Cargo.lock, package-lock, Makefile, etc.)
+- Contract docs: `docs/*-schema.md`, `docs/cli.md`, `docs/*-format.md`
+
+### Verifier (`tests/test.sh`)
+
+- Verifier deps **only** in Dockerfile (`/opt/verifier-venv`, `/opt/verifier-scripts`)
+- **No** `pip install`, `curl`, `apt`, `npm install`, `uvx` at runtime
+- Seed `echo 0 > /logs/verifier/reward.txt` before pytest (preferred; most corpus tasks do)
+- `PWD=/` guard when `WORKDIR /app` set
+- **Rebuild agent code** before pytest when task compiles: `cargo build --release --locked`, `npm run build`, `make`, or `rebuild-*` helper
+- `set +e` immediately before pytest; file **ends** with:
+
+```bash
+if [ $? -eq 0 ]; then
+ echo 1 > /logs/verifier/reward.txt
+else
+ echo 0 > /logs/verifier/reward.txt
+fi
+```
+
+(no lines after `fi`)
+
+### Tests (`tests/test_outputs.py`)
+
+- Module docstring mapping to instruction/docs
+- **Behavior-only**: `subprocess` CLI runs, HTTP against spawned server, DB/file checks
+- **Independent reference** implementation in pytest (not grep source, not bundled golden JSON)
+- Anti-cheat: env overrides (`TB3_*`, task-specific seeds), mutated inputs, fresh DB/port per session
+
+### Oracle (`solution/solve.sh`)
+
+- Copies patched source from `solution/files/` into `/app`, then **rebuilds**
+- Deterministic; no network; no hardcoded final artifact-only writes
+
+### Milestone exception
+
+- `rack-session-blob-migration`: no root `instruction.md` / `tests/`; uses `steps/milestone_N/` layout — still ACCEPTED
+
+---
+
+## What ACCEPTED tasks AVOID (never repeat)
+
+- Trivial one-file / one-typo fixes; medium Python script repair
+- Hidden test requirements not in instruction or cited `/app/docs/`
+- Oracle that only writes final JSON/CSV without running real logic
+- Runtime dependency installs in `test.sh`
+- Non-empty `subcategories` (use `[]` only)
+- Apt package version pins on Debian bookworm (`shared/platform-preferences.mdc`)
+- Minimal codebase labeled `small` without 20+ meaningful env files
+- Unsolvable traps: brittle formatting, secret strings not in docs
+- Copying rejected WIP patterns from active `tasks/` without triage
+
+---
+
+## NEEDS_REVISION vs ACCEPTED — concrete deltas (local evidence)
+
+Compare active failures in `tasks/` against corpus — **do not treat NEEDS_REVISION as reference**.
+
+| Dimension | ACCEPTED example | NEEDS_REVISION example | Delta |
+|-----------|------------------|------------------------|-------|
+| Rebuild in verifier | `order-replay-reconcile`: `npm run build` in `test.sh` before pytest | `reservation-holds-ttl`: no `npm run build` in `test.sh`; only `cd /app` | Missing rebuild → stale binary can pass/fail wrongly |
+| Dockerfile apt | `stun-attribute-tlv-binder`: apt by name only; pytest `9.0.3` | `udev-rules-ordered-merge`: pinned apt versions; pytest `8.4.1` | Platform preference violation; verifier drift |
+| Difficulty / category | `modbus-map-merge`: `hard`, `debugging` | `udev-rules-ordered-merge`: `medium`, `security` | Medium bash + non-standard category → trivial / metadata risk |
+| Instruction contract | `usb-configuration-descriptor-walker`: cites 3 doc paths + env override | Same pattern in udev — OK shape | udev failure likely implementation alignment + metadata/Dockerfile, not instruction length |
+| Anti-cheat depth | `stun-attribute-tlv-binder`: full Python STUN reference + `TB3_*` paths | `udev-rules-ordered-merge`: has independent reference — shape OK | Ensure multi-module bugs remain after fixes |
+
+---
+
+## Pre-submit gate (required before zip / “ready”)
+
+Run in **Ubuntu WSL** (Snorkel/harbor tooling host) from repo root:
+
+```bash
+# Oracle must pass
+stb harbor run -a oracle -p ./tasks/<name> --debug --force-build
+
+# Verifier after oracle → reward 1
+# NOP (no solution) → reward 0
+```
+
+Also:
+
+- `ruff check` on task `tests/*.py` (and milestone `test_mN.py` if applicable)
+- Flat zip: `./scripts/pack_zip.sh <name>` (`zip/ZIP-RULES.mdc`)
+- Instruction ↔ test mapping: every pytest case traces to instruction or cited doc
+- No `rubric.md` in repo zips unless user explicitly asks
+
+**Do not say ready** without oracle + NOP evidence.
+
+---
+
+## Reference task index (all 26 in corpus)
+
+`auditd-ruleset-pack-merger`, `binary-frame-decoder`, `btrfs-send-stream-instruction-fixer`, `capnp-segment-realigner`, `cgroup-v2-stat-rollup`, `delve-corefile-unwind`, `dns-zone-axfr-merge`, `dot-subgraph-merge`, `fits-header-merge`, `fix-resend-journal-reconciler`, `hls-discontinuity-stitcher`, `journal-slice-merge`, `modbus-map-merge`, `nats-jetstream-pull-fork-divergence`, `nmea0183-mux-buffer`, `order-replay-reconcile`, `pkcs12-safebag-mac-verifier`, `rack-session-blob-migration`, `rust-pack-index-v2-repair`, `scap-oval-applicability`, `steam-depot-chunk-manifest-differ`, `stun-attribute-tlv-binder`, `systemd-dropin-resolver`, `usb-configuration-descriptor-walker`, `wal-segment-checksum-repair`, `warc-crawl-dedupe-merge`
+
+**Suggested read pairs for new work:**
+
+- Rust protocol CLI: `stun-attribute-tlv-binder` + `usb-configuration-descriptor-walker`
+- Merge/export CLI: `modbus-map-merge` + `journal-slice-merge`
+- Stateful API + SQLite: `order-replay-reconcile` + `fix-resend-journal-reconciler`
+- Tool-specific config: `systemd-dropin-resolver` + `scap-oval-applicability`
+- Milestone: `rack-session-blob-migration`
+
+---
+
+## Future new tasks — agent checklist
+
+When creating a task, agent MUST in the design reply:
+
+1. Cite **2 reference tasks** read from `tasks/_accepted-tasks/` (paths + what was copied structurally)
+2. Explain why **not trivial** (4+ bugs / 3+ modules; independent reference tests)
+3. Explain why **not repeating** known revision failures (rebuild, Dockerfile pins, hidden requirements)
+4. Use same skeleton as references (see `shared/first-pass-blueprint.mdc`)
+5. State oracle/NOP status — **not verified yet** until WSL harbor runs complete
+
+**Forbidden** unless user overrides: UI-building, multi-container, easy, minimal codebase, simple Python medium.

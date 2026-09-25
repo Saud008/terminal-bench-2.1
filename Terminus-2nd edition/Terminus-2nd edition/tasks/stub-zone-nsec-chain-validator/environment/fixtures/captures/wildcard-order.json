@@ -1,0 +1,42 @@
+{
+  "zone": "wild.stub.",
+  "soa_serial": 42,
+  "nsec3_params": {
+    "salt_hex": "00ff",
+    "iterations": 1,
+    "hash_algorithm": 1
+  },
+  "records": [
+    {
+      "owner": "wild.stub.",
+      "rtype": "NSEC",
+      "next": "a.wild.stub.",
+      "type_bitmap": ["NS", "SOA", "NSEC"]
+    },
+    {
+      "owner": "a.wild.stub.",
+      "rtype": "NSEC",
+      "next": "z.wild.stub.",
+      "type_bitmap": ["A", "NSEC"]
+    },
+    {
+      "owner": "z.wild.stub.",
+      "rtype": "NSEC",
+      "next": "wild.stub.",
+      "type_bitmap": ["AAAA", "NSEC"]
+    },
+    {
+      "owner": "*.wild.stub.",
+      "rtype": "NSEC",
+      "next": "wild.stub.",
+      "type_bitmap": ["A", "NSEC"]
+    }
+  ],
+  "queries": [
+    {
+      "qname": "nomatch.wild.stub.",
+      "qtype": "A",
+      "expect": "invalid"
+    }
+  ]
+}

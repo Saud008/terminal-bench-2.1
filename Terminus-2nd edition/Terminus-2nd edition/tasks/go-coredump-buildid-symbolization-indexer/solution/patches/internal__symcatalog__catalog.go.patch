@@ -1,0 +1,20 @@
+--- internal/symcatalog/catalog.go
++++ internal/symcatalog/catalog.go
+@@ -27,7 +27,7 @@
+         byPath: make(map[string]model.CatalogEntry),
+     }
+     for path, entry := range cat.Binaries {
+-        key := strings.ToLower(entry.BuildID)
++        key := strings.ToUpper(entry.BuildID)
+         idx.byID[key] = entry
+         idx.byPath[path] = entry
+     }
+@@ -35,7 +35,7 @@
+ }
+ 
+ func (idx *Index) LookupBuildID(id string) (model.CatalogEntry, bool) {
+-    e, ok := idx.byID[strings.ToLower(id)]
++    e, ok := idx.byID[strings.ToUpper(id)]
+     return e, ok
+ }
+ 

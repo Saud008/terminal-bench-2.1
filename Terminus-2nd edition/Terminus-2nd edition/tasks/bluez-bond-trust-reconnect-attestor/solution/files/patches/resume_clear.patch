@@ -1,0 +1,24 @@
+--- lib/trustgate/resume_clear.sh
++++ lib/trustgate/resume_clear.sh
+@@ -5,8 +5,10 @@
+ source /app/lib/intake/device_table.sh
+ 
+ _resume_token_present() {
+-  local _mac="$1"
+-  return 1
++  local mac="$1"
++  local token
++  token="$(read_device_field "$mac" resume_token)"
++  [[ -n "$token" ]]
+ }
+ 
+ _bond_wipe_payload() {
+@@ -16,7 +18,7 @@
+ from pathlib import Path
+ p = Path(sys.argv[1])
+ doc = json.load(open(p, encoding="utf-8")) if p.is_file() else {}
+-doc.update({"bonded": False, "trusted": False, "pairing_confirmed": False})
++doc.update({"bonded": False, "trusted": False, "pairing_confirmed": False, "resume_token": ""})
+ json.dump(doc, sys.stdout)
+ PY
+ }

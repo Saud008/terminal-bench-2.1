@@ -1,0 +1,249 @@
+{
+
+  "slug": "broadcast-playout-rights-window-planner",
+
+  "stack": "go-gridplan-sqlite-syndication",
+
+  "artifact": "syndication-plan-db",
+
+  "workflow": "import-grid-snapshot-runway-compile-windows-syndicate-plan",
+
+  "domain": "broadcast-rights-window-planner",
+
+  "oracle_frontier": [
+
+    {
+
+      "path": "internal/windowpick/overlap.go",
+
+      "fix_symbols": ["PickContract", "narrowestMatch", "contractSpanDays"],
+
+      "co_resident_helpers": ["windowSpan", "AirDate"],
+
+      "allowed_top_level_symbols": []
+
+    },
+
+    {
+
+      "path": "internal/darkregion/precede.go",
+
+      "fix_symbols": ["Blocked"],
+
+      "co_resident_helpers": [],
+
+      "allowed_top_level_symbols": []
+
+    },
+
+    {
+
+      "path": "internal/breakcue/keep.go",
+
+      "fix_symbols": ["MarkersForProgram"],
+
+      "co_resident_helpers": [],
+
+      "allowed_top_level_symbols": []
+
+    },
+
+    {
+
+      "path": "internal/lineswap/subst.go",
+
+      "fix_symbols": ["ResolveProgram"],
+
+      "co_resident_helpers": [],
+
+      "allowed_top_level_symbols": []
+
+    },
+
+    {
+
+      "path": "internal/plannerdb/sqlite.go",
+
+      "fix_symbols": ["Save", "replaceScenarioRows", "insertPlanRows"],
+
+      "co_resident_helpers": ["Load", "RowCount", "ensureSchema"],
+
+      "allowed_top_level_symbols": []
+
+    },
+
+    {
+
+      "path": "internal/runwaysnap/stage.go",
+
+      "fix_symbols": ["WriteRunwaySnap", "runwayDigest"],
+
+      "co_resident_helpers": ["readBundle"],
+
+      "allowed_top_level_symbols": []
+
+    },
+
+    {
+
+      "path": "internal/syndemit/gate.go",
+
+      "fix_symbols": ["Allowed"],
+
+      "co_resident_helpers": [],
+
+      "allowed_top_level_symbols": []
+
+    },
+
+    {
+
+      "path": "internal/syndemit/conflicts.go",
+
+      "fix_symbols": ["writeConflicts"],
+
+      "co_resident_helpers": ["writePlan"],
+
+      "allowed_top_level_symbols": []
+
+    }
+
+  ],
+
+  "flipping_point_contract": {
+
+    "concentration_cap": 0.5,
+
+    "locations": [
+
+      {
+
+        "id": "windowpick",
+
+        "path": "windowpick/overlap.go",
+
+        "controls_tests": [
+
+          "test_overlap_scenario_picks_narrowest_rights_window"
+
+        ]
+
+      },
+
+      {
+
+        "id": "runwaysnap",
+
+        "path": "runwaysnap/stage.go",
+
+        "controls_tests": [
+
+          "test_runway_digest_tracks_bundle_seed",
+
+          "test_runway_snapshot_lists_rights_contract_edges",
+
+          "test_stable_syndication_row_order_is_deterministic"
+
+        ]
+
+      },
+
+      {
+
+        "id": "plannerdb",
+
+        "path": "plannerdb/sqlite.go",
+
+        "controls_tests": [
+
+          "test_sqlite_plan_rows_stable_after_second_compile",
+
+          "test_syndication_and_conflict_bytes_unchanged_on_recompile"
+
+        ]
+
+      },
+
+      {
+
+        "id": "syndemit",
+
+        "path": "syndemit/gate.go",
+
+        "controls_tests": [
+
+          "test_syndicate_blocked_when_compile_epoch_zero"
+
+        ]
+
+      },
+
+      {
+
+        "id": "blackout",
+
+        "path": "darkregion/precede.go",
+
+        "controls_tests": [
+
+          "test_regional_blackout_wins_over_rights_window",
+
+          "test_blackout_block_kind_present_in_conflict_ledger"
+
+        ]
+
+      },
+
+      {
+
+        "id": "feedswap",
+
+        "path": "lineswap/subst.go",
+
+        "controls_tests": [
+
+          "test_feed_specific_program_substitution",
+
+          "test_break_cues_survive_feed_line_swap"
+
+        ]
+
+      },
+
+      {
+
+        "id": "breakcue",
+
+        "path": "breakcue/keep.go",
+
+        "controls_tests": [
+
+          "test_break_cues_survive_feed_line_swap"
+
+        ]
+
+      },
+
+      {
+
+        "id": "conflicts",
+
+        "path": "syndemit/conflicts.go",
+
+        "controls_tests": [
+
+          "test_blackout_block_kind_present_in_conflict_ledger",
+
+          "test_clean_scenario_exports_empty_conflict_ledger"
+
+        ]
+
+      }
+
+    ]
+
+  }
+
+}
+
+

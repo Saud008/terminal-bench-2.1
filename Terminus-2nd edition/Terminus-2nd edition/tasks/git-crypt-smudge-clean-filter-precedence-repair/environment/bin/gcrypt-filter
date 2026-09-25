@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="/app"
+LIB="${ROOT}/lib"
+
+# shellcheck source=/app/lib/gc_common.sh
+source "${LIB}/gc_common.sh"
+# shellcheck source=/app/lib/gc_attrs.sh
+source "${LIB}/gc_attrs.sh"
+# shellcheck source=/app/lib/gc_keys.sh
+source "${LIB}/gc_keys.sh"
+# shellcheck source=/app/lib/gc_crypto.sh
+source "${LIB}/gc_crypto.sh"
+# shellcheck source=/app/lib/gc_staging.sh
+source "${LIB}/gc_staging.sh"
+# shellcheck source=/app/lib/gc_manifest.sh
+source "${LIB}/gc_manifest.sh"
+
+usage() {
+  echo "usage: gcrypt-filter <clean|smudge|export-manifest> ..." >&2
+  exit 2
+}
+
+cmd="${1:-}"
+shift || usage
+
+repo=""
+relpath=""
+config_path="${ROOT}/config/filter.json"
+output_path="${ROOT}/output/encrypted-manifest.json"
+use_staging=0
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --repo)
+      repo="$2"
+      shift 2
+      ;;
+    --path)
+      relpath="$2"
+      shift 2
+      ;;
+    --config)
+      config_path="$2"
+      shift 2
+      ;;
+    --output)
+      output_path="$2"
+      shift 2
+      ;;
+    --staging)
+      use_staging=1
+      shift
+      ;;
+    *)
+      usage
+      ;;
+  esac
+done
+
+case "$cmd" in
+  clean)
+    gc__require_dir "$repo" || exit 1
+    gc__require_relpath "$relpath" || exit 1
+    gc_attrs_load "$repo" || true
+    gc_crypto_clean_filter "$repo" "$relpath"
+    ;;
+  smudge)
+    gc__require_dir "$repo" || exit 1
+    gc__require_relpath "$relpath" || exit 1
+    gc_attrs_load "$repo" || true
+    if ! gc_pipeline_smudge "$repo" "$relpath" "$use_staging"; then
+      exit 2
+    fi
+    ;;
+  export-manifest)
+    gc__require_dir "$repo" || exit 1
+    gc_manifest_write "$repo" "$output_path"
+    ;;
+  *)
+    usage
+    ;;
+esac

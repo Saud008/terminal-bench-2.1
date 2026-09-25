@@ -1,0 +1,61 @@
+package mutcmd
+
+import (
+    "encoding/json"
+    "os"
+    "path/filepath"
+    "sort"
+
+    "github.com/terminus/chmutled/internal/model"
+)
+
+func LoadDir(dir string) ([]model.MutCmd, error) {
+    paths, err := filepath.Glob(filepath.Join(dir, "*.mut-cmd.jsonl"))
+    if err != nil {
+        return nil, err
+    }
+    sort.Strings(paths)
+    var out []model.MutCmd
+    for _, p := range paths {
+        rows, err := loadFile(p)
+        if err != nil {
+            return nil, err
+        }
+        out = append(out, rows...)
+    }
+    return out, nil
+}
+
+func loadFile(path string) ([]model.MutCmd, error) {
+    raw, err := os.ReadFile(path)
+    if err != nil {
+        return nil, err
+    }
+    var out []model.MutCmd
+    for _, line := range splitLines(string(raw)) {
+        if line == "" {
+            continue
+        }
+        var row model.MutCmd
+        if err := json.Unmarshal([]byte(line), &row); err != nil {
+            return nil, err
+        }
+        out = append(out, row)
+    }
+    return out, nil
+}
+
+func splitLines(s string) []string {
+    var lines []string
+    start := 0
+    for i := 0; i < len(s); i++ {
+        if s[i] == '\n' {
+            lines = append(lines, s[start:i])
+            start = i + 1
+        }
+    }
+    if start < len(s) {
+        lines = append(lines, s[start:])
+    }
+    return lines
+}

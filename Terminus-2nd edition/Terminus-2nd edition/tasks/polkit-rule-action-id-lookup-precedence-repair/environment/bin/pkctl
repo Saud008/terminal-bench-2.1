@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${APP_ROOT:-/app}"
+LIB_DIR="${APP_ROOT}/lib"
+
+# shellcheck source=common.sh
+source "${LIB_DIR}/common.sh"
+# shellcheck source=evaluate.sh
+source "${LIB_DIR}/evaluate.sh"
+# shellcheck source=merge_rules.sh
+source "${LIB_DIR}/merge_rules.sh"
+
+usage() {
+  cat <<'EOF'
+usage:
+  pkctl evaluate --scenario PATH
+  pkctl merge-rules --stack NAME
+  pkctl lookup-action --action-id ID
+EOF
+}
+
+cmd_merge_rules() {
+  local stack=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --stack) stack="$2"; shift 2 ;;
+      *) die "unknown merge-rules arg: $1" ;;
+    esac
+  done
+  [[ -n "$stack" ]] || die "missing --stack"
+  pk_merge_rules "$stack"
+}
+
+cmd_lookup_action() {
+  local action_id=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --action-id) action_id="$2"; shift 2 ;;
+      *) die "unknown lookup-action arg: $1" ;;
+    esac
+  done
+  [[ -n "$action_id" ]] || die "missing --action-id"
+  pk_lookup_action "$action_id"
+}
+
+main() {
+  [[ $# -ge 1 ]] || { usage; exit 1; }
+  case "$1" in
+    evaluate) shift; cmd_evaluate "$@" ;;
+    merge-rules) shift; cmd_merge_rules "$@" ;;
+    lookup-action) shift; cmd_lookup_action "$@" ;;
+    -h|--help) usage ;;
+    *) die "unknown command: $1" ;;
+  esac
+}
+
+main "$@"

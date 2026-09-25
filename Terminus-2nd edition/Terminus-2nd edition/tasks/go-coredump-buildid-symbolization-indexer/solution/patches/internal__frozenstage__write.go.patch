@@ -1,0 +1,14 @@
+--- internal/frozenstage/write.go
++++ internal/frozenstage/write.go
+@@ -11,7 +11,10 @@
+ 
+ func WriteStaging(path string, rows []model.StagedCrash) error {
+     sort.Slice(rows, func(i, j int) bool {
+-        return rows[i].Timestamp < rows[j].Timestamp
++        if rows[i].Timestamp != rows[j].Timestamp {
++            return rows[i].Timestamp < rows[j].Timestamp
++        }
++        return rows[i].CrashID < rows[j].CrashID
+     })
+     f, err := os.Create(path)
+     if err != nil {

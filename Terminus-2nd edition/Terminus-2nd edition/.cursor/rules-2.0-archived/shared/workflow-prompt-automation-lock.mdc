@@ -1,0 +1,58 @@
+---
+description: LOCKED — Router → prompts → automation; CREATE A–H all phases
+alwaysApply: true
+---
+
+# Terminus — Prompt router → prompts → automation (LOCKED)
+
+**User does not repeat:** which prompt, Case 6, harbor, zip, or rubric path. Hooks + this file define order.
+
+## 1. Every task touch — order
+
+| Step | What runs | Agent |
+|------|-----------|--------|
+| 1 | `route-terminus-prompt.py` on submit | Injected context: ENGINE, router, case |
+| 2 | **`Read` prompt files** from router (`prompts/trivial.md`, `reviewer.md`, `audit.md`, …) | **Mandatory** — not optional |
+| 3 | Inspect real `tasks/<slug>/` files | Before any edit |
+| 4 | **Automation scripts** on save / finish | Hooks — user runs nothing |
+
+**Wrong @-tag:** summary wins (`shared/prompt-router.mdc`).
+
+## 2. Revise (platform feedback)
+
+| Signal | Read first | Then |
+|--------|------------|------|
+| Reviewer line comments | `prompts/reviewer.md` → RF1–RF6 + triage | Edit in place; automation on save |
+| TRIVIAL / EASY | `trivial-fix-invoke.md` + trivial trio + Case 6 | `trivial_easy_auto_finish` on **save** |
+| Oracle 0 | `oracleFix.md` | G-025–G-027 then harbor |
+| Unsolvable | `prompts/hard.md` case | Fairness only |
+
+**Forbidden:** edit before reading router prompt; skip triage on reviewer feedback.
+
+## 3. CREATE — all phases A→H (LOCKED — no stop early)
+
+| Phase | Must complete | Stop allowed? |
+|-------|---------------|---------------|
+| **A** | Read ≥2 `tasks/_accepted-tasks/` + skeleton | No |
+| **B** | Corpus scan + similarity table | No |
+| **C** | One idea → implement immediately | No |
+| **D** | Full `tasks/<slug>/` tree | No |
+| **E** | Audit loop — High/Medium = 0 | No |
+| **F** | Oracle **1.0**, NOP **0.0**, ruff | No |
+| **G** | `./scripts/pack_zip.sh <slug>` | No |
+| **H** | Verification table + `tasksubmit/<slug>.zip` + **`rubrics/<slug>.md`** (or chat) | **Only** after G passes |
+
+**Same-turn rule:** Phase D done → **same session** run `./scripts/create_finish_to_zip.sh <name>` until PASS or BLOCKED_*.
+
+**Forbidden:** “task created” without zip; skip audit/harbor/pack without user override in **that message**.
+
+## 4. Automation after prompts
+
+- **Save:** `anti-spam-auto-run.py` → audit → 8/8 → finish (or trivial_easy finish if EASY context).
+- **EASY paste:** context + gates on paste; finish on **save** after Case 6 edits.
+- **Pack:** `pack_zip.sh` chain (calibration, design gate, anti-spam, F′, CI, verify).
+
+## Related
+
+- `sanjana-standing-requirements.mdc` · `shared/prompt-router.mdc` · `create/new-task-pipeline-A-H.mdc`
+- `shared/rubric-storage-lock.mdc` · `shared/jobs-local-layout-lock.mdc`

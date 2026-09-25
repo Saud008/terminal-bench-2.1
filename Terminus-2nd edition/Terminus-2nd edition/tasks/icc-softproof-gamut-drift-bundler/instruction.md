@@ -1,0 +1,17 @@
+Implement the icc-drift-bundler softproof gamut drift analyzer on the working Bash and jq baseline under /app. The icc-drift-bundler CLI at /app/bin/icc-drift-bundler ingests spectrophotometer LAB readings with ICC profile and paper batch manifests, evaluates drift against rendering-intent policy and calibration ticket epochs into a staging snapshot beside the readings file, and exports a structured drift report. Libraries under /app/lib implement LAB delta math, paper batch lineage resolution, rendering-intent precedence, profile checksum validation, calibration ticket epoch gates, staging serialization, and report export.
+
+Build icc-drift-bundler by ensuring /app/bin/icc-drift-bundler and /app/lib modules remain executable after edits. Subcommands and flags are defined in /app/docs/cli.md. Spectrophotometer reading field semantics are in /app/docs/readings-format.md. ICC profile checksum and reference patch contracts are in /app/docs/profile-checksum.md. Paper batch lineage and gamma anchor inheritance are in /app/docs/paper-lineage.md. Rendering-intent precedence and LAB delta thresholds are in /app/docs/rendering-intent.md. Calibration ticket epoch windows are in /app/docs/calibration-tickets.md. Staging snapshot schema is in /app/docs/staging-format.md. Drift report fields and sorting rules are in /app/docs/drift-report-schema.md.
+
+Your implementation must satisfy every contract above. The decoy helper at /app/lib/decoy/legacy_gamut.sh is not on the bundler hot path. Drift reasoning combines CIE76 delta against the active rendering intent, inherited paper gamma anchors, profile checksum gates, and calibration ticket validity at the evaluated epoch. icc-drift-bundler ingest must write dirname(readings)/icc.stage.json before icc-drift-bundler evaluate populates the evaluation block in that staging file. icc-drift-bundler export must evaluate drift from the frozen staging snapshot and must not re-read the raw readings TSV. ingest also appends the readings file sha256 digest to /app/state/run-registry.json for cross-run provenance tracking.
+
+Duplicate patch_id lines in a readings file keep the last line in file order. Rendering intent selection walks policy intent_precedence and picks the first intent present in the profile rendering_intents map. Paper batch gamma_anchor null entries inherit by walking parent links until a non-null anchor is found. Profile checksum is sha256 over canonical JSON of checksum_fields only. Calibration tickets match profile_id and paper_batch_id with inclusive valid_from_epoch and valid_until_epoch bounds against evaluate --as-of.
+
+Public workflow:
+
+  icc-drift-bundler ingest --readings /app/fixtures/seed/readings.tsv --profile /app/fixtures/profiles/coated-gloss.json --paper /app/fixtures/paper/batches.json
+  icc-drift-bundler evaluate --readings /app/fixtures/seed/readings.tsv --profile /app/fixtures/profiles/coated-gloss.json --paper /app/fixtures/paper/batches.json --policy /app/config/drift-policy.json --tickets /app/fixtures/tickets/calibration.json --as-of 1722470400
+  icc-drift-bundler export --readings /app/fixtures/seed/readings.tsv --out /app/output/drift-report.json
+
+Hidden verifier fixtures may supply alternate readings and profiles under /opt/verifier-fixtures/icc/. Alternate broken modules may appear under /opt/verifier-broken-icc/ for partial-path traps.
+
+Do not edit /app/docs/, /app/fixtures/, /app/config/drift-policy.json, or /tests/.

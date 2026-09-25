@@ -1,0 +1,44 @@
+{
+  "scenario_id": "energize-propagation",
+  "buses": [
+    {
+      "bus_id": "bus-s0"
+    },
+    {
+      "bus_id": "bus-s1"
+    },
+    {
+      "bus_id": "bus-s2"
+    }
+  ],
+  "energized_sources": [
+    "bus-s0"
+  ],
+  "breakers": [
+    {
+      "breaker_id": "brk-01",
+      "from_bus": "bus-s0",
+      "to_bus": "bus-s1",
+      "initial_state": "open"
+    },
+    {
+      "breaker_id": "brk-12",
+      "from_bus": "bus-s1",
+      "to_bus": "bus-s2",
+      "initial_state": "open"
+    }
+  ],
+  "lockouts": [],
+  "procedure": [
+    {
+      "step_index": 1,
+      "action": "close",
+      "breaker_id": "brk-01"
+    },
+    {
+      "step_index": 2,
+      "action": "close",
+      "breaker_id": "brk-12"
+    }
+  ]
+}

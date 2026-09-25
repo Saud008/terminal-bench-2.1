@@ -1,0 +1,27 @@
+user_visible_outputs = [
+  "/app/output/schema_coverage_report.json",
+  "/app/output/ref_graph.json",
+]
+
+internal_harness_files = [
+  "/app/state/ref_edges.jsonl",
+  "/app/state/example_coverage.jsonl",
+  "/app/environment/docs/staging_pipeline.md",
+]
+
+[structured_outputs.schema_coverage_report]
+target = "/app/output/schema_coverage_report.json"
+format = "json"
+instruction_checks = [
+  "totals",
+  "unresolved_refs",
+  "example_coverage",
+]
+
+[structured_outputs.ref_graph]
+target = "/app/output/ref_graph.json"
+format = "json"
+instruction_checks = [
+  "nodes",
+  "edges",
+]

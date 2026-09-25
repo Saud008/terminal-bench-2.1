@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+APP_ROOT="/app"
+source "${APP_ROOT}/lib/attpipe/common.sh"
+
+usage() {
+  echo "usage: kcfgattest compile-stage|emit-manifest ..." >&2
+  exit 2
+}
+
+cmd="${1:-}"
+shift || true
+case "$cmd" in
+  compile-stage)
+    exec bash "${APP_ROOT}/lib/attpipe/p07.sh" "$@"
+    ;;
+  emit-manifest)
+    exec bash "${APP_ROOT}/lib/attpipe/p08.sh" "$@"
+    ;;
+  *)
+    usage
+    ;;
+esac

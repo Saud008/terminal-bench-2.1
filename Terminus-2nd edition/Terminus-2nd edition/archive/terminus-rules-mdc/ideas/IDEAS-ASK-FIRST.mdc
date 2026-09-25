@@ -1,0 +1,64 @@
+---
+description: IDEAS — ASK FIRST (no auto-generation on gen ideas) (LOCKED)
+alwaysApply: false
+---
+
+# IDEAS — ASK FIRST (LOCKED)
+
+**Trigger:** `gen ideas`, `generate ideas`, `brainstorm`, `@prompts/newidea.md`, `@NEWIDEA`.
+
+**Similarity gate:** **`ideas/idea-similarity-gate.mdc`** — block if weighted **> 0.10**; **auto @CREATE** when weighted **== 0.0**.
+
+## Do NOT (causes duplicate / templated tasks)
+
+- Do **not** auto-generate 10 / 25 / batch idea lists
+- Do **not** invent domains or titles when user only said "gen ideas"
+- Do **not** write `jobs-local/ideas-draft.json` with agent-made ideas on first turn
+- Do **not** start `@CREATE` when similarity **> 0.10** or script exits **1**
+- Do **not** wait for “build it” when similarity **== 0.0** and gate reports **AUTO_CREATE=yes**
+- Do **not** use Mode A batch defaults (25+5) unless user explicitly requests a batch **after** intake
+
+## DO on first "gen ideas" message
+
+**Ask user once** for exactly three inputs (English):
+
+1. **Primary language** — Rust, Go, Bash, Java, TypeScript, etc.
+2. **Domain** — industry or scenario (user's choice, not agent-picked list)
+3. **Your task idea** — 1–3 sentences: what broken system / CLI / pipeline should the agent fix?
+
+Stop and wait. **Do not generate ideas in the same reply.**
+
+## DO after user answers (lang + domain + idea)
+
+1. Corpus scan only:
+
+```bash
+ls tasks/
+ls pending/ 2>/dev/null
+ls tasks/_accepted-tasks/
+ls tasksubmit/*.zip 2>/dev/null
+```
+
+2. **Mandatory similarity script** (no guessing):
+
+```bash
+python3 scripts/idea_similarity_gate.py \
+  --language "<lang>" \
+  --domain "<domain>" \
+  --title "<short title>" \
+  --summary "<user idea>"
+```
+
+3. Read **`jobs-local/idea-similarity-gate-last.json`** — cite real `weighted_score`, `nearest`, `auto_create`
+4. **BLOCK** if weighted **> 0.10** or exit code **1**
+5. **AUTO_CREATE** if weighted **== 0.0** → start `@CREATE` Phase A **immediately** (same chat)
+6. **0 < sim ≤ 0.10** → PASS; user confirms or says build → then CREATE
+7. Family saturation ≥3 same lane in `tasks/` → script blockers; fix domain/shape
+
+## Then
+
+- **sim == 0 + PASS** → `@CREATE RULES` Phase A→H **automatically**
+- **0 < sim ≤ 0.10** → CREATE only after user says build / OK
+- **sim > 0.10** → **no build** — new domain required
+
+Entry prompt: **`prompts/newidea.md`** · Gate: **`ideas/idea-similarity-gate.mdc`**

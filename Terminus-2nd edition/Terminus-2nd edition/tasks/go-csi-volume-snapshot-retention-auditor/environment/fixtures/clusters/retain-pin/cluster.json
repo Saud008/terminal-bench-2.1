@@ -1,0 +1,63 @@
+{
+  "audit_clock_ms": 1707777582691,
+  "default_retention_days": 30,
+  "pvcs": [
+    {
+      "namespace": "ns-retain",
+      "name": "pvc-689",
+      "storage_class_name": "sc-fast",
+      "requested_bytes": 10000000
+    },
+    {
+      "namespace": "ns-retain",
+      "name": "pvc-1924",
+      "storage_class_name": "sc-slow",
+      "requested_bytes": 20000000
+    }
+  ],
+  "snapshots": [
+    {
+      "uid": "snap-retain-pin-a",
+      "namespace": "ns-retain",
+      "name": "snap-a",
+      "source_pvc": "pvc-689",
+      "restore_size_bytes": 2872165,
+      "deletion_policy": "Retain",
+      "creation_clock_ms": 1690497582691
+    },
+    {
+      "uid": "snap-retain-pin-b",
+      "namespace": "ns-retain",
+      "name": "snap-b",
+      "source_pvc": "pvc-1924",
+      "restore_size_bytes": 1218516,
+      "deletion_policy": "Delete",
+      "creation_clock_ms": 1700087982691
+    }
+  ],
+  "storage_classes": [
+    {
+      "name": "sc-fast",
+      "retention_days": 7
+    },
+    {
+      "name": "sc-slow",
+      "retention_days": 60
+    }
+  ],
+  "backup_policies": [
+    {
+      "name": "default-backup",
+      "priority": 10,
+      "retention_days": 14,
+      "namespace_selector": ""
+    }
+  ],
+  "quotas": [
+    {
+      "namespace": "ns-retain",
+      "max_snapshot_bytes": 50000000,
+      "used_snapshot_bytes": 0
+    }
+  ]
+}

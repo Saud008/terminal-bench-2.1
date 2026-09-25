@@ -1,0 +1,70 @@
+{
+  "mounts": [
+    {
+      "id": "proc",
+      "source": "proc",
+      "target": "/proc",
+      "fstype": "proc",
+      "options": [
+        "nosuid",
+        "nodev",
+        "noexec"
+      ],
+      "kind": "virtual",
+      "after": []
+    },
+    {
+      "id": "sysfs",
+      "source": "sysfs",
+      "target": "/sys",
+      "fstype": "sysfs",
+      "options": [
+        "nosuid",
+        "nodev",
+        "noexec"
+      ],
+      "kind": "virtual",
+      "after": []
+    },
+    {
+      "id": "devpts",
+      "source": "devpts",
+      "target": "/dev/pts",
+      "fstype": "devpts",
+      "options": [
+        "gid=5",
+        "mode=620"
+      ],
+      "kind": "virtual",
+      "after": [
+        "proc"
+      ]
+    },
+    {
+      "id": "devbind",
+      "source": "/dev",
+      "target": "/dev",
+      "fstype": "bind",
+      "options": [
+        "bind"
+      ],
+      "kind": "bind",
+      "after": [
+        "proc"
+      ]
+    },
+    {
+      "id": "ptsbin",
+      "source": "/dev/pts",
+      "target": "/dev/pts",
+      "fstype": "bind",
+      "options": [
+        "bind"
+      ],
+      "kind": "bind",
+      "after": [
+        "devpts"
+      ]
+    }
+  ]
+}

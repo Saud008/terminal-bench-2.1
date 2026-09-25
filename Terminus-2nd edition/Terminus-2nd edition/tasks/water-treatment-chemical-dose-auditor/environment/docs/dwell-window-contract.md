@@ -1,0 +1,1 @@
+Hydraulic contact gate excludes minutes where scaled flow in liters per minute is strictly below the shift min_flow_lpm threshold. Excluded minutes increment contact_excluded_minutes and do not contribute to dose totals or weighted concentration.

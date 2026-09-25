@@ -1,0 +1,105 @@
+---
+description: LOCKED index — Jun 2026 Snorkel additive rules (lazy per engine; hub = additive-rules-lock-index only when loaded)
+alwaysApply: false
+---
+
+# Terminus — Additive rules lock index (Jun 2026)
+
+**LOCKED — verified registry.** Indexed in `LOCKED.mdc` § Jun 2026 additive rules. **Load with ENGINE_3 CREATE, ENGINE_7 REVISE, or ENGINE_6 ZIP** — not ENGINE_0 hub.
+
+**Additive rule.** These files are canonical guidance. They **supplement** — do not replace — `LOCKED.mdc`, `WORKFLOW-MAP.mdc`, or older rows in `shared/platform-preferences.mdc` when Snorkel docs are newer.
+
+## Lock policy (confirmation)
+
+| Scope | Locked? | alwaysApply |
+|-------|---------|-------------|
+| `.cursor/rules/**/*.mdc` (active) | **Yes** | `true` unless noted |
+| `.cursor/rules/_legacy/**` | Archive only | `false` |
+| `.cursor/rules/prompts/*.mdc`, `tag-prompts/*.mdc` | @-tag hints | `false` |
+| `prompts/*.md` | **Yes** (`prompts/LOCKED.md`) | N/A |
+
+**Agents:** do not weaken additive or core rules unless the user explicitly overrides in the current message.
+
+## Additive rules added (Jun 2026 — Snorkel sync)
+
+| File | Purpose |
+|------|---------|
+| `shared/canonical-base-image-gate.mdc` | Snorkel ECR 10 base images + upload form Yes/No |
+| `shared/canonical-ecr-dockerfile-auto.mdc` | **Auto-apply** ECR `FROM` — user never repeats “canonical images” |
+| `shared/task-toml-subcategories-gate.mdc` | **`subcategories = []` always** |
+| `shared/task-toml-category-gate.mdc` | **`category` blocklist** — no `debugging` / `software-engineering` (platform + repo) |
+| `shared/allow-internet-gate.mdc` | **`allow_internet` static check** — metadata must match offline solve |
+| `shared/instruction-prose-style.mdc` | No backticks / fenced CLI in `instruction.md` |
+| `shared/difficulty-benchmark-models.mdc` | Opus 4.8 + GPT-5.5; unchanged EASY/MEDIUM/HARD thresholds |
+| `reviewer/common-errors-reference.mdc` | Common Errors + feedback categories (`environment`, `oracle`, …) |
+| `revise/trivial-easy-difficulty-prompt-lock.mdc` | TRIVIAL/EASY **prompt trio** (below) |
+| `shared/snorkel-platform-changelog-sync.mdc` | Welcome page changelog → rule map + gaps |
+| `shared/test-sh-reward-block.mdc` | `rc=$?` preferred; both CI-valid reward endings |
+| `shared/problem-rule-loader.mdc` | **Problem → which rules load; conflict winners** |
+| `shared/anti-spam-templated-submissions.mdc` | **No spam / no templated clones** — family saturation, pre-upload PASS/FAIL |
+| `shared/block-trivial-platform-acceptance.mdc` | **Block TRIVIAL/EASY zip** — shape gate S1–S7 + Case 6 + agent smoke ≤20% |
+| `create/first-submit-acceptance-gate.mdc` | **First-upload hardness** — Phase F′ probes before first zip (CREATE) |
+| `create/post-create-audit-loop.mdc` | **CREATE Phase E** — auto audit-fix loop after Phase D (no user prompt) |
+| `ideas/idea-similarity-gate.mdc` | **Ideas intake** — block sim >0.10; auto CREATE when sim==0 |
+| `shared/unacceptable-task-classes.mdc` | **Never accept** — templated, copy, duplicate, family, lane, sibling, fabricated, synthetic |
+| `shared/task-generation-mandatory.mdc` | **No debugging tasks** — build/analyze only; automated at ideas + pack |
+
+On conflict between additive Snorkel rows and legacy `docker.io` corpus examples → **prefer additive Snorkel row** for **new uploads**; see **`problem-rule-loader.mdc` §3**.
+
+## Trivial / EASY / difficulty hardening — prompt trio
+
+**LOCKED workflow** when summary shows **TRIVIAL**, **EASY**, either benchmark **≥3/5**, worst **>60%**, or post-hardening still too easy:
+
+| Order | Read | Role |
+|-------|------|------|
+| 1 | **`prompts/trivial.md`** | Router — Step A/B; quote matched row before edits |
+| 2 | **`prompts/trivial-case-6.md`** | **Default case** — structural redesign (ingest → staging → export + decoy); not decorative fields |
+| 3 | **`prompts/sp-hard-create-revise.md`** | Repo-wide quality, subsystem map, probes before zip, Claude 0% OK if fair |
+
+**Also load (mandatory with trio):**
+
+- **@REVISE RULES** (`revise/REVISE-RULES.mdc`)
+- `revise/trivial-hardening-probes.mdc` — run probes **before zip**
+- `prompts/trivial-repo-wide.md` §1–§14 (per `trivial.md` Step C)
+- `shared/difficulty-benchmark-models.mdc`
+- `shared/anti-trivial.mdc`, `revise/hardness.mdc`
+
+**Case override (summary only — first matching row in `trivial.md` Step B):**
+
+- Audit only → `trivial-case-audit.md` (no edits)
+- Unsolvable / unfair 0%-forever → **`prompts/hard.md`** (not trio)
+- TB3 / shallow Python → `trivial-tb3-hardening.md`
+- Both models **≤2/5** and worst **≤20%** → `trivial-case-2.md` (not Case 6)
+- Oracle / verifier only → `oracleFix.md` + G-025–G-027
+
+**Deprecated for default route:** `trivial-harden.md` alone — use **Case 6** unless Step B row 8 applies.
+
+## Copy-paste invoke (user → agent)
+
+```text
+tasks/<name>/ + platform summary (TRIVIAL / EASY)
+
+Load LOCKED trio:
+@prompts/trivial.md
+@prompts/trivial-case-6.md
+@prompts/sp-hard-create-revise.md
+@REVISE RULES
+
+Auto-route from summary; default Case 6. Oracle 1, NOP 0, pack_zip.
+```
+
+## @-tags (optional hints)
+
+| Tag | Points to |
+|-----|-----------|
+| `@TRIVIAL PROMPT` | `prompts/trivial.md` |
+| `@prompts/trivial-case-6.md` | Case 6 file (no separate @ menu entry — paste path) |
+| `@SP HARD` / `prompts/sp-hard-prompt.mdc` | `prompts/sp-hard-create-revise.md` |
+
+Summary **beats** wrong @-tag (`shared/prompt-router.mdc`).
+
+## Related
+
+- `prompts/LOCKED.md` — benchmark agents + `sp-hard` pairing
+- `shared/prompt-router.mdc` — automated summary routing
+- `revise/trivial-easy-difficulty-prompt-lock.mdc` — trio detail (duplicate hub OK for discoverability)

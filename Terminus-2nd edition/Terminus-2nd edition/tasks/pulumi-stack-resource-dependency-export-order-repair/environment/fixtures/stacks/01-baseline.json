@@ -1,0 +1,28 @@
+{
+  "stack": "dev",
+  "version": 3,
+  "deployment": {
+    "resources": [
+      {
+        "urn": "urn:pulumi:dev::acme::pulumi:providers:aws::default",
+        "type": "pulumi:providers:aws",
+        "parent": "urn:pulumi:dev::acme::pulumi:stack$acme/dev"
+      },
+      {
+        "urn": "urn:pulumi:dev::acme::aws:s3/bucket:Bucket::logs",
+        "type": "aws:s3/bucket:Bucket",
+        "parent": "urn:pulumi:dev::acme::pulumi:stack$acme/dev",
+        "provider": "urn:pulumi:dev::acme::pulumi:providers:aws::default"
+      },
+      {
+        "urn": "urn:pulumi:dev::acme::aws:s3/bucketObject:BucketObject::logs/obj",
+        "type": "aws:s3/bucketObject:BucketObject",
+        "parent": "urn:pulumi:dev::acme::pulumi:stack$acme/dev",
+        "provider": "urn:pulumi:dev::acme::pulumi:providers:aws::default",
+        "dependencies": [
+          "urn:pulumi:dev::acme::aws:s3/bucket:Bucket::logs"
+        ]
+      }
+    ]
+  }
+}

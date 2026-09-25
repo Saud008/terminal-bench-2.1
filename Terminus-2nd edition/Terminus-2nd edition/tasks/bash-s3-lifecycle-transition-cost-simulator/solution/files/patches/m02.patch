@@ -1,0 +1,11 @@
+--- lib/zq7/m02.sh
++++ lib/zq7/m02.sh
+@@ -15,7 +15,7 @@
+     tags="$tags_json"
+     if tag_prefixes_match "$tags" "$prefixes"; then
+       spec="$(echo "$prefixes" | jq 'length')"
+-      if [[ -z "$winner" || "$pri" -lt "$win_pri" || ( "$pri" -eq "$win_pri" && "$spec" -gt "$win_spec" ) ]]; then
++      if [[ -z "$winner" || "$pri" -gt "$win_pri" || ( "$pri" -eq "$win_pri" && "$spec" -gt "$win_spec" ) ]]; then
+         winner="$row"
+         win_pri="$pri"
+         win_spec="$spec"

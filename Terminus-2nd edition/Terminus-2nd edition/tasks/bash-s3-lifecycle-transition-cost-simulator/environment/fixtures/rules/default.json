@@ -1,0 +1,54 @@
+{
+  "reference_time": "2024-06-30T23:59:59Z",
+  "rules": [
+    {
+      "id": "default-expire",
+      "priority": 10,
+      "tag_prefixes": {},
+      "transitions": [],
+      "expiration": {
+        "days": 400
+      },
+      "noncurrent_expiration": {
+        "days": 60
+      }
+    },
+    {
+      "id": "access-log-tier",
+      "priority": 200,
+      "tag_prefixes": {
+        "log_type": "access"
+      },
+      "transitions": [
+        {
+          "days": 30,
+          "storage_class": "STANDARD_IA"
+        },
+        {
+          "days": 120,
+          "storage_class": "GLACIER"
+        }
+      ],
+      "expiration": {
+        "days": 365
+      },
+      "noncurrent_expiration": {
+        "days": 30
+      }
+    },
+    {
+      "id": "debug-short",
+      "priority": 150,
+      "tag_prefixes": {
+        "log_type": "debug"
+      },
+      "transitions": [],
+      "expiration": {
+        "days": 90
+      },
+      "noncurrent_expiration": {
+        "days": 7
+      }
+    }
+  ]
+}

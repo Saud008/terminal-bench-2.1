@@ -1,0 +1,58 @@
+{
+  "scenario": "hidden-inherit-priority",
+  "critical_prefixes": [
+    "9.9.9.0/24"
+  ],
+  "peer_groups": [
+    {
+      "group_id": "g",
+      "filters": [
+        {
+          "filter_id": "hi",
+          "priority": 200,
+          "match_mode": "origin",
+          "asn": 9,
+          "action": "deny"
+        },
+        {
+          "filter_id": "lo",
+          "priority": 10,
+          "match_mode": "origin",
+          "asn": 9,
+          "action": "accept"
+        }
+      ]
+    }
+  ],
+  "peers": [
+    {
+      "peer_id": "hp",
+      "asn": 99,
+      "group_id": "g",
+      "wave_rank": 1,
+      "med_ceiling": null,
+      "abort_on_critical_deny": true,
+      "community_rewrite": {},
+      "filters": [
+        {
+          "filter_id": "hi",
+          "priority": 200,
+          "match_mode": "origin",
+          "asn": 9,
+          "action": "accept"
+        }
+      ]
+    }
+  ],
+  "rib": [
+    {
+      "prefix": "9.9.9.0/24",
+      "as_path": [
+        9
+      ],
+      "communities": [],
+      "med": 1,
+      "peer_id": "hp"
+    }
+  ]
+}

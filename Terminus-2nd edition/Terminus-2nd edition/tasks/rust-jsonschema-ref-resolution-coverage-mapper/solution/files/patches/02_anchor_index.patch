@@ -1,0 +1,11 @@
+--- environment/crates/anchor_index/src/lib.rs
++++ solution/oracle/golden/crates/anchor_index/src/lib.rs
+@@ -15,7 +15,7 @@
+ 
+ fn walk(doc_id: &str, node: &Value, pointer: &str, idx: &mut AnchorIndex) {
+     if let Some(anchor) = object_get(node, "$anchor").and_then(|v| v.as_str()) {
+-        idx.anchors.insert(format!("#{anchor}"), format!("{doc_id}{pointer}"));
++        idx.anchors.insert(anchor.to_string(), format!("{doc_id}{pointer}"));
+     }
+     if let Some(obj) = node.as_object() {
+         for (k, v) in obj {

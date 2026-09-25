@@ -1,0 +1,6 @@
+        def check() -> None:
+            assert merge(part1, state=STATE).returncode == 0
+            assert merge(part2, state=STATE).returncode == 0
+            doc = json.loads(OUT.read_text())
+            _, expected = reference_merge(part2, load_session_file(STATE), use_session=True)
+            assert doc != expected

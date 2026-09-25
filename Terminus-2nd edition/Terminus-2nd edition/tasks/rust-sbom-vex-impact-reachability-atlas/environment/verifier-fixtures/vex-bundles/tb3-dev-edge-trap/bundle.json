@@ -1,0 +1,28 @@
+{
+  "bundle_id": "tb3-dev-edge-trap",
+  "fingerprint": "fp-tb3-dev",
+  "packages": [
+    {"purl": "pkg:cargo/apigate@4.0.0", "name": "apigate", "version": "4.0.0"},
+    {"purl": "pkg:cargo/probeutil@0.1.0", "name": "probeutil", "version": "0.1.0"},
+    {"purl": "pkg:cargo/codecrown@2.2.0", "name": "codecrown", "version": "2.2.0"}
+  ],
+  "edges": [
+    {"from": "pkg:cargo/apigate@4.0.0", "to": "pkg:cargo/probeutil@0.1.0", "edge_kind": "dev"},
+    {"from": "pkg:cargo/probeutil@0.1.0", "to": "pkg:cargo/codecrown@2.2.0", "edge_kind": "runtime"}
+  ],
+  "binaries": [
+    {"name": "apigate", "root_purl": "pkg:cargo/apigate@4.0.0"}
+  ],
+  "vulnerabilities": [
+    {"vuln_id": "CVE-2024-8008", "summary": "codecrown overflow"}
+  ],
+  "vex": [
+    {
+      "statement_id": "v-tb3-code",
+      "product_purl": "pkg:cargo/codecrown@2.2.0",
+      "vuln_id": "CVE-2024-8008",
+      "status": "affected",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+--- lib/attest/witness_binder.sh
++++ solution/files/lib/attest/witness_binder.sh
+@@ -22,6 +22,12 @@
+   ca_id="$(echo "$probe_json" | jq -r '.ca_id // ""')"
+   scope="$(resolve_match_scope "$match_dir" "$user" "$host")"
+ 
++  if jq -e --arg fp "$fp" '.revoked[]? | select(. == $fp)' "$ledger" >/dev/null; then
++    local ad
++    ad="$(sha256_hex "${pid}|deny|revoked||${scope}")"
++    jq -n --arg pid "$pid" --arg s "$scope" --arg ad "$ad" '{probe_id:$pid, verdict:"deny", reason:"revoked", winning_principal:"", scope_id:$s, binding_seal:$ad}'
++    return 0
++  fi
+   if ! enforce_wildcard_policy "$principal"; then
+     local ad
+     ad="$(sha256_hex "${pid}|deny|wildcard_denied||${scope}")"
+@@ -42,12 +48,6 @@
+     fi
+   fi
+ 
+-  if jq -e --arg fp "$fp" '.revoked[]? | select(. == $fp)' "$ledger" >/dev/null; then
+-    local ad
+-    ad="$(sha256_hex "${pid}|deny|revoked||${scope}")"
+-    jq -n --arg pid "$pid" --arg s "$scope" --arg ad "$ad" '{probe_id:$pid, verdict:"deny", reason:"revoked", winning_principal:"", scope_id:$s, binding_seal:$ad}'
+-    return 0
+-  fi
+   local best="" best_deny=1 best_rank=999999
+   while IFS= read -r row; do
+     [[ -z "$row" ]] && continue
+@@ -57,10 +57,9 @@
+     rank="$(echo "$row" | jq -r '.rank')"
+     text="$(echo "$row" | jq -r '.principal')"
+     if [[ "$scope" == "global" ]]; then
+-      :
++      [[ "$p_scope" != "global" ]] && continue
+     else
+-      [[ "$p_scope" != "$scope" && "$p_scope" != "global" ]] && continue
+-      :
++      [[ "$p_scope" != "$scope" ]] && continue
+     fi
+     _row_matches "$text" "$principal" || continue
+     dnum=0

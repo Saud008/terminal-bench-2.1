@@ -1,0 +1,1 @@
+Decision-task heartbeats must record progress before extending visibility. When progress_seq is lower than the last recorded progress, visibility must not advance. Renewal at the same progress_seq may extend visibility. See /app/docs/timeout-wheel.md for interaction with timeout evaluation.

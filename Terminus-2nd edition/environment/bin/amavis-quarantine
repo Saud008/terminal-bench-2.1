@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+
+ROOT="/app"
+# shellcheck source=lib/common.sh
+source "$ROOT/lib/common.sh"
+# shellcheck source=lib/parse_log.sh
+source "$ROOT/lib/parse_log.sh"
+# shellcheck source=lib/queue_route.sh
+source "$ROOT/lib/queue_route.sh"
+# shellcheck source=lib/release.sh
+source "$ROOT/lib/release.sh"
+# shellcheck source=lib/ledger.sh
+source "$ROOT/lib/ledger.sh"
+# shellcheck source=lib/export.sh
+source "$ROOT/lib/export.sh"
+# shellcheck source=lib/ingest.sh
+source "$ROOT/lib/ingest.sh"
+# shellcheck source=lib/epoch.sh
+source "$ROOT/lib/epoch.sh"
+# shellcheck source=lib/staging.sh
+source "$ROOT/lib/staging.sh"
+# shellcheck source=lib/policy.sh
+source "$ROOT/lib/policy.sh"
+# shellcheck source=lib/custody.sh
+source "$ROOT/lib/custody.sh"
+# shellcheck source=lib/pipeline.sh
+source "$ROOT/lib/pipeline.sh"
+
+cmd_prepare() {
+  local scenario="" seed=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --scenario) scenario="$2"; shift 2 ;;
+      --seed) seed="$2"; shift 2 ;;
+      *) echo "unknown arg: $1" >&2; return 2 ;;
+    esac
+  done
+  [[ -n "$scenario" && -n "$seed" ]] || {
+    echo "usage: amavis-quarantine prepare --scenario NAME --seed SEED" >&2
+    return 2
+  }
+  run_prepare "$scenario" "$seed"
+}
+
+cmd_commit() {
+  local out="/app/output/reconcile.json"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --export) out="$2"; shift 2 ;;
+      *) echo "unknown arg: $1" >&2; return 2 ;;
+    esac
+  done
+  mkdir -p "$(dirname "$out")"
+  run_commit "$out"
+}
+
+cmd_reconcile() {
+  local scenario="" seed="" out="/app/output/reconcile.json"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --scenario) scenario="$2"; shift 2 ;;
+      --seed) seed="$2"; shift 2 ;;
+      --export) out="$2"; shift 2 ;;
+      *) echo "unknown arg: $1" >&2; return 2 ;;
+    esac
+  done
+  [[ -n "$scenario" && -n "$seed" ]] || {
+    echo "usage: amavis-quarantine reconcile --scenario NAME --seed SEED [--export FILE]" >&2
+    return 2
+  }
+  mkdir -p "$(dirname "$out")"
+  run_reconcile "$scenario" "$seed" "$out"
+}
+
+main() {
+  [[ $# -ge 1 ]] || {
+    echo "usage: amavis-quarantine {prepare|commit|reconcile} ..." >&2
+    exit 2
+  }
+  case "$1" in
+    prepare) shift; cmd_prepare "$@" ;;
+    commit) shift; cmd_commit "$@" ;;
+    reconcile) shift; cmd_reconcile "$@" ;;
+    *) echo "unknown command: $1" >&2; exit 2 ;;
+  esac
+}
+
+main "$@"

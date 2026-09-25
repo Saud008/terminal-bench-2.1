@@ -1,0 +1,68 @@
+---
+description: TB 2.1 task.toml — pool schema (schema_version 1.1), required fields, 7200 timeouts, codebase_size, compose flags
+globs: **/task.toml
+alwaysApply: false
+---
+
+# TB 2.1 — task.toml (pool schema)
+
+First line must be exactly `schema_version = "1.1"` (Master Ship Checklist 46 — overrides the public guide's `version = "2.0"`). No comment above it. No task id, no `[reference_pattern]` or other authoring/review/pipeline metadata, no local machine paths, no placeholder text.
+
+```toml
+schema_version = "1.1"
+
+[task]
+description = "Repair the ledger rollup so per-account totals match the raw entries again"
+keywords = [ "go", "ledger", "rounding", "csv" ]
+
+[[task.authors]]
+name = "anonymous"
+email = "anonymous"
+
+[metadata]
+author_name = "anonymous"
+author_email = "anonymous"
+difficulty = "hard"            # easy | medium | hard | unknown — measured GPT-5.6 xhigh k=5
+category = "debugging"         # one of the 9 below
+codebase_size = "small"        # small (20+) | large (200+); minimal is BLOCKED
+languages = [ "go" ]           # main language of oracle/agent work only (pytest tests don't make it Python)
+tags = [ "ledger", "rounding", "csv" ]   # 3–6, task-specific
+expert_time_estimate_min = 60
+junior_time_estimate_min = 180
+
+[verifier]
+timeout_sec = 7200.0
+
+[agent]
+timeout_sec = 7200.0
+
+[environment]
+build_timeout_sec = 7200.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+allow_internet = true
+```
+
+## Field rules
+
+- `description`, `keywords`, `[[task.authors]]`, `category`, `tags` present, accurate, consistent with the planted defects / fix scope — never stale from an earlier draft (check 47). `description` must not narrate the fix mechanism.
+- **All three timeouts = 7200** (check 48).
+- **`allow_internet = true`** (check 50) and instruction.md must not tell the agent to stay offline. (Verifier `test.sh` still must not install/fetch at runtime — separate CI rule.)
+- Anonymous authors are fine.
+
+## Categories (no restriction; pick primary activity)
+
+`system-administration`, `build-and-dependency-management`, `data-processing`, `games`, `software-engineering`, `machine-learning`, `debugging`, `security`, `scientific-computing`.
+
+## codebase_size
+
+Count files in `environment/` excluding `Dockerfile`, `docker-compose.yaml`, `.dockerignore` (starting state only). `minimal` <20 blocked, `small` 20+, `large` 200+. Lowercase. Real project files, never filler.
+
+## Difficulty
+
+Hard 1/5 · Medium 2–3/5 · Easy 4/5 (blocked) · 0/5 CHALLENGE · 5/5 CONTROL. Python-primary → hard. Consistent with time estimates; updated atomically after every k=5 rerun (check 82).
+
+## Multi-container
+
+`environment/docker-compose.yaml` → `[metadata] custom_docker_compose = true`; more than one container → also `is_multi_container = true`.

@@ -1,0 +1,1 @@
+ABO recipient rules: O receives O only; A receives A or O; B receives B or O; AB receives A, B, AB, or O. Rh negative patients may receive Rh negative units only unless a matching emergency override exists for the patient-unit pair.

@@ -1,0 +1,17 @@
+--- src/port_polygons/mod.rs
++++ src/port_polygons/mod.rs
+@@ -51,9 +51,12 @@
+     }
+ 
+     pub fn port_at(&self, lat: f64, lon: f64) -> &'static str {
+-        if lat > 51.85 && lat < 51.95 && lon > 4.0 && lon < 4.5 {
++        let pt = Coord { x: lon, y: lat };
++        let in_rot = point_in_polygon(pt, &self.rotterdam);
++        let in_ham = point_in_polygon(pt, &self.hamburg);
++        if in_rot {
+             "rotterdam"
+-        } else if lat > 53.50 && lat < 53.60 && lon > 9.90 && lon < 10.05 {
++        } else if in_ham {
+             "hamburg"
+         } else {
+             "none"

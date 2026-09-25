@@ -1,0 +1,46 @@
+--- a/internal/wgpa91/analyze/analyze_run.sh
++++ b/internal/wgpa91/analyze/analyze_run.sh
+@@ -29,21 +29,19 @@
+     [[ -z "$peer" ]] && continue
+     pk=$(echo "$peer" | jq -r '.PublicKey')
+     name=$(echo "$peer" | jq -r '.Name // .PublicKey')
++    if is_peer_disabled "$name" "$policy"; then
++      continue
++    fi
+     allowed=$(echo "$peer" | jq -c '.AllowedIPs // []')
+     endpoint=$(pick_endpoint "$name" "$policy")
+     [[ -z "$endpoint" ]] && endpoint=$(echo "$peer" | jq -r '.Endpoint // ""')
+-    disabled=false
+-    if is_peer_disabled "$name" "$policy"; then
+-      disabled=true
+-    fi
+     peers=$(echo "$peers" | jq --arg pk "$pk" --arg name "$name" --arg iface "$iface" \
+-      --argjson allowed "$allowed" --arg endpoint "$endpoint" --argjson disabled "$disabled" \
+-      '. + [{public_key: $pk, peer_id: $name, interface: $iface, allowed_ips: $allowed, endpoint: $endpoint, disabled: $disabled}]')
++      --argjson allowed "$allowed" --arg endpoint "$endpoint" \
++      '. + [{public_key: $pk, peer_id: $name, interface: $iface, allowed_ips: $allowed, endpoint: $endpoint, disabled: false}]')
+   done < <(echo "$cfg" | jq -c '.peers[]')
+ done < <(echo "$data" | jq -c '.configs[]')
+ 
+ overlaps="[]"
+-plist=$(echo "$peers" | jq -c '.[]')
+ while IFS= read -r p1; do
+   [[ -z "$p1" ]] && continue
+   id1=$(echo "$p1" | jq -r '.peer_id')
+@@ -66,6 +64,7 @@
+ 
+ route_conflicts=$(detect_route_conflicts "$(echo "$data" | jq -c '.routes')")
+ overlaps=$(echo "$overlaps" | jq 'sort_by(.peer_a, .peer_b, .cidr_a, .cidr_b)')
++disabled_skipped=$(echo "$policy" | jq -c '.disabled_peers // []')
+ 
+ body=$(jq -n \
+   --arg run_id "$run_id" \
+@@ -73,6 +72,7 @@
+   --argjson peers "$peers" \
+   --argjson overlaps "$overlaps" \
+   --argjson route_conflicts "$route_conflicts" \
+-  '{run_id: $run_id, site: $site, peers: $peers, overlaps: $overlaps, route_conflicts: $route_conflicts}')
++  --argjson disabled_skipped "$disabled_skipped" \
++  '{run_id: $run_id, site: $site, peers: $peers, overlaps: $overlaps, route_conflicts: $route_conflicts, disabled_skipped: $disabled_skipped}')
+ fp=$(workspace_fingerprint "$body")
+ echo "$body" | jq --arg fp "$fp" '. + {workspace_fingerprint: $fp}' > "${APP_ROOT}/state/wgpatlas-workspace.json"

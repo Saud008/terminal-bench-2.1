@@ -1,0 +1,34 @@
+--- src/exportkit/snapshot_lines.rs
++++ src/exportkit/snapshot_lines.rs
+@@ -21,6 +21,12 @@
+     pub witness_set_hash: String,
+ }
+ 
++fn row_inclusion_flag(bundle: &AuditBundle) -> bool {
++    let inc_path = steps_from_json(&bundle.inclusion.audit_path);
++    let newer_root = normalize_root(&bundle.newer_sth.sha256_root_hash);
++    verify_inclusion(&bundle.inclusion.leaf_input, &newer_root, &inc_path)
++}
++
+ fn steps_from_json(path: &[crate::ledgerfmt::hex_norm::ProofStepJson]) -> Vec<ProofStep> {
+     path.iter()
+         .filter_map(|s| {
+@@ -36,8 +42,7 @@
+ fn evaluate_bundle(bundle: &AuditBundle, checkpoints: &[WitnessCheckpoint]) -> StagedAuditRow {
+     let newer_root = normalize_root(&bundle.newer_sth.sha256_root_hash);
+     let older_root = normalize_root(&bundle.older_sth.sha256_root_hash);
+-    let inc_path = steps_from_json(&bundle.inclusion.audit_path);
+-    let inclusion_ok = verify_inclusion(&bundle.inclusion.leaf_input, &newer_root, &inc_path);
++    let inclusion_ok = row_inclusion_flag(bundle);
+     let con_path = steps_from_json(&bundle.consistency.audit_path);
+     let consistency_ok = verify_consistency(
+         &older_root,
+@@ -80,7 +85,7 @@
+     let bundles = load_bundles_from_index(index_path).map_err(|_| "bundle discovery failed".to_string())?;
+     let checkpoints = load_witness_file(ledger_path).map_err(|_| "witness read failed".to_string())?;
+     let mut rows: Vec<StagedAuditRow> = bundles.iter().map(|b| evaluate_bundle(b, &checkpoints)).collect();
+-    rows.sort_by(|a, b| b.log_id.cmp(&a.log_id));
++    rows.sort_by(|a, b| a.log_id.cmp(&b.log_id));
+     let json = serde_json::to_string_pretty(&rows).map_err(|e| e.to_string())?;
+     fs::write(staging_path, format!("{json}\n")).map_err(|e| e.to_string())
+ }

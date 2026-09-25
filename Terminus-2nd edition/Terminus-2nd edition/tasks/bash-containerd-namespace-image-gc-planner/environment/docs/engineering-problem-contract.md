@@ -1,0 +1,3 @@
+# Engineering problem contract — bash-containerd-namespace-image-gc-planner
+
+Container runtime operators need a dry-run garbage-collection planner that respects namespace isolation, active content-store leases, snapshot parent closure, and dangling image manifests. Core reasoning uses lease-shield subtree retention, retention-pin manifest holds, ancestor snapshot closure along parent links, dangling-manifest detection via snapshot ref linkage, namespace-scope filtering across all metadata tables, and reclaim-sequence depth that deletes deepest snapshot keys before parent keys then pinned digests last.

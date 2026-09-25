@@ -1,0 +1,44 @@
+{
+  "scenario_name": "basic-volume-join",
+  "job_id": "cache-api",
+  "task_group": "api",
+  "focus_alloc_id": "alloc-primary",
+  "stale_cutoff_index": 0,
+  "csi_volumes": [
+    {
+      "volume_id": "vol-cache-a",
+      "namespace": "prod",
+      "plugin_id": "csi-aws-ebs"
+    }
+  ],
+  "allocations": [
+    {
+      "alloc_id": "alloc-primary",
+      "node_id": "node-1",
+      "node_class": "compute",
+      "create_index": 100,
+      "modify_index": 110,
+      "client_status": "running",
+      "desired_status": "run",
+      "reschedule_attempts": 0,
+      "reschedule_failed": false,
+      "csi_mounts": [
+        {
+          "volume_id": "vol-cache-a",
+          "mount_path": "/data/cache",
+          "read_only": false
+        }
+      ],
+      "constraints": [
+        {
+          "attribute": "${node.class}",
+          "operator": "=",
+          "value": "compute",
+          "hard": true
+        }
+      ],
+      "affinities": [],
+      "superseded_by": ""
+    }
+  ]
+}

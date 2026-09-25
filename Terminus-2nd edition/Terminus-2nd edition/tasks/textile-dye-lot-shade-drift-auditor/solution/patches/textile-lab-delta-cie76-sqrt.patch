@@ -1,0 +1,14 @@
+--- a/lib/xk7r/b02/fc02.sh
++++ b/lib/xk7r/b02/fc02.sh
+@@ -1,8 +1,11 @@
+ #!/usr/bin/env bash
+ set -euo pipefail
+ cie76_delta() {
+-  awk -v l1="$1" -v a1="$2" -v b1="$3" -v l2="$4" -v a2="$5" -v b2="$6" \
+-    'BEGIN { dl=l1-l2; da=a1-a2; db=b1-b2; printf "%.6f\n", dl*dl+da*da+db*db }'
++  python3 - "$@" <<'PY'
++import math, sys
++l1, a1, b1, l2, a2, b2 = map(float, sys.argv[1:])
++print(f"{math.sqrt((l1-l2)**2+(a1-a2)**2+(b1-b2)**2):.6f}")
++PY
+ }

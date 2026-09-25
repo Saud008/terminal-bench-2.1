@@ -1,0 +1,5 @@
+The combat tools team needs a sealed tick-ledger replay export workflow on the Rust hitreplay workspace under /app. Pose sampling, frame mapping, quaternion interpolation, hurtbox windows, and hit detection already run in the hitbox-core library. Implement the staging and export layers in ledger.rs and export.rs under /app/crates/hitbox-core/src/ so hitreplay sample writes /app/state/tick-ledger.jsonl and /app/state/replay-manifest.json with manifest epoch binding and input SHA-256 seals, and hitreplay export validates that seal before writing /app/output/collision-report.json with canonically ordered hits and events for audit review.
+
+Frame mapping, hurtbox invulnerability windows, hit deduplication, and export sort keys are defined in /app/docs/. Primary contracts are /app/docs/replay-manifest.md, /app/docs/tick-ledger-schema.md, and /app/docs/replay-export.md. Rebuild and reinstall hitreplay from /app after source edits. Run /app/scripts/reset-state.sh before local checks. The environment has no outbound network access.
+
+Do not edit /app/docs/, /app/fixtures/, or /tests/.

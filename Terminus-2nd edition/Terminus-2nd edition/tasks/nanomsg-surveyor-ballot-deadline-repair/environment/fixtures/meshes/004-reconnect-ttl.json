@@ -1,0 +1,19 @@
+{
+  "mesh_id": "mesh-004-reconnect-ttl",
+  "survey_id": "SURVEY0012345678",
+  "deadline_ms": 8000,
+  "default_ttl_ms": 3000,
+  "topology": {
+    "kind": "star",
+    "hub": "surveyor",
+    "edges": [["surveyor", "r1"]]
+  },
+  "events": [
+    {"offset_ms": 0, "type": "start"},
+    {"offset_ms": 3500, "type": "reconnect", "respondent": "r1"},
+    {"offset_ms": 4000, "type": "ballot", "respondent": "r1", "vote": 9, "header_hex": "4e5353555256455930303132333435363738"},
+    {"offset_ms": 4100, "type": "pipe_drained", "respondent": "r1"},
+    {"offset_ms": 8000, "type": "deadline"},
+    {"offset_ms": 8100, "type": "close"}
+  ]
+}

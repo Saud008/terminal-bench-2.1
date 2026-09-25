@@ -1,0 +1,40 @@
+--- a/internal/pamcore/policy/group_gate.sh
++++ b/internal/pamcore/policy/group_gate.sh
+@@ -10,9 +10,34 @@
+ subject = sys.argv[2]
+ users = doc.get("users", {})
+ groups = doc.get("groups", {})
+-direct = set(users.get(subject, {}).get("groups", []))
+-# direct group list only
+-print(json.dumps(sorted(direct)))
++
++def member_closure(name, seen=None):
++    seen = seen or set()
++    if name in seen:
++        return set()
++    seen.add(name)
++    out = {name}
++    for child in groups.get(name, []):
++        if child in groups:
++            out |= member_closure(child, seen)
++        else:
++            out.add(child)
++    return out
++
++direct = users.get(subject, {}).get("groups", [])
++effective = set(direct) | {subject}
++for g in direct:
++    effective |= member_closure(g)
++changed = True
++while changed:
++    changed = False
++    for gname, members in groups.items():
++        if gname in effective:
++            continue
++        if any(m in effective for m in members):
++            effective.add(gname)
++            changed = True
++print(json.dumps(sorted(effective)))
+ PY
+ }
+ 

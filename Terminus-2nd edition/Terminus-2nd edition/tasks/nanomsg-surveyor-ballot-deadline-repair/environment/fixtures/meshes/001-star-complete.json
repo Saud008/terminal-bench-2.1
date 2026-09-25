@@ -1,0 +1,23 @@
+{
+  "mesh_id": "mesh-001-star-complete",
+  "survey_id": "SURVEY0012345678",
+  "deadline_ms": 2000,
+  "default_ttl_ms": 10000,
+  "topology": {
+    "kind": "star",
+    "hub": "surveyor",
+    "edges": [
+      ["surveyor", "r1"],
+      ["surveyor", "r2"]
+    ]
+  },
+  "events": [
+    {"offset_ms": 0, "type": "start"},
+    {"offset_ms": 100, "type": "ballot", "respondent": "r1", "vote": 2, "header_hex": "4e5353555256455930303132333435363738"},
+    {"offset_ms": 150, "type": "pipe_drained", "respondent": "r1"},
+    {"offset_ms": 200, "type": "ballot", "respondent": "r2", "vote": 3, "header_hex": "4e5353555256455930303132333435363738"},
+    {"offset_ms": 250, "type": "pipe_drained", "respondent": "r2"},
+    {"offset_ms": 2000, "type": "deadline"},
+    {"offset_ms": 2100, "type": "close"}
+  ]
+}

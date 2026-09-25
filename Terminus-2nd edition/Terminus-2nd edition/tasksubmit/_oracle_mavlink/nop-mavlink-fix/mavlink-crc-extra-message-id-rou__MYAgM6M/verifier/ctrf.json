@@ -1,0 +1,465 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "9.0.3"
+        },
+        "summary": {
+            "tests": 39,
+            "passed": 6,
+            "failed": 22,
+            "skipped": 11,
+            "pending": 0,
+            "other": 0,
+            "start": 1785195593015,
+            "stop": 1785195593637
+        },
+        "environment": {
+            "buildName": "Pytest JSON CTRF Report",
+            "buildNumber": "000",
+            "buildUrl": "https://ctrf.io"
+        },
+        "tests": [
+            {
+                "name": "tests/test_outputs.py::test_resume_session_seeded_from_checkpoint",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 30,
+                "start": 1785195593096,
+                "stop": 1785195593126,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "def test_resume_session_seeded_from_checkpoint() -> None:\n        \"\"\"Resume must seed seq guards from checkpoint rows before filtering new frames.\"\"\"\n        seed = SEEDS[0]\n        cp = STATE / \"session-seed.db\"\n        proc_a = decode_cli(\n            \"checkpoint-session-a\",\n            seed,\n            checkpoint=cp,\n            export_name=\"session-a.json\",\n        )\n        assert proc_a.returncode == 0, proc_a.stderr or proc_a.stdout\n        proc_b = decode_cli(\n            \"checkpoint-resume-session-trap\",\n            seed,\n            checkpoint=cp,\n            resume=True,\n            export_name=\"session-b.json\",\n        )\n        assert proc_b.returncode == 0, proc_b.stderr or proc_b.stdout\n        expected = reference_two_pass(\n            stream_path(\"checkpoint-session-a\"),\n            stream_path(\"checkpoint-resume-session-trap\"),\n            seed,\n            cp,\n        )\n        got = json.loads((OUTPUT / \"session-b.json\").read_text(encoding=\"utf-8\"))\n>       assert got == expected\nE       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}\nE         \nE         Omitting 5 identical items, use -vv to show\nE         Differing items:\nE         {'gps_fixes': []} != {'gps_fixes': [{'compid': 1, 'lat': 111000, 'lon': 222000, 'seq': 50, ...}]}\nE         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 1}\nE         {'valid_frame_count': 0} != {'valid_frame_count': 1}\nE         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 24, 'name': 'GPS_RAW_INT', ...}]}\nE         {'checkpoint_frame_count': 0} != {'checkpoint_frame_count': 1}\nE         Use -v to get more diff\n\n/tests/test_outputs.py:184: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_merged_regression_seed_dynamic",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 18,
+                "start": 1785195593126,
+                "stop": 1785195593144,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "def test_merged_regression_seed_dynamic() -> None:\n        \"\"\"Anti-cheat: merged-regression must match reference for a non-primary seed.\"\"\"\n        seed = SEEDS[2]\n        expected = reference_export(stream_path(\"merged-regression\"), seed)\n        proc = decode_cli(\"merged-regression\", seed)\n        assert proc.returncode == 0, proc.stderr or proc.stdout\n        got = json.loads(export_path(\"merged-regression\", seed).read_text(encoding=\"utf-8\"))\n>       assert got == expected\nE       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}\nE         \nE         Omitting 6 identical items, use -vv to show\nE         Differing items:\nE         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 2, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 2, 'count': 1, 'msg_id': 11000, 'name': 'EVENT_LOG', ...}]}\nE         {'events': []} != {'events': [{'compid': 2, 'event_seq': 5, 'frame_seq': 10, 'sysid': 2, ...}]}\nE         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 2}\nE         {'valid_frame_count': 0} != {'valid_frame_count': 3}\nE         Use -v to get more diff\n\n/tests/test_outputs.py:195: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_core_catalog_decode_matches_reference",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 20,
+                "start": 1785195593145,
+                "stop": 1785195593165,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "tags": [
+                    "parametrize::scenario_name::['merged-regression']",
+                    "parametrize::seed::['alpha01', 'gamma99', 'delta42']"
+                ],
+                "trace": "scenario_name = 'merged-regression', seed = 'alpha01'\n\n    @pytest.mark.parametrize(\"seed\", SEEDS)\n    @pytest.mark.parametrize(\"scenario_name\", CORE_SCENARIOS)\n    def test_core_catalog_decode_matches_reference(scenario_name: str, seed: str) -> None:\n        \"\"\"Core catalog streams must match the independent reference export.\"\"\"\n        expected = reference_export(stream_path(scenario_name), seed)\n        proc = decode_cli(scenario_name, seed)\n        assert proc.returncode == 0, proc.stderr or proc.stdout\n        got = json.loads(export_path(scenario_name, seed).read_text(encoding=\"utf-8\"))\n>       assert got == expected\nE       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}\nE         \nE         Omitting 6 identical items, use -vv to show\nE         Differing items:\nE         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 2, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 2, 'count': 1, 'msg_id': 11000, 'name': 'EVENT_LOG', ...}]}\nE         {'events': []} != {'events': [{'compid': 2, 'event_seq': 5, 'frame_seq': 10, 'sysid': 2, ...}]}\nE         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 2}\nE         {'valid_frame_count': 0} != {'valid_frame_count': 3}\nE         Use -v to get more diff\n\n/tests/test_outputs.py:206: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_core_catalog_decode_matches_reference",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 16,
+                "start": 1785195593165,
+                "stop": 1785195593181,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "tags": [
+                    "parametrize::scenario_name::['merged-regression']",
+                    "parametrize::seed::['alpha01', 'gamma99', 'delta42']"
+                ],
+                "trace": "scenario_name = 'merged-regression', seed = 'gamma99'\n\n    @pytest.mark.parametrize(\"seed\", SEEDS)\n    @pytest.mark.parametrize(\"scenario_name\", CORE_SCENARIOS)\n    def test_core_catalog_decode_matches_reference(scenario_name: str, seed: str) -> None:\n        \"\"\"Core catalog streams must match the independent reference export.\"\"\"\n        expected = reference_export(stream_path(scenario_name), seed)\n        proc = decode_cli(scenario_name, seed)\n        assert proc.returncode == 0, proc.stderr or proc.stdout\n        got = json.loads(export_path(scenario_name, seed).read_text(encoding=\"utf-8\"))\n>       assert got == expected\nE       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}\nE         \nE         Omitting 6 identical items, use -vv to show\nE         Differing items:\nE         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 2, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 2, 'count': 1, 'msg_id': 11000, 'name': 'EVENT_LOG', ...}]}\nE         {'events': []} != {'events': [{'compid': 2, 'event_seq': 5, 'frame_seq': 10, 'sysid': 2, ...}]}\nE         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 2}\nE         {'valid_frame_count': 0} != {'valid_frame_count': 3}\nE         Use -v to get more diff\n\n/tests/test_outputs.py:206: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_core_catalog_decode_matches_reference",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 18,
+                "start": 1785195593181,
+                "stop": 1785195593199,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "tags": [
+                    "parametrize::scenario_name::['merged-regression']",
+                    "parametrize::seed::['alpha01', 'gamma99', 'delta42']"
+                ],
+                "trace": "scenario_name = 'merged-regression', seed = 'delta42'\n\n    @pytest.mark.parametrize(\"seed\", SEEDS)\n    @pytest.mark.parametrize(\"scenario_name\", CORE_SCENARIOS)\n    def test_core_catalog_decode_matches_reference(scenario_name: str, seed: str) -> None:\n        \"\"\"Core catalog streams must match the independent reference export.\"\"\"\n        expected = reference_export(stream_path(scenario_name), seed)\n        proc = decode_cli(scenario_name, seed)\n        assert proc.returncode == 0, proc.stderr or proc.stdout\n        got = json.loads(export_path(scenario_name, seed).read_text(encoding=\"utf-8\"))\n>       assert got == expected\nE       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}\nE         \nE         Omitting 6 identical items, use -vv to show\nE         Differing items:\nE         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 2, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 2, 'count': 1, 'msg_id': 11000, 'name': 'EVENT_LOG', ...}]}\nE         {'events': []} != {'events': [{'compid': 2, 'event_seq': 5, 'frame_seq': 10, 'sysid': 2, ...}]}\nE         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 2}\nE         {'valid_frame_count': 0} != {'valid_frame_count': 3}\nE         Use -v to get more diff\n\n/tests/test_outputs.py:206: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_length_edge_payload_and_event_crc",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 17,
+                "start": 1785195593200,
+                "stop": 1785195593217,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "def test_length_edge_payload_and_event_crc() -> None:\n        \"\"\"Short payloads and 24-bit msg_id CRC must validate together.\"\"\"\n        seed = SEEDS[0]\n        expected = reference_export(stream_path(\"length-edge\"), seed)\n        proc = decode_cli(\"length-edge\", seed)\n        assert proc.returncode == 0, proc.stderr or proc.stdout\n        got = json.loads(export_path(\"length-edge\", seed).read_text(encoding=\"utf-8\"))\n>       assert got == expected\nE       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}\nE         \nE         Omitting 7 identical items, use -vv to show\nE         Differing items:\nE         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 1, 'count': 1, 'msg_id': 11000, 'name': 'EVENT_LOG', ...}]}\nE         {'events': []} != {'events': [{'compid': 1, 'event_seq': 1, 'frame_seq': 1, 'sysid': 1, ...}]}\nE         {'valid_frame_count': 0} != {'valid_frame_count': 2}\nE         Use -v to get more diff\n\n/tests/test_outputs.py:216: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_seq_rollback_drop_counts_stale",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 16,
+                "start": 1785195593218,
+                "stop": 1785195593234,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "def test_seq_rollback_drop_counts_stale() -> None:\n        \"\"\"Stale seq rollbacks must drop frames without rejecting u8 wrap-forward elsewhere.\"\"\"\n        seed = SEEDS[0]\n        expected = reference_export(stream_path(\"seq-rollback-drop\"), seed)\n        proc = decode_cli(\"seq-rollback-drop\", seed)\n        assert proc.returncode == 0\n        got = json.loads(export_path(\"seq-rollback-drop\", seed).read_text(encoding=\"utf-8\"))\n>       assert got == expected\nE       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}\nE         \nE         Omitting 7 identical items, use -vv to show\nE         Differing items:\nE         {'routes': []} != {'routes': [{'compid': 1, 'count': 3, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 2, 'count': 2, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 1, 'count': 2, 'msg_id': 0, 'name': 'HEARTBEAT', ...}]}\nE         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 1}\nE         {'valid_frame_count': 0} != {'valid_frame_count': 7}\nE         Use -v to get more diff\n\n/tests/test_outputs.py:226: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_u8_wrap_forward_not_treated_as_rollback",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 17,
+                "start": 1785195593234,
+                "stop": 1785195593251,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "def test_u8_wrap_forward_not_treated_as_rollback() -> None:\n        \"\"\"Sequence 250,251,0 on one route must all be accepted.\"\"\"\n        seed = SEEDS[1]\n        expected = reference_export(stream_path(\"u8-wrap-forward\"), seed)\n        proc = decode_cli(\"u8-wrap-forward\", seed)\n        assert proc.returncode == 0\n        got = json.loads(export_path(\"u8-wrap-forward\", seed).read_text(encoding=\"utf-8\"))\n>       assert got == expected\nE       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}\nE         \nE         Omitting 8 identical items, use -vv to show\nE         Differing items:\nE         {'routes': []} != {'routes': [{'compid': 1, 'count': 3, 'msg_id': 0, 'name': 'HEARTBEAT', ...}]}\nE         {'valid_frame_count': 0} != {'valid_frame_count': 3}\nE         Use -v to get more diff\n\n/tests/test_outputs.py:237: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_dedup_replay_keeps_distinct_compid_rows",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 17,
+                "start": 1785195593251,
+                "stop": 1785195593268,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "def test_dedup_replay_keeps_distinct_compid_rows() -> None:\n        \"\"\"Dedup must key on compid; same sysid/msg_id/seq on different compids stay distinct.\"\"\"\n        seed = SEEDS[0]\n        expected = reference_export(stream_path(\"dedup-replay\"), seed)\n        proc = decode_cli(\"dedup-replay\", seed)\n        assert proc.returncode == 0\n        got = json.loads(export_path(\"dedup-replay\", seed).read_text(encoding=\"utf-8\"))\n>       assert got == expected\nE       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}\nE         \nE         Omitting 6 identical items, use -vv to show\nE         Differing items:\nE         {'gps_fixes': []} != {'gps_fixes': [{'compid': 2, 'lat': 100, 'lon': -200, 'seq': 7, ...}]}\nE         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 2, 'count': 1, 'msg_id': 24, 'name': 'GPS_RAW_INT', ...}]}\nE         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 1}\nE         {'valid_frame_count': 0} != {'valid_frame_count': 2}\nE         Use -v to get more diff\n\n/tests/test_outputs.py:248: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_checkpoint_two_pass_resume_export",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 26,
+                "start": 1785195593268,
+                "stop": 1785195593294,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "def test_checkpoint_two_pass_resume_export() -> None:\n        \"\"\"Checkpoint resume across two decode passes must merge accepted frames.\"\"\"\n        seed = SEEDS[0]\n        cp = STATE / \"two-pass.db\"\n        proc_a = decode_cli(\n            \"checkpoint-resume-a\",\n            seed,\n            checkpoint=cp,\n            export_name=\"pass-a.json\",\n        )\n        assert proc_a.returncode == 0, proc_a.stderr or proc_a.stdout\n        proc_b = decode_cli(\n            \"checkpoint-resume-b\",\n            seed,\n            checkpoint=cp,\n            resume=True,\n            export_name=\"pass-b.json\",\n        )\n        assert proc_b.returncode == 0, proc_b.stderr or proc_b.stdout\n        expected = reference_two_pass(\n            stream_path(\"checkpoint-resume-a\"),\n            stream_path(\"checkpoint-resume-b\"),\n            seed,\n            cp,\n        )\n        got = json.loads((OUTPUT / \"pass-b.json\").read_text(encoding=\"utf-8\"))\n>       assert got == expected\nE       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}\nE         \nE         Omitting 5 identical items, use -vv to show\nE         Differing items:\nE         {'gps_fixes': []} != {'gps_fixes': [{'compid': 1, 'lat': -111, 'lon': 222, 'seq': 2, ...}]}\nE         {'valid_frame_count': 0} != {'valid_frame_count': 4}\nE         {'routes': []} != {'routes': [{'compid': 1, 'count': 2, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 1, 'count': 1, 'msg_id': 24, 'name': 'GPS_RAW_INT', ...}, {'compid': 1, 'count': 1, 'msg_id': 11000, 'name': 'EVENT_LOG', ...}]}\nE         {'checkpoint_frame_count': 0} != {'checkpoint_frame_count': 2}\nE         {'events': []} != {'events': [{'compid': 1, 'event_seq': 2, 'frame_seq': 3, 'sysid': 5, ...}]}\nE         Use -v to get more diff\n\n/tests/test_outputs.py:278: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_triple_checkpoint_resume_preserves_gps_order",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 40,
+                "start": 1785195593295,
+                "stop": 1785195593335,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "def test_triple_checkpoint_resume_preserves_gps_order() -> None:\n        \"\"\"Three resume passes must keep checkpoint rows before new rows in gps_fixes.\"\"\"\n        seed = SEEDS[0]\n        cp = STATE / \"triple-pass.db\"\n        assert decode_cli(\n            \"checkpoint-resume-a\",\n            seed,\n            checkpoint=cp,\n            export_name=\"triple-a.json\",\n        ).returncode == 0\n        assert decode_cli(\n            \"checkpoint-resume-b\",\n            seed,\n            checkpoint=cp,\n            resume=True,\n            export_name=\"triple-b.json\",\n        ).returncode == 0\n        proc_c = decode_cli(\n            \"checkpoint-resume-c\",\n            seed,\n            checkpoint=cp,\n            resume=True,\n            export_name=\"triple-c.json\",\n        )\n        assert proc_c.returncode == 0, proc_c.stderr or proc_c.stdout\n        expected = reference_three_pass(\n            stream_path(\"checkpoint-resume-a\"),\n            stream_path(\"checkpoint-resume-b\"),\n            stream_path(\"checkpoint-resume-c\"),\n            seed,\n            cp,\n        )\n        got = json.loads((OUTPUT / \"triple-c.json\").read_text(encoding=\"utf-8\"))\n>       assert got == expected\nE       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...', ...}], ...}\nE         \nE         Omitting 3 identical items, use -vv to show\nE         Differing items:\nE         {'gps_fixes': []} != {'gps_fixes': [{'compid': 1, 'lat': -111, 'lon': 222, 'seq': 2, ...}, {'compid': 1, 'lat': 333000, 'lon': -444000, 'seq': 5, ...}]}\nE         {'diff_rows': []} != {'diff_rows': [{'compid': 1, 'fact_key': 'lat', 'msg_id': 24, 'new_value': '333000', ...}, {'compid': 1, 'fact_key': '...: 24, 'new_value': '-444000', ...}, {'compid': 1, 'fact_key': 'time_boot_ms', 'msg_id': 24, 'new_value': '1005', ...}]}\nE         {'changed_fact_count': 0} != {'changed_fact_count': 3}\nE         {'valid_frame_count': 0} != {'valid_frame_count': 5}...\nE         \nE         ...Full output truncated (4 lines hidden), use '-vv' to show\n\n/tests/test_outputs.py:314: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_non_resume_export_has_empty_diff_rows",
+                "status": "passed",
+                "duration": 9,
+                "start": 1785195593335,
+                "stop": 1785195593344,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py"
+            },
+            {
+                "name": "tests/test_outputs.py::test_resume_diff_rows_include_stringified_old_and_new_values",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 33,
+                "start": 1785195593344,
+                "stop": 1785195593377,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "def test_resume_diff_rows_include_stringified_old_and_new_values() -> None:\n        \"\"\"Resume exports must record prior and new decoded facts as JSON scalar strings.\"\"\"\n        seed = SEEDS[0]\n        cp = STATE / \"diff-scalar.db\"\n        assert decode_cli(\n            \"checkpoint-resume-a\",\n            seed,\n            checkpoint=cp,\n            export_name=\"diff-a.json\",\n        ).returncode == 0\n        assert decode_cli(\n            \"checkpoint-resume-b\",\n            seed,\n            checkpoint=cp,\n            resume=True,\n            export_name=\"diff-b.json\",\n        ).returncode == 0\n        proc = decode_cli(\n            \"checkpoint-resume-c\",\n            seed,\n            checkpoint=cp,\n            resume=True,\n            export_name=\"diff-c.json\",\n        )\n        assert proc.returncode == 0, proc.stderr or proc.stdout\n        expected = reference_three_pass(\n            stream_path(\"checkpoint-resume-a\"),\n            stream_path(\"checkpoint-resume-b\"),\n            stream_path(\"checkpoint-resume-c\"),\n            seed,\n            cp,\n        )\n        got = json.loads((OUTPUT / \"diff-c.json\").read_text(encoding=\"utf-8\"))\n>       assert got == expected\nE       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...', ...}], ...}\nE         \nE         Omitting 3 identical items, use -vv to show\nE         Differing items:\nE         {'gps_fixes': []} != {'gps_fixes': [{'compid': 1, 'lat': -111, 'lon': 222, 'seq': 2, ...}, {'compid': 1, 'lat': 333000, 'lon': -444000, 'seq': 5, ...}]}\nE         {'diff_rows': []} != {'diff_rows': [{'compid': 1, 'fact_key': 'lat', 'msg_id': 24, 'new_value': '333000', ...}, {'compid': 1, 'fact_key': '...: 24, 'new_value': '-444000', ...}, {'compid': 1, 'fact_key': 'time_boot_ms', 'msg_id': 24, 'new_value': '1005', ...}]}\nE         {'changed_fact_count': 0} != {'changed_fact_count': 3}\nE         {'valid_frame_count': 0} != {'valid_frame_count': 5}...\nE         \nE         ...Full output truncated (4 lines hidden), use '-vv' to show\n\n/tests/test_outputs.py:370: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_preamble_noise_resync_decodes_frames",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 23,
+                "start": 1785195593378,
+                "stop": 1785195593401,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "def test_preamble_noise_resync_decodes_frames() -> None:\n        \"\"\"Leading garbage bytes must be skipped before STX resync.\"\"\"\n        seed = SEEDS[0]\n        expected = reference_export(stream_path(\"preamble-noise\"), seed)\n        proc = decode_cli(\"preamble-noise\", seed)\n        assert proc.returncode == 0, proc.stderr or proc.stdout\n        got = json.loads(export_path(\"preamble-noise\", seed).read_text(encoding=\"utf-8\"))\n>       assert got == expected\nE       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}\nE         \nE         Omitting 7 identical items, use -vv to show\nE         Differing items:\nE         {'gps_fixes': []} != {'gps_fixes': [{'compid': 1, 'lat': -77777, 'lon': 88888, 'seq': 2, ...}]}\nE         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 1, 'count': 1, 'msg_id': 24, 'name': 'GPS_RAW_INT', ...}]}\nE         {'valid_frame_count': 0} != {'valid_frame_count': 2}\nE         Use -v to get more diff\n\n/tests/test_outputs.py:391: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_mixed_invalid_crc_skips_bad_frame",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 17,
+                "start": 1785195593401,
+                "stop": 1785195593418,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "def test_mixed_invalid_crc_skips_bad_frame() -> None:\n        \"\"\"CRC mismatches must be skipped without aborting the run.\"\"\"\n        seed = SEEDS[1]\n        expected = reference_export(stream_path(\"mixed-invalid-crc\"), seed)\n        proc = decode_cli(\"mixed-invalid-crc\", seed)\n        assert proc.returncode == 0, proc.stderr or proc.stdout\n        got = json.loads(export_path(\"mixed-invalid-crc\", seed).read_text(encoding=\"utf-8\"))\n>       assert got == expected\nE       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}\nE         \nE         Omitting 6 identical items, use -vv to show\nE         Differing items:\nE         {'gps_fixes': []} != {'gps_fixes': [{'compid': 1, 'lat': -500000, 'lon': 1200000, 'seq': 2, ...}]}\nE         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 24, 'name': 'GPS_RAW_INT', ...}]}\nE         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 1}\nE         {'valid_frame_count': 0} != {'valid_frame_count': 1}\nE         Use -v to get more diff\n\n/tests/test_outputs.py:401: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_resume_idempotent_second_pass_no_growth",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 19,
+                "start": 1785195593418,
+                "stop": 1785195593437,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "def test_resume_idempotent_second_pass_no_growth() -> None:\n        \"\"\"Re-running resume on the same stream must not duplicate checkpoint rows.\"\"\"\n        seed = SEEDS[1]\n        cp = STATE / \"idempotent.db\"\n        decode_cli(\"checkpoint-resume-b\", seed, checkpoint=cp, export_name=\"first.json\")\n        decode_cli(\n            \"checkpoint-resume-b\",\n            seed,\n            checkpoint=cp,\n            resume=True,\n            export_name=\"second.json\",\n        )\n        first = json.loads((OUTPUT / \"first.json\").read_text(encoding=\"utf-8\"))\n        second = json.loads((OUTPUT / \"second.json\").read_text(encoding=\"utf-8\"))\n        assert second[\"valid_frame_count\"] == first[\"valid_frame_count\"]\n        assert second[\"routes\"] == first[\"routes\"]\n        assert second[\"gps_fixes\"] == first[\"gps_fixes\"]\n        assert second[\"events\"] == first[\"events\"]\n        assert second[\"checkpoint_frame_count\"] == first[\"valid_frame_count\"]\n>       assert second[\"deduped_count\"] >= 1\nE       assert 0 >= 1\n\n/tests/test_outputs.py:423: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_signed_gps_lat_lon_are_signed",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 18,
+                "start": 1785195593437,
+                "stop": 1785195593455,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "def test_signed_gps_lat_lon_are_signed() -> None:\n        \"\"\"GPS_RAW_INT must preserve negative lat/lon from two's-complement payload.\"\"\"\n        seed = SEEDS[1]\n        expected = reference_export(stream_path(\"signed-gps-decode\"), seed)\n        proc = decode_cli(\"signed-gps-decode\", seed)\n        assert proc.returncode == 0\n        got = json.loads(export_path(\"signed-gps-decode\", seed).read_text(encoding=\"utf-8\"))\n>       assert got == expected\nE       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}\nE         \nE         Omitting 7 identical items, use -vv to show\nE         Differing items:\nE         {'gps_fixes': []} != {'gps_fixes': [{'compid': 1, 'lat': -123456789, 'lon': 987654321, 'seq': 1, ...}, {'compid': 1, 'lat': 450000000, 'lon': -750000000, 'seq': 2, ...}]}\nE         {'routes': []} != {'routes': [{'compid': 1, 'count': 2, 'msg_id': 24, 'name': 'GPS_RAW_INT', ...}]}\nE         {'valid_frame_count': 0} != {'valid_frame_count': 2}\nE         Use -v to get more diff\n\n/tests/test_outputs.py:433: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_event_order_by_timestamp",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 19,
+                "start": 1785195593455,
+                "stop": 1785195593474,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "def test_event_order_by_timestamp() -> None:\n        \"\"\"EVENT_LOG export must be sorted by timestamp_ms, not frame seq.\"\"\"\n        seed = SEEDS[1]\n        expected = reference_export(stream_path(\"event-order\"), seed)\n        proc = decode_cli(\"event-order\", seed)\n        assert proc.returncode == 0\n        got = json.loads(export_path(\"event-order\", seed).read_text(encoding=\"utf-8\"))\n>       assert got == expected\nE       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}\nE         \nE         Omitting 6 identical items, use -vv to show\nE         Differing items:\nE         {'routes': []} != {'routes': [{'compid': 1, 'count': 2, 'msg_id': 11000, 'name': 'EVENT_LOG', ...}]}\nE         {'events': []} != {'events': [{'compid': 1, 'event_seq': 3, 'frame_seq': 15, 'sysid': 1, ...}, {'compid': 1, 'event_seq': 4, 'frame_seq': 20, 'sysid': 1, ...}]}\nE         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 2}\nE         {'valid_frame_count': 0} != {'valid_frame_count': 2}\nE         Use -v to get more diff\n\n/tests/test_outputs.py:445: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_multi_sysid_route_counts",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 16,
+                "start": 1785195593474,
+                "stop": 1785195593490,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "def test_multi_sysid_route_counts() -> None:\n        \"\"\"Route counts must distinguish sysid/component pairs with independent seq guards.\"\"\"\n        seed = SEEDS[0]\n        expected = reference_export(stream_path(\"multi-msg-routing\"), seed)\n        proc = decode_cli(\"multi-msg-routing\", seed)\n        assert proc.returncode == 0\n        got = json.loads(export_path(\"multi-msg-routing\", seed).read_text(encoding=\"utf-8\"))\n>       assert got == expected\nE       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}\nE         \nE         Omitting 5 identical items, use -vv to show\nE         Differing items:\nE         {'gps_fixes': []} != {'gps_fixes': [{'compid': 1, 'lat': -350000000, 'lon': 1380000000, 'seq': 20, ...}]}\nE         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 2}\nE         {'valid_frame_count': 0} != {'valid_frame_count': 3}\nE         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 11000, 'name': 'EVENT_LOG', ...}, {'compid': 1, 'count': 1, 'msg_id': 0, 'name': 'HEARTBEAT', ...}, {'compid': 1, 'count': 1, 'msg_id': 24, 'name': 'GPS_RAW_INT', ...}]}\nE         {'events': []} != {'events': [{'compid': 1, 'event_seq': 1, 'frame_seq': 30, 'sysid': 1, ...}]}\nE         Use -v to get more diff\n\n/tests/test_outputs.py:457: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_reference_independent_of_cli",
+                "status": "passed",
+                "duration": 7,
+                "start": 1785195593490,
+                "stop": 1785195593497,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py"
+            },
+            {
+                "name": "tests/test_outputs.py::test_decode_writes_snapshot_artifact",
+                "status": "passed",
+                "duration": 9,
+                "start": 1785195593497,
+                "stop": 1785195593506,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py"
+            },
+            {
+                "name": "tests/test_outputs.py::test_publish_reads_snapshot_only",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 14,
+                "start": 1785195593506,
+                "stop": 1785195593520,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "def test_publish_reads_snapshot_only() -> None:\n        \"\"\"Publish must reflect mutated snapshot bytes, not re-decoded streams.\"\"\"\n        seed = SEEDS[0]\n        assert decode_cli(\"signed-gps-decode\", seed).returncode == 0\n        snap = json.loads(SNAPSHOT.read_text(encoding=\"utf-8\"))\n>       assert snap[\"frames\"], \"snapshot must contain frames\"\nE       AssertionError: snapshot must contain frames\nE       assert []\n\n/tests/test_outputs.py:485: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_publish_without_snapshot_fails",
+                "status": "passed",
+                "duration": 9,
+                "start": 1785195593521,
+                "stop": 1785195593530,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py"
+            },
+            {
+                "name": "tests/test_outputs.py::test_contract_output_and_snapshot_paths_after_decode",
+                "status": "passed",
+                "duration": 6,
+                "start": 1785195593531,
+                "stop": 1785195593537,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py"
+            },
+            {
+                "name": "tests/test_outputs.py::test_stream_ingest_extracts_frames_before_validate",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 16,
+                "start": 1785195593537,
+                "stop": 1785195593553,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "def test_stream_ingest_extracts_frames_before_validate() -> None:\n        \"\"\"Stream ingest must extract GPS frames before CRC validation on signed-gps-decode.\"\"\"\n        seed = SEEDS[0]\n        proc = decode_cli(\"signed-gps-decode\", seed)\n        assert proc.returncode == 0, proc.stderr or proc.stdout\n        got = json.loads(export_path(\"signed-gps-decode\", seed).read_text(encoding=\"utf-8\"))\n>       assert got[\"gps_fixes\"]\nE       assert []\n\n/tests/test_outputs.py:529: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_snapshot_payload_stored_as_json_byte_array",
+                "status": "passed",
+                "duration": 10,
+                "start": 1785195593553,
+                "stop": 1785195593563,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py"
+            },
+            {
+                "name": "tests/test_outputs.py::test_verifier_hidden_dedup_compid_scenario",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 16,
+                "start": 1785195593563,
+                "stop": 1785195593579,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "def test_verifier_hidden_dedup_compid_scenario() -> None:\n        \"\"\"Hidden /opt/verifier-fixtures dedup-compid stream must match reference export.\"\"\"\n        fixtures_root = Path(\"/opt/verifier-fixtures/mavlink\")\n        hidden_catalog = json.loads((fixtures_root / \"catalog.json\").read_text(encoding=\"utf-8\"))\n        entry = next(s for s in hidden_catalog[\"scenarios\"] if s[\"name\"] == \"hidden-dedup-compid\")\n        stream = fixtures_root / entry[\"stream\"]\n        seed = SEEDS[0]\n        export_path = OUTPUT / \"hidden-dedup-compid.json\"\n        proc = run(\n            [\n                CLI,\n                \"decode\",\n                \"--input\",\n                str(stream),\n                \"--seed\",\n                seed,\n                \"--export\",\n                str(export_path),\n            ]\n        )\n        assert proc.returncode == 0, proc.stderr or proc.stdout\n        got = json.loads(export_path.read_text(encoding=\"utf-8\"))\n        expected = reference_export(stream, seed)\n>       assert got == expected\nE       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}\nE         \nE         Omitting 7 identical items, use -vv to show\nE         Differing items:\nE         {'gps_fixes': []} != {'gps_fixes': [{'compid': 1, 'lat': 100, 'lon': -200, 'seq': 10, ...}, {'compid': 2, 'lat': 300, 'lon': 400, 'seq': 10, ...}]}\nE         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 24, 'name': 'GPS_RAW_INT', ...}, {'compid': 2, 'count': 1, 'msg_id': 24, 'name': 'GPS_RAW_INT', ...}]}\nE         {'valid_frame_count': 0} != {'valid_frame_count': 2}\nE         Use -v to get more diff\n\n/tests/test_outputs.py:568: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_verifier_hidden_session_resume_scenario",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 38,
+                "start": 1785195593579,
+                "stop": 1785195593617,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "def test_verifier_hidden_session_resume_scenario() -> None:\n        \"\"\"Hidden /opt/verifier-fixtures session-resume trap must match two-pass reference.\"\"\"\n        fixtures_root = Path(\"/opt/verifier-fixtures/mavlink\")\n        hidden_catalog = json.loads((fixtures_root / \"catalog.json\").read_text(encoding=\"utf-8\"))\n        entry = next(s for s in hidden_catalog[\"scenarios\"] if s[\"name\"] == \"hidden-session-resume\")\n        stream = fixtures_root / entry[\"stream\"]\n        seed = SEEDS[0]\n        cp = STATE / \"hidden-session.db\"\n        proc_a = run(\n            [\n                CLI,\n                \"decode\",\n                \"--input\",\n                str(stream_path(\"checkpoint-session-a\")),\n                \"--seed\",\n                seed,\n                \"--checkpoint\",\n                str(cp),\n                \"--export\",\n                str(OUTPUT / \"hidden-session-a.json\"),\n            ]\n        )\n        assert proc_a.returncode == 0, proc_a.stderr or proc_a.stdout\n        proc_b = run(\n            [\n                CLI,\n                \"decode\",\n                \"--input\",\n                str(stream),\n                \"--seed\",\n                seed,\n                \"--checkpoint\",\n                str(cp),\n                \"--resume\",\n                \"--export\",\n                str(OUTPUT / \"hidden-session-b.json\"),\n            ]\n        )\n        assert proc_b.returncode == 0, proc_b.stderr or proc_b.stdout\n        expected = reference_two_pass(\n            stream_path(\"checkpoint-session-a\"),\n            stream,\n            seed,\n            cp,\n        )\n        got = json.loads((OUTPUT / \"hidden-session-b.json\").read_text(encoding=\"utf-8\"))\n>       assert got == expected\nE       AssertionError: assert {'changed_fac...ows': [], ...} == {'changed_fac...ows': [], ...}\nE         \nE         Omitting 5 identical items, use -vv to show\nE         Differing items:\nE         {'gps_fixes': []} != {'gps_fixes': [{'compid': 1, 'lat': 111000, 'lon': 222000, 'seq': 50, ...}]}\nE         {'stale_seq_dropped': 0} != {'stale_seq_dropped': 1}\nE         {'valid_frame_count': 0} != {'valid_frame_count': 1}\nE         {'routes': []} != {'routes': [{'compid': 1, 'count': 1, 'msg_id': 24, 'name': 'GPS_RAW_INT', ...}]}\nE         {'checkpoint_frame_count': 0} != {'checkpoint_frame_count': 1}\nE         Use -v to get more diff\n\n/tests/test_outputs.py:617: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "tests/test_outputs.py::test_partial_broken_validate_fails_crc_catalog",
+                "status": "skipped",
+                "duration": 3,
+                "start": 1785195593617,
+                "stop": 1785195593620,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "('/tests/test_outputs.py', 620, 'Skipped: oracle golden modules not mounted')"
+            },
+            {
+                "name": "tests/test_outputs.py::test_partial_broken_parse_fails_length_edge",
+                "status": "skipped",
+                "duration": 2,
+                "start": 1785195593620,
+                "stop": 1785195593622,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "('/tests/test_outputs.py', 633, 'Skipped: oracle golden modules not mounted')"
+            },
+            {
+                "name": "tests/test_outputs.py::test_partial_broken_seed_fails_event_order",
+                "status": "skipped",
+                "duration": 2,
+                "start": 1785195593623,
+                "stop": 1785195593625,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "('/tests/test_outputs.py', 646, 'Skipped: oracle golden modules not mounted')"
+            },
+            {
+                "name": "tests/test_outputs.py::test_partial_broken_session_fails_seq_rollback",
+                "status": "skipped",
+                "duration": 2,
+                "start": 1785195593625,
+                "stop": 1785195593627,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "('/tests/test_outputs.py', 659, 'Skipped: oracle golden modules not mounted')"
+            },
+            {
+                "name": "tests/test_outputs.py::test_partial_broken_dedup_fails_compid_trap",
+                "status": "skipped",
+                "duration": 1,
+                "start": 1785195593627,
+                "stop": 1785195593628,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "('/tests/test_outputs.py', 672, 'Skipped: oracle golden modules not mounted')"
+            },
+            {
+                "name": "tests/test_outputs.py::test_partial_broken_checkpoint_fails_cross_seed_resume",
+                "status": "skipped",
+                "duration": 1,
+                "start": 1785195593628,
+                "stop": 1785195593629,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "('/tests/test_outputs.py', 685, 'Skipped: oracle golden modules not mounted')"
+            },
+            {
+                "name": "tests/test_outputs.py::test_partial_broken_fact_diff_fails_old_value",
+                "status": "skipped",
+                "duration": 1,
+                "start": 1785195593630,
+                "stop": 1785195593631,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "('/tests/test_outputs.py', 705, 'Skipped: oracle golden modules not mounted')"
+            },
+            {
+                "name": "tests/test_outputs.py::test_partial_broken_route_fails_signed_gps",
+                "status": "skipped",
+                "duration": 1,
+                "start": 1785195593631,
+                "stop": 1785195593632,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "('/tests/test_outputs.py', 741, 'Skipped: oracle golden modules not mounted')"
+            },
+            {
+                "name": "tests/test_outputs.py::test_partial_broken_publish_fails_checkpoint_merge_order",
+                "status": "skipped",
+                "duration": 1,
+                "start": 1785195593632,
+                "stop": 1785195593633,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "('/tests/test_outputs.py', 754, 'Skipped: oracle golden modules not mounted')"
+            },
+            {
+                "name": "tests/test_outputs.py::test_partial_broken_decode_fails_session_resume_trap",
+                "status": "skipped",
+                "duration": 1,
+                "start": 1785195593633,
+                "stop": 1785195593634,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "('/tests/test_outputs.py', 790, 'Skipped: oracle golden modules not mounted')"
+            },
+            {
+                "name": "tests/test_outputs.py::test_partial_broken_decode_fails_triple_checkpoint_order",
+                "status": "skipped",
+                "duration": 1,
+                "start": 1785195593635,
+                "stop": 1785195593636,
+                "retries": 0,
+                "file_path": "tests/test_outputs.py",
+                "trace": "('/tests/test_outputs.py', 816, 'Skipped: oracle golden modules not mounted')"
+            }
+        ]
+    }
+}

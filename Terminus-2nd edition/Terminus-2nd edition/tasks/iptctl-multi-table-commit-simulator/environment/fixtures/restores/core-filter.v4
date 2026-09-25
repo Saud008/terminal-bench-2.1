@@ -1,0 +1,6 @@
+*filter
+:INPUT DROP [120:48000]
+:FORWARD ACCEPT [0:0]
+-A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT [44:8192]
+-A INPUT -m conntrack --ctstate NEW -j DROP [9:540]
+COMMIT

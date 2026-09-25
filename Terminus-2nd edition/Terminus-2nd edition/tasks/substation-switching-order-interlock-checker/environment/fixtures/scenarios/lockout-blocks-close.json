@@ -1,0 +1,38 @@
+{
+  "scenario_id": "lockout-blocks-close",
+  "buses": [
+    {
+      "bus_id": "bus-a"
+    },
+    {
+      "bus_id": "bus-b"
+    }
+  ],
+  "energized_sources": [
+    "bus-a"
+  ],
+  "breakers": [
+    {
+      "breaker_id": "brk-ab",
+      "from_bus": "bus-a",
+      "to_bus": "bus-b",
+      "initial_state": "open"
+    }
+  ],
+  "lockouts": [
+    {
+      "tag_id": "lot-ab",
+      "equipment_ids": [
+        "brk-ab"
+      ],
+      "active": true
+    }
+  ],
+  "procedure": [
+    {
+      "step_index": 1,
+      "action": "close",
+      "breaker_id": "brk-ab"
+    }
+  ]
+}

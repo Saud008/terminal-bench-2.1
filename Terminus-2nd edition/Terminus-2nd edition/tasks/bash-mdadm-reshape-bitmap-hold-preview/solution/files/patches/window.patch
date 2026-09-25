@@ -1,0 +1,11 @@
+--- internal/raidops/policies/window_fit_policy.sh	2026-07-16 16:45:59.552736100 +0000
++++ internal/raidops/policies/window_fit_policy.sh	2026-07-16 14:44:17.035783400 +0000
+@@ -7,7 +7,7 @@
+ window_hours = float(inv["window_hours"])
+ blocked = {}
+ for arr in inv.get("arrays", []):
+-    if float(arr.get("estimated_hours", 0)) >= window_hours:
++    if float(arr.get("estimated_hours", 0)) > window_hours:
+         blocked[arr["name"]] = "blocked_window"
+ json.dump(blocked, sys.stdout)
+ PY

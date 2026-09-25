@@ -1,0 +1,30 @@
+{
+  "topic": "inventory-keys",
+  "bundled": [
+    {"scenario": "clean-compact", "phase": "staging_digest"},
+    {"scenario": "part-order", "phase": "staging_digest"},
+    {"scenario": "tomb-retain", "phase": "staging_digest"},
+    {"scenario": "dup-offset", "phase": "staging_digest"},
+    {"scenario": "key-nfc", "phase": "staging_digest"},
+    {"scenario": "seg-order", "phase": "staging_digest"},
+    {"scenario": "idempotent-export", "phase": "staging_digest"},
+    {"scenario": "clean-compact", "phase": "full_export"},
+    {"scenario": "part-order", "phase": "full_export"},
+    {"scenario": "dup-offset", "phase": "full_export"},
+    {"scenario": "key-nfc", "phase": "full_export"},
+    {"scenario": "idempotent-export", "phase": "full_export"},
+    {"scenario": "tomb-retain", "phase": "audit_only"},
+    {"scenario": "seg-order", "phase": "ingest_order_probe"},
+    {"scenario": "idempotent-export", "phase": "repeat_emit_bytes"},
+    {"scenario": "clean-compact", "phase": "field_probe", "key": "cfg:theme", "field": "value_raw", "expect": "light"},
+    {"scenario": "part-order", "phase": "field_probe", "key": "metric:cpu", "field": "offset", "expect": 15},
+    {"scenario": "tomb-retain", "phase": "field_probe", "key": "user:bob", "field": "deleted", "expect": true},
+    {"scenario": "dup-offset", "phase": "field_probe", "key": "user:adam", "field": "value_raw", "expect": "tie"},
+    {"scenario": "tomb-retain", "phase": "lineage_contains", "key": "user:bob"},
+    {"scenario": "idempotent-export", "phase": "snapshot_sort_keys"}
+  ],
+  "off_catalog": [
+    {"scenario": "retention-bias", "phase": "hidden_retention", "window_ms": 50000, "note": "TB3_TOMB_RETENTION_MS per tomb-window-contract.md"},
+    {"scenario": "canonical-trap", "phase": "hidden_export"}
+  ]
+}

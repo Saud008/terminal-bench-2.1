@@ -1,0 +1,1 @@
+import-panels persists patients with abo, rh, and antibodies arrays into release.db. Units store abo, rh, collected_at, expires_at, and antigens. Overrides store patient_id, unit_id, authorizer, reason, issued_at. Meta key scenario_id and release_clock are required.

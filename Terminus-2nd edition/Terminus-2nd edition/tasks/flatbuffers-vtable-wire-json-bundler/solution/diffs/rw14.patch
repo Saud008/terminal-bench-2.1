@@ -1,0 +1,37 @@
+--- a/src/rw14.rs
++++ b/src/rw14.rs
+@@ -4,7 +4,7 @@
+ 
+ use crate::bd13::decode_buffer;
+ 
+-use crate::je67;
++use crate::je67_stage;
+ 
+ use crate::zq81;
+ 
+@@ -14,7 +14,6 @@
+ 
+ 
+ 
+-/// Ingest-phase entry: decode flatbuffer wire bytes, persist snapshot, append ledger.
+ pub fn stage_buffer(buf: &[u8]) -> Result<u32> {
+ 
+     let scene = decode_buffer(buf)?;
+@@ -37,7 +36,7 @@
+ 
+     let scene = load_snapshot(buf, revision)?;
+ 
+-    export::render_stdout(&scene)
++    stdout_render::render_stdout(&scene)
+ 
+ }
+ 
+@@ -49,7 +48,7 @@
+ 
+     guard::verify_export_binding(&envelope)?;
+ 
+-    export::render_stdout(&envelope.scene)
++    stdout_render::render_stdout(&envelope.scene)
+ 
+ }
+ 

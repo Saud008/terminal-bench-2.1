@@ -1,0 +1,48 @@
+{
+  "scenario": "carbon-alias-mix",
+  "slot_minutes": 45,
+  "window_count": 3,
+  "regions": {
+    "Zephyr-7": {
+      "quota_per_window": 4,
+      "max_carryover": 3
+    },
+    "Nimbus-2": {
+      "quota_per_window": 4,
+      "max_carryover": 3
+    }
+  },
+  "intensity": {
+    "Zephyr-7": [
+      500.0,
+      400.0,
+      300.0
+    ],
+    "Nimbus-2": [
+      350.0,
+      250.0,
+      450.0
+    ]
+  },
+  "jobs": [
+    {
+      "job_id": "JX-9001",
+      "compute_units": 2,
+      "duration_slots": 1,
+      "deadline_slot": 2,
+      "allowed_regions": [
+        "Nimbus-2"
+      ]
+    },
+    {
+      "job_id": "JX-9002",
+      "compute_units": 3,
+      "duration_slots": 1,
+      "deadline_slot": 1,
+      "allowed_regions": [
+        "Zephyr-7",
+        "Nimbus-2"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+---
+description: LOCKED — Phase F′ before first zip; predict TRIVIAL at CREATE not after platform
+alwaysApply: true
+---
+
+# Terminus — First-submit acceptance gate (LOCKED)
+
+**Always on with:** `shared/trivial-first-upload-lock.mdc` · `sanjana-standing-requirements.mdc` §L
+
+**When:** New task **after** oracle **1** + NOP **0**, **before** `./scripts/pack_zip.sh`.  
+**Pack blocks** without `jobs-local/first-submit-<slug>.json` verdict **PASS** (unless slug in `platform_submissions.txt`).
+
+---
+
+## Why audit alone fails
+
+| Local pass | Platform still TRIVIAL |
+|------------|-------------------------|
+| Oracle 1, NOP 0, CI clean | Opus 4.8 / GPT 5.5 **≥3/5** |
+| 20+ env files | One-file patch passes most tests |
+| `difficulty = "hard"` | Worst model **>60%** |
+| Case 5 decorative hardening | Same bugs, new fields |
+
+**Design first upload as predicted TRIVIAL rejection** → fix at CREATE with Case 6.
+
+---
+
+## Mandatory reads (CREATE)
+
+1. `prompts/sp-hard-create-revise.md`
+2. `revise/trivial-hardening-probes.mdc`
+3. `shared/trivial-first-upload-lock.mdc`
+4. `prompts/trivial-case-6.md` (Go/Rust/Bash CLI export)
+
+---
+
+## Phase F′ commands
+
+```bash
+python3 scripts/terminus_auto_probes.py --task-dir tasks/<name>   # must exit 0
+./scripts/create_finish_to_zip.sh <name>                            # records F′ + zip
+```
+
+Dry-check:
+
+```bash
+python3 scripts/first_submit_pack_gate.py --pack-gate --task-dir tasks/<name>
+```
+
+---
+
+## Forbidden first-upload (block zip)
+
+- One obvious edit fixes bundled tests
+- Sequential bugs (fix A → all green)
+- Hash/fingerprint field + tests, **same** root bugs
+- Hidden tests duplicate bundled failure mode
+- Single-function ingest+export+persist (`BuildLedger` pattern)
+- Probe table skipped or manual PASS while auto-probes FAIL
+- Case 4/5 used as **CREATE** strategy
+
+---
+
+## A→H integration
+
+| Phase | First-submit action |
+|-------|---------------------|
+| C | Case 6 shape if CLI export; ≥5 bugs + 2 hidden traps planned |
+| D | Multi-stage pipeline, decoy, persistence |
+| E | Audit includes **First-submit TRIVIAL risk: Low/Medium/High** |
+| F | Oracle 1, NOP 0 |
+| F′ | Auto probes + this gate |
+| G | Zip only if F′ PASS |

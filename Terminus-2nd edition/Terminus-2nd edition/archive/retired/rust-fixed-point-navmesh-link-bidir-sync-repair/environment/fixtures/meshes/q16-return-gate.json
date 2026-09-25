@@ -1,0 +1,28 @@
+{
+  "mesh_id": "q16-return-gate",
+  "cells": [
+    {"id": "west", "gx": 0, "gy": 0, "walkable": true, "region": 10},
+    {"id": "gate", "gx": 1, "gy": 0, "walkable": true, "region": 10},
+    {"id": "east", "gx": 2, "gy": 0, "walkable": true, "region": 11},
+    {"id": "yard", "gx": 3, "gy": 0, "walkable": true, "region": 11}
+  ],
+  "edges": [
+    {"from": "west", "to": "gate", "cost_q16": 65536},
+    {"from": "gate", "to": "east", "cost_q16": 65536},
+    {"from": "east", "to": "yard", "cost_q16": 65536}
+  ],
+  "portals": [
+    {
+      "id": "p-gate-east",
+      "from": "gate",
+      "to": "east",
+      "cost_q16": 131072,
+      "require_region_match": false
+    }
+  ],
+  "offmesh": [],
+  "path_queries": [
+    {"id": "west-yard", "from": "west", "to": "yard"},
+    {"id": "yard-west", "from": "yard", "to": "west"}
+  ]
+}

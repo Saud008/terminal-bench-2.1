@@ -1,0 +1,44 @@
+--- a/internal/roombind/shard_pull.go
++++ b/internal/roombind/shard_pull.go
+@@ -6,7 +6,6 @@
+ 	"fmt"
+ 	"os"
+ 	"path/filepath"
+-	"sort"
+ 	"strings"
+ 
+ 	"github.com/terminus/vcreplay/internal/model"
+@@ -29,7 +28,7 @@
+ 			shardNames = append(shardNames, e.Name())
+ 		}
+ 	}
+-	sort.Strings(shardNames)
++	shardNames = NumericShardSort(shardNames)
+ 
+ 	var staged []model.StagedEvent
+ 	frontier := map[string]int{}
+@@ -49,9 +48,6 @@
+ 				f.Close()
+ 				return nil, 0, err
+ 			}
+-			expected := lamportmesh.Merge(frontier, ev.VectorClock)
+-			expected = lamportmesh.Increment(expected, ev.Sender)
+-			_ = expected
+ 			staged = append(staged, model.StagedEvent{
+ 				EventID:     ev.EventID,
+ 				Sender:      ev.Sender,
+@@ -83,7 +79,13 @@
+ 		fmt.Sscanf(mid, "%d", &num)
+ 		items = append(items, item{name: n, num: num})
+ 	}
+-	sort.Slice(items, func(i, j int) bool { return items[i].num < items[j].num })
++	for i := 0; i < len(items); i++ {
++		for j := i + 1; j < len(items); j++ {
++			if items[j].num < items[i].num {
++				items[i], items[j] = items[j], items[i]
++			}
++		}
++	}
+ 	out := make([]string, len(items))
+ 	for i, it := range items {
+ 		out[i] = it.name

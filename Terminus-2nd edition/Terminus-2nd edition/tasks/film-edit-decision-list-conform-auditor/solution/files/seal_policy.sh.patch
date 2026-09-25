@@ -1,0 +1,15 @@
+--- lib/seal_policy.sh
++++ lib/seal_policy.sh
+@@ -9,7 +9,11 @@
+ compute_seal_digest() {
+   local event_file="$1"
+   local finding_file="$2"
+-  sha256sum "${event_file}" | awk '{print $1}'
++  if [[ "${DIGEST_INCLUDES_FINDINGS}" -eq 1 ]]; then
++    cat "${event_file}" "${finding_file}" | sha256sum | awk '{print $1}'
++  else
++    sha256sum "${event_file}" | awk '{print $1}'
++  fi
+ }
+ 
+ emit_reopens_bundle() {

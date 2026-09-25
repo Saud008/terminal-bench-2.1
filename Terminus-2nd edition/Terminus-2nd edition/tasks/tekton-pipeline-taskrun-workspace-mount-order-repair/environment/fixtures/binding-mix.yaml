@@ -1,0 +1,33 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: binding-mix-run
+spec:
+  pipelineSpec:
+    workspaces:
+      - name: shared-cache
+        optional: false
+      - name: docker-credentials
+        optional: false
+    tasks:
+      - name: build
+        workspaces:
+          - name: cache
+            workspace: shared-cache
+          - name: creds
+            workspace: docker-credentials
+        taskSpec:
+          workspaces:
+            - name: cache
+              mountPath: /cache
+            - name: creds
+              mountPath: /creds
+          steps:
+            - name: compile
+  workspaces:
+    - name: shared-cache
+      persistentVolumeClaim:
+        claimName: cache-pvc-01
+    - name: docker-credentials
+      emptyDir:
+        medium: Memory

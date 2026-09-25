@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# borg-prune-sim — dispatch ingest / evaluate / export subcommands.
+set -euo pipefail
+
+APP_ROOT="/app"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export APP_ROOT SCRIPT_DIR
+
+usage() {
+  cat <<'EOF'
+Usage:
+  borg-prune-sim ingest --list <repo.list> --repo-id <id>
+  borg-prune-sim evaluate --list <repo.list> --policy <policy.json> --holds <holds.json> --now <iso>
+  borg-prune-sim export --list <repo.list> --out <prune-report.json>
+EOF
+  exit 1
+}
+
+[ $# -ge 1 ] || usage
+cmd="$1"
+shift
+
+case "${cmd}" in
+  ingest)
+    exec bash "${APP_ROOT}/scripts/ingest.sh" "$@"
+    ;;
+  evaluate)
+    exec bash "${APP_ROOT}/scripts/evaluate.sh" "$@"
+    ;;
+  export)
+    exec bash "${APP_ROOT}/scripts/export.sh" "$@"
+    ;;
+  *)
+    usage
+    ;;
+esac

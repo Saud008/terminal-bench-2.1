@@ -1,0 +1,22 @@
+{
+  "mesh_id": "mesh-003-deadline-partial",
+  "survey_id": "SURVEY0012345678",
+  "deadline_ms": 500,
+  "default_ttl_ms": 10000,
+  "topology": {
+    "kind": "star",
+    "hub": "surveyor",
+    "edges": [
+      ["surveyor", "r1"],
+      ["surveyor", "r2"]
+    ]
+  },
+  "events": [
+    {"offset_ms": 0, "type": "start"},
+    {"offset_ms": 50, "type": "ballot", "respondent": "r1", "vote": 4, "header_hex": "4e5353555256455930303132333435363738"},
+    {"offset_ms": 120, "type": "pipe_drained", "respondent": "r1"},
+    {"offset_ms": 200, "type": "ballot", "respondent": "r2", "vote": 7, "header_hex": "4e5353555256455930303132333435363738"},
+    {"offset_ms": 500, "type": "deadline"},
+    {"offset_ms": 600, "type": "close"}
+  ]
+}

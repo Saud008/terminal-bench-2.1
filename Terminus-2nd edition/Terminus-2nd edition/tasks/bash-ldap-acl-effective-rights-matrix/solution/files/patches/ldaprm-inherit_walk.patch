@@ -1,0 +1,11 @@
+--- internal/dirauth/policy/inherit_walk.sh
++++ internal/dirauth/policy/inherit_walk.sh
+@@ -11,7 +11,7 @@
+     IFS='|' read -r src idx target scope inherit _ <<< "$line"
+     target="$(normalize_dn "$target")"
+     inherit="$(echo "$inherit" | tr '[:upper:]' '[:lower:]')"
+-    if [[ "$target" != "$entry" && "$inherit" =~ ^(yes|true|1)$ ]]; then
++    if [[ "$target" == "$entry" && "$inherit" =~ ^(no|false|0)$ ]]; then
+       return 0
+     fi
+   done <<< "$ace_stream"

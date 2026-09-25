@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SHEET_APP_ROOT="${SHEET_APP_ROOT:-/app}"
+export SHEET_APP_ROOT
+export PYTHONPATH="${SHEET_APP_ROOT}/lib:${PYTHONPATH:-}"
+
+exec python3 -m sheet.cli "$@"

@@ -1,0 +1,28 @@
+wsl python3 -c "
+import json, re
+from pathlib import Path
+T = Path('/mnt/c/Users/masau/.cursor/projects/d-Terminus-2nd-edition-Terminus-2nd-edition/agent-transcripts')
+REAL_MISSING = [
+ 'bash-awk-jsonl-windowed-aggregate-pipeline','bash-steamcmd-workshop-mount-plan-pipeline',
+ 'godot-tscn-uid-remap-merge-repair','hitbox-hurtbox-tick-sample-replay-collision',
+ 'kong-route-plugin-precedence-chain-repair','mavlink-crc-extra-message-id-routing-repair',
+ 'opa-bundle-signature-digest-chain-verifier','party-invite-accept-rollback-repair',
+ 'party-invite-audit-staging-governor','subtitle-srt-rollup-ruby-normalize',
+ 'vitess-vindex-cache-coalesce-engine','gocron-cronctl-staging-replay-export'
+]
+pat = re.compile(r'tasks[\\\\/]([a-z0-9][a-z0-9-]*)', re.I)
+writes={s:0 for s in REAL_MISSING}
+for f in T.rglob('*.jsonl'):
+    for line in f.read_text(encoding='utf-8', errors='replace').splitlines():
+        try: o=json.loads(line)
+        except: continue
+        if o.get('role')!='assistant': continue
+        for it in o.get('message',{}).get('content',[]):
+            if it.get('type')!='tool_use' or it.get('name')!='Write': continue
+            p=it.get('input',{}).get('path','')
+            m=pat.search(p)
+            if m and m.group(1) in writes: writes[m.group(1)]+=1
+print('RESTORE POTENTIAL (Write ops in transcripts):')
+for s,c in sorted(writes.items(), key=lambda x:-x[1]):
+    print(f'  {s}: {c} writes')
+"

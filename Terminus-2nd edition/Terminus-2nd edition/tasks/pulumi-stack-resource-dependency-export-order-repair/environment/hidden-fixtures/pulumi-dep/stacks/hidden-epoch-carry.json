@@ -1,0 +1,19 @@
+{
+  "stack": "hidden-epoch",
+  "version": 3,
+  "deployment": {
+    "resources": [
+      {
+        "urn": "urn:pulumi:epoch::acme::pulumi:providers:aws::default",
+        "type": "pulumi:providers:aws",
+        "parent": "urn:pulumi:epoch::acme::pulumi:stack$acme/epoch"
+      },
+      {
+        "urn": "urn:pulumi:epoch::acme::aws:s3/bucket:Bucket::only",
+        "type": "aws:s3/bucket:Bucket",
+        "parent": "urn:pulumi:epoch::acme::pulumi:stack$acme/epoch",
+        "provider": "urn:pulumi:epoch::acme::pulumi:providers:aws::default"
+      }
+    ]
+  }
+}

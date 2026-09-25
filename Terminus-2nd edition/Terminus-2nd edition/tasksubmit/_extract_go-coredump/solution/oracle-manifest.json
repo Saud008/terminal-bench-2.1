@@ -1,0 +1,56 @@
+{
+  "oracle_frontier": [
+    {
+      "path": "internal/gnubuildid/buildid.go",
+      "fix_symbols": ["parseNotes", "ReadBuildID"],
+      "co_resident_helpers": ["align4"],
+      "allowed_top_level_symbols": ["ReadBuildID", "parseNotes"]
+    },
+    {
+      "path": "internal/vmarange/locate.go",
+      "fix_symbols": ["LocatePC", "FileRelativeOffset"],
+      "co_resident_helpers": ["parseHex"],
+      "allowed_top_level_symbols": ["LocatePC", "FileRelativeOffset"]
+    },
+    {
+      "path": "internal/symcatalog/catalog.go",
+      "fix_symbols": ["LookupBuildID"],
+      "co_resident_helpers": ["LoadCatalog"],
+      "allowed_top_level_symbols": ["LookupBuildID", "LoadCatalog"]
+    },
+    {
+      "path": "internal/splitpath/resolve.go",
+      "fix_symbols": ["ResolveSymbol"],
+      "co_resident_helpers": ["lookupNearest"],
+      "allowed_top_level_symbols": ["ResolveSymbol", "lookupNearest"]
+    },
+    {
+      "path": "internal/crashfold/group.go",
+      "fix_symbols": ["GroupKey"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": ["GroupKey"]
+    },
+    {
+      "path": "internal/frozenstage/write.go",
+      "fix_symbols": ["WriteStaging"],
+      "co_resident_helpers": ["ReadStaging"],
+      "allowed_top_level_symbols": ["WriteStaging", "ReadStaging"]
+    },
+    {
+      "path": "internal/indexsql/export.go",
+      "fix_symbols": ["aggregateGroups"],
+      "co_resident_helpers": ["buildSummary"],
+      "allowed_top_level_symbols": ["Export", "aggregateGroups"]
+    }
+  ],
+  "symbol_table": [
+    {"path": "internal/gnubuildid/buildid.go", "symbol": "parseNotes"},
+    {"path": "internal/vmarange/locate.go", "symbol": "LocatePC"},
+    {"path": "internal/vmarange/locate.go", "symbol": "FileRelativeOffset"},
+    {"path": "internal/symcatalog/catalog.go", "symbol": "LookupBuildID"},
+    {"path": "internal/splitpath/resolve.go", "symbol": "ResolveSymbol"},
+    {"path": "internal/crashfold/group.go", "symbol": "GroupKey"},
+    {"path": "internal/frozenstage/write.go", "symbol": "WriteStaging"},
+    {"path": "internal/indexsql/export.go", "symbol": "aggregateGroups"}
+  ]
+}

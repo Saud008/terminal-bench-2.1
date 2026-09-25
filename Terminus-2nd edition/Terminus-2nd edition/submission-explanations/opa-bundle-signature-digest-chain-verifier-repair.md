@@ -1,0 +1,16 @@
+# Submission explanations — opa-bundle-signature-digest-chain-verifier-repair
+
+**Task folder:** tasks/opa-bundle-signature-digest-chain-verifier-repair/
+**Platform form only** — not in upload zip.
+
+## Difficulty Explanation
+
+Agents must implement bundlectl verify and eval across several Go packages while following five contract docs. Verify needs import preview staging to /app/state/preview-ledger.json, lexicographic digest chains, path escape rejection, scoped HMAC checks, and revocation handling. Eval needs seed substitution, full trace bindings, and an eval audit file whose binding count matches the reference trace. Fixing digest math alone passes many bundled verify cases but still fails eval trace checks, scoped multi-file bundles, or hidden ledger-trap fixtures. Partial-fix tests swap one layer at a time and tolerate internal refactors when stub files no longer compile against agent helpers.
+
+## Solution Explanation
+
+The oracle copies golden sources into /app/internal for canonical paths, preview ledger ingest, digest chain, scoped verification, revocation, trace capture, and eval audit. It rebuilds bundlectl with go build. Digest iteration reads the preview ledger order. Scoped chain roots exclude manifest metadata and sort lexicographically within each scope prefix. Trace bindings include every data and input reference with substituted JSON values. CanonicalPath rejects ../../etc/passwd style escapes before any member bytes are read.
+
+## Verification Explanation
+
+test.sh rebuilds bundlectl before pytest. Subprocess tests call bundlectl verify and eval against bundled and hidden fixtures. reference_bundle.py recomputes chain roots, signatures, and eval JSON independently. Partial-fix tests inject golden stubs per layer with compile-safe fallback when agent refactors digest helpers. Tests assert preview ledger, path-escape rejection, and eval audit binding counts against reference_eval. Oracle passes all tests and NOP on the broken image scores zero.

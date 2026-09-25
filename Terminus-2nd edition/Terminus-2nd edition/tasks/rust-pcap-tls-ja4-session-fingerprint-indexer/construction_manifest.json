@@ -1,0 +1,160 @@
+{
+  "symbol_table": [
+    {
+      "path": "environment/tls_lab/capsule_io/src/reader.rs",
+      "symbol": "read_capsule_dir",
+      "kind": "function"
+    },
+    {
+      "path": "environment/tls_lab/tls_reasm/src/record_splice.rs",
+      "symbol": "reassemble_records",
+      "kind": "function"
+    },
+    {
+      "path": "environment/tls_lab/role_detect/src/endpoint_roles.rs",
+      "symbol": "endpoint_label_table",
+      "kind": "function"
+    },
+    {
+      "path": "environment/tls_lab/ja4_canon/src/fingerprint_canon.rs",
+      "symbol": "seal_handshake_tag",
+      "kind": "function"
+    },
+    {
+      "path": "environment/tls_lab/retrans_dedupe/src/payload_dedupe.rs",
+      "symbol": "dedupe_frames",
+      "kind": "function"
+    },
+    {
+      "path": "environment/tls_lab/anomaly_count/src/anomaly_tally.rs",
+      "symbol": "count_anomalies",
+      "kind": "function"
+    },
+    {
+      "path": "environment/tls_lab/ledger_store/src/session_ledger.rs",
+      "symbol": "persist_capsule_ledger",
+      "kind": "function"
+    },
+    {
+      "path": "environment/tls_lab/index_emit/src/session_report.rs",
+      "symbol": "publish_ledger_report",
+      "kind": "function"
+    }
+  ],
+  "oracle_frontier": [
+    {
+      "path": "environment/tls_lab/capsule_io/src/reader.rs",
+      "fix_symbols": ["read_capsule_dir"],
+      "co_resident_helpers": ["parse_capsule", "CapsuleError"],
+      "allowed_top_level_symbols": ["read_capsule_dir", "CapsuleError"]
+    },
+    {
+      "path": "environment/tls_lab/tls_reasm/src/record_splice.rs",
+      "fix_symbols": ["reassemble_records"],
+      "co_resident_helpers": ["TlsRecord"],
+      "allowed_top_level_symbols": ["reassemble_records", "TlsRecord"]
+    },
+    {
+      "path": "environment/tls_lab/role_detect/src/endpoint_roles.rs",
+      "fix_symbols": ["endpoint_label_table"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": ["endpoint_label_table"]
+    },
+    {
+      "path": "environment/tls_lab/ja4_canon/src/fingerprint_canon.rs",
+      "fix_symbols": ["seal_handshake_tag"],
+      "co_resident_helpers": ["HandshakeView", "extension_hash"],
+      "allowed_top_level_symbols": ["seal_handshake_tag", "HandshakeView"]
+    },
+    {
+      "path": "environment/tls_lab/retrans_dedupe/src/payload_dedupe.rs",
+      "fix_symbols": ["dedupe_frames"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": ["dedupe_frames"]
+    },
+    {
+      "path": "environment/tls_lab/anomaly_count/src/anomaly_tally.rs",
+      "fix_symbols": ["count_anomalies"],
+      "co_resident_helpers": ["AnomalyCounters"],
+      "allowed_top_level_symbols": ["count_anomalies", "AnomalyCounters"]
+    },
+    {
+      "path": "environment/tls_lab/ledger_store/src/session_ledger.rs",
+      "fix_symbols": ["persist_capsule_ledger"],
+      "co_resident_helpers": ["collect_handshake_bytes", "StagedSession"],
+      "allowed_top_level_symbols": ["persist_capsule_ledger", "read_ledger", "StagedSession"]
+    },
+    {
+      "path": "environment/tls_lab/index_emit/src/session_report.rs",
+      "fix_symbols": ["publish_ledger_report"],
+      "co_resident_helpers": ["SessionRow", "SessionIndex", "Totals"],
+      "allowed_top_level_symbols": ["publish_ledger_report", "SessionRow", "SessionIndex", "Totals"]
+    }
+  ],
+  "flipping_point_contract": {
+    "locations": [
+      {
+        "id": "capsule-read",
+        "path": "environment/tls_lab/capsule_io/src/reader.rs",
+        "controls_tests": [
+          "test_alpha_capsule_quad_in_index",
+          "test_bravo_capsule_quad_in_index"
+        ]
+      },
+      {
+        "id": "record-splice",
+        "path": "environment/tls_lab/tls_reasm/src/record_splice.rs",
+        "controls_tests": [
+          "test_bravo_fragment_gap_matches_parity",
+          "test_unique_frames_matches_parity",
+          "test_unique_frames_never_exceed_frame_count",
+          "test_alpha_retransmit_anomaly_count"
+        ]
+      },
+      {
+        "id": "session-ledger",
+        "path": "environment/tls_lab/ledger_store/src/session_ledger.rs",
+        "controls_tests": [
+          "test_staging_jsonl_created_on_ingest",
+          "test_staging_rows_sorted_by_session_id",
+          "test_subprocess_alt_staging_export_path"
+        ]
+      },
+      {
+        "id": "session-report",
+        "path": "environment/tls_lab/index_emit/src/session_report.rs",
+        "controls_tests": [
+          "test_full_index_matches_parity_session_index",
+          "test_per_session_ja4_matches_parity",
+          "test_export_is_byte_identical_on_repeat"
+        ]
+      },
+      {
+        "id": "cli-dispatch",
+        "path": "environment/tools/ja4idx/src/main.rs",
+        "controls_tests": [
+          "test_split_cli_ingest_then_export",
+          "test_ja4idx_release_binary_rebuilds"
+        ]
+      },
+      {
+        "id": "build-script",
+        "path": "environment/scripts/build_all.sh",
+        "controls_tests": [
+          "test_ja4idx_release_binary_rebuilds",
+          "test_ingest_export_pipeline_writes_index"
+        ]
+      }
+    ],
+    "no_single_location_flips_majority": true,
+    "concentration_cap": 0.5
+  },
+  "decoy_manifest": [
+    {
+      "path": "environment/tls_lab/telemetry_wrap/src/lib.rs",
+      "kind": "module",
+      "non_fix_purpose": "latency wrapper not on ingest/export hot path"
+    }
+  ],
+  "task_slug": "rust-pcap-tls-ja4-session-fingerprint-indexer"
+}

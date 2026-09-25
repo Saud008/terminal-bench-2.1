@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${APP_ROOT:-/app}"
+STATE_DIR="${APP_ROOT}/state"
+OUTPUT_DIR="${APP_ROOT}/output"
+
+usage() {
+  echo "usage: fw-risk-map ingest --pair <manifest.json>" >&2
+  echo "       fw-risk-map export --pair <pair_id> --output <path>" >&2
+  exit 2
+}
+
+cmd="${1:-}"
+shift || usage
+
+case "${cmd}" in
+  ingest)
+    exec bash "${APP_ROOT}/lib/ingest.sh" "$@"
+    ;;
+  export)
+    exec bash "${APP_ROOT}/lib/export.sh" "$@"
+    ;;
+  *)
+    usage
+    ;;
+esac

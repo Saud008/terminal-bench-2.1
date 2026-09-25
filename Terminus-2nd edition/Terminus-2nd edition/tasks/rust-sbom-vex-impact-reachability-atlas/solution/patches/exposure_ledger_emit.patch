@@ -1,0 +1,85 @@
+--- a/src/rptgen/rollup.rs
++++ b/src/rptgen/rollup.rs
+@@ -2,13 +2,10 @@
+ use std::fs;
+ use std::path::Path;
+ 
+-use serde_json::json;
+-
+ use crate::depcrawl::binary_map::{apply_salt, packages_for_binary};
+ use crate::snapbuf::codec::load_stage;
+ use crate::types::{
+-    AtlasStage, ImpactAtlas, ImpactRow, StageVex, WaiverEvidence, STATUS_AFFECTED,
+-    STATUS_FIXED, STATUS_NOT_AFFECTED,
++    AtlasStage, ImpactAtlas, ImpactRow, StageVex, WaiverEvidence, STATUS_FIXED, STATUS_NOT_AFFECTED,
+ };
+ use crate::waiverq::ttl::filter_active;
+ use crate::waiverq::rank::{effective_status, pick_effective};
+@@ -57,7 +54,12 @@
+             }
+         }
+     }
+-    rows.sort_by(|a, b| a.vuln_id.cmp(&b.vuln_id));
++    rows.sort_by(|a, b| {
++        a.binary
++            .cmp(&b.binary)
++            .then(a.package_purl.cmp(&b.package_purl))
++            .then(a.vuln_id.cmp(&b.vuln_id))
++    });
+     Ok(rows)
+ }
+ 
+@@ -81,20 +83,34 @@
+ }
+ 
+ fn export_digest_for(impacts: &[ImpactRow]) -> String {
+-    let mut arr = Vec::new();
++    let mut parts = Vec::new();
+     for row in impacts {
+-        arr.push(json!({
+-            "binary": row.binary,
+-            "package_purl": row.package_purl,
+-            "vuln_id": row.vuln_id,
+-            "effective_status": row.effective_status,
+-            "reachable": row.reachable,
+-            "waiver": row.waiver,
+-        }));
++        let waiver_json = match &row.waiver {
++            None => "null".to_string(),
++            Some(w) => {
++                let exp = match &w.expires_at {
++                    None => "null".to_string(),
++                    Some(v) => serde_json::to_string(v).unwrap_or_else(|_| "null".to_string()),
++                };
++                format!(
++                    r#"{{"statement_id":{},"expires_at":{}}}"#,
++                    serde_json::to_string(&w.statement_id).unwrap_or_default(),
++                    exp
++                )
++            }
++        };
++        parts.push(format!(
++            r#"{{"binary":{},"package_purl":{},"vuln_id":{},"effective_status":{},"reachable":true,"waiver":{}}}"#,
++            serde_json::to_string(&row.binary).unwrap_or_default(),
++            serde_json::to_string(&row.package_purl).unwrap_or_default(),
++            serde_json::to_string(&row.vuln_id).unwrap_or_default(),
++            serde_json::to_string(&row.effective_status).unwrap_or_default(),
++            waiver_json
++        ));
+     }
+-    let bytes = serde_json::to_vec(&arr).unwrap_or_default();
++    let body = format!("[{}]", parts.join(","));
+     use sha2::{Digest, Sha256};
+-    hex::encode(Sha256::digest(bytes))
++    hex::encode(Sha256::digest(body.as_bytes()))
+ }
+ 
+ pub fn group_vex(stage: &AtlasStage) -> HashMap<(String, String), Vec<StageVex>> {
+@@ -106,7 +122,3 @@
+     }
+     map
+ }
+-
+-pub fn should_emit(status: &str) -> bool {
+-    status != STATUS_AFFECTED || status == STATUS_AFFECTED
+-}

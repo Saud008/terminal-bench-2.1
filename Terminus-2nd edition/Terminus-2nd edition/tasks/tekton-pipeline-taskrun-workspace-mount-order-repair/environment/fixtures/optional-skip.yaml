@@ -1,0 +1,29 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: optional-skip-run
+spec:
+  pipelineSpec:
+    workspaces:
+      - name: artifacts
+        optional: false
+      - name: signing-key
+        optional: true
+    tasks:
+      - name: package
+        workspaces:
+          - name: dist
+            workspace: artifacts
+          - name: key
+            workspace: signing-key
+        taskSpec:
+          workspaces:
+            - name: dist
+              mountPath: /workspaces/dist
+            - name: key
+              mountPath: /workspaces/key
+          steps:
+            - name: tar
+  workspaces:
+    - name: artifacts
+      emptyDir: {}

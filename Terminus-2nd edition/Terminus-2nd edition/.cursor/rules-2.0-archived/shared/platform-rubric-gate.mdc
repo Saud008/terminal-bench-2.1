@@ -1,0 +1,73 @@
+---
+description: LOCKED — Platform rubric positive cumulative 10–40 per block; pack gate
+alwaysApply: true
+---
+
+# Terminus — Platform rubric gate (LOCKED)
+
+**Repo policy:** Platform rubrics live in `rubrics/<slug>.md` (never task zip). Before **`pack_zip.sh`**, the rubric must pass **`platform_rubric_gate.py`**.
+
+---
+
+## Cumulative score (required)
+
+| Task type | Rule |
+|-----------|------|
+| **Non-milestone** | Sum of **positive** criteria scores (**+1, +2, +3, +5** only) = **10–40** |
+| **Milestone** | Each `# Rubric N` block: positive cumulative **10–40**; **≥1 negative** per milestone |
+| **All** | **≥3 negative** criteria overall; scores ∈ {±1, ±2, ±3, ±5} — **never 4** |
+
+**Positive cumulative** = add only plus lines (negatives do not reduce this band).
+
+**Format:** each line `Agent …, <score>` — one line; no tests/pytest/instruction/oracle mentions.
+
+---
+
+## Where files live
+
+| Output | Path | In zip? |
+|--------|------|--------|
+| **File (required before pack)** | `rubrics/<slug>.md` | **No** |
+| **Platform form** | Copy criterion lines from file | Upload UI only |
+
+Header every file:
+
+```markdown
+# Platform rubric — <slug>
+
+**Task folder:** tasks/<slug>/
+```
+
+---
+
+## Agent workflow (Phase H + every ready-to-submit)
+
+1. Write `rubrics/<slug>.md` via `scripts/write_platform_rubric.py` (validates 10–40 on write).
+2. Run `python3 scripts/platform_rubric_gate.py --check --slug <slug>`.
+3. Phase H reply: paste rubric lines in chat **and** give `rubrics/<slug>.md` path.
+4. `pack_zip.sh` runs `--pack-gate` — **blocks** if missing or out of 10–40 band.
+5. `create_finish_to_zip.py` runs the same check before pack.
+
+**Override (user explicit only in that message):** `TERMINUS_PLATFORM_RUBRIC_SKIP=1 ./scripts/pack_zip.sh <name>`
+
+---
+
+## Validation (automatic)
+
+`platform_rubric_gate.py` + `rubric_policy.py` check:
+
+- File at `rubrics/<slug>.md`
+- Slug header matches `tasks/<slug>/`
+- Agent-prefixed lines; valid ±1/2/3/5 suffix
+- **Positive cumulative 10–40** per block (default block or each `# Rubric N`)
+- **≥3 negatives** overall; milestone tasks need `# Rubric` headers when `number_of_milestones > 0`
+
+Report: `jobs-local/gates/platform-rubric-last.json`
+
+---
+
+## Related
+
+- `shared/rubric-storage-lock.mdc` — storage + slug naming
+- `create/creation-rules.mdc` · `reviewer/reviewer-checklist.mdc` — rubric format
+- `scripts/write_platform_rubric.py` · `scripts/platform_rubric_gate.py` · `scripts/rubric_policy.py`

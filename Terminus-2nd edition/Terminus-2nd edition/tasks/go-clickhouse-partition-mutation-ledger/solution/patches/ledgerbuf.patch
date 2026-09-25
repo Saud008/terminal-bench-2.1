@@ -1,0 +1,14 @@
+--- a/internal/ledgerbuf/io.go
++++ b/internal/ledgerbuf/io.go
+@@ -11,7 +11,10 @@
+ 
+ func Write(path string, rows []model.StagedMutation) error {
+     sort.Slice(rows, func(i, j int) bool {
+-        return rows[i].MutationID < rows[j].MutationID
++        if rows[i].PartitionID != rows[j].PartitionID {
++            return rows[i].PartitionID < rows[j].PartitionID
++        }
++        return rows[i].MutationVersion < rows[j].MutationVersion
+     })
+     f, err := os.Create(path)
+     if err != nil {

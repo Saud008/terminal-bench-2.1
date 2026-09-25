@@ -1,0 +1,76 @@
+{
+  "probes": [
+    {
+      "probe_id": "p_ops_allow",
+      "user": "ops",
+      "host": "bastion.corp.example.com",
+      "principal": "ops",
+      "key_fingerprint": "0011223344556677889900112233445566778899",
+      "signed_by_ca": true,
+      "ca_id": "infra-ca-01"
+    },
+    {
+      "probe_id": "p_guest_deny",
+      "user": "ops",
+      "host": "bastion.corp.example.com",
+      "principal": "guest",
+      "key_fingerprint": "1122334455667788990011223344556677889900",
+      "signed_by_ca": false,
+      "ca_id": ""
+    },
+    {
+      "probe_id": "p_revoked",
+      "user": "ops",
+      "host": "bastion.corp.example.com",
+      "principal": "admin",
+      "key_fingerprint": "deadbeef00112233445566778899aabbccddeeff",
+      "signed_by_ca": true,
+      "ca_id": "infra-ca-01"
+    },
+    {
+      "probe_id": "p_ca_scope_deny",
+      "user": "ops",
+      "host": "bastion.corp.example.com",
+      "principal": "contractor",
+      "key_fingerprint": "2233445566778899001122334455667788990011",
+      "signed_by_ca": true,
+      "ca_id": "infra-ca-01"
+    },
+    {
+      "probe_id": "p_wildcard_allow",
+      "user": "ops",
+      "host": "bastion.corp.example.com",
+      "principal": "alice@corp.example.com",
+      "key_fingerprint": "3344556677889900112233445566778899001122",
+      "signed_by_ca": false,
+      "ca_id": ""
+    },
+    {
+      "probe_id": "p_global_fallback",
+      "user": "vendor",
+      "host": "other.example.com",
+      "principal": "contractor",
+      "key_fingerprint": "4455667788990011223344556677889900112233",
+      "signed_by_ca": false,
+      "ca_id": ""
+    },
+    {
+      "probe_id": "p_staging_release",
+      "user": "release",
+      "host": "staging1.corp.example.com",
+      "principal": "release",
+      "key_fingerprint": "5566778899001122334455667788990011223344",
+      "signed_by_ca": false,
+      "ca_id": ""
+    },
+    {
+      "probe_id": "p_wildcard_bad",
+      "user": "ops",
+      "host": "bastion.corp.example.com",
+      "principal": "bad*token",
+      "key_fingerprint": "6677889900112233445566778899001122334455",
+      "signed_by_ca": false,
+      "ca_id": ""
+    }
+  ]
+}

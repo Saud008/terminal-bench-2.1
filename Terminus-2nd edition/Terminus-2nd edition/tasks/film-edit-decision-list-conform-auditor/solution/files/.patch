@@ -1,0 +1,75 @@
+Only in solution/files/: .patch
+Only in environment/lib/: conform_publish.sh
+Only in environment/lib/: conform_stage.sh
+Only in environment/lib/: digest_helper.py
+Only in environment/lib/: edl_parse.awk
+diff -u environment/lib/handle_math.sh solution/files/handle_math.sh
+--- environment/lib/handle_math.sh	2026-07-08 21:18:14.002002600 +0000
++++ solution/files/handle_math.sh	2026-07-08 20:09:53.466981200 +0000
+@@ -19,7 +19,7 @@
+   budget=$(( out_frames - in_frames ))
+   if [[ "${pulldown}" == "23976" ]]; then
+     scale="${PULLDOWN_NUMERATOR}"
+-    if [[ "${scale}" -eq 24000 ]]; then
++    if [[ "${scale}" -eq 23976 ]]; then
+       budget=$(( (budget * 24000 + 11988) / 23976 ))
+     fi
+   fi
+Only in environment/lib/: missing_media.sh
+diff -u environment/lib/offline_media_ledger.sh solution/files/offline_media_ledger.sh
+--- environment/lib/offline_media_ledger.sh	2026-07-08 21:20:37.027226700 +0000
++++ solution/files/offline_media_ledger.sh	2026-07-08 21:20:37.672004900 +0000
+@@ -12,13 +12,9 @@
+   local reel="$1"
+   local missing_file="$2"
+   local alias_file="$3"
+-  local check_name="${reel}"
++  local check_name
+   local line
+-  if [[ "${MISSING_BEFORE_ALIAS}" -eq 1 ]]; then
+-    check_name="${reel}"
+-  elif [[ "${MISSING_BEFORE_ALIAS}" -eq 0 ]]; then
+-    check_name="$(resolve_reel "${reel}" "${alias_file}")"
+-  fi
++  check_name="$(resolve_reel "${reel}" "${alias_file}")"
+   if [[ ! -f "${missing_file}" ]]; then
+     return 1
+   fi
+diff -u environment/lib/seal_policy.sh solution/files/seal_policy.sh
+--- environment/lib/seal_policy.sh	2026-07-08 21:19:55.865549900 +0000
++++ solution/files/seal_policy.sh	2026-07-08 21:20:04.314678200 +0000
+@@ -9,7 +9,11 @@
+ compute_seal_digest() {
+   local event_file="$1"
+   local finding_file="$2"
+-  sha256sum "${event_file}" | awk '{print $1}'
++  if [[ "${DIGEST_INCLUDES_FINDINGS}" -eq 1 ]]; then
++    cat "${event_file}" "${finding_file}" | sha256sum | awk '{print $1}'
++  else
++    sha256sum "${event_file}" | awk '{print $1}'
++  fi
+ }
+ 
+ emit_reopens_bundle() {
+Only in environment/lib/: tc_map_validate.sh
+diff -u environment/lib/tc_policy.sh solution/files/tc_policy.sh
+--- environment/lib/tc_policy.sh	2026-07-08 20:09:53.263432300 +0000
++++ solution/files/tc_policy.sh	2026-07-08 20:09:53.557209900 +0000
+@@ -1,9 +1,9 @@
+ #!/usr/bin/env bash
+ # Runtime policy for SMPTE drop-frame conversion.
+ # When DROP_FRAME_LINEAR is true, drop-frame bundles use non-drop frame math.
+-DROP_FRAME_LINEAR=1
+-ALIAS_BIDIRECTIONAL=0
+-MISSING_BEFORE_ALIAS=1
+-PULLDOWN_NUMERATOR=24000
+-DIGEST_INCLUDES_FINDINGS=0
+-EMIT_REOPEN=1
+\ No newline at end of file
++DROP_FRAME_LINEAR=0
++ALIAS_BIDIRECTIONAL=1
++MISSING_BEFORE_ALIAS=0
++PULLDOWN_NUMERATOR=23976
++DIGEST_INCLUDES_FINDINGS=1
++EMIT_REOPEN=0
+\ No newline at end of file

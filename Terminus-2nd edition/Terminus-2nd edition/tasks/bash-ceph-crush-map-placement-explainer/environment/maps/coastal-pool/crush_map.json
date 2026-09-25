@@ -1,0 +1,86 @@
+{
+  "buckets": [
+    {
+      "id": -1,
+      "name": "default",
+      "type": "root",
+      "weight": 0,
+      "children": [
+        {
+          "id": -2,
+          "weight": 4096
+        }
+      ]
+    },
+    {
+      "id": -2,
+      "name": "rack-coastal",
+      "type": "rack",
+      "weight": 0,
+      "children": [
+        {
+          "id": -3,
+          "weight": 2048
+        },
+        {
+          "id": -4,
+          "weight": 2048
+        }
+      ]
+    },
+    {
+      "id": -3,
+      "name": "host-alpha",
+      "type": "host",
+      "weight": 0,
+      "children": [
+        {
+          "id": 0,
+          "weight": 1024
+        },
+        {
+          "id": 1,
+          "weight": 1024
+        }
+      ]
+    },
+    {
+      "id": -4,
+      "name": "host-beta",
+      "type": "host",
+      "weight": 0,
+      "children": [
+        {
+          "id": 2,
+          "weight": 1536
+        },
+        {
+          "id": 3,
+          "weight": 512
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": 0,
+      "name": "rep_rule",
+      "steps": [
+        {
+          "op": "take",
+          "arg": "default"
+        },
+        {
+          "op": "chooseleaf",
+          "arg": {
+            "num": 3,
+            "type": "host"
+          }
+        },
+        {
+          "op": "emit"
+        }
+      ]
+    }
+  ]
+}

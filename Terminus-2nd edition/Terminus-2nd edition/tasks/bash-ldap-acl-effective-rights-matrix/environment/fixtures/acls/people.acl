@@ -1,0 +1,13 @@
+# people subtree ACLs
+TARGET ou=people,dc=example,dc=com
+SCOPE subtree
+INHERIT yes
+ALLOW group cn=readers,ou=groups,dc=example,dc=com read,search ATTR *
+DENY group cn=contractors,ou=groups,dc=example,dc=com write ATTR userPassword
+---
+TARGET cn=alice,ou=people,dc=example,dc=com
+SCOPE entry
+INHERIT no
+ALLOW user cn=alice,ou=people,dc=example,dc=com write ATTR mail
+DENY group cn=readers,ou=groups,dc=example,dc=com write ATTR mail
+DENY group cn=readers,ou=groups,dc=example,dc=com read ATTR mail

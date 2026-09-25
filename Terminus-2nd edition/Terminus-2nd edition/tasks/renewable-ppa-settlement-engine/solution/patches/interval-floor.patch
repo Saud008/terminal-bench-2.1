@@ -1,0 +1,15 @@
+--- internal/intervalalign/align.go
++++ internal/intervalalign/align.go
+@@ -15,11 +15,7 @@
+ 	}
+ 	minute := t.Minute()
+-	// Baseline uses ceiling within the hour instead of floor.
+-	alignedMinute := ((minute / step) + 1) * step
+-	if alignedMinute >= 60 {
+-		t = t.Add(time.Hour)
+-		alignedMinute = 0
+-	}
++	alignedMinute := (minute / step) * step
+ 	aligned := time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), alignedMinute, 0, 0, time.UTC)
+ 	return aligned.Format(time.RFC3339), nil
+ }

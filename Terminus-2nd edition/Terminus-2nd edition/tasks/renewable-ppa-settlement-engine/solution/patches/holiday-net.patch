@@ -1,0 +1,23 @@
+--- internal/holidayrollup/rollup.go
++++ internal/holidayrollup/rollup.go
+@@ -15,8 +15,15 @@
+ 	if err != nil {
+ 		return 0, err
+ 	}
++	holidaySet := map[string]struct{}{}
++	for _, h := range sc.Holidays {
++		holidaySet[h] = struct{}{}
++	}
+ 	days := 0
++	trim := 0
+ 	for d := start; !d.After(end); d = d.AddDate(0, 0, 1) {
+ 		days++
++		key := d.Format("2006-01-02")
++		if _, ok := holidaySet[key]; ok {
++			trim++
++		}
+ 	}
+-	// Baseline adds holiday count instead of subtracting.
+-	return days + len(sc.Holidays), nil
++	return days - trim, nil
+ }

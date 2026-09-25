@@ -1,0 +1,83 @@
+--- internal/plugins/rewrite.go
++++ internal/plugins/rewrite.go
+@@ -1,8 +1,10 @@
+ package plugins
+
+ 
+
+ import (
+
++	"fmt"
+
+ 	"strings"
+
+ 
+
++	"github.com/miekg/dns"
+
+ 	"github.com/terminus/dnsplugd/internal/model"
+
+ )
+
+ 
+
+@@ -30,8 +32,30 @@
+ 	}
+
+ 	if ctx.Qname != before {
+
+ 		ctx.Handled = true
+
++		if r.rule.Continue {
+
++			return true, nil
+
++		}
+
+ 		ctx.StopChain = true
+
+ 		return false, nil
+
+ 	}
+
+ 	return true, nil
+
+ }
+
++
+
++func addCNAMEResponse(ctx *model.QueryCtx, target string) {
+
++	if ctx.Msg == nil {
+
++		ctx.Msg = ctx.Req.Copy()
+
++	}
+
++	ctx.Msg.Rcode = dns.RcodeSuccess
+
++	rr := &dns.CNAME{
+
++		Hdr: dns.RR_Header{
+
++			Name:   dns.Fqdn(ctx.Req.Question[0].Name),
+
++			Rrtype: dns.TypeCNAME,
+
++			Class:  dns.ClassINET,
+
++			Ttl:    60,
+
++		},
+
++		Target: dns.Fqdn(target),
+
++	}
+
++	ctx.Msg.Answer = []dns.RR{rr}
+
++}
+
++
+
++var _ = fmt.Sprintf

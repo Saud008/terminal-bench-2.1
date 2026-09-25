@@ -1,0 +1,9 @@
+{
+  "path": "d:\\Terminus-2nd edition\\Terminus-2nd edition\\tasks\\opa-bundle-signature-digest-chain-verifier-repair\\solution\\golden_digest.go",
+  "tool": "StrReplace",
+  "old_string": "func ChainRoot(members []bundle.Member, _ []string) (string, map[string]string) {\n\torder := append([]bundle.Member(nil), members...)\n\tsort.Slice(order, func(i, j int) bool {\n\t\treturn order[i].Canonical < order[j].Canonical\n\t})",
+  "new_string": "func ChainRoot(members []bundle.Member, _ []string) (string, map[string]string) {\n\torder := append([]bundle.Member(nil), members...)\n\tif ledger, err := bundle.LoadPreviewLedger(); err == nil && len(ledger.Order) > 0 {\n\t\tbyCanon := make(map[string]bundle.Member, len(members))\n\t\tfor _, m := range members {\n\t\t\tbyCanon[m.Canonical] = m\n\t\t}\n\t\torder = order[:0]\n\t\tfor _, canon := range ledger.Order {\n\t\t\tif m, ok := byCanon[canon]; ok {\n\t\t\t\torder = append(order, m)\n\t\t\t}\n\t\t}\n\t} else {\n\t\tsort.Slice(order, func(i, j int) bool {\n\t\t\treturn order[i].Canonical < order[j].Canonical\n\t\t})\n\t}",
+  "contents_len": 0,
+  "contents": null,
+  "contents_omitted": false
+}

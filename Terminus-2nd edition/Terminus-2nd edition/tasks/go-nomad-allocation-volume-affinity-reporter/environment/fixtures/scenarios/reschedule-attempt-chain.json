@@ -1,0 +1,55 @@
+{
+  "scenario_name": "reschedule-attempt-chain",
+  "job_id": "ingest",
+  "task_group": "processor",
+  "focus_alloc_id": "alloc-live",
+  "stale_cutoff_index": 0,
+  "csi_volumes": [],
+  "allocations": [
+    {
+      "alloc_id": "alloc-dead",
+      "node_id": "node-a",
+      "node_class": "compute",
+      "create_index": 300,
+      "modify_index": 310,
+      "client_status": "failed",
+      "desired_status": "run",
+      "reschedule_attempts": 3,
+      "reschedule_failed": true,
+      "csi_mounts": [],
+      "constraints": [],
+      "affinities": [],
+      "superseded_by": "alloc-live"
+    },
+    {
+      "alloc_id": "alloc-live",
+      "node_id": "node-b",
+      "node_class": "compute",
+      "create_index": 311,
+      "modify_index": 320,
+      "client_status": "running",
+      "desired_status": "run",
+      "reschedule_attempts": 1,
+      "reschedule_failed": false,
+      "csi_mounts": [],
+      "constraints": [],
+      "affinities": [],
+      "superseded_by": ""
+    },
+    {
+      "alloc_id": "alloc-retry",
+      "node_id": "node-c",
+      "node_class": "compute",
+      "create_index": 305,
+      "modify_index": 315,
+      "client_status": "failed",
+      "desired_status": "run",
+      "reschedule_attempts": 2,
+      "reschedule_failed": true,
+      "csi_mounts": [],
+      "constraints": [],
+      "affinities": [],
+      "superseded_by": ""
+    }
+  ]
+}

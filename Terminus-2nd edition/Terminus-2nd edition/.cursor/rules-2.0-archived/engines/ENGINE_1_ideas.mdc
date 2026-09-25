@@ -1,0 +1,3777 @@
+---
+description: Terminus ENGINE_1 — IDEAS — full verbatim policy (alwaysApply false; hook loads one)
+alwaysApply: false
+---
+
+# ENGINE_1 — IDEAS
+
+Ideas / newidea — corpus scan, anti-spam on ideas
+
+> Built by `scripts/build_consolidated_rules.py` from `archive/terminus-rules-mdc/`.
+> Re-run script after editing archive sources.
+
+
+---
+
+<!-- SOURCE: LOCKED.mdc -->
+
+# LOCKED — Rules & prompts policy
+
+**All files under `.cursor/rules/` and `prompts/` are LOCKED canonical guidance** for this repo unless the user explicitly overrides in the current message.
+
+**ENGINE_0 hub only (always on):** seven `.mdc` files in `shared/terminus-master-engine.mdc` — `LOCKED.mdc`, `WORKFLOW-MAP`, `terminus-master-engine`, `prompt-router`, `problem-rule-loader`, `core`, `repo-workflow`. **All other** active `.cursor/rules/**/*.mdc` use `alwaysApply: false` and load per **ENGINE_1–7** (lazy). Archive: `_legacy/**`, `prompts/*.mdc`, `tag-prompts/*.mdc` (`alwaysApply: false`). **Navigation:** `shared/terminus-master-engine.mdc` · **Registry:** `scripts/terminus_engine_registry.py`.
+
+**Standing default (no reminder):** User pastes `tasks/<name>/` + platform summary → agent auto-analyzes summary, picks prompt router + case, reads `prompts/*.md`, works task. User does not repeat this instruction each chat (`shared/prompt-router.mdc`).
+
+**Canonical ECR `FROM` (no reminder):** Any `tasks/<name>/` work → agent auto-ensures Snorkel ECR `FROM` per `shared/canonical-ecr-dockerfile-auto.mdc` + `shared/canonical-base-image-gate.mdc`. User does not repeat “use canonical images” each chat.
+
+---
+
+## Paths (LOCKED)
+
+| Live | Zip |
+|------|-----|
+| `tasks/<name>/` | `tasksubmit/<name>.zip` via **`./scripts/pack_zip.sh <name>`** only |
+
+- `author_name` / `author_email` = `anonymous`
+- No `rubric.md` in task folders or zips
+- Scan `tasks/`, `tasks/_accepted-tasks/`, `tasksubmit/` only — **no** `dusre-wale/`
+- Harbor job output → `jobs-local/` (gitignored)
+
+---
+
+## Rule folders (LOCKED @ tags)
+
+| @ tag | Folder | Hub file |
+|-------|--------|----------|
+| **@IDEAS RULES** | `ideas/` | `IDEAS-RULES.mdc` |
+| **@CREATE RULES** | `create/` | `CREATE-RULES.mdc` |
+| **@AUDIT RULES** | `audit/` | `AUDIT-RULES.mdc` |
+| **@REVIEWER RULES** | `reviewer/` | `REVIEWER-RULES.mdc` |
+| **@REVISE RULES** | `revise/` | `REVISE-RULES.mdc` |
+| **@VERIFY RULES** | `verify/` | `VERIFY-RULES.mdc` |
+| **@ZIP RULES** | `zip/` | `ZIP-RULES.mdc` |
+
+**Always with task work (via engine — not all in context):** ENGINE_3 CREATE or ENGINE_7 REVISE loads `shared/spec.mdc`, `shared/runtime-verifier.mdc`, etc. See `shared/terminus-master-engine.mdc`.
+
+**Dockerfile / image CI (LOCKED):** `shared/snorkel-dockerfile-image-best-practices.mdc` (Snorkel verbatim §1–15) · **Snorkel ECR canonical `FROM`:** `shared/canonical-base-image-gate.mdc` (`platform-preferences.mdc` §6 defers here) · Terminus extensions: `shared/dockerfile.mdc`
+
+**Oracle failed:** `revise/oracle-fix-g025-g027.mdc` + `prompts/oracleFix.md`
+
+**EASY / TRIVIAL (LOCKED trio):** `prompts/trivial.md` → `prompts/trivial-case-6.md` → `prompts/sp-hard-create-revise.md` + **@REVISE RULES** — see `revise/trivial-easy-difficulty-prompt-lock.mdc`. Pick other cases from `trivial.md` Step B only when summary matches.
+
+**Jun 2026 Snorkel additive (lazy — load with CREATE / REVISE / ZIP):** `shared/additive-rules-lock-index.mdc`
+
+**Legacy archive:** `rules/_legacy/` — superseded copies (`alwaysApply: false`). On conflict: **additive Snorkel Jun 2026 rules** > legacy docker.io corpus > `_legacy/`.
+
+---
+
+## Jun 2026 additive rules (LOCKED — lazy per engine)
+
+Loaded by **ENGINE_3 CREATE**, **ENGINE_7 REVISE**, or **ENGINE_6 ZIP** — not ENGINE_0 hub. Index: `shared/additive-rules-lock-index.mdc`.
+
+| File | Purpose |
+|------|---------|
+| `shared/additive-rules-lock-index.mdc` | **Master index** — lock policy + trivial trio |
+| `shared/snorkel-platform-changelog-sync.mdc` | Welcome changelog → rule map |
+| `shared/canonical-base-image-gate.mdc` | Snorkel ECR 10 base images + upload form |
+| `shared/canonical-ecr-dockerfile-auto.mdc` | **Auto-apply** ECR `FROM` on every task touch — no user reminder |
+| `shared/difficulty-benchmark-models.mdc` | Opus 4.8 + GPT-5.5 thresholds |
+| `shared/task-toml-subcategories-gate.mdc` | `subcategories = []` always |
+| `shared/task-toml-category-gate.mdc` | Blocked `category` values (platform: no debugging / software-engineering) |
+| `shared/allow-internet-gate.mdc` | `allow_internet` must match solve-time network need |
+| `shared/instruction-prose-style.mdc` | No backticks in `instruction.md` |
+| `shared/test-sh-reward-block.mdc` | `rc=$?` preferred reward block |
+| `reviewer/common-errors-reference.mdc` | Common Errors + feedback categories |
+| `revise/trivial-easy-difficulty-prompt-lock.mdc` | TRIVIAL/EASY prompt trio |
+| `shared/problem-rule-loader.mdc` | **Problem → load set; conflict resolution** |
+| `shared/anti-spam-templated-submissions.mdc` | **No spam / no templated tasks** — platform flag avoidance, family saturation, pre-upload gate, **§ When FAIL → fix (LOCKED)** |
+| `shared/unacceptable-task-classes.mdc` | **Never-accept registry** — templated, copy, duplicate, family, same lane, sibling, fabricated, synthetic (CREATE + REVISE + zip) |
+| `create/first-submit-acceptance-gate.mdc` | **First-upload hardness** — Phase F′ probes before first zip (ENGINE_3 / 5 / 6) |
+| `shared/sanjana-standing-requirements.mdc` | **Standing defaults** — auto audit after CREATE, no hints on reviewer instruction, no repeat asks |
+| `create/post-create-audit-loop.mdc` | **CREATE Phase E** — auto audit-fix loop (2–4 rounds; no user ask) |
+
+**Repo-only (stricter than platform where noted):** empty subcategories; blocked `category` (`debugging`, `software-engineering` — now also **platform-wide** for new tasks); no `minimal` codebase for new tasks (`create/accepted-patterns.mdc`); **anti-spam/templated PASS/FAIL** before zip (`anti-spam-templated-submissions.mdc`); default **`allow_internet = false`** with static check if solve needs network (`shared/allow-internet-gate.mdc`).
+
+**Conflicts:** `shared/problem-rule-loader.mdc` §3 — additive Snorkel Jun 2026 wins over docker.io corpus.
+
+---
+
+## Prompts (LOCKED entrypoints)
+
+| Phase | Prompt |
+|-------|--------|
+| A Ideas | `prompts/newidea.md` + **@IDEAS RULES** |
+| C Audit | `prompts/audit.md` + **@AUDIT RULES** + **@REVIEWER RULES** |
+| D Trivial | `prompts/trivial.md` + **@REVISE RULES** |
+| D Easy | `prompts/easy.md` + **@REVISE RULES** + `revise/hardness.mdc` |
+| D Medium | `prompts/medium.md` + **@REVISE RULES** |
+| D Hard | `prompts/hard.md` + **@REVISE RULES** |
+| D′ Reviewer | `prompts/reviewer.md` + **@REVIEWER RULES** |
+| E Verify | **@VERIFY RULES** |
+| F Zip | **@ZIP RULES** → `./scripts/pack_zip.sh <name>` |
+
+Full index: `prompts/README.md` · policy: `prompts/LOCKED.md`
+
+---
+
+## Conflict resolution (LOCKED)
+
+1. On conflict between rules → prefer the **stricter** rule (fairness, difficulty, offline oracle, no runtime installs).
+2. Do **not** merge tasks, folders, or zips — revise **in place** in `tasks/<name>/`.
+3. Do **not** implement reviewer feedback blindly — triage first (`REVIEWER-RULES.mdc`).
+4. Do **not** pack upload zips by hand — use `scripts/pack_zip.sh` only.
+5. Do **not** claim ready without Oracle **1** + NOP **0** evidence.
+6. Do **not** weaken `shared/snorkel-dockerfile-image-best-practices.mdc` (digest pin, final-runtime sanctioned base, 100 MiB / 50 MiB build context, offline deps, `tmux`/`asciinema`) unless the user explicitly overrides in this message.
+7. On Snorkel vs legacy conflict → **`shared/problem-rule-loader.mdc` §3** (additive Jun 2026 > docker.io corpus > `_legacy/`).
+
+---
+
+## Forbidden (agents)
+
+| Do not | Use instead |
+|--------|-------------|
+| Manual `zip -r` / `Compress-Archive` for upload | `./scripts/pack_zip.sh <name>` |
+| Runtime `pip`/`apt`/`npm` in `test.sh` | Dockerfile `/opt/verifier-venv` |
+| `sbt` / `mix deps.get` / network in `solve.sh` | G-025 offline oracle patterns |
+| Cherry-pick one rule file | `@` tag hub + WORKFLOW-MAP lifecycle |
+| Leave legacy `docker.io` `FROM` when editing a task | **`shared/canonical-ecr-dockerfile-auto.mdc`** — fix to ECR automatically |
+| Weaken tests/instruction to pass feedback | Triage: accept / reject / partial |
+| `pack_zip` on first upload without F′ record | `python3 scripts/first_submit_pack_gate.py --record ...` then pack — **no zip created until PASS** |
+| Manual zip to bypass F′ | `./scripts/pack_zip.sh` only — gate runs inside script |
+| `TERMINUS_FIRST_SUBMIT_SKIP` without user override | Fix probes per `create/first-submit-acceptance-gate.mdc` |
+
+
+
+---
+
+<!-- SOURCE: shared/sanjana-standing-requirements.mdc -->
+
+# Sanjana standing requirements (LOCKED — always on)
+
+**User does not repeat these every chat.** Treat as **mandatory** on every task touch. On conflict with a generic example, **this file wins**.
+
+---
+
+## 0. NEW TASK / ANY TASK EDIT — agent runs ALL phases (no permission)
+
+**User says nothing extra.** Paste platform summary and/or `tasks/<name>/` — engines + hooks drive the rest.
+
+**Trigger (automatic — user never says again):**
+
+- New folder under `tasks/<name>/` or `pending/<name>/`
+- Any edit to task files (`task.toml`, `instruction.md`, `Dockerfile`, `tests/`, `solution/`, `environment/`)
+- User pastes `tasks/<name>/` or `pending/<name>/` without saying “read only”
+
+**Agent must in the same turn (or until `jobs-local/finish/create-finish-last.json` verdict PASS):**
+
+1. **Router → Read prompts** (`shared/workflow-prompt-automation-lock.mdc`) — reviewer / trivial / audit file **before** edits
+2. Phase E static audit → fix **High → Medium** in place (max 4 rounds)
+3. Harbor oracle **1.0** + NOP **0.0** (or `jobs-local/harbor/harbor-verify-<slug>.json` if PASS)
+4. Probes + F′ record (`first_submit_pack_gate.py --record`)
+5. **`./scripts/create_finish_to_zip.sh <name>`** — one command, **no skip flags**
+6. **`rubrics/<name>.md`** via `write_platform_rubric.py` **or** same block in chat (`shared/rubric-storage-lock.mdc`)
+7. **`submission-explanations/<name>.md`** via `write_submission_explanations.py --draft` — edit in your words, paste on platform (`shared/submission-explanations-gate.mdc`)
+8. Reply with `tasksubmit/<name>.zip` path **or** `BLOCKED_*` + what was fixed
+
+**Never ask:** “run harbor?” · “pack zip?” · “audit?” · “use canonical images?” — all **automatic**.
+
+**Read-only exception (only):** user says audit only / read only / do not edit / no changes.
+
+**Hook on save:** `anti-spam-auto-run.py` → audit → 8/8 → `create_finish_to_zip --hook-mode` (debounced 45s).
+
+---
+
+## A. CREATE → zip (full pipeline — **all phases A→H — LOCKED**)
+
+**Policy:** `shared/workflow-prompt-automation-lock.mdc` + `create/new-task-pipeline-A-H.mdc`
+
+| Phase | Deliverable | Skip? |
+|-------|-------------|-------|
+| A | ≥2 accepted reads cited | **No** |
+| B | Corpus scan + similarity table | **No** |
+| C | One idea → implement | **No** |
+| D | `tasks/<name>/` tree | **No** |
+| E | Audit High/Medium = 0 | **No** |
+| F | Oracle 1.0, NOP 0.0, ruff | **No** |
+| G | `tasksubmit/<name>.zip` | **No** |
+| H | Verification table + **`rubrics/<name>.md`** + **`submission-explanations/<name>.md`** (slug in header) | **No** |
+
+| Always | Never |
+|--------|-------|
+| Phase D done → **same turn** finish script until exit **0** | Stop at “task created” without zip |
+| Final reply includes zip **and** rubric path | Ask “should I audit?” / “run harbor?” / “pack?” |
+
+**One command:**
+
+```bash
+./scripts/create_finish_to_zip.sh <name>
+```
+
+WSL harbor already run:
+
+```bash
+./scripts/create_finish_to_zip.sh <name> --skip-harbor --oracle 1.0 --nop 0.0
+```
+
+---
+
+## B. Hook automation (user runs nothing)
+
+On **every task file save** (debounced ~45s), hook runs:
+
+1. `post_create_audit_loop.py` (static Phase E)
+2. `unacceptable_class_gate.py` (**8/8**)
+3. `create_finish_to_zip.py --hook-mode` → ruff → **F′ record** → **`pack_zip.sh`**
+4. Harbor: cache `jobs-local/harbor-verify-<slug>.json` if PASS; else try; else **background** (`finish-bg-<slug>.log`)
+
+Reports: `jobs-local/anti-spam-hook-last.txt`, `create-finish-last.json`
+
+**Never ask** user to run: `terminus_anti_spam_auto.py`, `after_create.sh`, manual harbor, manual `first_submit_pack_gate --record`, manual `zip -r`.
+
+---
+
+## C. Phase E audit (conditions — no permission)
+
+- Read `jobs-local/post-create-audit-last.json` + semantic **`prompts/audit.md`** + AUDIT + REVIEWER
+- Fix **High → Medium** (Low optional, never blocks zip)
+- Stop when **High=0, Medium=0** (min **2** rounds if round 1 had blockers; max **4**)
+- Re-run finish after behavior/tests/oracle/Dockerfile change
+
+---
+
+## D. Platform summary → auto route + prompts + automation
+
+Paste summary (+ optional `tasks/<name>/`) → **auto** pick router + case → **`Read` prompt files** → edit → hooks on save.
+
+**Reviewer line comments:** hook runs **`reviewer_feedback_gate.py`** (accepted A-001…A-010 + trivial-risk) on paste; **audit only** until you save fixes; then full finish (sim **0.0**).
+
+**Revise feedback:** `prompts/reviewer.md` triage first. **EASY/TRIVIAL:** trivial-fix-invoke trio + Case 6. **No case quiz.**
+
+**Category first (every revise):** read `task.toml` `category`. **Allowed only:** `data-administration`, `machine-learning`, `games`. Banned = `debugging`, `software-engineering`, `data-processing`, `security`, `system-administration`, `build-and-dependency-management`, `scientific-computing`, `cloud-devops` (and any other value). If CI `category_classifier` predicts a banned label, reframe `instruction.md` + tags in the same turn (`shared/task-toml-category-gate.mdc`).
+
+Oracle fail only → `oracleFix.md` / G-025–G-027 first.
+
+Full order: `shared/workflow-prompt-automation-lock.mdc`.
+
+---
+
+## D2. Rubrics (LOCKED — per task slug)
+
+| Store | Path |
+|-------|------|
+| **File (preferred)** | `rubrics/<slug>.md` — header must say `tasks/<slug>/` |
+| **Chat** | Same lines at Phase H — first line names slug |
+
+**Never** `tasks/<slug>/rubric.md` or inside zip. Use `scripts/write_platform_rubric.py`.
+
+Policy: `shared/rubric-storage-lock.mdc`.
+
+---
+
+## D2b. Submission explanations (LOCKED — platform form)
+
+| Store | Path |
+|-------|------|
+| **File (required before pack)** | `submission-explanations/<slug>.md` |
+| **Platform** | Copy three paragraphs — Difficulty · Solution · Verification |
+
+**Never** in zip. Draft: `write_submission_explanations.py --slug <slug> --draft` — **edit in your own words** before paste.
+
+**Zero tolerance (Terminus):** Each field must answer its platform label exactly — Difficulty = *why hard*, not verification/oracle/CI; Solution = *approach + insight*; Verification = *how tests prove correctness*. LLM paste on the form is a critical violation.
+
+**Length cap:** **4–6 sentences**, **≤6 prose lines**, **~≤120 words** per section — trim agent drafts before paste (`shared/submission-explanations-gate.mdc`).
+
+**Prose style:** plain Indian English — avoid semicolons, colons, dashes, digits, and path dumps unless unavoidable; spell counts in words.
+
+Policy: `shared/submission-explanations-gate.mdc`.
+
+---
+
+## D2c. Task generation — no debugging, no software-engineering (LOCKED)
+
+**Every** idea and **every** pack must pass **hard acceptance 7/7**:
+
+1. NOT debugging · 2. NOT intentionally broken repo · 3. NOT fixing existing functionality
+4. NEW capability framing · 5. NOT "find bug, make tests pass"
+6. Accepted category (not debugging / not software-engineering)
+7. NOT repair/patch/correction/restoration workflow
+
+**No zip** until `repository_state_gate.py --pack-gate` → **7/7 PASS** (REGENERATE if repair/debug objective).
+
+Ideas: `idea_similarity_gate.py` runs same policy **before** similarity.
+
+Policy: `shared/repository-state-requirement.mdc` · Report: `jobs-local/repository-state-gate-last.json` (also `jobs-local/task-generation-gate-last.json`)
+
+Override (user explicit only): `TERMINUS_TASK_GENERATION_SKIP=1` on pack.
+
+---
+
+## D3. jobs-local layout (LOCKED)
+
+Artifacts in subfolders — see `shared/jobs-local-layout-lock.mdc`. Migrate once:
+
+```bash
+python3 scripts/jobs_local_paths.py --migrate
+```
+
+---
+
+## E. Reviewer instruction fixes → no hints
+
+| Do | Do not |
+|----|--------|
+| Fix via **`/app/docs/`** + **tests** | Bug files, fix order, test checklist in `instruction.md` |
+| Triage RF6 — reject trivializing comments | Blind reviewer implementation |
+
+---
+
+## F. Zip / metadata / Docker (automatic)
+
+| Item | Rule |
+|------|------|
+| Zip | **`./scripts/pack_zip.sh <name>`** only — never manual `zip -r` |
+| ECR `FROM` | Auto-fix per canonical gate on every task touch |
+| **Canonical base image** | **Always** use Snorkel ECR canonical `FROM` with exact `@sha256:` digest from `archive/terminus-rules-mdc/shared/canonical-base-image-gate.mdc` — **every task** user gives you (create, revise, verify, zip). Never leave `docker.io`, floating tags, or legacy digests. Run `migrate_dockerfile_canonical_ecr.py --ensure` before pack. |
+| **Platform form** | User answers **Yes** to “Approved canonical base image?” on upload — agent must ensure Dockerfile qualifies so **Yes** is correct (no justification needed). |
+| Stack pick | Go→golang ECR · Rust→rust ECR · Python→python ECR · Node→node ECR · **Bash/shell/C/Make→debian:bookworm-slim ECR** (not non-ECR python when agent work is shell) |
+| `subcategories` | Always **`[]`** |
+| `category` | **ALLOWED only:** `data-administration`, `machine-learning`, `games`. **BANNED:** `debugging`, `software-engineering`, `data-processing`, `security`, `system-administration`, `build-and-dependency-management`, … (`shared/task-toml-category-gate.mdc`) |
+| `task.toml` keys | **Only official skeleton fields** — no invented/undocumented metadata (`shared/task-toml-supported-fields-only.mdc`) |
+| `instruction.md` | No backticks; absolute paths |
+| `author_name` / `author_email` | `anonymous` |
+| `allow_internet` | Default **`false`** |
+
+---
+
+## G. Gates before upload (all must pass)
+
+| Gate | Evidence |
+|------|----------|
+| Oracle | **1.0** · NOP **0.0** (`harbor-verify-<slug>.json` or finish record) |
+| **Unacceptable-class 8/8** | TEMPLATED · COPY · DUPLICATE · FAMILY · SAME_LANE · SIBLING · FABRICATED · SYNTHETIC — all PASS |
+| **Anti-spam/templated** | PASS · **legacy sim 0.0** (nearest none) in `pack_zip.sh` |
+| **Phase F′** | `jobs-local/first-submit-<slug>.json` verdict PASS (first upload) |
+| **Trivial shape** | `preupload_trivial_shape_gate.py` PASS — `jobs-local/gates/trivial-shape-last.txt` |
+| **Agent calibration** | `jobs-local/calibration/agent-smoke-<slug>.json` worst **≤20%** |
+| **CI / audit** | No High/Medium blockers |
+
+Do not claim **ready** without **`create-finish-last.json` verdict PASS** + zip path.
+
+---
+
+## H. TRIVIAL / EASY — first upload must not bounce (LOCKED)
+
+**Root cause:** shallow tasks pass audit + oracle → platform **TRIVIAL** → many revise rounds.
+
+**Always load:** `shared/trivial-fix-invoke-mandatory-steps.mdc` + `shared/trivial-first-upload-lock.mdc` + `create/first-submit-acceptance-gate.mdc`
+
+| When | Action |
+|------|--------|
+| **CREATE** (new slug) | **Case 6 shape at CREATE** — ingest→staging→export, decoy, ≥5 bugs, ≥18 tests if hard |
+| Platform **TRIVIAL** / **EASY** pasted | **`prompts/trivial-fix-invoke.md`** + **14 mandatory steps** — **no skips** (§H table below) |
+| Vague “fix task” / `@trivial` only | **One ask** — paste `trivial-fix-invoke.md` §1 |
+
+### TRIVIAL/EASY pasted — 14 steps (LOCKED — agent must not skip any)
+
+See **`shared/trivial-fix-invoke-mandatory-steps.mdc`**. Summary:
+
+- Steps **1–7**: agent (read invoke + trio, **§3 fix prompt before edits**, Case 6 code).
+- Steps **8–14**: **AUTOMATIC on file save** when TRIVIAL/EASY context exists (`trivial_easy_auto_finish.sh`). First EASY paste saves context + gate report only — **not** finish before edits.
+
+1. Quote summary facts → 2. Read invoke → 3. Read trio → 4. Read probes contract → **5. Write §3 fix prompt BEFORE edits** → 6. List real files → 7. Case 6 structural edits → 8. `terminus_auto_probes.py` → 9. agent calibration record → 10. probe table → 11. `create_finish_to_zip.sh` → 12. oracle/NOP → 13. zip → 14. ready only if all PASS.
+
+**Forbidden:** edit before step 5; Case 4/5 only; skip probes or finish script.
+
+| Before zip | `terminus_auto_probes.py` **must exit 0** — no manual `--probe PASS` if auto FAIL |
+
+**Forbidden:** Case 4/5 as CREATE strategy; decorative hash fields; one-file-fix depth; `TERMINUS_FIRST_SUBMIT_SKIP` without user override in message.
+
+---
+
+## I. Forbidden (agents)
+
+- Stop after CREATE without finish script attempt
+- Ask permission for standing defaults (audit, harbor, zip, ECR, gates)
+- Weaken tests/instruction to pass feedback
+- `TERMINUS_ANTI_SPAM_SKIP` unless user **explicitly overrides in that message**
+- Manual pack / skip unacceptable-class / skip F′ on first upload
+- Invent undocumented `task.toml` metadata fields (`shared/task-toml-supported-fields-only.mdc`)
+
+---
+
+## J. Ask user only when (one question)
+
+- **BLOCKED_HARBOR** and no WSL/Docker path
+- Audit blocked **after 4 rounds** and ambiguous product decision
+- Task path or platform summary truly missing
+
+---
+
+## K. Similarity must be 0.0 before zip (LOCKED)
+
+**Pack line must show:** `Anti-spam/templated: PASS — nearest none (sim 0.0) …`
+
+If **`sim > 0`** → **do not zip** — fix the **whole task** in place until sim is **0.0**:
+
+```bash
+python3 scripts/terminus_anti_spam_check.py --pack-gate --task-name <name>
+```
+
+| If blocker shows | Fix (task redesign, not metadata-only) |
+|------------------|----------------------------------------|
+| Same **family** tag as neighbor | Change slug tokens (no substring false family, e.g. quest**frame** ≠ frame), or different primary stack so family matcher does not tag both |
+| **Near-duplicate slug** (jaccard ≥ 0.72) | Rename slug / domain tokens — generic shared words (rollup, certificate, replay) alone must not pair tasks |
+| Harness overlap + shared family | Change languages in `task.toml`, test harness shape (reference/TB3/rebuild), or verifier contract so fingerprint diverges |
+| Pipeline weighted only | OK when **legacy sim 0.0** — pipeline does not inflate displayed sim |
+
+Re-run **`create_finish_to_zip.sh`** after fixes. **No** `TERMINUS_ANTI_SPAM_SKIP` for sim > 0.
+
+---
+
+## L. Full pipeline — agents never skip steps (LOCKED)
+
+**One command (no flags unless user explicitly overrides in that message):**
+
+```bash
+./scripts/create_finish_to_zip.sh <name>
+```
+
+| # | Step | Runs in | Agent may skip? |
+|---|------|---------|-----------------|
+| 1 | Static audit (High/Medium → 0) | `create_finish_to_zip` | **No** — never `--skip-audit` |
+| 2 | Harbor oracle **1.0** + NOP **0.0** | same | **No** — never `--skip-harbor` without user override |
+| 3 | `ruff check` tests | same | **No** |
+| 4 | F′ probes + `first_submit_pack_gate --record` | same | **No** |
+| 4b | Platform rubric **10–40** positive cumulative + gate | `platform_rubric_gate.py` | **No** — before pack |
+| 4c | Submission explanations draft + gate | same | **No** — auto before pack |
+| 5 | Canonical ECR `FROM` | `pack_zip.sh` | **Auto** |
+| 6 | `subcategories = []` + category allow-list + **supported `task.toml` fields only** | `pack_zip.sh` | **Auto** |
+| 6b | Repository-state **hard acceptance 7/7** (functional baseline + new capability; REGENERATE if repair/debug) | `repository_state_gate.py` | **No** — **no zip** until PASS |
+| 7 | Anti-spam + **legacy sim 0.0** (`PACK_SIM_MUST_BE_ZERO`) | `pack_zip.sh` | **No** — never `TERMINUS_ANTI_SPAM_SKIP` |
+| 8 | Unacceptable-class **8/8 PASS** | `pack_zip.sh` | **No** |
+| 8b | Task-uniqueness **14-check** (distinct workflow/artifact/industry) | `task_uniqueness_gate.py` | **No** |
+| 9 | First-submit F′ pack gate | `pack_zip.sh` | **No** — never `TERMINUS_FIRST_SUBMIT_SKIP` |
+| 9b | Agent calibration (worst ≤20% HARD + `--post-harden` if platform EASY) | `preupload_agent_calibration.py` | **No** |
+| 9c | Difficulty design (hard metadata, per-test surface) | `preupload_difficulty_design_gate.py` | **No** |
+| 9d | Trivial shape (modules, hidden traps, auto-probes live) | `preupload_trivial_shape_gate.py` | **No** |
+| 10 | CI preflight (local static + quality heuristics) | `pack_zip.sh` | **No** — harbor GPT LLMaJ **not** in pack path |
+| 11 | Zip flat root + G-026/G-027 | `pack_zip.sh` | **No** |
+| 11a | Platform rubric file (10–40 positive per block) | `platform_rubric_gate.py` | **No** |
+| 11b | Submission explanations file | `submission_explanations_gate.py` | **No** |
+| 12 | `terminus_verify_submit.py` task + zip | `pack_zip.sh` | **No** |
+
+**Hook (on save):** `post_create_audit_loop.py` → `unacceptable_class_gate.py` (8/8) → `repository_state_gate.py` (7/7) → optional reviewer/TRIVIAL context → `create_finish_to_zip --hook-mode` or `trivial_easy_auto_finish.py` (hook **cannot** use skip flags).
+
+**Claim “ready” only when:** `jobs-local/finish/create-finish-last.json` has `"verdict": "PASS"`, `tasksubmit/<name>.zip` exists, **`rubrics/<name>.md`**, and **`submission-explanations/<name>.md`** (or chat copies with slug header).
+
+**Forbidden for agents:** manual `zip -r`; stopping after CREATE without finish script; any `TERMINUS_*_SKIP` unless user **explicitly** overrides in the **current** message.
+
+---
+
+**Scripts:** `create_finish_to_zip.sh` · `pack_zip.sh` · `post_create_audit_loop.py` · `unacceptable_class_gate.py` · `repository_state_gate.py` · `task_uniqueness_gate.py` · `anti_spam_hook_runner.py`  
+**Archive copy (ENGINE bundles):** `archive/terminus-rules-mdc/shared/sanjana-standing-requirements.mdc`
+
+
+
+---
+
+<!-- SOURCE: shared/no-easy-upload-lock.mdc -->
+
+# Terminus — No EASY upload lock (LOCKED)
+
+**User goal:** Platform par **EASY / TRIVIAL** tasks nahi chahiye. Probes PASS + oracle 1 **≠** agents fail.
+
+**Evidence (Jun 2026):** `vulkan-spirv-dead-strip-auditor` — Opus **5/5**, GPT **4/5**, probes PASS, 22/24 tests **≥9/10** → platform **EASY**.
+
+On conflict: **stricter** wins over “ready to upload” without agent smoke.
+
+---
+
+## Platform bands (unchanged)
+
+| Worst model pass rate | Label | Upload? |
+|----------------------|-------|---------|
+| **>80%** | Not accepted | **No** |
+| **>60% – 80%** | **EASY** | **No** |
+| **>20% – 60%** | MEDIUM | Only if `difficulty = "medium"` + user accepts MEDIUM |
+| **≤20%** | HARD (target) | **Yes** |
+
+**Claude-primary:** For `difficulty = "hard"`, **Opus ≤20%** (≤1/5) is the design target even when GPT is higher.
+
+---
+
+## What local gates cannot do
+
+Rules **cannot** change platform agent scores after upload. They **block zip** until the task is redesigned and **local smoke** (or recorded platform eval) shows **worst ≤20%**.
+
+---
+
+## Mandatory before first zip (automatic in `pack_zip.sh`)
+
+| Gate | Script | Blocks when |
+|------|--------|-------------|
+| **Agent calibration** | `preupload_agent_calibration.py --pack-gate` | No smoke record; worst **>20%** (hard) or **>60%** (medium); platform EASY context without `--post-harden` record |
+| **Trivial shape** | `preupload_trivial_shape_gate.py --pack-gate` | `<5` modules; `<18` tests (hard); `<2` hidden-trap tests; `<5` solution files; auto-probes not PASS |
+| **Difficulty design** | `preupload_difficulty_design_gate.py --pack-gate` | `difficulty ≠ "hard"`; platform EASY/TRIVIAL context; ≥75% per-tests ≥9/10 in pasted summary; recipe-like `instruction.md` + EASY |
+| Auto probes | `terminus_auto_probes.py` | Any probe FAIL |
+| F′ | `first_submit_pack_gate.py` | No PASS record |
+
+**Forbidden:** upload when platform summary shows **EASY/TRIVIAL** or either model **≥3/5** without Case 6 + post-harden smoke.
+
+---
+
+## After platform EASY / TRIVIAL paste (agent workflow)
+
+1. Save context (hook) → `jobs-local/trivial-easy-context-<slug>.json`
+2. **Case 6 only** — `prompts/trivial-fix-invoke.md` + trio + probes
+3. Local smoke (≥2 runs each when possible):
+
+```bash
+stb harbor run -m @anthropic/claude-opus-4-8 -p tasks/<slug>
+stb harbor run -m @openai/gpt-5.5 -p tasks/<slug>
+```
+
+4. Record **only if** worst ≤20%:
+
+```bash
+python3 scripts/preupload_agent_calibration.py --record --task-dir tasks/<slug> \
+  --opus 1/5 --gpt 2/5 --post-harden
+```
+
+5. `./scripts/create_finish_to_zip.sh <slug>` — zip blocked until steps 4–5 PASS
+
+---
+
+## Design fixes when agents still 4–5/5 (not decorative)
+
+| Symptom | Fix class |
+|---------|-----------|
+| Hidden tests **10/10** like bundled | **Independent** hidden traps — partial fix passes bundled, fails TB3 |
+| Instruction lists ingest→export pipeline | **Shorten** instruction; contracts in **≥3** `/app/docs/` |
+| One conceptual bug (e.g. phi labels) stops 1 run | Good — add **second** independent layer so 5/5 cannot happen |
+| `difficulty = "medium"` | Set **`hard`** + deepen interaction |
+| Probes PASS, agents 80–100% | **Poison-pill** + export-only + persistence — not more hash fields |
+
+---
+
+## Overrides (user message only)
+
+| Env | When |
+|-----|------|
+| `TERMINUS_AGENT_CALIBRATION_SKIP=1` | User explicitly overrides in **current** message |
+| `TERMINUS_DIFFICULTY_DESIGN_SKIP=1` | Same |
+
+**No skip** for platform EASY without user override.
+
+---
+
+## Related
+
+- `shared/trivial-first-upload-lock.mdc` · `shared/trivial-fix-invoke-mandatory-steps.mdc`
+- `shared/difficulty-benchmark-models.mdc` · `revise/hardness.mdc` G-028–G-035
+- `scripts/preupload_agent_calibration.py` · `scripts/preupload_difficulty_design_gate.py`
+
+
+
+---
+
+<!-- SOURCE: shared/block-trivial-platform-acceptance.mdc -->
+
+# Terminus — Block TRIVIAL platform acceptance (LOCKED)
+
+**User problem:** Tasks keep uploading, platform returns **TRIVIAL** or **EASY**, repeat revise rounds.
+
+**Root cause:** Oracle 1 + NOP 0 + shallow probes **do not** mean Opus 4.8 / GPT 5.5 will fail. Platform judges **agent pass rate**, not local CI.
+
+**This rule:** Block **zip** until shape + smoke predict **worst model ≤20%** (HARD band).
+
+On conflict: **stricter** wins. Do not upload to “see what platform says.”
+
+---
+
+## Why tasks keep coming back TRIVIAL
+
+| You thought was enough | Platform still EASY |
+|------------------------|---------------------|
+| Oracle 1, NOP 0 | Opus **5/5**, GPT **4/5** |
+| `difficulty = "hard"` in task.toml | Worst model **>60%** |
+| 15 pytest tests | One-file patch passes **80%+** |
+| Hidden tests same bug as bundled | Agents fix obvious file once |
+| Case 5: new hash field + 4 tests | Same pipeline, sequential bugs |
+| Probes manually marked PASS | Live auto-probes FAIL on pack |
+
+**Fix class:** **`prompts/trivial-case-6.md`** at CREATE or after EASY paste — not more fields on same bugs.
+
+---
+
+## Upload blocked until ALL pass (automatic in `pack_zip.sh`)
+
+| Gate | What it enforces |
+|------|------------------|
+| **Trivial shape** | `preupload_trivial_shape_gate.py` — ≥5 modules, ≥18 tests (hard), ≥2 hidden-trap tests, ≥5 solution files, auto-probes PASS |
+| **F′ first-submit** | `first_submit_pack_gate.py` — live probe re-check |
+| **Agent calibration** | `preupload_agent_calibration.py` — local smoke record; worst **≤20%**; `--post-harden` after platform EASY |
+| **Difficulty design** | `preupload_difficulty_design_gate.py` — no medium first upload; no ≥9/10 per-test surface from pasted summary |
+| **Anti-spam** | `terminus_anti_spam_check.py` — family / templated |
+
+**No zip** if any gate FAIL. Overrides (`TERMINUS_*_SKIP=1`) only when user **explicitly** says so in the current message.
+
+---
+
+## CREATE — design for HARD before writing zip
+
+1. Read **`prompts/sp-hard-create-revise.md`** + **`prompts/trivial-case-6.md`** (not Case 4/5).
+2. **Go/Rust/C++/Bash CLI export:** ingest → staging file → export stage; **decoy** off hot path; persistence cross-run.
+3. **≥5 bugs** across **≥5 modules**; oracle patches **≥5** files.
+4. **≥2** pytest functions that use `/opt/verifier-fixtures/` or `TB3_*` with **different** failure mode than bundled.
+5. **≥18** behavioral tests when `difficulty = "hard"`.
+6. Run **`python3 scripts/terminus_auto_probes.py --task-dir tasks/<name>`** — must exit 0.
+7. Local Opus + GPT smoke (≥2 runs each); record worst **≤20%**:
+   `python3 scripts/preupload_agent_calibration.py --record --task-dir tasks/<name> --opus 1/5 --gpt 2/5`
+8. **`./scripts/create_finish_to_zip.sh <name>`** only — not raw `pack_zip` without F′.
+
+---
+
+## REVISE — after platform TRIVIAL / EASY paste
+
+User pastes summary only → agent loads **trivial trio** (`trivial.md` → `trivial-case-6.md` → `sp-hard-create-revise.md`).
+
+1. **Structural** Case 6 redesign — staging, decoy, poison-pill, persistence.
+2. Re-run auto-probes + harbor oracle/NOP.
+3. Local agent smoke with **`--post-harden`** when context file exists.
+4. **`create_finish_to_zip.sh`** — shape gate S7 requires post-harden worst ≤20%.
+
+**Forbidden:** upload again without post-harden smoke after EASY/TRIVIAL summary.
+
+---
+
+## Agent reply before zip (mandatory line)
+
+```
+Trivial acceptance risk: LOW / MEDIUM / HIGH
+Shape gate: PASS/FAIL — <jobs-local/gates/trivial-shape-last.txt summary>
+Agent calibration: worst ≤20%? — <yes/no + path>
+```
+
+**HIGH** or any FAIL → **do not** say ready; **do not** `./scripts/pack_zip.sh`.
+
+---
+
+## Related (always on)
+
+- `shared/trivial-first-upload-lock.mdc`
+- `shared/no-easy-upload-lock.mdc`
+- `shared/trivial-fix-invoke-mandatory-steps.mdc`
+- `create/first-submit-acceptance-gate.mdc`
+- `revise/trivial-hardening-probes.mdc`
+
+
+
+---
+
+<!-- SOURCE: shared/trivial-first-upload-lock.mdc -->
+
+# Terminus — TRIVIAL first-upload lock (LOCKED)
+
+**Problem:** Audit + oracle pass → first upload → platform **TRIVIAL** → many revise rounds. User wants **accept in one go**.
+
+**User does not repeat this.** Agents treat every **new** task and every **REVISE after TRIVIAL** as below.
+
+On conflict: **stricter** wins. This blocks zip when depth is shallow.
+
+---
+
+## When this applies
+
+| Situation | Action |
+|-----------|--------|
+| **New** task under `tasks/` or `pending/` (not in `platform_submissions.txt`) | **Case 6 shape at CREATE** — not Case 4/5 playbook |
+| Platform **TRIVIAL** / **EASY** / either model **≥3/5** | **`prompts/trivial.md` trio** → **Case 6 only** |
+| User says “ready to upload” on never-submitted slug | Full probe table + `create_finish_to_zip.sh` |
+| Agent **creates** or **revises** any task | Read this file + `create/first-submit-acceptance-gate.mdc` |
+
+**Skip F′ record only:** slug already in `scripts/platform_submissions.txt` (resubmit after platform eval).
+
+---
+
+## CREATE — mandatory shape (before first zip)
+
+Do **not** ship “fix one obvious bug” tasks. Minimum for **all** new non-milestone tasks:
+
+| # | Requirement |
+|---|-------------|
+| 1 | **≥5 interacting bugs** across **≥5 modules** (not one file) |
+| 2 | **Independent `reference_*`** in pytest — **subprocess** CLI every run |
+| 3 | **≥12** behavioral tests; **≥18** if `difficulty = "hard"` |
+| 4 | **≥3** `/app/docs/*.md` in `instruction.md`; hidden behavior split across docs |
+| 5 | **≥2 hidden traps** (`/opt/verifier-fixtures/` or `TB3_*`) — **different** failure mode than bundled |
+| 6 | **Rebuild** in `test.sh` before pytest (compiled stacks) |
+| 7 | **Auto probes PASS** — `python3 scripts/terminus_auto_probes.py --task-dir …` |
+
+### Go / Rust / Bash CLI export (LOCKED — no first upload without)
+
+Implement **`prompts/trivial-case-6.md` path A at CREATE**:
+
+- **Ingest → staging file** on disk + pytest asserts snapshot/schema
+- **Decoy module** (`wrap.go`, `merge/apply.go`, …) **not** on export hot path
+- **Export-only** bugs separate from ingest/staging
+- Probes **1b, 7, 8** PASS (decoy-only / staging / ingest-only poison)
+
+If you would not bet Opus stops after fixing **one obvious file** → still too shallow.
+
+---
+
+## REVISE — after platform TRIVIAL (mandatory)
+
+1. Load **`prompts/trivial.md`** → **`prompts/trivial-case-6.md`** → **`prompts/sp-hard-create-revise.md`**
+2. **Forbidden:** Case 4/5 only, new JSON fields on same bugs, instruction fix recipes, `difficulty` relabel
+3. **Required:** structural change (staging, decoy, persistence gate, poison-pill interaction)
+4. Re-run **`./scripts/create_finish_to_zip.sh <name>`** — probes must PASS again
+
+Second **TRIVIAL** on same slug → **new structural layer or new slug** — not more tests on same pipeline.
+
+---
+
+## Manual paste — TRIVIAL / EASY fix invoke (LOCKED)
+
+**Mandatory steps (no skips):** **`shared/trivial-fix-invoke-mandatory-steps.mdc`** — **14 steps in order**; Step 5 §3 fix prompt **before** any file edit.
+
+**Canonical copy-paste:** **`prompts/trivial-fix-invoke.md`** Section 1 (user) + Section 3 (agent-written fix prompt before edits).
+
+**Hook:** `route-terminus-prompt.py` injects Case 6 checklist when summary shows TRIVIAL/EASY.
+
+### Bad vs good (user message)
+
+| Bad | Good |
+|-----|------|
+| Fix task | Full block in `prompts/trivial-fix-invoke.md` with slug + verbatim summary + per-test table |
+| Harden it | Case 6 only + probe table + `create_finish_to_zip.sh` |
+| @trivial alone | `tasks/<slug>/` + platform summary |
+
+### Agent must reject vague messages
+
+If user sends only **fix task** / **harden** / **trivial fix** / **@trivial** without slug or platform summary → **one question only:**
+
+“Paste `tasks/<slug>/` + full platform summary (Difficulty, agents, per-test table) using `prompts/trivial-fix-invoke.md` Section 1.”
+
+Do **not** start Case 6 edits without summary + path.
+
+### Agent must write a specific fix prompt first
+
+Before editing files, agent outputs **`prompts/trivial-fix-invoke.md` Section 3** filled with real slug, agent scores, weakest tests, and **named structural plan** (staging/decoy/hidden/cross-run) — not “fix the bugs.”
+
+---
+
+## Pack / finish gates (automatic — no manual PASS lying)
+
+| Gate | Blocks zip when |
+|------|-----------------|
+| `terminus_auto_probes.py` | Any probe **FAIL** |
+| `first_submit_pack_gate.py --pack-gate` | No F′ record or **live probes ≠ PASS** |
+| **Agent calibration** (first upload) | Worst **≤20%** (hard) / **≤60%** (medium only); platform EASY needs **`--post-harden`** |
+| **Difficulty design** | `difficulty = "hard"`; no platform EASY without post-harden; per-test ≥75% at 9/10 → block |
+| `create_finish_to_zip.sh` | Audit, harbor, auto probes, pack chain |
+
+**Forbidden:** `--probe 1=PASS` by hand when `terminus_auto_probes.py` exits **1**.  
+**Forbidden:** `TERMINUS_FIRST_SUBMIT_SKIP` unless user **explicitly overrides in that message**.
+
+---
+
+## Probes PASS ≠ platform MEDIUM (LOCKED)
+
+**Evidence:** Tasks with **all auto probes PASS** still land **EASY** when Opus **4/5 (80%)** and GPT **5/5 (100%)**. Local structure gates catch **shallow** tasks; they do **not** replace **agent calibration**.
+
+### Platform bands (worst model sets the floor)
+
+| Worst model pass rate | Platform label | First-upload OK? |
+|----------------------|----------------|------------------|
+| **>80%** | Not accepted | **No** |
+| **>60% – 80%** | **EASY** (your case: 80%) | **No** — needs at least **MEDIUM** |
+| **>20% – 60%** | MEDIUM | **No** for first upload unless `difficulty = "medium"` + user accepts |
+| **≤20%** | HARD | **Yes** — **repo default target** |
+
+**Your summary:** Claude **80%** = worst model → **EASY**. GPT **100%** confirms task is still too shallow for training.
+
+### Mandatory before **first** upload (after probes PASS)
+
+Run **≥2** local benchmark runs **each** (when Harbor/API available):
+
+```bash
+stb harbor run -m @openai/gpt-5.5 -p tasks/<name>
+stb harbor run -m @anthropic/claude-opus-4-8 -p tasks/<name>
+```
+
+Record in `jobs-local/agent-smoke-<slug>.json` (or paste platform-style summary in chat).
+
+| Smoke result | Action |
+|--------------|--------|
+| Either model **≥3/5** or worst **>20%** (hard) | **Do not upload** — Case 6 deepen |
+| Worst **≤20%**, Opus **≤20%**, `--post-harden` | OK to pack + upload |
+| Probes FAIL | Fix structure first |
+
+**Do not upload hoping platform will rate MEDIUM** when local smoke or prior eval shows **>60%** worst.
+
+---
+
+## Agent reply before zip (mandatory table)
+
+Paste probe table from `revise/trivial-hardening-probes.mdc` + line:
+
+`First-upload TRIVIAL lock: PASS/FAIL — auto-probes jobs-local/auto-probes-<slug>.json`
+
+**Do not say ready** if any probe FAIL or `create-finish-last.json` verdict ≠ PASS.
+
+---
+
+## Related
+
+- **`prompts/trivial-fix-invoke.md`** — user paste + agent fix-prompt template
+- `create/first-submit-acceptance-gate.mdc` · `revise/trivial-hardening-probes.mdc` · `revise/hardness.mdc` G-028–G-035
+- `prompts/sp-hard-create-revise.md` · `prompts/trivial-case-6.md`
+- `scripts/terminus_auto_probes.py` · `scripts/preupload_agent_calibration.py` · `scripts/preupload_difficulty_design_gate.py` · `scripts/create_finish_to_zip.sh`
+- **`shared/no-easy-upload-lock.mdc`**
+
+
+
+---
+
+<!-- SOURCE: shared/trivial-fix-invoke-mandatory-steps.mdc -->
+
+# Terminus — TRIVIAL / EASY mandatory steps (LOCKED — do not skip)
+
+**Trigger (automatic):** User message has **`tasks/<slug>/` or `pending/<slug>/`** AND platform summary with **`TRIVIAL`**, **`EASY`**, **`≥3/5`**, **`4/5`**, **`5/5`**, or worst **>60%**.
+
+**Hook routes:** `prompts/trivial-fix-invoke.md` + **Case 6**. User does **not** @-tag invoke.
+
+**On conflict:** this file wins over speed, habit, or “I'll just patch one file.”
+
+---
+
+## Forbidden (instant FAIL — do not claim done)
+
+| Skip | Why blocked |
+|------|-------------|
+| Edit task files **before** Steps 1–5 | Under-fix; Case 4/5 drift |
+| Skip **`Read` `prompts/trivial-fix-invoke.md`** | Invoke is the contract |
+| Skip **§3 fix prompt** in first reply | No structural plan |
+| Use **Case 4/5 only** or `trivial-harden.md` alone | Platform will stay TRIVIAL/EASY |
+| Decorative fields only (hash/fingerprint) | Probes PASS, agents still 5/5 |
+| Skip **`terminus_auto_probes.py`** | G-028 |
+| Skip **probe table** (`trivial-hardening-probes.mdc`) | Upload blocker |
+| Skip **`create_finish_to_zip.sh`** | Standing §0 |
+| Say **ready** without oracle **1** + NOP **0** evidence | Anti-hallucination |
+| **`TERMINUS_*_SKIP`** flags without user override in **this** message | Policy |
+
+---
+
+## Mandatory order (every step — same turn or until PASS)
+
+Execute **in order**. Do **not** reorder. Do **not** merge steps.
+
+| Step | Action | Evidence in reply |
+|------|--------|-------------------|
+| **1** | Quote **2–3 facts** from platform summary (difficulty, Opus/GPT, weakest tests) | Quoted lines |
+| **2** | **`Read`** `prompts/trivial-fix-invoke.md` | “Read invoke” |
+| **3** | **`Read`** trio: `prompts/trivial.md` → `prompts/trivial-case-6.md` → `prompts/sp-hard-create-revise.md` | “Read trio” |
+| **4** | **`Read`** `prompts/trivial-repo-wide.md` + `revise/trivial-hardening-probes.mdc` | “Read probes contract” |
+| **5** | Write **`prompts/trivial-fix-invoke.md` §3** fix prompt (facts, weakest tests, **named** structural plan) | Full §3 block **before any edit** |
+| **6** | List **real** files under `tasks/<slug>/` or `pending/<slug>/` — no hallucination | Tree or file list |
+| **7** | **Case 6** edits in place only: staging artifact, decoy split, export-only bugs, ≥2 hidden traps, persistence if applicable | Files changed |
+| **8** | `terminus_auto_probes.py` | exit **0** + JSON path | **AUTO** — `trivial_easy_auto_finish` on save + prompt |
+| **9** | `preupload_agent_calibration.py --record` | verdict line (opus/gpt from saved context) | **AUTO** — same pipeline |
+| **10** | Paste **probe table** (`trivial-hardening-probes.mdc`) | PASS/FAIL table in reply | Agent — from step 8 output |
+| **11–13** | `trivial_easy_auto_finish.sh` → `create_finish_to_zip` | `jobs-local/trivial-easy-pipeline-last.json` | **AUTO** on save + prompt |
+| **12** | Oracle **1.0** + NOP **0.0** | harbor output / cache | **AUTO** inside finish |
+| **13** | `tasksubmit/<slug>.zip` + anti-spam **PASS** | pack line | **AUTO** when gates pass |
+| **14** | **Ready** only if 8–13 PASS | Explicit yes/no | Agent reports after AUTO run |
+
+**Step 5 is a hard gate:** no `StrReplace` / `Write` on `tasks/<slug>/` until §3 is in the chat.
+
+---
+
+## First-reply template (agent must match shape)
+
+```text
+## TRIVIAL/EASY — mandatory steps
+
+Facts: …
+Router: trivial-fix-invoke.md → Case 6 because …
+
+## Fix prompt (invoke §3) — BEFORE edits
+… structural plan …
+
+Steps 2–4: Read invoke + trio + probes — done.
+Step 6: Files found: …
+```
+
+## Automation (LOCKED — steps 8–14)
+
+**Hooks run these — agent does not invoke manually:**
+
+| Event | Script |
+|-------|--------|
+| TRIVIAL/EASY summary pasted | `trivial_easy_context.py` saves opus/gpt → `jobs-local/trivial-easy-context-<slug>.json` |
+| Prompt submit + task save | `./scripts/trivial_easy_auto_finish.sh <slug> --hook-mode` |
+
+Steps **1–7** remain agent work (read prompts, §3 fix prompt before edits, Case 6 code).
+
+Manual re-run (optional): `./scripts/trivial_easy_auto_finish.sh <slug> --opus 1/5 --gpt 1/5` after local smoke.
+
+- `prompts/trivial-fix-invoke.md` · `shared/trivial-first-upload-lock.mdc`
+- `revise/trivial-easy-difficulty-prompt-lock.mdc` · `sanjana-standing-requirements.mdc` §H
+- `.cursor/hooks/route-terminus-prompt.py` — injects checklist on TRIVIAL/EASY
+
+
+
+---
+
+<!-- SOURCE: shared/workflow-prompt-automation-lock.mdc -->
+
+# Terminus — Prompt router → prompts → automation (LOCKED)
+
+**User does not repeat:** which prompt, Case 6, harbor, zip, or rubric path. Hooks + this file define order.
+
+## 1. Every task touch — order
+
+| Step | What runs | Agent |
+|------|-----------|--------|
+| 1 | `route-terminus-prompt.py` on submit | Injected context: ENGINE, router, case |
+| 2 | **`Read` prompt files** from router (`prompts/trivial.md`, `reviewer.md`, `audit.md`, …) | **Mandatory** — not optional |
+| 3 | Inspect real `tasks/<slug>/` files | Before any edit |
+| 4 | **Automation scripts** on save / finish | Hooks — user runs nothing |
+
+**Wrong @-tag:** summary wins (`shared/prompt-router.mdc`).
+
+## 2. Revise (platform feedback)
+
+| Signal | Read first | Then |
+|--------|------------|------|
+| Reviewer line comments | `prompts/reviewer.md` → RF1–RF6 + triage | Edit in place; automation on save |
+| TRIVIAL / EASY | `trivial-fix-invoke.md` + trivial trio + Case 6 | `trivial_easy_auto_finish` on **save** |
+| Oracle 0 | `oracleFix.md` | G-025–G-027 then harbor |
+| Unsolvable | `prompts/hard.md` case | Fairness only |
+
+**Forbidden:** edit before reading router prompt; skip triage on reviewer feedback.
+
+## 3. CREATE — all phases A→H (LOCKED — no stop early)
+
+| Phase | Must complete | Stop allowed? |
+|-------|---------------|---------------|
+| **A** | Read ≥2 `tasks/_accepted-tasks/` + skeleton | No |
+| **B** | Corpus scan + similarity table | No |
+| **C** | One idea → implement immediately | No |
+| **D** | Full `tasks/<slug>/` tree | No |
+| **E** | Audit loop — High/Medium = 0 | No |
+| **F** | Oracle **1.0**, NOP **0.0**, ruff | No |
+| **G** | `./scripts/pack_zip.sh <slug>` | No |
+| **H** | Verification table + `tasksubmit/<slug>.zip` + **`rubrics/<slug>.md`** (or chat) | **Only** after G passes |
+
+**Same-turn rule:** Phase D done → **same session** run `./scripts/create_finish_to_zip.sh <name>` until PASS or BLOCKED_*.
+
+**Forbidden:** “task created” without zip; skip audit/harbor/pack without user override in **that message**.
+
+## 4. Automation after prompts
+
+- **Save:** `anti-spam-auto-run.py` → audit → 8/8 → finish (or trivial_easy finish if EASY context).
+- **EASY paste:** context + gates on paste; finish on **save** after Case 6 edits.
+- **Pack:** `pack_zip.sh` chain (calibration, design gate, anti-spam, F′, CI, verify).
+
+## Related
+
+- `sanjana-standing-requirements.mdc` · `shared/prompt-router.mdc` · `create/new-task-pipeline-A-H.mdc`
+- `shared/rubric-storage-lock.mdc` · `shared/jobs-local-layout-lock.mdc`
+
+
+
+---
+
+<!-- SOURCE: shared/rubric-storage-lock.mdc -->
+
+# Terminus — Rubric storage (LOCKED)
+
+**Repo policy:** No `rubric.md` in `tasks/<slug>/` or submission zips. Platform rubrics are **upload-form only**.
+
+## Where rubrics go
+
+| Output | Path | When |
+|--------|------|------|
+| **File (required on submit)** | `rubrics/<slug>.md` | Phase H CREATE, revise ready, or user asks for rubric |
+| **Chat** | Same `Agent …, ±N` lines | Optional duplicate of the file — **same slug** as the file |
+
+## Slug = task name from **this chat** (LOCKED — no conflicts)
+
+**Filename must equal the task slug you are working on in the current message.**
+
+| Chat says | Rubric file | Wrong |
+|-----------|-------------|-------|
+| `tasks/vulkan-spirv-dead-strip-auditor/` | `rubrics/vulkan-spirv-dead-strip-auditor.md` | `rubrics/rubric.md`, `rubrics/task.md`, another slug |
+| `pending/my-new-task/` | `rubrics/my-new-task.md` | reusing an old task’s rubric file |
+
+**Rules:**
+
+1. Take slug from `tasks/<slug>/` or `pending/<slug>/` in the user message (or hook-detected slug from platform summary for **that** task only).
+2. Write **only** `rubrics/<that-exact-slug>.md` — one file per task; never overwrite another slug’s file.
+3. Header inside the file must repeat the **same** slug and `tasks/<slug>/`.
+4. If two tasks in one chat, **two** rubric files — never one combined file.
+
+`write_platform_rubric.py` **refuses** `--slug` when `tasks/<slug>/` and `pending/<slug>/` do not exist (unless `--force`).
+
+**Every rubric file must start with:**
+
+```markdown
+# Platform rubric — <slug>
+
+**Task folder:** tasks/<slug>/
+```
+
+So rubrics never mix between tasks.
+
+## Write rules
+
+- Use `python3 scripts/write_platform_rubric.py --slug <name> …` **or** hand-write `rubrics/<name>.md` with the header above.
+- Lines: `Agent …, ±N` only; scores ∈ {±1, ±2, ±3, ±5}; ≥3 negatives total.
+- **Positive cumulative score 10–40** per rubric block (non-milestone: one block; milestone: each `# Rubric N` block). Sum **+** lines only — negatives do not count toward the band.
+- Milestone: `# Rubric 1` headers on platform; file may note milestone in header comment; **≥1 negative per milestone block**.
+- **Forbidden:** `tasks/<slug>/rubric.md`; rubric inside zip; generic rubric without slug in filename.
+
+## Agent must
+
+1. On **CREATE Phase H** or **ready to submit**: write `rubrics/<slug>.md` **and** paste the same lines in chat (or file only if user prefers files).
+2. Run `python3 scripts/platform_rubric_gate.py --check --slug <slug>` (or rely on `write_platform_rubric.py` validation).
+3. On **CREATE Phase H** or **ready to submit**: write `submission-explanations/<slug>.md` (user edits voice) **and** paste three paragraphs in chat for platform form.
+4. Name the **task slug** in the rubric header every time.
+5. Never skip rubric because repo omits task-folder `rubric.md`.
+
+## Related
+
+- `shared/platform-rubric-gate.mdc` — **10–40 positive cumulative** + pack gate
+- `shared/repo-workflow.mdc` · `create/new-task-pipeline-A-H.mdc` Phase H
+- `scripts/write_platform_rubric.py` · `rubrics/README.md`
+
+
+
+---
+
+<!-- SOURCE: shared/platform-rubric-gate.mdc -->
+
+# Terminus — Platform rubric gate (LOCKED)
+
+**Repo policy:** Platform rubrics live in `rubrics/<slug>.md` (never task zip). Before **`pack_zip.sh`**, the rubric must pass **`platform_rubric_gate.py`**.
+
+---
+
+## Cumulative score (required)
+
+| Task type | Rule |
+|-----------|------|
+| **Non-milestone** | Sum of **positive** criteria scores (**+1, +2, +3, +5** only) = **10–40** |
+| **Milestone** | Each `# Rubric N` block: positive cumulative **10–40**; **≥1 negative** per milestone |
+| **All** | **≥3 negative** criteria overall; scores ∈ {±1, ±2, ±3, ±5} — **never 4** |
+
+**Positive cumulative** = add only plus lines (negatives do not reduce this band).
+
+**Format:** each line `Agent …, <score>` — one line; no tests/pytest/instruction/oracle mentions.
+
+---
+
+## Where files live
+
+| Output | Path | In zip? |
+|--------|------|--------|
+| **File (required before pack)** | `rubrics/<slug>.md` | **No** |
+| **Platform form** | Copy criterion lines from file | Upload UI only |
+
+Header every file:
+
+```markdown
+# Platform rubric — <slug>
+
+**Task folder:** tasks/<slug>/
+```
+
+---
+
+## Agent workflow (Phase H + every ready-to-submit)
+
+1. Write `rubrics/<slug>.md` via `scripts/write_platform_rubric.py` (validates 10–40 on write).
+2. Run `python3 scripts/platform_rubric_gate.py --check --slug <slug>`.
+3. Phase H reply: paste rubric lines in chat **and** give `rubrics/<slug>.md` path.
+4. `pack_zip.sh` runs `--pack-gate` — **blocks** if missing or out of 10–40 band.
+5. `create_finish_to_zip.py` runs the same check before pack.
+
+**Override (user explicit only in that message):** `TERMINUS_PLATFORM_RUBRIC_SKIP=1 ./scripts/pack_zip.sh <name>`
+
+---
+
+## Validation (automatic)
+
+`platform_rubric_gate.py` + `rubric_policy.py` check:
+
+- File at `rubrics/<slug>.md`
+- Slug header matches `tasks/<slug>/`
+- Agent-prefixed lines; valid ±1/2/3/5 suffix
+- **Positive cumulative 10–40** per block (default block or each `# Rubric N`)
+- **≥3 negatives** overall; milestone tasks need `# Rubric` headers when `number_of_milestones > 0`
+
+Report: `jobs-local/gates/platform-rubric-last.json`
+
+---
+
+## Related
+
+- `shared/rubric-storage-lock.mdc` — storage + slug naming
+- `create/creation-rules.mdc` · `reviewer/reviewer-checklist.mdc` — rubric format
+- `scripts/write_platform_rubric.py` · `scripts/platform_rubric_gate.py` · `scripts/rubric_policy.py`
+
+
+
+---
+
+<!-- SOURCE: shared/submission-explanations-gate.mdc -->
+
+# Terminus — Submission explanations (LOCKED)
+
+**Platform policy (Jun 2026+):** Every upload needs three short paragraphs on the submit form. **Not** in the task zip — same pattern as platform rubrics.
+
+---
+
+## CRITICAL — Terminus quality notice (zero tolerance)
+
+The Terminus team flags **critical quality issues** when explanation fields:
+
+1. **Do not answer the prompt** — e.g. Difficulty asks *why the task is difficult*; writing about debugging symptoms, implementation trivia, or verification instead is **wrong** even if related.
+2. **Look LLM-generated** — copying, paraphrasing, or generating platform paste with AI is a **direct violation**. Snorkel expects **your own words**.
+
+**Effective rules (non-negotiable):**
+
+- **Read each platform label before writing.** Answer **exactly** what it asks.
+- **Difficulty Explanation** → why humans **and** agents struggle with **this** task (doc traps, interacting bugs, partial-fix failure modes). **Not** how you verified, not oracle steps, not pytest names.
+- **Solution Explanation** → your **high-level** fix approach and **key insight** (modules, contract, rebuild). **Not** a line-by-line recipe; **not** re-stating difficulty.
+- **Verification Explanation** → how **tests** prove correctness (reference impl, subprocess CLI, hidden fixtures, anti-cheat). **Not** why the task is hard; **not** the oracle patch list as the whole answer.
+
+**Agent drafts are scaffolds only.** `write_submission_explanations.py --draft` produces a starting file from the real task tree. **You must rewrite in your own voice** before pasting on the platform. Never paste agent text verbatim.
+
+**Human voice:** plain prose, no bullet lists, no template filler (“Furthermore”, “In conclusion”, “This task challenges”, “leverage”, “utilize”, “delve into”).
+
+**Human prose style (Indian English, LOCKED):** Write like you are briefing a teammate in your own words — direct, slightly informal, not a US tech blog.
+
+- Prefer **and**, **but**, **so**, **because** over semicolons, colons, or dash chains.
+- **Avoid** `;` `:` `—` `–` and hyphen stacks unless one is truly needed.
+- **Spell counts in words** (seven modules, ten scenarios) — skip digits in platform paste.
+- **Skip path dumps** (`/opt/...`, `foo.rs`, `tag-one-through-five`) — name the idea, not the file tree.
+- Short sentences are fine. Slight redundancy is fine. Stiff listy prose is not.
+
+Violations → probable LLM usage, irrelevant explanations, or prompt mismatch → **removal from project without further warning**.
+
+---
+
+## Length cap (LOCKED — habit for every task)
+
+Each platform field (**Difficulty**, **Solution**, **Verification**) must stay **short**:
+
+| Limit | Rule |
+|-------|------|
+| **Sentences** | **4–6** per section (hard max **6** — never 7+) |
+| **Lines** | **One paragraph**; **≤6 non-empty lines** of prose per section in the file |
+| **Words** | Aim **≤120 words** per section — cut filler before adding detail |
+
+**Habit:** Draft with `--draft`, then **trim** to the max. Prefer 4–5 tight sentences over 6 long ones. If a section wraps to many lines, merge sentences or delete tangents.
+
+**Do not** paste long agent drafts verbatim. Extra sentences about CI, file lists, or oracle steps belong in the task repo, not the platform form.
+
+---
+
+## Where files live
+
+| Output | Path | In zip? |
+|--------|------|--------|
+| **File (required before pack)** | `submission-explanations/<slug>.md` | **No** |
+| **Platform form** | Copy three sections from the file | Upload UI only |
+
+**Forbidden:** `tasks/<slug>/submission-explanations.md` inside the task tree if it would be zipped; do not add these fields to `instruction.md`.
+
+**Header (every file):**
+
+```markdown
+# Submission explanations — <slug>
+
+**Task folder:** tasks/<slug>/
+**Platform form only** — not in upload zip.
+```
+
+---
+
+## Per-section answer discipline
+
+| Section | Must include | Must NOT be |
+|---------|--------------|-------------|
+| **Difficulty** | Why **this** task is hard for humans/agents; specific interacting behaviors, doc vs code traps, partial fixes | Test inventory, oracle copy steps, CI/ruff, “tests verify”, debugging play-by-play unrelated to *difficulty* |
+| **Solution** | High-level repair strategy; which subsystems align; one or two contract insights | Difficulty essay, pytest file checklist, paste of solve.sh |
+| **Verification** | Reference vs SUT, CLI/subprocess, hidden suites, mutation/anti-cheat | Why agents fail, implementation walkthrough, rubric copy |
+
+**Good Difficulty opener (pattern):** “Agents struggle because …” / “This is hard because three layers must agree …”  
+**Bad Difficulty opener:** “Pytest rebuilds …” / “The oracle copies patches …” / “We fixed ruff …”
+
+Each section: **one paragraph**, **4–6 sentences** (max **6**), **≤6 prose lines**, task-specific facts from `tasks/<slug>/`.
+
+---
+
+## Agent workflow (CREATE Phase H + every ready-to-submit)
+
+1. Inspect `tasks/<slug>/` — instruction, `/app/docs/`, tests, solution, environment modules.
+2. Run `python3 scripts/write_submission_explanations.py --slug <slug> --draft`, then **rewrite every sentence** in your words from real task work.
+3. Run `python3 scripts/submission_explanations_gate.py --check --slug <slug>` — fix section-mismatch errors before pack.
+4. On Phase H / ready reply: paste all three paragraphs in chat **and** give file path.
+5. `pack_zip.sh` runs `--pack-gate --ensure` — auto-drafts when missing, then **blocks** if invalid (unless user overrides `TERMINUS_SUBMISSION_EXPLANATIONS_SKIP=1` in that message).
+6. `create_finish_to_zip.sh` runs the same ensure step before pack (step **4b**).
+
+**Do not** reuse paragraphs across slugs. **Do not** mention pytest file names as a fix checklist in Difficulty/Solution sections.
+
+---
+
+## Validation (automatic)
+
+`submission_explanations_gate.py` checks:
+
+- File exists at `submission-explanations/<slug>.md`
+- Slug header matches `tasks/<slug>/`
+- All three `##` sections present and non-empty
+- **4–6 sentences** per section (hard max **6**)
+- **≤6 non-empty prose lines** per section body
+- No fenced code blocks; no `instruction.md` / `test_outputs.py` path spam as the whole answer
+- **Section fit:** Difficulty must not lead with verification/oracle/CI language; Solution must not read like Difficulty; Verification must mention how tests prove behavior
+- Banned LLM/template phrases
+- **Prose style:** no semicolons; no colons; no em/en dashes; ≤2 hyphenated compounds; no digits; ≤1 slash per section
+
+---
+
+## Related
+
+- `shared/rubric-storage-lock.mdc` — rubric file pattern
+- `sanjana-standing-requirements.mdc` Phase H
+- `zip/ZIP-RULES.mdc` — pack gate list
+- `scripts/write_submission_explanations.py` · `scripts/submission_explanations_gate.py`
+
+
+
+---
+
+<!-- SOURCE: shared/task-generation-mandatory.mdc -->
+
+# Terminus — Task generation rules (MANDATORY)
+
+**Additive LOCKED rule.** Applies to **every** new task and **every** revise before zip.
+
+**No zip without PASS.** `pack_zip.sh` runs `repository_state_gate.py --pack-gate` — all **7 hard acceptance checks** must PASS. Verdict **`REGENERATE`** blocks zip when repair/debug is the primary objective (`shared/forbidden-repair-objectives-gate.mdc`). **No skip** unless user explicitly overrides in the current message (`TERMINUS_TASK_GENERATION_SKIP=1`).
+
+| When | Script |
+|------|--------|
+| Ideas intake (before CREATE) | `idea_similarity_gate.py` → hard acceptance on idea text |
+| Pack / finish / post-create hook | `repository_state_gate.py --pack-gate` in `pack_zip.sh` + `anti_spam_hook_runner.py` |
+
+Policy: `scripts/task_generation_policy.py` · Reports: `jobs-local/repository-state-gate-last.json` · **On FAIL:** `shared/repository-state-fail-fix.mdc`
+
+---
+
+## HARD BLOCK: NO DEBUGGING · NO SOFTWARE-ENGINEERING
+
+Under **no circumstances** generate or upload:
+
+| Forbidden | Includes |
+|-----------|----------|
+| **Debugging tasks** | Fix bugs, repair broken code, patch source, restore functionality, seeded bugs, make tests pass |
+| **Software-engineering tasks** | Fix/repair the service or API, broken service under /app, wrong/inconsistent output repair, `category = "software-engineering"` |
+
+**Platform metadata:** `category` must be one of **`security`**, **`cloud-devops`**, **`system-configuration-and-setup`**, **`build-and-dependency-management`**. Never `debugging`, `software-engineering`, or `data-processing` — pack and platform CI FAIL (`shared/task-toml-category-gate.mdc`). No exceptions in this repo.
+
+**Task shape:** even with allowed category, **repair/software-engineering objective** in `instruction.md` → **FAIL** gate.
+
+### Forbidden core objectives
+
+fix · repair · patch · debug · broken · incomplete · restore · correct · resolve bug · make tests pass · failing implementation · fix the service · repair the API · service under /app is producing wrong/inconsistent
+
+If any appear as the **primary goal** → **regenerate** the task.
+
+---
+
+## Repository state requirement
+
+**Full policy:** `shared/repository-state-requirement.mdc` · enforced in `task_generation_policy.py`
+
+### Repository provided to the agent must be
+
+| Property | Requirement |
+|----------|-------------|
+| **Functional** | Working baseline under /app — not a defect hunt |
+| **Buildable** | Image builds; `test.sh` rebuilds compiled stacks |
+| **Internally consistent** | Docs, schemas, and fixtures align |
+| **Not intentionally broken** | No `BUG:` / `INTENTIONALLY BROKEN` in `environment/` |
+
+### Agent goal — NEVER
+
+> Identify what is wrong and fix it.
+
+Also forbidden as primary objective: find the bug · make tests pass · repair broken code · fix the service · restore functionality · debug seeded defects.
+
+### Agent goal — MUST (at least one)
+
+| Goal | Examples |
+|------|----------|
+| Add a new capability | New feature on working /app baseline |
+| Build a new subsystem | Planner, correlator, exporter, governor |
+| Construct a planner | Scheduling / routing / closure planner |
+| Implement a new workflow | Ingest → staging → export pipeline |
+| Generate analytical outputs | Ledgers, atlases, rollups, reports |
+| Scientific computation | Closure, traverse, correlation, modeling |
+| Security analysis engine | Trust, compromise, attestation reasoning |
+| Reproducibility artifacts | Sealed bundles, attestations, SBOM-style outputs |
+| Build dependency-management functionality | Supply-chain / reproducibility tooling |
+| Governance or compliance reasoning | Policy checks over datasets |
+| Generate reports from complex datasets | Multi-source analytical exports |
+
+Instruction must open with **what to build or analyze**, not what is broken.
+
+---
+
+## Accepted categories (H6)
+
+Use **`task.toml`** category from this allowlist only:
+
+| Allowed | Examples |
+|---------|----------|
+| **`data-administration`** | Host-local data ops desks, ledgers, admit→gate→seal inventory / catalog admin |
+| **`machine-learning`** | Feature stores, model eval/calibration, embedding/MinHash pipelines, ML metrics |
+| **`games`** | Playfields, playtest atlases, turn planners, level packs, win-condition sealing |
+
+**Never:** `debugging` · `software-engineering` · `data-processing` · `security` · `system-administration` · `build-and-dependency-management` · `scientific-computing` · `cloud-devops` · any other value
+
+See `shared/task-toml-category-gate.mdc` for forced remap from old categories.
+
+---
+
+## Hard acceptance check (automated — 7/7 required before zip)
+
+| # | Check | Gate ID | Automated signal |
+|---|-------|---------|------------------|
+| 1 | Task is **NOT** debugging | **H1** | Instruction/slug/tags; no fix/repair/debug objective |
+| 2 | Repository is **functional, buildable, consistent** — not intentionally broken | **H2** | No `BUG:` / broken-repo framing; rebuild in `test.sh` when compiled |
+| 3 | Agent is **NOT** fixing existing functionality | **H3** | No correct-existing / service-repair shape; no patch-only oracle |
+| 4 | Agent **adds capability / subsystem / workflow / analysis** (NEW) | **H4** | Allowed goal patterns; not find-and-fix |
+| 5 | Cannot summarize as *"find the bug and make tests pass"* | **H5** | No find-the-bug / make-tests-pass phrasing |
+| 6 | Belongs to an **accepted category** | **H6** | Not debugging/SE; category in allowed set |
+| 7 | Not repair, patch, correction, or restoration workflow | **H7** | No restoration/correction workflow; no repair slug/oracle |
+
+**Any FAIL → discard task and regenerate.** **No `tasksubmit/<name>.zip` until 7/7 PASS.**
+
+```bash
+python3 scripts/repository_state_gate.py --pack-gate --task-dir tasks/<name>
+```
+
+---
+
+## Task uniqueness (similarity gates — also required before zip)
+
+**Full policy:** `shared/task-uniqueness-gate.mdc` · `scripts/task_uniqueness_policy.py`
+
+**Ideas:** `idea_similarity_gate.py` — similarity **+ 14-row uniqueness table** (block on any FAIL).
+
+**Pack:** `unacceptable_class_gate.py` (8 classes) then `task_uniqueness_gate.py` (distinct dimensions on instruction).
+
+No duplicate · copy · sibling · same-family · same-lane · template variant · fabricated benchmark · synthetic puzzle · spam
+
+Every task: distinct workflow, artifact, reasoning pattern, operational objective, industry use case.
+
+**Ideas:** weighted **> 0.10** → BLOCK · **== 0.0** → auto CREATE when uniqueness **PASS**.
+
+**Pack:** anti-spam PASS + unacceptable-class **8/8** + uniqueness distinct-dimension **PASS**.
+
+---
+
+## When FAIL → fix
+
+| Signal | Fix |
+|--------|-----|
+| Debugging / SE instruction | Reframe: new capability on **working** baseline repo |
+| `category = debugging`, `software-engineering`, or `data-processing` | Change to an **allowed** category (`security` / `cloud-devops` / `system-configuration-and-setup` / `build-and-dependency-management`) |
+| Repair slug (`repair-*`, `fix-*`) | Rename; change workflow |
+| Patch-only oracle | Oracle builds real new artifacts |
+| Seeded BUG in environment | Remove; ship functional baseline |
+| H4 fail (no new-capability framing) | Rewrite instruction opening around build/analyze/implement |
+
+**Do not** weaken gates or use skip overrides unless the user explicitly overrides in the current message.
+
+---
+
+## Related
+
+- `shared/repository-state-requirement.mdc` — functional baseline + allowed agent goals
+- `shared/task-toml-category-gate.mdc` — metadata blocklist
+- `ideas/idea-similarity-gate.mdc` — ideas + similarity
+- `shared/unacceptable-task-classes.mdc` — 8-class pack gate
+- `create/new-task-pipeline-A-H.mdc` — Phase B
+
+
+
+---
+
+<!-- SOURCE: shared/repository-state-requirement.mdc -->
+
+# Terminus — Repository state requirement (LOCKED)
+
+**When:** Every CREATE, revise, ideas intake, and pack (`repository_state_gate.py` / `idea_similarity_gate.py`). CLI alias: `task_generation_gate.py` (same 7/7 policy).
+
+**Policy script:** `scripts/task_generation_policy.py` · **Parent gate:** `shared/task-generation-mandatory.mdc`
+
+---
+
+## REPOSITORY STATE REQUIREMENT
+
+The repository provided to the agent must be considered:
+
+| Property | Meaning |
+|----------|---------|
+| **Functional** | Baseline code runs; contracts are coherent; no seeded failure as the product story |
+| **Buildable** | Image builds; compiled stacks rebuild in `tests/test.sh` when applicable |
+| **Internally consistent** | Docs, schemas, and sample data agree; no contradiction that only “fixing bugs” resolves |
+| **Not intentionally broken** | No `BUG:` / `INTENTIONALLY BROKEN` in `environment/`; no repair-only oracle |
+
+---
+
+## Agent goal — NEVER
+
+The agent's goal must **NEVER** be:
+
+> Identify what is wrong and fix it.
+
+Also forbidden as **primary** objective:
+
+- Find the bug · make tests pass · repair broken code · patch source to restore behavior
+- Fix the service / API / parser that “is producing wrong output”
+- Debug seeded defects · correct existing functionality · restoration workflow
+
+Automated: **H1**, **H3**, **H5**, **H7** in `task_generation_policy.py`. **REGENERATE** verdict → `shared/forbidden-repair-objectives-gate.mdc`.
+
+---
+
+## Forbidden repair objectives (REGENERATE)
+
+If the task’s **primary objective** is fix/repair/debug/patch/restore/correct/make-tests-pass — or forbidden terminology appears in the **instruction opening**, slug, or idea text — the gate returns **`REGENERATE`**. Agent must **reject and regenerate** the task (new design), not patch in place.
+
+Full block list + terminology: **`shared/forbidden-repair-objectives-gate.mdc`**.
+
+---
+
+## Agent goal — MUST (pick at least one framing)
+
+The agent's goal **should** be one of:
+
+| Goal class | Examples |
+|------------|----------|
+| **New capability** | Add a new capability on the working baseline under /app |
+| **New subsystem** | Build a new subsystem (planner, correlator, exporter, governor) |
+| **New workflow** | Implement a new workflow (ingest → staging → export) |
+| **Analytical outputs** | Generate analytical outputs, reports, ledgers, atlases |
+| **Scientific computation** | Scientific computation, closure, traverse, correlation |
+| **Security analysis** | Security analysis engine, trust / compromise modeling |
+| **Reproducibility** | Reproducibility artifacts, attestations, sealed bundles |
+| **Build / dependency** | Build dependency-management functionality, supply-chain reasoning |
+| **Governance / compliance** | Governance or compliance reasoning over datasets |
+| **Complex datasets** | Generate reports from complex datasets; provenance / lineage analysis |
+
+Instruction opening must state **what to build or analyze**, not what is broken.
+
+Automated: **H4** — build/analyze/implement framing + allowed goal patterns.
+
+---
+
+## CREATE-time environment (mandatory)
+
+| Do | Do not |
+|----|--------|
+| Ship a **working** baseline under /app (builds in Dockerfile) | Seed `BUG:` / `INTENTIONALLY BROKEN` in source |
+| Oracle **implements** new behavior and rebuilds | Patch-only oracle copying `solution/files/` without new artifacts |
+| Cite output paths and contracts in `/app/docs/` | Frame entire task as “fix broken service” |
+| `test.sh` rebuilds agent code when stack compiles | Rely on stale broken binary in image as the task |
+
+---
+
+## Gate mapping
+
+| Repository state | Check ID |
+|------------------|----------|
+| Not intentionally broken | **H2** |
+| Not fix-existing / repair workflow | **H3**, **H7** |
+| New capability goal (not find-and-fix) | **H4**, **H5** |
+| Not debugging / SE category | **H1**, **H6** |
+
+**7/7 PASS required before zip** — see `task-generation-mandatory.mdc`.
+
+---
+
+## When FAIL → fix (LOCKED)
+
+**Full procedure:** **`shared/repository-state-fail-fix.mdc`** — triage table by H1–H7, mandatory re-verify, no zip until PASS.
+
+Quick signals:
+
+| Signal | Fix |
+|--------|-----|
+| Instruction opens with broken/repair | Rewrite: working baseline + **add/build/implement** new output |
+| Seeded bugs in environment | Remove; implement missing capability instead |
+| H4 fail | Add explicit new-capability sentence (table above) |
+| Patch-only oracle | Oracle runs real build path producing new artifacts |
+
+**Do not** weaken gates unless user explicitly overrides in the current message.
+
+---
+
+## Related
+
+- `shared/forbidden-repair-objectives-gate.mdc` — **REGENERATE** when repair is core objective
+- `shared/repository-state-fail-fix.mdc` — **LOCKED** when gate FAILs
+- `shared/task-generation-mandatory.mdc` — hard acceptance 7/7
+- `scripts/repository_state_gate.py` — automated pack + hook gate
+- `create/creation-rules.mdc` — instruction + environment
+- `create/environment-no-ai-scaffolding.mdc` — no hint leaks
+
+
+
+---
+
+<!-- SOURCE: shared/repository-state-fail-fix.mdc -->
+
+# Terminus — Repository state FAIL → fix (LOCKED)
+
+**Trigger:** Any of:
+
+- `pack_zip.sh` blocks on task-generation / repository-state gate
+- `jobs-local/repository-state-gate-last.json` → `"verdict": "FAIL"`
+- `jobs-local/task-generation-gate-last.json` → `"verdict": "FAIL"`
+- Ideas intake: `idea_similarity_gate.py` blocks on hard acceptance
+
+**Agents must:** read violations → **REGENERATE** if `regenerate_required: true` in gate JSON (forbidden repair objective) — **do not** patch the same slug in place. Otherwise fix **`tasks/<name>/` in place** → re-run gate until **7/7 PASS**. **No zip** until PASS. **No** `TERMINUS_TASK_GENERATION_SKIP` unless user explicitly overrides in the current message.
+
+**REGENERATE:** **`shared/forbidden-repair-objectives-gate.mdc`** — new slug, new scenario, functional baseline + new capability.
+
+**Load with fixes:** `shared/repository-state-requirement.mdc` · `shared/task-generation-mandatory.mdc` · `shared/forbidden-repair-objectives-gate.mdc` · `scripts/task_generation_policy.py`
+
+---
+
+## Step 1 — Triage (mandatory table in reply)
+
+Read `jobs-local/repository-state-gate-last.json` (or `task-generation-gate-last.json`). Map first failing check:
+
+| Failed check | Meaning | Fix class |
+|--------------|---------|-----------|
+| **REGENERATE** (`regenerate_required: true`) | Forbidden repair/debug **primary objective** or terminology in opening | **Regenerate** — new slug + scenario per `forbidden-repair-objectives-gate.mdc` |
+| **H1** | Debugging / SE objective | **Regenerate** if repair-shaped; else reframe |
+| **H2** | Repo not functional / buildable / consistent | Remove `BUG:` / `INTENTIONALLY BROKEN`; add `test.sh` rebuild; remove “broken repository” framing |
+| **H3** | Fixing existing functionality | New capability on **working** baseline; oracle builds new artifacts — not patch-only copy |
+| **H4** | No new-capability goal | Open instruction with **add/build/implement** + one allowed goal (subsystem, workflow, analysis, planner, …) |
+| **H5** | Find-bug / make-tests-pass shape | Remove “identify what is wrong”, “find the bug”, “make tests pass” |
+| **H6** | Blocked category | Set `category` to an allowlisted value (`data-administration` / `machine-learning` / `games`) |
+| **H7** | Repair / restoration workflow | Rename slug; remove restoration/correction/after-repair language; real build oracle |
+
+---
+
+## Step 2 — Fix by type (edit task — not metadata-only)
+
+### H2 / H4 — Repository state + new goal (most common)
+
+1. **Instruction** — first paragraph: working baseline under /app + **what to build or analyze** (see goal table in `repository-state-requirement.mdc`).
+2. **Environment** — remove seeded defects; ship code that **builds** in Dockerfile.
+3. **`tests/test.sh`** — rebuild (`cargo build` / `go build` / `rebuild-*`) before pytest when stack compiles.
+4. **`solution/solve.sh`** — implement new behavior + rebuild; no copy-only patch from `solution/files/` without compile.
+
+### H1 / H3 / H5 / H7 — Repair-shaped task
+
+**Do not** weaken tests. **Redesign:**
+
+- Scenario = add export stage, planner, attestation ledger, governance report — on **functional** /app
+- Oracle = construct new outputs through real CLI/build paths
+- Slug = no `repair-`, `fix-`, `debug-`, `restore-`
+
+### H6 — Category
+
+```toml
+category = "data-administration"  # or machine-learning / games
+```
+
+Never `debugging`, `software-engineering`, `data-processing`, `security`, `system-administration`, `build-and-dependency-management`, `scientific-computing`, `cloud-devops`, or any value outside the allowlist.
+
+---
+
+## Step 3 — Re-verify (mandatory before zip)
+
+```bash
+python3 scripts/repository_state_gate.py --pack-gate --task-dir tasks/<name>
+# must print: Repository-state: PASS — hard acceptance 7/7
+./scripts/pack_zip.sh <name>
+```
+
+Ideas (before CREATE):
+
+```bash
+python3 scripts/idea_similarity_gate.py --language <lang> --domain "<domain>" \
+  --title "<title>" --summary "<build/analyze new capability …>"
+```
+
+Report in reply:
+
+```
+Repository-state: PASS — 7/7 — <slug>
+Fix applied: H4 → rewrote instruction opening as build new workflow on working /app
+```
+
+---
+
+## Forbidden on FAIL
+
+| Do not | Do instead |
+|--------|------------|
+| `TERMINUS_TASK_GENERATION_SKIP=1` without user message | Fix per table above |
+| Relabel `difficulty` only | Reframe instruction + environment + oracle |
+| Weaken gate checks | Structural redesign per `repository-state-requirement.mdc` |
+| Tell user “upload anyway” | Re-run gate until PASS |
+
+---
+
+## Related
+
+- `shared/forbidden-repair-objectives-gate.mdc` — **REGENERATE** when repair is primary objective
+- `shared/repository-state-requirement.mdc` — full requirement
+- `shared/task-generation-mandatory.mdc` — 7/7 checklist
+- `scripts/repository_state_gate.py` — automated gate + report
+
+
+
+---
+
+<!-- SOURCE: shared/forbidden-repair-objectives-gate.mdc -->
+
+# Terminus — Forbidden repair objectives gate (LOCKED)
+
+**When:** Every ideas intake, CREATE, revise, pack, and post-create hook.
+
+**Automated:** `scripts/task_generation_policy.py` · `scripts/repository_state_gate.py` · `scripts/idea_similarity_gate.py`
+
+**Verdict `REGENERATE`:** Gate blocks zip/CREATE. Agent must **discard repair framing** and **regenerate** the task (new slug, new scenario, build-on-working-baseline) — **not** patch the same repair-shaped tree in place.
+
+**On REGENERATE:** load **`shared/repository-state-fail-fix.mdc`** only for H2/H4/H6 metadata fixes; for H1/H3/H5/H7 repair objective → **regenerate**, do not reword instruction only.
+
+---
+
+## REJECT and REGENERATE if primary objective is any of
+
+| Forbidden primary objective |
+|----------------------------|
+| Fixing bugs |
+| Repairing broken functionality |
+| Correcting existing behavior |
+| Patching source code |
+| Restoring missing functionality |
+| Completing an intentionally incomplete implementation |
+| Resolving failing tests |
+| Making a broken repository work |
+| Finding defects in existing code |
+| Repairing parsers, validators, schedulers, engines, or services |
+| Investigating seeded bugs |
+| Updating code solely to satisfy existing tests |
+
+**7/7 PASS** still required after regeneration. Repair-shaped tasks **never** zip.
+
+---
+
+## Forbidden terminology (core objective)
+
+If any phrase below is the **core objective** (instruction opening, idea title/summary, slug, tags) → **REGENERATE**:
+
+| Term / phrase |
+|---------------|
+| fix · repair · patch · debug · broken · incomplete |
+| restore · correct |
+| resolve bug · resolve failure |
+| make tests pass |
+| failing implementation · repair implementation |
+| broken module · unfinished implementation |
+
+**Allowed:** same words only in **negation** or **historical** context (e.g. “must not be a fix-the-broken-service task”) — not as the agent’s job.
+
+Automated: opening-paragraph scan + slug tokens + `OBJECTIVE_PATTERNS` in `task_generation_policy.py`.
+
+---
+
+## REGENERATE workflow (mandatory)
+
+1. **Stop** — do not zip, do not submit, do not “reframe” one paragraph on the same repair slug.
+2. **New design** — functional /app baseline + **add/build/implement** new capability (see `repository-state-requirement.mdc` goal table).
+3. **New slug** — no `fix-`, `repair-`, `debug-`, `patch-`, `restore-` tokens.
+4. **New environment** — no seeded `BUG:` / `INTENTIONALLY BROKEN`; oracle builds new artifacts.
+5. **Re-gate:**
+
+```bash
+python3 scripts/repository_state_gate.py --pack-gate --task-dir tasks/<new-slug>
+```
+
+Ideas before CREATE:
+
+```bash
+python3 scripts/idea_similarity_gate.py --language <lang> --domain "..." \
+  --title "<build new …>" --summary "<add capability on working baseline …>"
+```
+
+Report: `Repository-state: REGENERATE — <reason> — regenerated as <new-slug>`
+
+---
+
+## Gate mapping
+
+| Signal | Verdict | Action |
+|--------|---------|--------|
+| H1 / H3 / H5 / H7 + forbidden opening term | **REGENERATE** | New task design |
+| H2 seeded broken env | **FAIL** → fix env or regenerate |
+| H4 no new capability | **FAIL** → add build goal or regenerate |
+| H6 blocked category | **FAIL** → change category |
+
+---
+
+## Forbidden on REGENERATE
+
+| Do not | Do instead |
+|--------|------------|
+| Patch instruction only on same repair slug | Regenerate slug + scenario + env |
+| `TERMINUS_TASK_GENERATION_SKIP=1` without user message | Regenerate per table |
+| Weaken gate patterns | Build new capability task |
+| Upload anyway | Gate must show PASS 7/7 |
+
+---
+
+## Related
+
+- `shared/repository-state-requirement.mdc`
+- `shared/repository-state-fail-fix.mdc`
+- `shared/task-generation-mandatory.mdc`
+
+
+
+---
+
+<!-- SOURCE: shared/task-uniqueness-gate.mdc -->
+
+# Terminus — Task uniqueness gate (LOCKED)
+
+**When:** Ideas intake (`idea_similarity_gate.py`) and pack (`task_uniqueness_gate.py` after anti-spam / unacceptable-class gates).
+
+**Scripts:**
+
+```bash
+# Ideas (automatic inside idea_similarity_gate.py)
+python3 scripts/idea_similarity_gate.py --language <lang> --domain "<domain>" --title "<title>" --summary "<idea>"
+
+# Pack (automatic in pack_zip.sh after unacceptable-class gate)
+python3 scripts/task_uniqueness_gate.py --pack-gate --task-dir tasks/<name>
+```
+
+Reports: `jobs-local/idea-similarity-gate-last.json` · `jobs-local/task-uniqueness-gate-last.json`
+
+---
+
+## TASK UNIQUENESS RULES (mandatory)
+
+Additionally — **no**:
+
+| # | Rule |
+|---|------|
+| 1 | Duplicate tasks |
+| 2 | Copy tasks |
+| 3 | Sibling tasks |
+| 4 | Same-family tasks |
+| 5 | Same-lane tasks |
+| 6 | Template-generated variants |
+| 7 | Fabricated benchmark-style problems |
+| 8 | Synthetic puzzle tasks |
+| 9 | Spam submissions |
+
+Every generated task **must** have:
+
+| Dimension | Requirement |
+|-----------|-------------|
+| **Workflow** | Distinct real-world workflow (ingest/export, attest, correlate, …) |
+| **Artifact** | Distinct primary artifact (report, ledger, manifest, atlas, … or /app/output path) |
+| **Reasoning** | Distinct reasoning pattern (provenance, checksum, closure, policy, …) |
+| **Objective** | Distinct operational objective (build/analyze/implement — not fix/repair) |
+| **Industry** | Distinct industry use case (domain field + tags — not generic language name) |
+
+Minimize similarity across **industry**, **workflow**, **artifact type**, and **reasoning structure**.
+
+---
+
+## Automation mapping
+
+| Rule | Ideas gate | Pack gate |
+|------|------------|-----------|
+| Duplicate | slug collision · `DUPLICATE` class | `DUPLICATE` class + slug |
+| Copy | weighted > 0.10 · `COPY` class | anti-spam sim + `COPY` class |
+| Sibling | `SIBLING` class | `SIBLING` class |
+| Same-family | family saturation · `FAMILY` | `FAMILY` class |
+| Same-lane | `SAME_LANE` class | `SAME_LANE` class |
+| Templated | weighted > 0.10 · `TEMPLATED` | `TEMPLATED` class |
+| Fabricated | text patterns + `FABRICATED` | instruction patterns + class |
+| Synthetic | text patterns + `SYNTHETIC` | instruction patterns + class |
+| Spam | spam slug pattern | spam slug pattern |
+| Five dimensions | domain/summary heuristics | `instruction.md` + tags |
+
+**Ideas:** weighted similarity **> 0.10** → BLOCK · **== 0.0** → auto CREATE (when uniqueness **PASS**).
+
+**Pack:** run after `unacceptable_class_gate.py` (8/8 PASS) — distinct-dimension check on built task.
+
+---
+
+## Agent reply (ideas turn)
+
+Include **Task uniqueness** table from script output (do not guess):
+
+```markdown
+## Task uniqueness (scripted)
+| Check | PASS / FAIL |
+|-------|-------------|
+| No duplicate tasks | PASS |
+| … | … |
+| Distinct industry use case | PASS |
+| **Verdict** | **PASS** |
+```
+
+Any **FAIL** → do not CREATE. Revise domain, workflow, artifact, or industry — not keyword swap on same lane.
+
+---
+
+## When FAIL → fix
+
+| Signal | Fix |
+|--------|-----|
+| Duplicate / near slug | New slug + different domain |
+| Copy / sibling / family / lane | Different stack or verifier contract — not instruction nouns only |
+| Templated / sim > 0.10 | New industry + artifact + workflow |
+| Fabricated / synthetic | Real engineering scenario — remove puzzle/benchmark framing |
+| Missing distinct dimension | Add domain, artifact, workflow, reasoning, objective to idea text |
+| Pack distinct-dimension FAIL | Rewrite instruction opening + tags; cite /app/docs contracts |
+
+**Do not** use `TERMINUS_ANTI_SPAM_SKIP` to bypass uniqueness — fix in place.
+
+---
+
+## Related
+
+- `ideas/idea-similarity-gate.mdc` — thresholds + CREATE flow
+- `shared/task-generation-mandatory.mdc` — no debugging / no SE
+- `shared/unacceptable-task-classes.mdc` — 8-class pack gate
+- `shared/anti-spam-templated-submissions.mdc` — family saturation
+- `scripts/task_uniqueness_policy.py` — check implementation
+
+
+
+---
+
+<!-- SOURCE: shared/jobs-local-layout-lock.mdc -->
+
+# Terminus — jobs-local layout (LOCKED)
+
+**Gitignored:** `jobs-local/` — **machine reports only.** Hooks and `create_finish_to_zip.sh` write here. **You do not edit these folders.** They are not rubrics and not uploaded.
+
+**You care about:** `tasks/<slug>/`, `tasksubmit/<slug>.zip`, and `rubrics/<slug>.md`.
+
+## Subfolders (what each is for)
+
+| Folder | Written by | Purpose (for agents / debug) |
+|--------|------------|------------------------------|
+| `jobs-local/audit/` | `post_create_audit_loop.py` | Static audit pass/fail — fix High/Medium in task |
+| `jobs-local/harbor/` | harbor verify scripts | Oracle/NOP evidence (`harbor-verify-<slug>.json`) |
+| `jobs-local/calibration/` | EASY paste + smoke | Platform scores; blocks zip until post-harden |
+| `jobs-local/probes/` | `terminus_auto_probes.py` | Case 6 probe PASS/FAIL per slug |
+| `jobs-local/first-submit/` | `first_submit_pack_gate.py` | F′ probe record before first upload |
+| `jobs-local/finish/` | `create_finish_to_zip.py` | **Ready?** read `create-finish-last.json` verdict |
+| `jobs-local/gates/` | pack_zip chain | CI, unacceptable-class, anti-spam reports |
+| `jobs-local/trivial-easy/` | `trivial_easy_auto_finish.py` | EASY pipeline last run |
+| `jobs-local/ideas/` | ideas hooks | Draft ideas + similarity gate |
+
+**Platform rubrics:** `rubrics/<slug>.md` at repo root — **separate from jobs-local.**
+
+## Scripts
+
+```bash
+python3 scripts/jobs_local_paths.py --migrate   # one-time flat → subfolders
+python3 scripts/jobs_local_paths.py --resolve harbor-verify-foo.json
+```
+
+Readers accept **legacy flat** paths until migrated.
+
+## Agent reports
+
+Cite new paths in replies, e.g. `jobs-local/finish/create-finish-last.json`, `rubrics/<slug>.md`.
+
+
+
+---
+
+<!-- SOURCE: shared/WORKFLOW-MAP.mdc -->
+
+# Terminus Edition 2 — Main hub (LOCKED)
+
+**ENGINE_0 hub (always on):** `LOCKED.mdc`, this file, `shared/terminus-master-engine.mdc`, `shared/prompt-router.mdc`, `shared/problem-rule-loader.mdc`, `shared/core.mdc`, `shared/repo-workflow.mdc`. **All other** `.mdc` rules lazy-load per **ENGINE_1–7** — see **`shared/terminus-master-engine.mdc`** and `scripts/terminus_engine_registry.py`.
+
+**Jun 2026 Snorkel sync (LOCKED):** `shared/additive-rules-lock-index.mdc` · changelog map: `shared/snorkel-platform-changelog-sync.mdc`
+
+**Summary paste = auto-analyze (DEFAULT — user never repeats this):** Any message with `tasks/<name>/` + platform summary → agent **immediately** analyzes, picks `prompts/*.md` router + case, `Read`s files, fixes task. No need to say “analyze” or “use prompt”. Hook: `.cursor/hooks/route-terminus-prompt.py` · rule: `shared/prompt-router.mdc`. **`oracleFix.md` only for oracle failures.** Summary beats wrong @-tag.
+
+**Canonical ECR `FROM` = auto-apply (DEFAULT — user never repeats this):** Any work under `tasks/<name>/` → agent **automatically** ensures `environment/Dockerfile` uses `public.ecr.aws/docker/library/…` digests from **`shared/canonical-base-image-gate.mdc`**. No need to say “use canonical images” or “migrate docker.io”. Rule: **`shared/canonical-ecr-dockerfile-auto.mdc`**.
+
+**LOCKED policy:** All `.cursor/rules/` and `prompts/` files are canonical — see **`LOCKED.mdc`** (rules index) and **`prompts/LOCKED.md`** (prompt pairings). Do not bypass `@` tags, weaken difficulty, or pack zips by hand unless the user explicitly overrides in this message.
+
+**Paths (LOCKED):** `tasks/<name>/` → `./scripts/pack_zip.sh <name>` → `tasksubmit/<name>.zip` · `author_name` / `author_email` = `anonymous` · no `rubric.md` in zips · scan `tasks/`, `tasks/_accepted-tasks/`, `tasksubmit/` only (no `dusre-wale/`).
+
+**Harbor runs:** store under `jobs-local/` (gitignored) — do not commit `jobs/` at repo root or inside tasks.
+
+On conflict, prefer the **stricter** rule.
+
+---
+
+## LOCKED index
+
+| Doc | Role |
+|-----|------|
+| **`LOCKED.mdc`** | Rules policy + @ tag map + forbidden shortcuts |
+| **`shared/terminus-master-engine.mdc`** | **8-engine flow** — ENGINE_0 hub + ENGINE_1–7 lazy load |
+| **`shared/problem-rule-loader.mdc`** | **Conflicts** — problem → which rules to load |
+| **`prompts/LOCKED.md`** | Prompt pairings + routers |
+| **`prompts/README.md`** | Full prompt index |
+| **`shared/snorkel-dockerfile-image-best-practices.mdc`** | **LOCKED** — Snorkel Dockerfile & Image Best Practices (verbatim §1–15 + CI blocking checks) |
+| **`shared/dockerfile.mdc`** | Terminus Dockerfile integration (verifier, Rust amd64, checklist) |
+| **`create/first-submit-acceptance-gate.mdc`** | **Phase F′** — probes + hardness before **first** zip (hard block in `pack_zip.sh`) |
+
+---
+
+## Rule folders (`.cursor/rules/`)
+
+| @ tag | Folder | When to load |
+|-------|--------|----------------|
+| **@IDEAS RULES** | `ideas/` | Brainstorm / generate task ideas |
+| **@CREATE RULES** | `create/` | New task A→H pipeline |
+| **@AUDIT RULES** | `audit/` | Post-create audit (read-only) |
+| **@REVIEWER RULES** | `reviewer/` | Reviewer comments, checklist, CI/LLMaJ/agent-review refs |
+| **@REVISE RULES** | `revise/` | Platform reject, trivial/hard/unsolvable, oracle G-025–G-027 |
+| **@VERIFY RULES** | `verify/` | Oracle/NOP, pre-zip audit |
+| **@ZIP RULES** | `zip/` | Pack `tasksubmit/<name>.zip` |
+| **@LOCKED** | `LOCKED.mdc` | Full rules + prompts policy index |
+
+**Always load with task work:** `shared/repo-workflow.mdc`, `shared/runtime-verifier.mdc`, `shared/spec.mdc`, `shared/core.mdc`, **`shared/anti-spam-templated-submissions.mdc`** (before upload)
+
+**Snorkel verbatim (audit / revise / submit):** `shared/snorkel-dockerfile-image-best-practices.mdc` (Dockerfile & Image Best Practices page), `reviewer/reviewer-checklist.mdc`, `reviewer/ci-checks-reference.mdc`, `reviewer/llmaj-checks-reference.mdc`, `reviewer/agent-review-reference.mdc`
+
+**Oracle failed:** `revise/oracle-fix-g025-g027.mdc` + repo-root `oracleFix.md`
+
+---
+
+## Prompts — **user chooses** tag or automated (equal)
+
+| Path | You do | Agent does |
+|------|--------|------------|
+| **Tag** | `@` one prompt + paste summary | **Analyze summary first**; apply prompt **per summary** (tag = hint); override wrong tag |
+| **Automated** | Paste task path + summary only | Hook + `prompt-router` analyze; auto-pick router + case |
+
+**@ tags:** `@TRIVIAL PROMPT` · `@MEDIUM PROMPT` · `@HARD PROMPT` · `@REVIEWER PROMPT` · `@AUDIT PROMPT` · `@ORACLE PROMPT` · `@NEWIDEA PROMPT` · `@PROMPTS` (index)
+
+Same outcome either way — `prompts/HOW-TO-USE.md`
+
+---
+
+## Lifecycle (quick)
+
+| Phase | Action | Load |
+|-------|--------|------|
+| A Ideas | Generate | `@prompts/newidea.md` + **@IDEAS RULES** |
+| B Create | Build task | **@CREATE RULES** · hard SP: `@prompts/sp-hard-create-revise.md` CREATE |
+| C Audit | Read-only review (user-invoked) | `@prompts/audit.md` + **@AUDIT RULES** + **@REVIEWER RULES** |
+| C′ Auto audit | **After CREATE Phase D** — no user ask | **`create/post-create-audit-loop.mdc`** + audit trio |
+| D Revise | Platform / trivial / **easy** / medium / hard | `@prompts/easy.md` (EASY), `@prompts/trivial.md` (TRIVIAL), `@prompts/medium.md`, `@prompts/hard.md`, or **`@prompts/sp-hard-create-revise.md`** + **@REVISE RULES** + **`revise/hardness.mdc`** |
+| D′ Reviewer | Line comments | `@prompts/reviewer.md` + **@REVIEWER RULES** |
+| E Verify | Oracle 1, NOP 0 | **@VERIFY RULES** |
+| F′ First-submit | Probes + record PASS (first upload) | **`create/first-submit-acceptance-gate.mdc`** + `revise/trivial-hardening-probes.mdc` |
+| F Zip | Upload pack | **@ZIP RULES** → `./scripts/pack_zip.sh <name>` only (no zip until F′ PASS on first upload) |
+
+Detail: `shared/task-lifecycle.mdc`
+
+---
+
+## Non-negotiable gates
+
+- `allow_internet = false` · `workdir = "/app"` · verifier deps in Dockerfile only
+- **Final runtime `FROM` = Snorkel ECR canonical** — auto-fix per `shared/canonical-ecr-dockerfile-auto.mdc` (no user reminder)
+- `test.sh` ends with Harbor `if [ $? -eq 0 ]` reward block — nothing after `fi`
+- Oracle offline (G-025) · zip includes `tests/test_outputs.py` (G-026) · no `\` in zip paths (G-027)
+- Oracle **1**, NOP **0** before zip — evidence required, do not claim ready without runs
+- **First upload:** Phase **F′** PASS recorded (`first_submit_pack_gate.py --record`) — **`pack_zip.sh` writes no zip until PASS** (skip: milestone; slug in `platform_submissions.txt`)
+- **Zip only via** `./scripts/pack_zip.sh <name>` (or `pack_zip.ps1` / `pack-all-upload-zips.sh`) — **never** manual `zip -r` for upload
+- **Ask, don't hallucinate** — missing summary, task path, oracle/NOP evidence, or file contents → **one question**; never invent platform results or pick a case by guess (`shared/prompt-router.mdc`)
+
+
+
+---
+
+<!-- SOURCE: shared/core.mdc -->
+
+# Terminus Edition 2 — Core
+
+**Start:** `shared/WORKFLOW-MAP.mdc` (always on) + **`shared/task-lifecycle.mdc`**. Open phase `@` folders only when needed.
+
+Cursor must behave like a **strict Terminus reviewer first** and a code generator second. It must not invent files, CI results, task status, agent pass rates, rubric quality, or platform feedback.
+
+When **user gives an idea to build** under `tasks/`: **(1)** fetch `tasks/_accepted-tasks/` (`ls` + read ≥2), **(2)** scan corpus, **(3)** ask **one** question if blocking doubt else **(4)** build A→H per **`create/new-task-pipeline-A-H.mdc`**.
+
+When **creating a new task** (same as above) or **revising** existing: load lifecycle + **`shared/accepted-corpus.mdc`** + **≥2** reference reads before editing.
+
+**Revision triggers (do not merge — edit in place):**
+- **Platform rejection** (TRIVIAL / oracle / unsolvable / verifier) → Lifecycle **Phase D** + `shared/task-lifecycle.mdc` §2
+- **Reviewer feedback** → Lifecycle **Phase D′** + **`reviewer/REVIEWER-RULES.mdc`** + `shared/task-lifecycle.mdc` §3
+
+## Anti-hallucination and evidence rules
+
+- Do not invent task files, CI results, agent pass rates, platform feedback, rubric text, or reviewer decisions. If any detail is missing, mark it as missing and ask for it instead of assuming.
+- Before creating, editing, or reviewing any task, inspect the actual task directory and list the real files found. Do not claim a file exists unless it is present in the workspace. Do not claim a test, solution, Dockerfile, rubric, or `task.toml` field is valid unless it was actually checked.
+- Do not say a task is "accepted", "ready", "passing", "hard", or "CI-clean" unless there is real evidence from local runs, CI results, oracle runs, NOP runs, agent runs, or provided platform screenshots/logs.
+- Do not hallucinate difficulty. Difficulty must be based on actual agent run results when available. If no agent results exist, call it **target difficulty**, not confirmed difficulty.
+- Do not hallucinate codebase size. Count meaningful environment files that the agent can inspect or edit. Do not add filler files just to reach small codebase. If fewer than 20 meaningful files exist, do not label it small without explaining why.
+- Do not hallucinate dependencies. Only add dependencies actually used by the app, solution, or tests. Pin every app dependency exactly. Do not add random packages, unused frameworks, or fake package versions.
+- Do not hallucinate schemas. If tests check a JSON, CSV, CLI, API, or database schema, the schema must be explicitly written in the instruction or in a referenced environment doc. Do not make tests enforce fields that are not stated or clearly implied.
+- Do not hallucinate test coverage. For every test, identify which instruction requirement it validates. For every instruction requirement, identify which test validates it. If no matching test exists, add one or remove the requirement.
+- Do not hallucinate oracle behavior. The oracle must actually solve the task in the provided environment. Do not write a solve script that only creates final expected outputs unless the task itself is explicitly about producing those outputs through valid computation.
+- Do not hallucinate anti-cheat. Anti-cheat must be real: mutated fixtures, independent expected-value computation, behavior validation, DB state checks, CLI/API execution, or cross-file validation. Do not rely only on file existence or exact copied strings.
+- Do not hallucinate rubric quality. Rubric lines must be task-specific and trace-focused. Do not include generic lines like "Agent understands the task". Do not mention tests, pytest, instruction.md, task.toml, oracle, NOP, metadata, or final pass/fail.
+- Do not use phrases like "should pass CI" unless local checks were actually run. If checks were not run, say **not verified yet**.
+- Do not make broad rewrites after a task is mostly valid. Fix only the specific issue unless the task has structural problems. Avoid over-engineering, unnecessary files, extra services, or extra edge cases that make instruction/test alignment harder.
+- **Do not implement reviewer feedback blindly** (`reviewer/REVIEWER-RULES.mdc`). Triage each comment for fairness/reliability vs solution leak vs trivializing change before editing.
+- If unsure between two interpretations, choose the stricter current Terminus rule and leave a short note explaining the uncertainty. Never silently guess.
+
+## Mandatory self-check before final answer
+
+Before saying the task is ready, run **`shared/first-pass-blueprint.mdc` §0 (A–F)** and output PASS/FAIL for: **TRIVIAL risk**, **unsolvable/fairness**, **oracle**, **verifier did not run**, **repeat-issue guard**, **spam/templated**. Do not say ready if any FAIL or if oracle/NOP were not run.
+
+Then output this checklist with **real evidence**:
+
+- Actual task type: non-milestone or milestone.
+- Actual language(s) used.
+- Actual codebase_size and why.
+- Actual category and subcategories.
+- Actual root structure found.
+- For milestone tasks, actual `steps/milestone_N/` folders found.
+- Actual `task.toml` required fields checked.
+- Actual Dockerfile dependency pins checked.
+- Actual instruction paths checked for absolute paths.
+- Actual tests mapped to instruction requirements.
+- Actual `test.sh` reward writing checked.
+- Actual oracle script checked for determinism and no web/package downloads.
+- Actual environment checked for no tests, solution, ground truth, hidden hints, or expected outputs.
+- Actual rubric checked for format, valid scores, and at least three negative criteria (**skip if this repo omits `rubric.md` per `shared/repo-workflow.mdc`**).
+- Actual local commands run, or state clearly that they were **not run**.
+
+If any item cannot be verified, do not mark the task ready.
+
+## Platform preferences (EC Training)
+
+Before zipping or debugging timeouts / oracle / NOP, apply `.cursor/rules/shared/platform-preferences.mdc` (`[agent] timeout_sec = 1800`, `[verifier] timeout_sec = 900`, Debian apt without version pins, oracle/NOP checklist, prefer Rust/Go/Bash for new tasks).
+
+## Final pre-submit checklist
+
+Before zipping:
+
+- Run oracle locally.
+- Run verifier locally after oracle.
+- Run verifier on clean environment without oracle to ensure NOP fails.
+- Confirm `reward.txt` is always written; `tests/test.sh` **ends** with Harbor `if [ $? -eq 0 ]` block (not `PYTEST_RC`; no lines after `fi`) — `zip/ZIP-RULES.mdc`.
+- Confirm `task.toml` schema and timeouts; **`subcategories = []`** (empty — do not assign Harbor labels).
+- Confirm no forbidden root files for milestone tasks.
+- Confirm all dependencies are pinned.
+- Confirm **final runtime `FROM`** is Snorkel ECR canonical (`shared/canonical-ecr-dockerfile-auto.mdc` + `canonical-base-image-gate.mdc`); upload form **Yes**.
+- Confirm instruction uses absolute paths.
+- Confirm every tested behavior is stated or clearly implied.
+- Confirm no tests, solution, ground truth, expected output, or hidden hint is in environment.
+- Confirm rubric has correct format and at least 3 negative criteria (**skip if this repo omits `rubric.md` per `shared/repo-workflow.mdc`**).
+- Confirm agent difficulty is not easy.
+- Confirm every claim in the final response is based on an actual file, actual command output, or explicitly provided evidence.
+
+Do not claim ready/pass/accepted unless local oracle and verifier checks were actually run.
+
+
+
+---
+
+<!-- SOURCE: shared/repo-workflow.mdc -->
+
+# Terminus — This repository (Sanjana)
+
+**Entry:** `shared/WORKFLOW-MAP.mdc` + `shared/terminus-master-engine.mdc` (ENGINE_0 hub). Platform/live work in **`tasks/`**; pack-ready WIP in **`pending/`**. Zip to **`tasksubmit/`**.
+
+**Quick tags:** `@CREATE RULES` · `@REVIEWER RULES` · `@AUDIT RULES` · `@REVISE RULES` · `@VERIFY RULES` · `@ZIP RULES` · `@IDEAS RULES`
+
+## Paths (LOCKED)
+
+| Live | Zip |
+|------|-----|
+| `tasks/<name>/` or `pending/<name>/` | `tasksubmit/<name>.zip` |
+
+- Accepted examples: **`tasks/_accepted-tasks/`** (local — `ls` + read 2 folders before new work)
+- `author_name` / `author_email` = `anonymous`
+- **No `rubric.md`** in task folders or zips — rubric in chat only
+- `difficulty` = `medium` or `hard` only
+
+## File patterns (LOCKED)
+
+Before create/revise: `ls tasks/_accepted-tasks/` → copy harness from closest stack per **`shared/accepted-corpus.mdc`**.
+
+## Task diversity — no copies, no templates, no spam (LOCKED)
+
+**Full gate:** **`shared/anti-spam-templated-submissions.mdc`** (Jun 2026 platform policy — flags, family saturation, pre-upload checklist).
+
+Scan **`tasks/`**, **`pending/`**, **`tasks/_accepted-tasks/`**, **`tasksubmit/`**, and **`tasks/tasksss/`** before any new idea or build. Reject slug, near-title, or **family** duplicates.
+
+**Platform policy — templated / spam uploads are NOT allowed:**
+
+- Each submission must be **substantively different** from your prior tasks — not a re-skin.
+- **Forbidden:** same structure, solution approach, or test patterns with keyword swaps only (e.g. swap domain nouns in instruction while keeping identical bash pipeline / Rust replay / TB3 env override layout).
+- **Forbidden:** bulk uploading many same-family tasks (volume spam) — pick **one per family** per batch unless user explicitly overrides.
+- **Required:** distinct problem domain, distinct failure modes, distinct verifier semantics — not plug-and-play clones.
+- Templated or spam-pattern submissions may be **rejected**, **flagged**, and can affect **project standing**.
+
+Before create: prove **≥2 structural differences** from nearest neighbor in a similarity table (`create/new-task-pipeline-A-H.mdc` Phase B). Before zip: **`Anti-spam/templated: PASS/FAIL`** line (`anti-spam-templated-submissions.mdc`).
+
+```
+ls tasks/_accepted-tasks/ + read 2 folders
+→ scan tasks/ + tasksubmit/ zips
+→ build tasks/<new-name>/   (unique domain + structure)
+→ oracle + NOP → ./scripts/pack_zip.sh <name>
+```
+
+**SP hard (Jun 2026):** new HARD tasks → `@prompts/sp-hard-create-revise.md` CREATE — target **Claude Opus 4.8** (0%/timeout @ 1800s OK); REVISE too-easy → same + Case 5 + `trivial-repo-wide.md`.
+
+## task.toml defaults
+
+```toml
+[agent]
+timeout_sec = 1800
+[verifier]
+timeout_sec = 900
+[environment]
+allow_internet = false
+workdir = "/app"
+build_timeout_sec = 600.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+```
+
+**`subcategories` (LOCKED — this repo):** always `subcategories = []`. Do not populate Harbor subcategory labels (`api_integration`, `tool_specific`, etc.) in `task.toml`.
+
+**`category` (LOCKED — this repo + platform):** never `debugging` or `software-engineering` on **new** submissions — platform blocked. Use `data-processing`, `build-and-dependency-management`, `security`, etc. (`shared/task-toml-category-gate.mdc`).
+
+**`allow_internet`:** default **`false`**. Static check fails if `false` but solve/agent needs network (`shared/allow-internet-gate.mdc`). Set **`true` only** when the task genuinely requires live internet (e.g. gallery **Requires Internet** inspirations).
+
+## Zip (LOCKED)
+
+```bash
+./scripts/pack_zip.sh <name>
+./scripts/pack-all-upload-zips.sh
+```
+
+Uses `@ZIP RULES` — flat root, no `rubric.md`, G-027 forward slashes. **`pack_zip.sh` auto-runs canonical ECR `--ensure`** on the task before zipping (no separate migrate step).
+
+## Platform submission form (LOCKED — fill at upload)
+
+| Field | Rule |
+|-------|------|
+| **Approved canonical base image?** | **Yes** only if final runtime `FROM` matches `shared/canonical-base-image-gate.mdc` (Snorkel ECR table). Else **No** + short **justification** in the textbox. |
+| **Task Inspiration ID** | Required when the task is based on a gallery inspiration — copy the ID from under the inspiration title on the project website. Leave blank only if not inspiration-based. |
+
+
+
+---
+
+<!-- SOURCE: shared/prompt-router.mdc -->
+
+# Terminus prompt router (LOCKED)
+
+## DEFAULT — every chat, no reminder needed (LOCKED)
+
+**Sanjana does not repeat this each time.** If the message has **`tasks/<name>/`** and/or a **platform summary** (Difficulty, Status, agent scores, per-test table, reviewer paste) — you **automatically**:
+
+1. **Analyze** the full summary  
+2. **Pick** router + best case (`trivial` / `medium` / `hard` / `reviewer` / `audit` / `oracleFix`)  
+3. **`Read`** `prompts/<router>.md` + case file + **ENGINE_N** rule list from hook (`shared/terminus-master-engine.mdc`)  
+4. **Work** on `tasks/<name>/` or `pending/<name>/`
+
+Do **not** wait for “analyze”, “use prompt”, or “route this”. Do **not** ask which case. Start with summary analysis in your **first reply**.
+
+**Canonical ECR `FROM` (same default — no reminder):** When working on `tasks/<name>/`, **automatically** ensure `environment/Dockerfile` uses Snorkel ECR digests (`shared/canonical-ecr-dockerfile-auto.mdc`). User does not say “use canonical images” each chat.
+
+**CREATE → auto audit (no reminder):** After Phase D, agent **immediately** runs Phase E audit-fix — **same turn**, **no** “should I audit?”. Policy: `shared/sanjana-standing-requirements.mdc` + `create/post-create-audit-loop.mdc`.
+
+**Reviewer instruction (no reminder):** Never add solve hints to `instruction.md` — fix via docs/tests. Policy: `reviewer/REVIEWER-RULES.mdc`.
+
+**Anti-spam (same default — no reminder):** Cursor hooks **execute** checks on task file saves and prompt submit; `pack_zip.sh` runs pack gate. **Never ask the user** to run scripts manually.
+
+**First-submit gate (same default — no reminder):** Before **first** platform upload on a new task → **Phase F′** per `create/first-submit-acceptance-gate.mdc` — probe table PASS before `pack_zip.sh`. ENGINE_3 / ENGINE_5 / ENGINE_6 inject this automatically.
+
+**When you @-tag AND paste summary:** still **analyze the summary first** — tag is a hint only. **Apply the prompt that matches the summary**, not the tag blindly. Wrong tag → override in one line, then use the correct router + case.
+
+No tag = same automated flow.
+
+**Can't @ tag `prompts/*.md`?** Normal — those files are not in Cursor's @ menu. Use **Rules → `HARD PROMPT`** etc., or **skip tag** (summary only works fully).
+
+---
+
+When the user pastes a **platform summary** for `tasks/<name>/`, you run **three steps**. Do **not** ask which case — **you** pick from the summary.
+
+**User chooses each time:**
+
+| Path | Behavior |
+|------|----------|
+| **@ tag + summary** | **Analyze summary first.** Tag = hint only. Pick router + case from **summary**; override wrong tag. |
+| **Summary only (no tag)** | Same — analyze summary → router + case → `Read` `prompts/`. |
+
+Never ask user to pick a case. Same 3-step flow both paths.
+
+**Hook:** `.cursor/hooks/route-terminus-prompt.py` — follow `## TERMINUS PROMPT ROUTER (hook)` if present.
+
+---
+
+## Step 1 — Analyze the summary (mandatory)
+
+Extract and **quote 2–3 facts**:
+
+| Field | Examples |
+|-------|----------|
+| Difficulty | medium, hard, TRIVIAL, EASY |
+| Status | solvable, not solvable, unsolvable |
+| Oracle | Oracle solution failed, oracle **0** (platform) |
+| Agents | Claude 3/5, GPT 5/5, per-test 0% forever |
+| Feedback type | reviewer bullets vs platform label only |
+
+If fields missing → **one** clarifying question. **Do not guess.**
+
+---
+
+## Ask — do not hallucinate (LOCKED)
+
+**Stop and ask the user one question** when you would otherwise invent facts:
+
+| If you don't have… | Do not… | Ask instead |
+|--------------------|---------|-------------|
+| Platform summary pasted | Assume TRIVIAL / oracle / scores | "Paste Difficulty, Status, agent scores, per-test table" |
+| Task path | Pick a random `tasks/` folder | "Which task — `tasks/<name>/`?" |
+| Oracle vs unsolvable vs trivial | Route to oracleFix or hard by guess | "Did platform say **Oracle solution failed** or **not solvable**?" |
+| Reviewer vs platform label only | Open `reviewer.md` on label alone | "Line comments paste karo ya sirf platform label?" |
+| Local oracle/NOP not run | Say "verified" / "ready to submit" | "Harbor run nahi hua — run karun?" |
+| File contents unread | Claim test/instruction/oracle bugs | Read files first; if blocked, ask |
+
+**Never:** fake platform metrics, invent reviewer comments, assume zip/oracle passed, or pick a case without summary evidence.
+
+If **two** problems could apply (e.g. oracle 0 + TRIVIAL) → state both, ask **which to fix first** (one question).
+
+---
+
+## Step 2 — Pick router by **problem type**
+
+| Problem in summary | Router |
+|--------------------|--------|
+| **CREATE** new hard task / `@sp-hard-create-revise` | **`prompts/sp-hard-create-revise.md`** |
+| TRIVIAL / EASY platform label (or worst **>60%**, either **≥3/5**) | **`prompts/trivial-fix-invoke.md`** first → trio → **`shared/trivial-fix-invoke-mandatory-steps.mdc` (14 steps)** — **Case 6 only** (hook overrides Case 4/5) |
+| TRIVIAL / agents pass too easily (no full summary) | **`prompts/trivial.md`** — ask for invoke §1 paste if summary incomplete |
+| Claude **0%** + oracle **OK** + fair docs | **`prompts/sp-hard-create-revise.md`** (quality-only — no weaken) |
+| difficulty = **medium** | **`prompts/medium.md`** |
+| HARD + not solvable / 0%-forever / unfair | **`prompts/hard.md`** — **Solvable ≠ Trivial**; parse summary exactly; Case 1 = fairness only |
+| Reviewer **line comments** | **`prompts/reviewer.md`** |
+| Post-create audit | **`prompts/audit.md`** |
+| **Oracle failed** / G-025–027 only | **`prompts/oracleFix.md`** |
+| verifier_did_not_run only | `runtime-verifier` + `hard-case-3.md` — **not** oracleFix |
+| Ideas | **`prompts/newidea.md`** |
+
+Wrong `@hard.md` + summary TRIVIAL 5/5 → **`trivial.md`**, not hard.
+
+---
+
+## Step 3 — Pick **best case** inside that router (auto — never ask user)
+
+**Rule:** Walk the table **top to bottom**. Pick the **first row whose summary signal matches**. Quote the matching facts. **Do not** default to Case 4 or Case 6 without a matching row.
+
+### `easy.md` or `trivial.md` → one case (same priority — first match wins)
+
+**LOCKED override:** Platform label **TRIVIAL** or **EASY** with full summary → **`prompts/trivial-fix-invoke.md`** + **Case 6 only** — ignore Case 4 row below. Follow **`shared/trivial-fix-invoke-mandatory-steps.mdc`** (14 steps; Step 5 before edits).
+
+| Summary signal | Case file |
+|----------------|-----------|
+| audit only / read-only | `trivial-case-audit.md` |
+| TB3 / shallow Python / language migration / verifier instability | `trivial-tb3-hardening.md` |
+| Label **EASY**, either model **≥3/5**, worst **>40%**, all per-tests **≥6/10** | `trivial-case-6.md` |
+| Label **TRIVIAL** + both **5/5**; 2nd trivial same slug; one-file patch; probes FAIL | `trivial-case-6.md` |
+| Already flagged trivial | `trivial-case-1.md` |
+| Still trivial, both models **≤2/5** | `trivial-case-2.md` |
+| Default — any other TRIVIAL/EASY | `trivial-case-6.md` |
+
+### `medium.md` → one case
+
+| Summary signal | Case file |
+|----------------|-----------|
+| 0%-forever / not solvable | `medium-case-1.md` |
+| solvable, harden to ~1/5 | `medium-case-2.md` |
+| mixed / unclear | `medium-case-3.md` |
+
+### `hard.md` → one case
+
+**LOCKED:** Benchmark agents = **`terminus-claude-opus-4-8`**, **`terminus-gpt5-5`**. Quote Agent Performance + per-test table + Analysis before edits. Case 1 fixes **0%-forever unfair tests only** — not blanket ease. After fix: probes 1/1b/7/8 + flag if either model likely **≥3/5** → `@prompts/trivial.md` Case 6. See `prompts/hard.md` § Solvable ≠ Trivial.
+
+| Summary signal | Case file |
+|----------------|-----------|
+| one test 0% forever, others pass (incl. 13/14 + spec gap in Analysis) | `hard-case-1.md` |
+| all agents 0/5 on **full suite**, fair, no 0%-forever unfair test | `hard-case-2.md` |
+| full audit / unclear root cause | `hard-case-3.md` |
+| either model **≥3/5** or platform EASY/TRIVIAL | **`prompts/trivial.md`** — **not** hard Case 1/2 alone |
+
+### `reviewer.md` → one RF
+
+| Summary signal | Case file |
+|----------------|-----------|
+| trivializing hints / triage first | `reviewer-feedback-6.md` → then `reviewer-feedback-4.md` |
+| timeouts / metadata / CI only | `reviewer-feedback-1.md` |
+| agents OK, preserve difficulty | `reviewer-feedback-3.md` |
+| re-run oracle/NOP / quality gate | `reviewer-feedback-2.md` |
+| full checklist + difficulty recheck | `reviewer-feedback-5.md` |
+| default mixed comments | `reviewer-feedback-4.md` |
+
+---
+
+## Execute (no @prompts tag)
+
+1. Quote summary facts.
+2. Say: **Router** + **case** + **why** (one line each).
+3. **TRIVIAL/EASY:** `Read` `prompts/trivial-fix-invoke.md` → trio → `shared/trivial-fix-invoke-mandatory-steps.mdc` — **write §3 fix prompt before any edit**.
+4. **`Read` `prompts/<router>.md`, `prompts/<case>.md`, and `prompts/trivial-repo-wide.md` (TRIVIAL / SP edit cases) from disk** — first tools after routing; do not skip because user did not @-tag.
+5. **SP CREATE / REVISE:** also `shared/platform-preferences.mdc` §1b (Claude-primary; timeout @ 1800 via scope).
+6. Inspect real `tasks/<name>/` files.
+7. **TRIVIAL/EASY:** Steps 8–14 per mandatory-steps.mdc (probes → calibration → finish script → oracle/NOP → zip).
+8. Oracle **1**, NOP **0** → **Phase F′** first-submit gate PASS → `./scripts/pack_zip.sh <name>` (or `create_finish_to_zip.sh` for TRIVIAL/EASY).
+
+
+
+---
+
+<!-- SOURCE: shared/problem-rule-loader.mdc -->
+
+# Terminus — Problem → rule loader (conflict resolution)
+
+**LOCKED.** When rules disagree, **this file wins** for *which guidance to apply*. General policy: **stricter** + **newer Snorkel additive (Jun 2026)** > legacy corpus examples > `_legacy/`.
+
+**Do not cherry-pick one rule file.** Load the **baseline** every time, then the **problem row** below.
+
+---
+
+## 1. Baseline (ENGINE_0 — always in context)
+
+Hub only — no extra Read needed:
+
+`LOCKED.mdc` · `WORKFLOW-MAP.mdc` · `shared/terminus-master-engine.mdc` · `shared/prompt-router.mdc` · `shared/problem-rule-loader.mdc` · `shared/core.mdc` · `shared/repo-workflow.mdc`
+
+**Then activate one engine** (hook sets `ENGINE_N`) and **`Read` all rules** listed in hook output or `scripts/terminus_engine_registry.py`.
+
+---
+
+## 2. Problem → load this next
+
+Pick **one primary problem** from summary or user message. If **two** apply (e.g. oracle 0 + EASY), use §4 priority — ask user **one** question only if tie.
+
+| Problem (summary / user) | Engine | Prompt `Read` first | Rules / docs to apply |
+|--------------------------|--------|---------------------|------------------------|
+| **TRIVIAL / EASY / ≥3/5 agents / worst >60%** | **ENGINE_7** | **`prompts/trivial-fix-invoke.md`** → `prompts/trivial.md` → `prompts/trivial-case-6.md` → `prompts/sp-hard-create-revise.md` | **`shared/trivial-fix-invoke-mandatory-steps.mdc`**, `revise/trivial-easy-difficulty-prompt-lock.mdc`, `revise/REVISE-RULES.mdc`, **`shared/unacceptable-task-classes.mdc`**, `revise/trivial-hardening-probes.mdc`, `prompts/trivial-repo-wide.md`, `shared/anti-trivial.mdc`, `revise/hardness.mdc`, `shared/difficulty-benchmark-models.mdc` |
+| **Oracle solution failed / oracle 0** | **ENGINE_7** | `prompts/oracleFix.md` (repo root same text) | `revise/oracle-fix-g025-g027.mdc`, `revise/platform-hardness-guards.mdc` — **before** trivial hardening |
+| **Verifier did not run / no reward.txt** | **ENGINE_7** | `prompts/hard.md` → `hard-case-3.md` if unclear | `shared/runtime-verifier.mdc`, `shared/test-sh-reward-block.mdc`, `reviewer/common-errors-reference.mdc` § Environment |
+| **Unsolvable / unfair / one test 0% forever** | **ENGINE_7** | `prompts/hard.md` → Case 1/2/3 per router | `shared/first-pass-blueprint.mdc` §4, **not** trivial trio |
+| **Reviewer line comments** | **ENGINE_7** | `prompts/reviewer.md` → RF1–RF6 | `reviewer/REVIEWER-RULES.mdc`, `reviewer/reviewer-checklist.mdc` |
+| **Post-create audit (read-only)** | **ENGINE_4** | `prompts/audit.md` | `audit/AUDIT-RULES.mdc`, `reviewer/reviewer-checklist.mdc` |
+| **New task create** | **ENGINE_3** | `create/new-task-pipeline-A-H.mdc` | `create/CREATE-RULES.mdc`, **`shared/unacceptable-task-classes.mdc`**, **`create/post-create-audit-loop.mdc` (Phase E auto)**, **`create/first-submit-acceptance-gate.mdc` (Phase F′)**, `revise/trivial-hardening-probes.mdc`, `shared/accepted-corpus.mdc` (≥2 reads), `prompts/sp-hard-create-revise.md` |
+| **MEDIUM band / mixed agents** | **ENGINE_7** | `prompts/medium.md` → case | `revise/REVISE-RULES.mdc` |
+| **Pre-upload / zip** | **ENGINE_5** then **ENGINE_6** | — | `verify/VERIFY-RULES.mdc`, **`create/first-submit-acceptance-gate.mdc` (first upload)**, `zip/ZIP-RULES.mdc` + §3 conflict checks |
+| **New ideas** | **ENGINE_1** | `prompts/newidea.md` | `ideas/IDEAS-RULES.mdc` |
+
+**Wrong @-tag:** summary wins (`shared/prompt-router.mdc`). Example: `@HARD` + EASY 4/5 → **trivial trio**, not `hard.md`.
+
+---
+
+## 3. Conflict resolution (when two rules disagree)
+
+| Topic | Older / weaker | **Apply (wins)** |
+|-------|----------------|------------------|
+| Base image `FROM` | Legacy `docker.io` in `_accepted-tasks/` only | **`canonical-base-image-gate.mdc`** (Snorkel ECR 10 images); `platform-preferences.mdc` §6 defers here |
+| `subcategories` | Harbor allow-list in `creation-rules.mdc`, lane labels | **`task-toml-subcategories-gate.mdc`** → always **`[]`** in this repo |
+| `category` | `_accepted-tasks/` often `debugging` / `software-engineering` | **`task-toml-category-gate.mdc`** → those two **blocked** on upload |
+| `instruction.md` style | Backticks / fenced CLI OK in old examples | **`instruction-prose-style.mdc`** — prose only |
+| Benchmark models | Opus 4.6, GPT-5.2 in old text | **`difficulty-benchmark-models.mdc`** — Opus **4.8**, GPT **5.5** |
+| `test.sh` reward end | `runtime-verifier.mdc` literal `$?` only | **`test-sh-reward-block.mdc`** — `rc=$?` **preferred**; both CI-valid |
+| Trivial default case | `trivial-harden.md`, Case 4-only | **`trivial-case-6.md`** + **`sp-hard-create-revise.md`** unless `trivial.md` Step B row 8 |
+| `codebase_size` | Platform allows `minimal` | **`create/accepted-patterns.mdc`** — new tasks **`small`/`large`** unless user overrides |
+| Dockerfile CI detail | Generic §2 in old docs | **`snorkel-dockerfile-image-best-practices.mdc`** + **`canonical-base-image-gate.mdc`** |
+| Common Errors / env defects | Scattered checklist only | **`reviewer/common-errors-reference.mdc`** |
+| Changelog vs memory | Ad-hoc | **`snorkel-platform-changelog-sync.mdc`** |
+| Any active vs `_legacy/terminus-*` | Legacy copies | **Active** `.cursor/rules/` (not `_legacy/`) |
+
+**Pinning vs environment:** unpinned pip/npm/`@sha256` missing → category **`pinning`**; tmux/test.sh network/copy layout → **`environment`** (`common-errors-reference.mdc`).
+
+---
+
+## 4. Multi-problem priority (fix order)
+
+| Order | Condition | Why |
+|-------|-----------|-----|
+| **1** | Oracle 0 / G-025–G-027 | Zip meaningless without oracle pass |
+| **2** | Verifier did not run | No agent score until reward.txt |
+| **3** | Unsolvable / unfair spec | Hardening trivial broken tasks wastes time |
+| **4** | TRIVIAL / EASY | Structural hardening (trio) |
+| **5** | Reviewer cosmetic | After behavior fair |
+| **6** | Zip | Last |
+
+If **1 + 4** both present → default **fix oracle first**; say so in one line unless user says “trivial first”.
+
+---
+
+## 5. Phase → minimum load set
+
+| Phase | Load |
+|-------|------|
+| **A Ideas** | `ideas/` + `prompts/newidea.md` |
+| **B Create** | `create/` + `accepted-corpus` + **`canonical-ecr-dockerfile-auto`** + `canonical-base-image-gate` + `instruction-prose-style` + `task-toml-subcategories-gate` + `task-toml-category-gate` |
+| **C Audit** | `audit/` + `reviewer/` + `common-errors-reference` (read-only) |
+| **D Revise** | Row from §2 + `first-pass-blueprint` §0–§4 |
+| **D′ Reviewer** | `reviewer/REVIEWER-RULES` + triage |
+| **E Verify** | `verify/` + `difficulty-benchmark-models` + `test-sh-reward-block` + **`canonical-ecr-dockerfile-auto`** |
+| **F Zip** | `zip/ZIP-RULES` only after E |
+
+---
+
+## 6. Quick decision (first reply)
+
+```
+Summary fact → primary problem (§2 row)
+Conflict? → §3 winner
+Multi-problem? → §4 order
+Read prompts/*.md from §2 column
+Inspect tasks/<name>/ files before edits
+```
+
+**Hub:** `shared/additive-rules-lock-index.mdc` · **Router:** `shared/prompt-router.mdc` · **Policy:** `LOCKED.mdc`
+
+
+
+---
+
+<!-- SOURCE: shared/additive-rules-lock-index.mdc -->
+
+# Terminus — Additive rules lock index (Jun 2026)
+
+**LOCKED — verified registry.** Indexed in `LOCKED.mdc` § Jun 2026 additive rules. **Load with ENGINE_3 CREATE, ENGINE_7 REVISE, or ENGINE_6 ZIP** — not ENGINE_0 hub.
+
+**Additive rule.** These files are canonical guidance. They **supplement** — do not replace — `LOCKED.mdc`, `WORKFLOW-MAP.mdc`, or older rows in `shared/platform-preferences.mdc` when Snorkel docs are newer.
+
+## Lock policy (confirmation)
+
+| Scope | Locked? | alwaysApply |
+|-------|---------|-------------|
+| `.cursor/rules/**/*.mdc` (active) | **Yes** | `true` unless noted |
+| `.cursor/rules/_legacy/**` | Archive only | `false` |
+| `.cursor/rules/prompts/*.mdc`, `tag-prompts/*.mdc` | @-tag hints | `false` |
+| `prompts/*.md` | **Yes** (`prompts/LOCKED.md`) | N/A |
+
+**Agents:** do not weaken additive or core rules unless the user explicitly overrides in the current message.
+
+## Additive rules added (Jun 2026 — Snorkel sync)
+
+| File | Purpose |
+|------|---------|
+| `shared/canonical-base-image-gate.mdc` | Snorkel ECR 10 base images + upload form Yes/No |
+| `shared/canonical-ecr-dockerfile-auto.mdc` | **Auto-apply** ECR `FROM` — user never repeats “canonical images” |
+| `shared/task-toml-subcategories-gate.mdc` | **`subcategories = []` always** |
+| `shared/task-toml-category-gate.mdc` | **`category` blocklist** — no `debugging` / `software-engineering` (platform + repo) |
+| `shared/allow-internet-gate.mdc` | **`allow_internet` static check** — metadata must match offline solve |
+| `shared/instruction-prose-style.mdc` | No backticks / fenced CLI in `instruction.md` |
+| `shared/difficulty-benchmark-models.mdc` | Opus 4.8 + GPT-5.5; unchanged EASY/MEDIUM/HARD thresholds |
+| `reviewer/common-errors-reference.mdc` | Common Errors + feedback categories (`environment`, `oracle`, …) |
+| `revise/trivial-easy-difficulty-prompt-lock.mdc` | TRIVIAL/EASY **prompt trio** (below) |
+| `shared/snorkel-platform-changelog-sync.mdc` | Welcome page changelog → rule map + gaps |
+| `shared/test-sh-reward-block.mdc` | `rc=$?` preferred; both CI-valid reward endings |
+| `shared/problem-rule-loader.mdc` | **Problem → which rules load; conflict winners** |
+| `shared/anti-spam-templated-submissions.mdc` | **No spam / no templated clones** — family saturation, pre-upload PASS/FAIL |
+| `shared/block-trivial-platform-acceptance.mdc` | **Block TRIVIAL/EASY zip** — shape gate S1–S7 + Case 6 + agent smoke ≤20% |
+| `create/first-submit-acceptance-gate.mdc` | **First-upload hardness** — Phase F′ probes before first zip (CREATE) |
+| `create/post-create-audit-loop.mdc` | **CREATE Phase E** — auto audit-fix loop after Phase D (no user prompt) |
+| `ideas/idea-similarity-gate.mdc` | **Ideas intake** — block sim >0.10; auto CREATE when sim==0 |
+| `shared/unacceptable-task-classes.mdc` | **Never accept** — templated, copy, duplicate, family, lane, sibling, fabricated, synthetic |
+| `shared/task-generation-mandatory.mdc` | **No debugging tasks** — build/analyze only; automated at ideas + pack |
+
+On conflict between additive Snorkel rows and legacy `docker.io` corpus examples → **prefer additive Snorkel row** for **new uploads**; see **`problem-rule-loader.mdc` §3**.
+
+## Trivial / EASY / difficulty hardening — prompt trio
+
+**LOCKED workflow** when summary shows **TRIVIAL**, **EASY**, either benchmark **≥3/5**, worst **>60%**, or post-hardening still too easy:
+
+| Order | Read | Role |
+|-------|------|------|
+| 1 | **`prompts/trivial.md`** | Router — Step A/B; quote matched row before edits |
+| 2 | **`prompts/trivial-case-6.md`** | **Default case** — structural redesign (ingest → staging → export + decoy); not decorative fields |
+| 3 | **`prompts/sp-hard-create-revise.md`** | Repo-wide quality, subsystem map, probes before zip, Claude 0% OK if fair |
+
+**Also load (mandatory with trio):**
+
+- **@REVISE RULES** (`revise/REVISE-RULES.mdc`)
+- `revise/trivial-hardening-probes.mdc` — run probes **before zip**
+- `prompts/trivial-repo-wide.md` §1–§14 (per `trivial.md` Step C)
+- `shared/difficulty-benchmark-models.mdc`
+- `shared/anti-trivial.mdc`, `revise/hardness.mdc`
+
+**Case override (summary only — first matching row in `trivial.md` Step B):**
+
+- Audit only → `trivial-case-audit.md` (no edits)
+- Unsolvable / unfair 0%-forever → **`prompts/hard.md`** (not trio)
+- TB3 / shallow Python → `trivial-tb3-hardening.md`
+- Both models **≤2/5** and worst **≤20%** → `trivial-case-2.md` (not Case 6)
+- Oracle / verifier only → `oracleFix.md` + G-025–G-027
+
+**Deprecated for default route:** `trivial-harden.md` alone — use **Case 6** unless Step B row 8 applies.
+
+## Copy-paste invoke (user → agent)
+
+```text
+tasks/<name>/ + platform summary (TRIVIAL / EASY)
+
+Load LOCKED trio:
+@prompts/trivial.md
+@prompts/trivial-case-6.md
+@prompts/sp-hard-create-revise.md
+@REVISE RULES
+
+Auto-route from summary; default Case 6. Oracle 1, NOP 0, pack_zip.
+```
+
+## @-tags (optional hints)
+
+| Tag | Points to |
+|-----|-----------|
+| `@TRIVIAL PROMPT` | `prompts/trivial.md` |
+| `@prompts/trivial-case-6.md` | Case 6 file (no separate @ menu entry — paste path) |
+| `@SP HARD` / `prompts/sp-hard-prompt.mdc` | `prompts/sp-hard-create-revise.md` |
+
+Summary **beats** wrong @-tag (`shared/prompt-router.mdc`).
+
+## Related
+
+- `prompts/LOCKED.md` — benchmark agents + `sp-hard` pairing
+- `shared/prompt-router.mdc` — automated summary routing
+- `revise/trivial-easy-difficulty-prompt-lock.mdc` — trio detail (duplicate hub OK for discoverability)
+
+
+
+---
+
+<!-- SOURCE: shared/unacceptable-task-classes.mdc -->
+
+# Terminus — Unacceptable task classes (LOCKED — zero tolerance)
+
+**Not partial. Not allowed.** If a task **is** any class below, it **must not** be created, hardened, or zipped. Platform will reject; this repo **blocks zip** before upload.
+
+**Applies to:** **IDEAS**, **CREATE** (A→H), **TRIVIAL / EASY revise**, **every** `pack_zip.sh` run — **first upload and resubmit**.
+
+**Hard gate (mandatory):**
+
+```bash
+python3 scripts/unacceptable_class_gate.py --pack-gate --task-dir tasks/<name>
+```
+
+`pack_zip.sh` runs this **after** anti-spam. **Any class FAIL → exit 1, no zip file.**
+
+Reports: `jobs-local/unacceptable-class-gate-last.json` · `jobs-local/unacceptable-class-gate-last.txt`
+
+**Override (user explicit only in current message):** `TERMINUS_ANTI_SPAM_SKIP=1` (same skip covers this gate).
+
+---
+
+## All 8 classes — none allowed
+
+| Class | **Not allowed** means | Gate |
+|-------|----------------------|------|
+| **TEMPLATED** | Keyword-swap on same harness, bug lattice, verifier, oracle shape | Anti-spam FAIL/WARN; sim ≥0.65; ideas sim >0.10 |
+| **COPY** | Renamed whole-tree / file-for-file clone of corpus neighbor | sim ≥0.75 or sim ≥0.50 with <2 structural diffs |
+| **DUPLICATE** | Slug or near-duplicate title already in corpus / platform | `slug already exists`; jaccard ≥0.72 |
+| **FAMILY** | **3+** tasks same family in `tasks/` | `family saturation:` blocker |
+| **SAME_LANE** | Saturated lane (custody, ledger, Go twin CLI+SQLite export, merge CLI, game-auditor clone) | Same as FAMILY when saturated |
+| **SIBLING** | Same-family nearest neighbor with high similarity | shared family + sim ≥0.65 |
+| **FABRICATED** | Oracle echoes golden files; no real patch/build; BUG/TODO/answers in `environment/` | `unacceptable_class_gate.py` solve.sh + env scan |
+| **SYNTHETIC** | Decorative fields, filler, inflated pytest, metadata-only hardening, probe-1 shallow | F′ record + probe 1 PASS; ≥3 docs; `reference_*` tests |
+
+**All 8 must show PASS** in gate report. **One FAIL = blocked.** No “warn and upload anyway.” No “mostly unique.”
+
+---
+
+## Phase gates (no skip, no partial)
+
+| Phase | Rule |
+|-------|------|
+| **Ideas** | `idea_similarity_gate.py` — weighted **> 0.10** → **do not CREATE** |
+| **Post-create** | Anti-spam post-create + unacceptable-class self-check |
+| **TRIVIAL / EASY** | Case 6 + probes — **still** all 8 classes PASS before zip |
+| **Pack** | `unacceptable_class_gate.py --pack-gate` — **required** |
+
+---
+
+## Agent reply before zip (mandatory)
+
+```text
+Unacceptable-class: PASS — all 8 clear
+  TEMPLATED PASS · COPY PASS · DUPLICATE PASS · FAMILY PASS · SAME_LANE PASS
+  SIBLING PASS · FABRICATED PASS · SYNTHETIC PASS
+```
+
+If any line is **FAIL** → **do not zip**; redesign in place or new slug/family — **not** metadata-only fix.
+
+---
+
+## TRIVIAL revise (LOCKED)
+
+Hardening **does not** exempt any class:
+
+- Extra tests/fields on a **TEMPLATED / COPY / SIBLING** task → **still blocked**
+- **FABRICATED** oracle or **SYNTHETIC** decorative hardening → **still blocked**
+- `difficulty = "hard"` relabel alone → **SYNTHETIC** — blocked
+
+---
+
+## Self-check (any yes = do not upload)
+
+1. Reviewer could swap instruction nouns and recognize the same task? → **TEMPLATED — not allowed**
+2. Renamed copy of one neighbor tree? → **COPY — not allowed**
+3. Slug/title exists in corpus? → **DUPLICATE — not allowed**
+4. ≥3 tasks same family in `tasks/`? → **FAMILY / SAME_LANE — not allowed**
+5. Nearest neighbor same family, sim ≥0.65? → **SIBLING — not allowed**
+6. Oracle only writes expected output without `/app` logic? → **FABRICATED — not allowed**
+7. Hardening added surface area without new bug layers? → **SYNTHETIC — not allowed**
+
+---
+
+## Related
+
+- `shared/anti-spam-templated-submissions.mdc`
+- `ideas/idea-similarity-gate.mdc`
+- `create/first-submit-acceptance-gate.mdc` (SYNTHETIC / probe depth)
+- `revise/trivial-easy-difficulty-prompt-lock.mdc`
+
+
+
+---
+
+<!-- SOURCE: ideas/IDEAS-ASK-FIRST.mdc -->
+
+# IDEAS — ASK FIRST (LOCKED)
+
+**Trigger:** `gen ideas`, `generate ideas`, `brainstorm`, `@prompts/newidea.md`, `@NEWIDEA`.
+
+**Similarity gate:** **`ideas/idea-similarity-gate.mdc`** — block if weighted **> 0.10**; **auto @CREATE** when weighted **== 0.0**.
+
+## Do NOT (causes duplicate / templated tasks)
+
+- Do **not** auto-generate 10 / 25 / batch idea lists
+- Do **not** invent domains or titles when user only said "gen ideas"
+- Do **not** write `jobs-local/ideas-draft.json` with agent-made ideas on first turn
+- Do **not** start `@CREATE` when similarity **> 0.10** or script exits **1**
+- Do **not** wait for “build it” when similarity **== 0.0** and gate reports **AUTO_CREATE=yes**
+- Do **not** use Mode A batch defaults (25+5) unless user explicitly requests a batch **after** intake
+
+## DO on first "gen ideas" message
+
+**Ask user once** for exactly three inputs (English):
+
+1. **Primary language** — Rust, Go, Bash, Java, TypeScript, etc.
+2. **Domain** — industry or scenario (user's choice, not agent-picked list)
+3. **Your task idea** — 1–3 sentences: what broken system / CLI / pipeline should the agent fix?
+
+Stop and wait. **Do not generate ideas in the same reply.**
+
+## DO after user answers (lang + domain + idea)
+
+1. Corpus scan only:
+
+```bash
+ls tasks/
+ls pending/ 2>/dev/null
+ls tasks/_accepted-tasks/
+ls tasksubmit/*.zip 2>/dev/null
+```
+
+2. **Mandatory similarity script** (no guessing):
+
+```bash
+python3 scripts/idea_similarity_gate.py \
+  --language "<lang>" \
+  --domain "<domain>" \
+  --title "<short title>" \
+  --summary "<user idea>"
+```
+
+3. Read **`jobs-local/idea-similarity-gate-last.json`** — cite real `weighted_score`, `nearest`, `auto_create`
+4. **BLOCK** if weighted **> 0.10** or exit code **1**
+5. **AUTO_CREATE** if weighted **== 0.0** → start `@CREATE` Phase A **immediately** (same chat)
+6. **0 < sim ≤ 0.10** → PASS; user confirms or says build → then CREATE
+7. Family saturation ≥3 same lane in `tasks/` → script blockers; fix domain/shape
+
+## Then
+
+- **sim == 0 + PASS** → `@CREATE RULES` Phase A→H **automatically**
+- **0 < sim ≤ 0.10** → CREATE only after user says build / OK
+- **sim > 0.10** → **no build** — new domain required
+
+Entry prompt: **`prompts/newidea.md`** · Gate: **`ideas/idea-similarity-gate.mdc`**
+
+
+
+---
+
+<!-- SOURCE: ideas/idea-similarity-gate.mdc -->
+
+# Terminus — Idea similarity gate (LOCKED — ENGINE_1 → ENGINE_3)
+
+**When:** User gives **language + domain + idea** (after ASK FIRST intake). **Before** any `tasks/<name>/` folder exists.
+
+**Script (mandatory — agent runs, user does not):**
+
+```bash
+python3 scripts/idea_similarity_gate.py \
+  --language <lang> \
+  --domain "<domain>" \
+  --title "<short title>" \
+  --summary "<user idea 1–3 sentences>"
+```
+
+Reports: `jobs-local/idea-similarity-gate-last.json` · `jobs-local/anti-spam-ideas-last.json`
+
+---
+
+## Thresholds (ideas only — not pack zip)
+
+| Weighted similarity | Verdict | Agent action |
+|---------------------|---------|--------------|
+| **> 0.10** | **BLOCK** | Stop. Tell user nearest neighbor + change domain/shape. **No CREATE.** |
+| **== 0.0** (no blockers) | **PASS + AUTO_CREATE** | **Immediately** start `@CREATE` Phase A→H — **no** “say build it” |
+| **0 < sim ≤ 0.10** | **PASS** | User explicit OK or revised idea — then CREATE |
+
+Pack/post-create/zip gates still use **0.85 / 0.65** — do not confuse with ideas gate.
+
+---
+
+## Mandatory steps (no skip)
+
+### Intake (ENGINE_1)
+
+1. **ASK** — language, domain, user idea (if missing)
+2. **Repository-state / task-generation check** — idea must **not** be fix/repair/debug objective (`repository_state_gate.py` / `task-generation-mandatory.mdc`) — **before** similarity
+3. **Corpus scan** — `ls tasks/`, `pending/`, `_accepted-tasks/`, `tasksubmit/`
+4. **`idea_similarity_gate.py`** — weighted similarity **+ task uniqueness table** (`task-uniqueness-gate.mdc`) — no guessing
+5. **BLOCKED** → stop with evidence from JSON report (similarity **or** uniqueness FAIL)
+6. **AUTO_CREATE=yes** → `@CREATE` pipeline **same turn** (Phase A→H)
+7. **PASS, sim > 0** → one-line confirm or user says build → then CREATE
+
+### CREATE (ENGINE_3) — after idea PASS
+
+| Phase | Step |
+|-------|------|
+| **A** | Read ≥2 `_accepted-tasks/` + skeleton |
+| **B** | Similarity table (again vs built slug) |
+| **C** | One hard idea → implement |
+| **D** | Create `tasks/<name>/` only |
+| **E** | **Auto audit** 2–4 rounds (`post-create-audit-loop.mdc`) |
+| **F** | Oracle 1.0, NOP 0.0, ruff |
+| **F′** | Probes + `first_submit_pack_gate.py --record` |
+| **G** | `./scripts/pack_zip.sh` (anti-spam + CI + F′ hard block) |
+| **H** | One final message — table + rubric |
+
+---
+
+## Task uniqueness (LOCKED — same turn as similarity)
+
+Full rules: **`shared/task-uniqueness-gate.mdc`**. Script embeds **14-check table** in `jobs-local/idea-similarity-gate-last.json` → `uniqueness`.
+
+**No:** duplicate · copy · sibling · same-family · same-lane · template variant · fabricated benchmark · synthetic puzzle · spam
+
+**Must have:** distinct workflow · primary artifact · reasoning pattern · operational objective · industry use case
+
+Any uniqueness **FAIL** → **BLOCK** even when weighted sim ≤ 0.10.
+
+---
+
+## Forbidden
+
+**Never-accept classes:** `shared/unacceptable-task-classes.mdc` — **TEMPLATED**, **COPY**, **DUPLICATE**, **FAMILY**, **SAME_LANE**, **SIBLING**, **FABRICATED**, **SYNTHETIC**. Ideas gate blocks these + distinct-dimension gaps when sim **> 0.10** or uniqueness table FAIL.
+
+| Do not | Do instead |
+|--------|------------|
+| Guess similarity without running script | `idea_similarity_gate.py` |
+| Idea objective is fix/repair/debug/broken | Reframe per `shared/task-generation-mandatory.mdc` |
+| CREATE when weighted **> 0.10** | Block + new domain |
+| Wait for “build it” when **sim == 0** | Auto Phase A |
+| Skip Phase E audit after CREATE | `post-create-audit-loop.mdc` |
+| Skip F / F′ before zip | Evidence + probe record |
+| Skip pack anti-spam / CI | `pack_zip.sh` only |
+
+---
+
+## Agent reply shape (similarity turn)
+
+```markdown
+## Corpus check
+- tasks/: N · pending/: N · _accepted-tasks/: N
+
+## Similarity (scripted — not guessed)
+- Nearest: tasks/<slug>/
+- Weighted sim: 0.000
+- Threshold: block if > 0.10 · auto-create if == 0.0
+- Verdict: BLOCKED | PASS (auto CREATE) | PASS (confirm build)
+- Report: jobs-local/idea-similarity-gate-last.json
+
+## Task uniqueness (scripted — not guessed)
+| Check | PASS / FAIL |
+| No duplicate tasks | PASS |
+| No copy tasks | PASS |
+| … (all 14 rows from script) | |
+| **Verdict** | **PASS** |
+
+## Next
+- BLOCKED (similarity or uniqueness): change domain/workflow/artifact — I will not create.
+- sim == 0 + uniqueness PASS: starting @CREATE Phase A now.
+- 0 < sim ≤ 0.10 + uniqueness PASS: confirm or I wait.
+```
+
+---
+
+## Related
+
+- `ideas/IDEAS-ASK-FIRST.mdc` · `prompts/newidea.md`
+- `create/new-task-pipeline-A-H.mdc` · `create/post-create-audit-loop.mdc`
+- `scripts/anti_spam_pipeline.py` — `IDEA_VERDICT_FAIL`, `IDEA_AUTO_CREATE_SIM`
+
+
+
+---
+
+<!-- SOURCE: ideas/IDEAS-RULES.mdc -->
+
+# @IDEAS RULES — Task ideas (Phase A) — LOCKED
+
+**Trigger:** `@prompts/newidea.md`, "gen ideas", brainstorm.
+
+**LOCKED:** **`ideas/IDEAS-ASK-FIRST.mdc`** + **`ideas/idea-similarity-gate.mdc`** + **`prompts/newidea.md`**
+
+---
+
+## Do
+
+- On "gen ideas" → **ask** language, domain, user's idea (one message); **wait**
+- After user answers → corpus scan + **`python3 scripts/idea_similarity_gate.py`** (mandatory)
+- Cite **real** `weighted_score` from `jobs-local/idea-similarity-gate-last.json`
+- **sim > 0.10** → BLOCK — tell user nearest neighbor
+- **sim == 0.0** → **auto @CREATE** Phase A (no “build it”)
+- **0 < sim ≤ 0.10** → PASS — CREATE after user says build
+
+## Do not
+
+- Guess similarity without running the script
+- Auto 10/25 idea batches or invented domain lists
+- Write `ideas-draft.json` with agent-made titles on first turn
+- `@CREATE` when weighted **> 0.10**
+- Wait for “build it” when **sim == 0** and AUTO_CREATE=yes
+- Scan `dusre-wale/` · clone families · lane saturation (3+ same family)
+
+**sim == 0 PASS** → **@CREATE RULES** immediately. **0 < sim ≤ 0.10** → CREATE after user says build.
+
+
+
+---
+
+<!-- SOURCE: ideas/generate-ideas.mdc -->
+
+# Terminus — Generate task ideas (ASK FIRST)
+
+**Primary prompt:** `prompts/newidea.md` · **Policy:** `ideas/IDEAS-ASK-FIRST.mdc`
+
+When the user says **gen ideas** / **brainstorm**:
+
+1. **Ask** — language, domain, user's idea (do not generate)
+2. **Scan** — `tasks/`, `pending/`, `_accepted-tasks/`, `tasksubmit/`
+3. **Similarity** — PASS/WARN/FAIL; no build on FAIL
+4. **Build** — only if user explicitly requests + PASS
+
+**Before build:** read ≥2 folders from `tasks/_accepted-tasks/` for **structure only**.
+
+**No copies · no family duplicates · no merging.** Lane saturation: 3+ same family in `tasks/` → block.
+
+Anti-spam: hook + `pack_zip.sh` — user does not run scripts manually.
+
+
+
+---
+
+<!-- SOURCE: shared/accepted-corpus.mdc -->
+
+# Terminus — Accepted task corpus (this repo)
+
+**Source of truth (LOCKED):** **`tasks/_accepted-tasks/`** (~59 platform-ACCEPTED folders). New and revised tasks must **follow exactly** — pick the **closest stack match** in the corpus, open those real files, and copy **structure verbatim** (only rename task-specific paths, binaries, and docs). Do **not** improvise Dockerfile/`test.sh`/`task.toml` from memory or from active WIP in `tasks/`.
+
+**Do not copy domain/title** — copy **files and layout exactly** from the reference task.
+
+**Stack → copy these files exactly (starting points):**
+
+| Stack | Reference task | Copy from |
+|-------|----------------|-----------|
+| Go CLI | `idle-offline-accrual-normalizer` | Dockerfile, `test.sh`, `solve.sh`, `task.toml` |
+| Go + tools | `cue-schema-unification-evaluator` | Dockerfile (`requirements-verifier.txt` + hashes), `test.sh` |
+| Rust CLI | `stun-attribute-tlv-binder` or `cargo-workspace-feature-resolver` | Dockerfile, `test.sh`, `solve.sh` |
+| C / Make | `modbus-map-merge` | Dockerfile, `test.sh` (canonical harness shape) |
+| Node / TS | `order-replay-reconcile` | Dockerfile, `test.sh` (`npm run build` before pytest) |
+| Milestone | `rack-session-blob-migration` | `task.toml` + `steps/milestone_N/` layout only |
+
+---
+
+## Corpus location
+
+| Path | Contents |
+|------|----------|
+| `tasks/_accepted-tasks/<name>/` | Platform-accepted gold reference (read-only pattern source) |
+| `tasks/<name>/` | Active work — REVIEW_PENDING, NEEDS_REVISION, unsubmitted WIP |
+
+When citing references in design or audit replies, use paths like `tasks/_accepted-tasks/stun-attribute-tlv-binder/`.
+
+---
+
+## Mandatory read before new task ideas or implementation
+
+Before generating ideas **or** creating/editing any task under `tasks/`:
+
+1. **Read ≥2 real tasks** from `tasks/_accepted-tasks/` (pick different shapes: e.g. Rust protocol CLI + merge/export CLI, or TS API + tool-specific).
+2. **Summarize structural match** — not just domain swap — against those files:
+   - `task.toml` (timeouts, `allow_internet = false`, `workdir = "/app"`, **`subcategories = []`**, `difficulty` medium/hard)
+   - `instruction.md` (concise, absolute paths, cites `/app/docs/` contracts)
+   - `environment/Dockerfile` (digest-pinned `FROM`, `tmux` + `asciinema`, verifier venv with pinned pytest)
+   - `tests/test.sh` (no runtime installs; seed `0`; rebuild agent code; Harbor ending `if [ $? -eq 0 ]`)
+   - `tests/test_outputs.py` (module docstring, subprocess/HTTP, independent `reference_*` math)
+   - `solution/solve.sh` (patches `/app` source, rebuilds — not echo-only golden files)
+3. **Do not** mirror failure patterns from NEEDS_REVISION tasks still in `tasks/` (see comparison below).
+
+---
+
+## Follow exactly — per-file rules (from real ACCEPTED files)
+
+**Workflow:** `ls tasks/_accepted-tasks/` → open reference task for your stack → copy each file type → rename only task-specific symbols. If your task already exists, **diff each file** against the reference and fix deltas before zip.
+
+### `task.toml` — copy from `modbus-map-merge` or `idle-offline-accrual-normalizer`
+
+Exact fields present in corpus (do not add fields the reference omits unless Harbor requires them).
+
+**Repo upload policy:** `_accepted-tasks/` may show `category = "debugging"` — **do not copy** for new tasks. Use `data-processing` (or another allowed category); never `debugging` or `software-engineering` (`shared/task-toml-category-gate.mdc`).
+
+```toml
+version = "2.0"
+
+[metadata]
+author_name = "anonymous"
+author_email = "anonymous@gmail.com"
+difficulty = "hard"
+category = "data-processing"
+subcategories = []
+number_of_milestones = 0
+codebase_size = "small"
+languages = ["go"]
+tags = ["..."]
+expert_time_estimate_min = 120
+junior_time_estimate_min = 240
+
+[verifier]
+timeout_sec = 900.0
+
+[agent]
+timeout_sec = 1800.0
+
+[environment]
+build_timeout_sec = 600.0   # 900.0 when image compiles (Rust/Go/Node build in Dockerfile)
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+allow_internet = false
+```
+
+Corpus note: **53/59** accepted tasks include `workdir = "/app"`; **6 omit it** (e.g. `modbus-map-merge`, `idle-offline`) — when copying a reference **without** `workdir`, match that reference exactly; when platform static check requires it, add `workdir = "/app"` only if CI fails.
+
+### `environment/Dockerfile` — copy from stack reference
+
+**`FROM` digest (new/revised uploads):** copy **exact** ECR canonical row from **`shared/canonical-base-image-gate.mdc`** — not legacy `docker.io` lines below. `_accepted-tasks/` may still show old digests; migrate `FROM` on revise.
+
+**Go** (`idle-offline-accrual-normalizer` — harness shape; ECR `FROM` from canonical gate):
+
+- `FROM public.ecr.aws/docker/library/golang:1.24-bookworm@sha256:1a6d4452c65dea36aac2e2d606b01b4a029ec90cc1ae53890540ce6173ea77ac` (see `canonical-base-image-gate.mdc`)
+- Single apt transaction: `asciinema`, `ca-certificates`, `python3`, `python3-pip`, `python3-venv`, `tmux` — **by name** (corpus majority; 50/59 unpinned)
+- Inline `pytest==9.0.3` + `pytest-json-ctrf==0.5.0` in `/opt/verifier-venv`
+- `/opt/verifier-scripts/rebuild-<task>` from `scripts/verifier-rebuild.sh`
+- `WORKDIR /app`; build `/app/bin/…` in image
+
+**Rust** (`stun-attribute-tlv-binder` / `cargo-workspace-feature-resolver` — harness shape; ECR `FROM` from canonical gate):
+
+- `FROM public.ecr.aws/docker/library/rust:1.85-slim@sha256:9f841bbe9e7d8e37ceb96ed907265a3a0df7f44e3737d0b100e7907a679acb36` (see `canonical-base-image-gate.mdc`)
+- Same harness apt list (unpinned)
+- `ENV CARGO_INCREMENTAL=0`
+- `cargo build --release --locked` in Dockerfile when agent binary ships prebuilt
+
+**Node** (`order-replay-reconcile` — harness shape; ECR `FROM` from canonical gate):
+
+- `FROM public.ecr.aws/docker/library/node:22-bookworm-slim@sha256:f3a68cf41a855d227d1b0ab832bed9749469ef38cf4f58182fb8c893bc462383` (see `canonical-base-image-gate.mdc`)
+- `npm ci` from `package-lock.json`; `npm run build` in image
+
+**Hashed verifier lockfile** (`cue-schema-unification-evaluator`): `requirements-verifier.txt` + `pip install --require-hashes` — use when reference task uses it.
+
+### `environment/.dockerignore` — copy from `idle-offline-accrual-normalizer`
+
+Exact minimum from accepted Go reference:
+
+```
+.git
+.gitignore
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/node_modules/
+**/bin/
+output/
+solution/
+tests/
+```
+
+### `tests/test.sh` — copy from `modbus-map-merge` (canonical ACCEPTED harness)
+
+This is the **exact** shape used by accepted merge/CLI tasks (46/56 use `PWD` guard; 52/56 seed reward `0` before pytest):
+
+```bash
+#!/bin/bash
+
+# Verifier packages preinstalled in environment/Dockerfile (no runtime installs).
+
+export PATH="/opt/verifier-scripts:/opt/verifier-venv/bin:${PATH}"
+
+mkdir -p /logs/verifier
+echo 0 > /logs/verifier/reward.txt
+echo '{"version":"1.0.0","results":{"tool":{"name":"pytest"},"summary":{"tests":0,"passed":0,"failed":0,"skipped":0},"tests":[]}}' > /logs/verifier/ctrf.json
+
+if [ "$PWD" = "/" ]; then
+    echo "Error: No working directory set. Please set a WORKDIR in your Dockerfile before running this script."
+    echo 0 > /logs/verifier/reward.txt
+    exit 1
+fi
+
+TEST_DIR="${TEST_DIR:-/tests}"
+
+if [ -f /app/Makefile ]; then
+    rebuild-<task> || {
+        echo 0 > /logs/verifier/reward.txt
+        exit 1
+    }
+fi
+
+set +e
+python3 -m pytest -o cache_dir=/tmp/pytest_cache \
+  --ctrf /logs/verifier/ctrf.json "${TEST_DIR}/test_outputs.py" -rA
+
+if [ $? -eq 0 ]; then
+    echo 1 > /logs/verifier/reward.txt
+else
+    echo 0 > /logs/verifier/reward.txt
+fi
+```
+
+**Stack swaps (only these deltas):**
+
+| Stack | Rebuild guard | Pytest invocation |
+|-------|---------------|-------------------|
+| Go | `if [ -f /app/go.mod ]; then rebuild-<task> …` | same |
+| Rust | `cargo build --release --locked` in `test.sh` (see `stun-attribute-tlv-binder`) | same or venv python |
+| Node | `npm --prefix /app run build` (see `order-replay-reconcile`) | `python -m pytest` on PATH |
+
+**Hard rules (all accepted):** no runtime `pip`/`apt`/`curl`/`npm install`; file ends with `if [ $? -eq 0 ]` block; **nothing after closing `fi`**.
+
+### `solution/solve.sh` — copy from `idle-offline-accrual-normalizer`
+
+```bash
+#!/bin/bash
+set -euo pipefail
+
+APP_ROOT="${APP_ROOT:-/app}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PATCHES="${SCRIPT_DIR}/patches"   # or files/
+
+# cp patches into /app
+cd "${APP_ROOT}"
+rebuild-<task>
+mkdir -p /app/output
+```
+
+No network; no echo-only golden writes.
+
+### `instruction.md` — copy from `fix-resend-journal-reconciler`
+
+- Opening: broken behavior + absolute `/app` paths
+- Lists `/app/docs/*.md` contracts (not a test checklist)
+- No bug-file names; no golden outputs
+- Optional example CLI in fenced `text`
+
+### `tests/test_outputs.py` — copy shape from `stun-attribute-tlv-binder` or `modbus-map-merge`
+
+- Module docstring
+- `subprocess` CLI / file / DB checks
+- Independent reference implementation in test module
+- Hidden inputs under `/opt/verifier-fixtures/` when reference task uses them
+
+---
+
+## What ACCEPTED tasks DO (evidence from corpus)
+
+Verified from real files under `tasks/_accepted-tasks/`:
+
+### Metadata (`task.toml`)
+
+- `version = "2.0"`, `author_name` / `author_email` = `anonymous` (this repo)
+- `allow_internet = false`; `workdir = "/app"` on non-milestone tasks
+- Preferred timeouts: `[agent] timeout_sec = 1800`, `[verifier] timeout_sec = 900`
+- `build_timeout_sec = 600` or `900` (Rust/ heavy compile → `900`)
+- `difficulty = "hard"` or `"medium"` — non-Python accepted tasks are usually **hard**
+- `codebase_size = "small"` with **20+ meaningful** `environment/` files (not filler)
+- `subcategories = []` always (this repo — do not populate Harbor subcategory labels)
+
+### Instruction
+
+- 1–3 short paragraphs; user tone; **every path absolute** (`/app/...`)
+- Behaviors and output schemas delegated to **`/app/docs/*.md`** linked from instruction — not a test checklist
+- States CLI subcommands or HTTP contract at a high level; does not name bug files or fix steps
+
+### Environment
+
+- Single-container; no tests/solution/ground truth in `environment/`
+- Pinned app deps (Cargo.lock, package-lock, Makefile, etc.)
+- Contract docs: `docs/*-schema.md`, `docs/cli.md`, `docs/*-format.md`
+
+### Verifier (`tests/test.sh`)
+
+- Verifier deps **only** in Dockerfile (`/opt/verifier-venv`, `/opt/verifier-scripts`)
+- **No** `pip install`, `curl`, `apt`, `npm install`, `uvx` at runtime
+- Seed `echo 0 > /logs/verifier/reward.txt` before pytest (preferred; most corpus tasks do)
+- `PWD=/` guard when `WORKDIR /app` set
+- **Rebuild agent code** before pytest when task compiles: `cargo build --release --locked`, `npm run build`, `make`, or `rebuild-*` helper
+- `set +e` immediately before pytest; file **ends** with:
+
+```bash
+if [ $? -eq 0 ]; then
+ echo 1 > /logs/verifier/reward.txt
+else
+ echo 0 > /logs/verifier/reward.txt
+fi
+```
+
+(no lines after `fi`)
+
+### Tests (`tests/test_outputs.py`)
+
+- Module docstring mapping to instruction/docs
+- **Behavior-only**: `subprocess` CLI runs, HTTP against spawned server, DB/file checks
+- **Independent reference** implementation in pytest (not grep source, not bundled golden JSON)
+- Anti-cheat: env overrides (`TB3_*`, task-specific seeds), mutated inputs, fresh DB/port per session
+
+### Oracle (`solution/solve.sh`)
+
+- Copies patched source from `solution/files/` into `/app`, then **rebuilds**
+- Deterministic; no network; no hardcoded final artifact-only writes
+
+### Milestone exception
+
+- `rack-session-blob-migration`: no root `instruction.md` / `tests/`; uses `steps/milestone_N/` layout — still ACCEPTED
+
+---
+
+## What ACCEPTED tasks AVOID (never repeat)
+
+- Trivial one-file / one-typo fixes; medium Python script repair
+- Hidden test requirements not in instruction or cited `/app/docs/`
+- Oracle that only writes final JSON/CSV without running real logic
+- Runtime dependency installs in `test.sh`
+- Non-empty `subcategories` (use `[]` only)
+- Apt package version pins on Debian bookworm (`shared/platform-preferences.mdc`)
+- Minimal codebase labeled `small` without 20+ meaningful env files
+- Unsolvable traps: brittle formatting, secret strings not in docs
+- Copying rejected WIP patterns from active `tasks/` without triage
+
+---
+
+## NEEDS_REVISION vs ACCEPTED — concrete deltas (local evidence)
+
+Compare active failures in `tasks/` against corpus — **do not treat NEEDS_REVISION as reference**.
+
+| Dimension | ACCEPTED example | NEEDS_REVISION example | Delta |
+|-----------|------------------|------------------------|-------|
+| Rebuild in verifier | `order-replay-reconcile`: `npm run build` in `test.sh` before pytest | `reservation-holds-ttl`: no `npm run build` in `test.sh`; only `cd /app` | Missing rebuild → stale binary can pass/fail wrongly |
+| Dockerfile apt | `stun-attribute-tlv-binder`: apt by name only; pytest `9.0.3` | `udev-rules-ordered-merge`: pinned apt versions; pytest `8.4.1` | Platform preference violation; verifier drift |
+| Difficulty / category | `modbus-map-merge`: `hard`, `debugging` | `udev-rules-ordered-merge`: `medium`, `security` | Medium bash + non-standard category → trivial / metadata risk |
+| Instruction contract | `usb-configuration-descriptor-walker`: cites 3 doc paths + env override | Same pattern in udev — OK shape | udev failure likely implementation alignment + metadata/Dockerfile, not instruction length |
+| Anti-cheat depth | `stun-attribute-tlv-binder`: full Python STUN reference + `TB3_*` paths | `udev-rules-ordered-merge`: has independent reference — shape OK | Ensure multi-module bugs remain after fixes |
+
+---
+
+## Pre-submit gate (required before zip / “ready”)
+
+Run in **Ubuntu WSL** (Snorkel/harbor tooling host) from repo root:
+
+```bash
+# Oracle must pass
+stb harbor run -a oracle -p ./tasks/<name> --debug --force-build
+
+# Verifier after oracle → reward 1
+# NOP (no solution) → reward 0
+```
+
+Also:
+
+- `ruff check` on task `tests/*.py` (and milestone `test_mN.py` if applicable)
+- Flat zip: `./scripts/pack_zip.sh <name>` (`zip/ZIP-RULES.mdc`)
+- Instruction ↔ test mapping: every pytest case traces to instruction or cited doc
+- No `rubric.md` in repo zips unless user explicitly asks
+
+**Do not say ready** without oracle + NOP evidence.
+
+---
+
+## Reference task index (all 26 in corpus)
+
+`auditd-ruleset-pack-merger`, `binary-frame-decoder`, `btrfs-send-stream-instruction-fixer`, `capnp-segment-realigner`, `cgroup-v2-stat-rollup`, `delve-corefile-unwind`, `dns-zone-axfr-merge`, `dot-subgraph-merge`, `fits-header-merge`, `fix-resend-journal-reconciler`, `hls-discontinuity-stitcher`, `journal-slice-merge`, `modbus-map-merge`, `nats-jetstream-pull-fork-divergence`, `nmea0183-mux-buffer`, `order-replay-reconcile`, `pkcs12-safebag-mac-verifier`, `rack-session-blob-migration`, `rust-pack-index-v2-repair`, `scap-oval-applicability`, `steam-depot-chunk-manifest-differ`, `stun-attribute-tlv-binder`, `systemd-dropin-resolver`, `usb-configuration-descriptor-walker`, `wal-segment-checksum-repair`, `warc-crawl-dedupe-merge`
+
+**Suggested read pairs for new work:**
+
+- Rust protocol CLI: `stun-attribute-tlv-binder` + `usb-configuration-descriptor-walker`
+- Merge/export CLI: `modbus-map-merge` + `journal-slice-merge`
+- Stateful API + SQLite: `order-replay-reconcile` + `fix-resend-journal-reconciler`
+- Tool-specific config: `systemd-dropin-resolver` + `scap-oval-applicability`
+- Milestone: `rack-session-blob-migration`
+
+---
+
+## Future new tasks — agent checklist
+
+When creating a task, agent MUST in the design reply:
+
+1. Cite **2 reference tasks** read from `tasks/_accepted-tasks/` (paths + what was copied structurally)
+2. Explain why **not trivial** (4+ bugs / 3+ modules; independent reference tests)
+3. Explain why **not repeating** known revision failures (rebuild, Dockerfile pins, hidden requirements)
+4. Use same skeleton as references (see `shared/first-pass-blueprint.mdc`)
+5. State oracle/NOP status — **not verified yet** until WSL harbor runs complete
+
+**Forbidden** unless user overrides: UI-building, multi-container, easy, minimal codebase, simple Python medium.
+
+
+
+---
+
+<!-- SOURCE: shared/anti-spam-templated-submissions.mdc -->
+
+# Terminus — Anti-spam & anti-templated submissions (LOCKED)
+
+**Platform policy (Jun 2026):** bulk or **templated** submissions can be **rejected**, **flagged**, or affect **project standing**.
+
+**Canonical policy (Python):** `scripts/terminus_rules_engine.py` — hook injects; this `.mdc` is storage/reference only.
+
+**Related:** `scripts/anti_spam_pipeline.py` · `scripts/terminus_anti_spam_check.py` · `create/new-task-pipeline-A-H.mdc` Phase B
+
+On conflict, prefer the **stricter** interpretation.
+
+---
+
+## Agent must NOT create similar tasks (LOCKED — proactive)
+
+**User expectation:** similarity checks run and save automatically; agents still must **avoid building** near-duplicates — do not rely on pack gate alone.
+
+| Hook / report | Agent action |
+|---------------|--------------|
+| **FAIL** (weighted ≥0.85 or near-copy) | **Do not implement.** Drop the idea from the list. Pick a **new domain + family + verifier contract** — never keyword-swap the same skeleton. |
+| **WARN** (≥0.65) | **Do not implement** unless user explicitly approves in this chat. Regenerate with **≥2 structural diffs** vs nearest neighbor (stack, milestone, reference math, bug lattice — not instruction nouns). |
+| **PASS** but nearest neighbor same family | Prefer a **different family** for new work; do not batch another task in that lane. |
+
+**Before create:** read `jobs-local/anti-spam-hook-last.txt` or injected hook context. If post-create shows FAIL/WARN → **stop and redesign** (or ask user to pick a different slug) — **never** tell user to upload anyway.
+
+**Saved reports (automatic):** `jobs-local/anti-spam-hook-last.txt`, `anti-spam-ideas-last.json`, `anti-spam-post-create-last.json`, `anti-spam-last.txt` (pack).
+
+---
+
+## Definitions
+
+| Term | Meaning |
+|------|---------|
+| **Spam** | Many uploads in a short window that are **same family**, **same harness**, or **low-effort variants** — looks like volume farming, not distinct engineering tasks. |
+| **Templated** | Same task **skeleton** as a prior submission with **domain keyword swaps** only — instruction nouns change; pipeline, bugs, tests, and oracle shape stay plug-and-play. |
+| **Family** | Recurring lane shape (e.g. Go twin ingest/export + JSONL + SQLite + export JSON; bash merge CLI; Rust binary decoder + `TB3_*` probes). |
+| **Flag** | Platform similarity review, templated rejection, account/project standing warning, or repeated NEEDS_REVISION on clone-shaped work. |
+| **Copy task** | Whole-tree or oracle/test file-for-file clone of an existing slug with domain strings renamed only — see **COPY** in `shared/unacceptable-task-classes.mdc`. |
+| **Duplicate task** | Slug or near-title already in corpus (`tasks/`, `pending/`, zips, platform list) — **DUPLICATE**. |
+| **Sibling task** | Nearest neighbor in the **same family** with high similarity — same lane “sister” of an existing task — **SIBLING**. |
+| **Same lane** | Saturated family shape (≥3 in `tasks/`) — **SAME_LANE** / **FAMILY**. |
+| **Fabricated task** | Oracle or env pretends to solve without real `/app` logic; golden outputs in image — **FABRICATED**. |
+| **Synthetic task** | Fake hardness: filler files, decorative schema fields, test inflation without bug depth — **SYNTHETIC**. |
+
+**Full registry:** **`shared/unacceptable-task-classes.mdc`** — **never accept** any class listed there (CREATE, REVISE, TRIVIAL, zip).
+
+## Forbidden — never-accept classes (High — all phases, zero tolerance)
+
+**Not partial. Not allowed.** Any row below → **do not** create, harden, or zip. **`unacceptable_class_gate.py --pack-gate`** must show **PASS on all 8**.
+
+| Class | Not allowed |
+|-------|-------------|
+| **TEMPLATED** | Keyword-swap on same skeleton |
+| **COPY** | Renamed clone of neighbor tree |
+| **DUPLICATE** | Slug/title already in corpus |
+| **FAMILY / SAME_LANE** | ≥3 same family in `tasks/` |
+| **SIBLING** | High sim to same-family neighbor (≥0.65) |
+| **FABRICATED** | Fake oracle / golden answers in env |
+| **SYNTHETIC** | Decorative hardness, no real bugs |
+
+**TRIVIAL revise does not exempt any class.** One FAIL → no zip.
+
+Full registry: **`shared/unacceptable-task-classes.mdc`**
+
+---
+
+## Forbidden — templated (High)
+
+Do **not** create or upload when **any** row is true without **≥2 proved structural differences** (similarity table required):
+
+1. **Find-replace clone** — copy an existing `tasks/<name>/` or `_accepted-tasks/<name>/` tree; rename slug + domain strings only.
+2. **Keyword-swap instruction** — same step count, same output paths pattern, same doc layout; only industry nouns change (brewery → apiary → cement kiln).
+3. **Identical verifier semantics** — same pytest shape (`reference_*` + `assert_matches_reference` + hidden dir) with only fixture filenames changed.
+4. **Same bug lattice** — same count/modules/placement (seq sort, invert order, coalesce, strict-gap map) copied across domains.
+5. **Same oracle recipe** — copy `solution/files/` pattern file-for-file without new failure modes tied to the domain contract.
+6. **Lane saturation** — **3+ tasks in `tasks/`** already share the family (e.g. `*-custody-reconciler`, `*-ledger-repair`, Go JSONL twin-CLI + SQLite audit) unless the new task proves a **different verifier contract** (not just CSV vs JSONL label).
+7. **Batch re-skin** — packing many tasks same day/week from one generator pass (e.g. 10+ game-domain CLIs with identical harness timestamps) **without** per-task similarity proof.
+
+**Allowed:** Copy **harness files** (`Dockerfile`, `test.sh`, `task.toml` timeouts) from `_accepted-tasks/` per `shared/accepted-corpus.mdc` — that is structure, not templating. Templating is **domain + failure modes + verifier contract** cloned.
+
+---
+
+## Forbidden — spam (High)
+
+Do **not**:
+
+1. Upload **zip-only experiments** (`tasksubmit/*.zip` with no reviewed `tasks/<name>/` tree).
+2. Upload **artifact / difficulty-check zips** (`*difficulty-check*`, `difficulty_check_artifact`, rubric-only packs).
+3. Re-upload the **same slug** with trivial metadata-only changes while platform row is still REVIEW PENDING (fix in place; one coherent resubmit).
+4. Submit **>3 tasks same family** in one batch without explicit user approval and similarity tables.
+5. Submit tasks that **fail oracle/NOP**, skip audit, or skip `pack_zip.sh` verification.
+6. Keep **broken symlinks** or duplicate corpus entries (`_accepted-tasks/` → `tasksss/`) — fix corpus before using as reference.
+
+---
+
+## Saturated families — scan before create/upload
+
+**Block or require extra structural proof** when `tasks/` + `tasksubmit/` already has **3+** in the lane:
+
+| Family pattern | Scan for |
+|----------------|----------|
+| Go twin CLI + JSONL `line_crc` + SQLite + `/app/docs/` export | `*-audit-cli`, `*-reconciler`, ingest/export command pairs |
+| Custody / ledger / staging rollup | `*-custody-*`, `*-ledger-*`, `*-reconciler` |
+| Merge/export directory CLI | `*-merge`, `*-normalizer` (check `_accepted-tasks/` corpus) |
+| Game/sim score or timing auditor | sports, racing, tetris, ccg, rts, pinball, scrabble, etc. — **rotate stack**, not same pytest layout |
+| `TB3_*` env override + hidden fixtures only | probe dir swap without new contract math |
+
+**Mandatory scan paths:** `tasks/`, `tasks/_accepted-tasks/`, `tasksubmit/*.zip` — **not** `dusre-wale/`.
+
+---
+
+## Pre-submit gate (mandatory — agent must run)
+
+Before `./scripts/pack_zip.sh <name>` or telling user to upload:
+
+1. **Similarity table** — proposed task vs nearest neighbor in corpus; **≥2 structural differences** documented (not domain adjectives alone).
+2. **Family count** — same family in `tasks/` + pending zips ≤ **2** (or user explicitly overrides in message).
+3. **Not templated self-check** — answer **no** to: “Could a reviewer swap instruction nouns and recognize the same task?” If yes → redesign before upload.
+4. **Not spam self-check** — this upload is **one reviewed task**, oracle **1**, NOP **0**, not a bulk dump of same-day clones.
+5. **Diversity vs your recent uploads** — do not upload back-to-back tasks that share stack + test module shape + bug count; space by **distinct family** or **distinct primary language contract**.
+
+### Automated checker (LOCKED — **do not run manually for normal zip**)
+
+| When | How (user does nothing) |
+|------|-------------------------|
+| **Ideas** | Agent writes `jobs-local/ideas-draft.json` → hook runs **`idea_similarity_gate.py`** |
+| **Task edits** | Agent saves task files → hook runs **`post_create_audit_loop.py`** + **`unacceptable_class_gate.py`** |
+| **Every prompt** | **`beforeSubmitPrompt` hook** runs pipeline + injects latest results |
+| **Pack / zip** | `./scripts/pack_zip.sh <name>` → full pack gate chain |
+
+Manual **`./scripts/after_create.sh`** = same pipeline as hook (debug / force round 1 without waiting for debounce).
+
+**`./scripts/pack_zip.sh <name>` runs everything via `terminus_anti_spam_auto.py pack`:**
+
+- Task anti-spam/templated PASS/FAIL line (audit copy-paste)
+- Zip-only orphan warning in `tasksubmit/`
+- Same-day batch upload hint
+- Local-only not-submitted pass/warn/fail counts
+- Writes `jobs-local/anti-spam-last.txt`
+
+**`./scripts/pack_zip.sh --all`** also prints `--pack-summary` (FAIL slugs only).
+
+**Platform slug lists (automatic):**
+
+| File | Updated by |
+|------|------------|
+| `scripts/platform_submissions.txt` | Paste platform export after upload batch |
+| `scripts/packed_for_upload.txt` | **Auto** on every `./scripts/pack_zip.sh <name>` success |
+
+Anti-spam merges both — no manual register step after pack.
+
+**Blocks pack when:** spam slug pattern; family saturation (≥3 in `tasks/`); similarity ≥0.85 to nearest neighbor **in same family**; **legacy sim > 0.0** (Sanjana standing — `PACK_SIM_MUST_BE_ZERO`).
+
+**Emergency override (user explicit only):** `TERMINUS_ANTI_SPAM_SKIP=1 ./scripts/pack_zip.sh <name>`
+
+**Debug only** (not required before upload):
+
+```bash
+python3 scripts/terminus_anti_spam_check.py --all-local --not-submitted
+python3 scripts/terminus_anti_spam_check.py --list-spam-zips
+```
+
+**Audit reply must include one line** (copy from checker output):
+
+`Anti-spam/templated: PASS/FAIL — <nearest neighbor> — <2 structural diffs or blocker>`
+
+FAIL → **do not zip**, **do not say ready**, **do not use `TERMINUS_ANTI_SPAM_SKIP`** unless the user **explicitly overrides in the current message**. → **Fix in place** per **§ When FAIL → fix (LOCKED)** below, re-run `./scripts/pack_zip.sh <name>` until **PASS**.
+
+---
+
+## When FAIL → fix (LOCKED)
+
+**Trigger:** `pack_zip.sh` blocks, or checker prints `Anti-spam/templated: FAIL`, or `jobs-local/anti-spam-last.txt` lists blockers.
+
+**Agents must:** read blockers → fix **`tasks/<name>/` in place** → re-run gate until **PASS**. **Forbidden:** skip with `TERMINUS_ANTI_SPAM_SKIP`, weaken checker thresholds, or tell user “upload anyway” without a real fix.
+
+**Load with fixes:** this file + `shared/anti-trivial.mdc` + `shared/accepted-corpus.mdc` (≥2 reads) + nearest neighbor diff from checker output.
+
+### Step 1 — Triage blocker (mandatory table in reply)
+
+| Blocker (from checker) | Type | Fix class |
+|------------------------|------|-----------|
+| `spam slug pattern` | Spam | Rename slug; remove artifact/difficulty-check naming |
+| `zip-only spam` | Spam | Restore `tasks/<name>/` or delete orphan `tasksubmit/*.zip` |
+| `family saturation: <family>` | Spam / lane | See **§ Family saturation** — task must not stay in saturated lane as clone |
+| `similarity must be 0.0` | Templated / standing | Fix task completely — `shared/sanjana-standing-requirements.mdc` §K (slug/family/harness) until `sim 0.0` |
+| `templated risk: similarity … same family` | Templated | See **§ Templated similarity** — structural redesign required |
+| `high structural similarity` (WARN) | Templated risk | Add **≥2 structural diffs** before upload; prefer redesign if same family |
+
+### Step 2 — Fix by type (edit task, not metadata-only)
+
+#### Templated similarity (High)
+
+Goal: reviewer cannot swap instruction nouns and recognize the same task.
+
+**Do (≥2 required):**
+
+1. **Different verifier contract** — new reference math, new output schema or CLI subcommands, new anti-cheat probes (not renamed fixtures only).
+2. **Different bug lattice** — new failure modes tied to domain docs in `/app/docs/`; not same seq-sort / invert-order / coalesce / strict-gap pattern copied from neighbor.
+3. **Different stack or shape** when nearest neighbor shares family — e.g. game auditor on **Rust** vs prior **Go**; merge CLI → protocol decoder; drop `assert_matches_reference` clone if neighbor uses identical pytest skeleton.
+4. **Similarity table in reply** — cite nearest `tasks/<neighbor>/`; list **≥2 structural diffs** (language, milestone, test count band, family tags, Docker base, reference impl shape) with file evidence.
+
+**Do not:** instruction keyword swap only; copy `solution/files/` file-for-file from neighbor; relabel `task.toml` difficulty; use `TERMINUS_ANTI_SPAM_SKIP`.
+
+#### Family saturation (High)
+
+Goal: **≤2 active tasks** in same family under `tasks/` (excluding `_accepted-tasks/`, `tasksss/`).
+
+**Pick one path (prefer 1 or 2 before 3):**
+
+1. **Redesign out of family** — change primary stack + verifier contract so checker assigns a **different family tag** (real code/test changes, not slug rename).
+2. **Defer upload** — user uploads **one** task from that family first; other same-family WIPs stay local until accepted (do not batch).
+3. **User explicit archive** — only if user says move WIPs: relocate other same-family folders out of `tasks/` (never delete; never merge tasks).
+
+**Do not:** upload 3+ same-family tasks in one session; pack with skip override without user message.
+
+#### Spam (High)
+
+1. **One task per pack/upload** — never `./scripts/pack_zip.sh --all` for upload; pack only the task being submitted.
+2. **Same-day batch** — if checker warns `same-day zip batch`, space uploads across days/families.
+3. **Zip-only** — every `tasksubmit/*.zip` must have `tasks/<name>/` or `tasks/_accepted-tasks/<name>/`.
+4. **Oracle + audit first** — spam gate is in addition to oracle **1**, NOP **0**.
+
+### Step 3 — Re-verify (mandatory before zip)
+
+```bash
+python3 scripts/terminus_anti_spam_check.py --pack-gate --task-name <name>
+# must print: Anti-spam/templated: PASS
+./scripts/pack_zip.sh <name>
+```
+
+Report in reply:
+
+```
+Anti-spam/templated: PASS — <nearest> (sim …) — diffs: …
+Fix applied: <blocker> → <what changed in tasks/<name>/>
+```
+
+### Step 4 — Still FAIL after real redesign?
+
+Ask user **one question:** upload a different slug first, or explicitly approve `TERMINUS_ANTI_SPAM_SKIP=1` for this pack. **Do not assume approval.**
+
+---
+
+## Platform flag signals (treat as blockers until fixed)
+
+| Signal | Likely cause | Fix |
+|--------|--------------|-----|
+| **Templated** / **too similar** rejection | Keyword-swap clone | New failure modes + verifier contract; not instruction-only |
+| Similarity search hit | Near-duplicate of your or corpus task | Change family or prove structural diffs |
+| **TRIVIAL** after batch upload | Same easy bug pattern across tasks | `@prompts/trivial-case-6.md` — structural redesign |
+| Repeated NEEDS_REVISION same harness | Template churn | Stop batching; fix one task deeply |
+| Project standing / spam warning | Volume + similarity | Pause uploads; diversify; remove zip-only spam |
+
+---
+
+## What agents must do on “what should I submit?”
+
+When user asks which tasks to upload:
+
+1. List **not yet on platform** tasks from live scan (`tasks/` vs platform export if pasted).
+2. **Deprioritize** same-family clusters — pick **one per family** with best oracle/NOP/audit status.
+3. Flag **templated risk** per task (Low/Medium/High) using this file.
+4. Never recommend uploading **all** unpacked June batch tasks in one session without diversity sort.
+
+---
+
+## Copy-paste (user → agent)
+
+```text
+Before I upload <name>: anti-spam/templated check per shared/anti-spam-templated-submissions.mdc.
+If FAIL: fix in place per § When FAIL → fix — no TERMINUS_ANTI_SPAM_SKIP unless I say so.
+Similarity table vs nearest neighbor; family count; PASS/FAIL; do not say ready if FAIL.
+```
+
+
+
+---
+
+<!-- SOURCE: create/safe-languages.mdc -->
+
+# Terminus — Safe languages for task ideas
+
+Use this tier list when generating or choosing **new** Terminus tasks. Prefer higher tiers; do not default to Python for medium difficulty.
+
+**Platform preference (EC Training):** prefer **Rust, Go, and Bash** for **new** tasks when the scenario fits — these stacks currently get **fewer revision cycles**. Also rotate **TypeScript/Node**, **Java**, and **C++** for genuine domain fit (see Tier 1). See `shared/platform-preferences.mdc`.
+
+## Tier 1 — Best (prefer for new ideas)
+
+- **Go** — CLI, log replay, JSONL/binary decode, checksum repair (**platform-preferred**)
+- **Rust** — parsers, binary decoders, streaming CLI (**platform-preferred**)
+- **Bash** — pipelines, Make/CMake glue, shell repair (**platform-preferred** when behavior is CLI-testable)
+- **TypeScript / Node** — API + SQLite, Express/Fastify-style services, npm tooling, structured JSON pipelines
+- **Java** — Maven/Gradle services, JDBC/SQLite, config/migration, LDIF/XML/enterprise parsers on **debian:bookworm-slim + OpenJDK 17**
+- **C++** — binary parsers, WAL/chunk reassembly, CMake/Cargo-adjacent native CLIs on **debian:bookworm-slim + g++/cmake** (or stack-specific canonical base when listed)
+
+Set `difficulty = "medium"` or `"hard"` and `codebase_size = "small"` or `"large"` (never `"minimal"` for new submissions).
+
+## Tier 2 — Also okay
+
+- **C / C# / Kotlin** — when Tier 1 stack is unnatural; services and tooling when stack fits single-container
+- **Ruby / PHP** — backend repair when behavior is testable without UI
+- **Bash / AWK / shell tooling** — pipelines, Make/CMake glue, local tool chains
+- **SQL** — migrations, constraints, backfill (usually paired with another primary language)
+- **Make / CMake** — build-and-dependency-management tasks with real artifacts
+
+## Tier 3 — Python (restricted)
+
+- **Allowed only if the task is genuinely HARD** — multiple interacting bugs, state across runs, non-trivial DB/API behavior, strong anti-cheat.
+- **Avoid:** simple script repair, one obvious bug, `difficulty = "medium"` Python, pure CSV/JSON formatting, read-files-and-answer with no real code repair.
+- In `task.toml`, list Python in `languages` only when Python is the **primary** task language.
+
+## Quick checks for idea prompts
+
+- Single-container; no new UI-building or multi-container unless explicitly approved.
+- 20+ meaningful environment files for `codebase_size = "small"` (not filler).
+- Non-Python primary → target **medium** or **hard**; Python primary → target **hard** only.
+
+
+
+---
+
+<!-- SOURCE: create/accepted-patterns.mdc -->
+
+# Terminus Edition 2 — Accepted Task Patterns
+
+## `subcategories` in `task.toml` (LOCKED)
+
+Always **`subcategories = []`**. Lane notes below describe task **shape** only — do not copy Harbor subcategory labels into `task.toml`.
+
+## `category` in `task.toml` (LOCKED — this repo)
+
+**Do not** use **`debugging`** or **`software-engineering`** — **platform block** on new submissions (CodeBuild also fails). Lane examples below that say “Category: debugging” describe **shape only**; on upload use **`data-processing`**, **`build-and-dependency-management`**, **`security`**, etc. Full mapping: **`shared/task-toml-category-gate.mdc`**.
+
+## Accepted task patterns
+
+When creating a new Terminus task, prefer realistic engineering work with enough hidden complexity for frontier agents to struggle.
+
+The safest accepted pattern is:
+
+- Single-container task.
+- Primary language from the **safe language tiers** below (full list in `create/safe-languages.mdc`).
+- `codebase_size = "small"` or `"large"`, never `"minimal"` for new submissions.
+- `difficulty = "medium"` or `"hard"` for non-Python tasks.
+- Python only if the task is genuinely hard (not medium script repair).
+
+### Safe languages for task ideas
+
+**Best:** Go, Rust, Bash (platform-preferred — fewer revisions), TypeScript/Node, Java.
+
+**Also okay:** C, C++, C#, Kotlin, Ruby, PHP, AWK, SQL, Make/CMake, shell tooling.
+
+**Python:** allowed only if genuinely **hard**; avoid simple Python medium tasks and one-bug script fixes.
+- 20+ meaningful environment files for small codebase, not filler.
+- Multiple related bugs or behaviors, not one obvious bug.
+- Tests verify real behavior through CLI, API, DB, or output artifacts.
+- Oracle passes 100%, NOP fails, and real agents do not all pass.
+- Instruction is short and user-like, but output paths and schemas are fully specified.
+- No hidden behavior in tests that instruction does not mention.
+- No leaked answers, expected outputs, or solution hints in environment files.
+
+## Most accepted task lanes
+
+### 1. TypeScript or Node API + SQLite task
+
+- Category: `software-engineering` or `debugging`
+- Subcategories: `api_integration`, `db_interaction`
+- Good behaviors: request validation, pagination, idempotency, transaction rollback, duplicate handling, report generation, malformed input handling.
+
+### 2. Go CLI or service debugging task
+
+- Category: `debugging` or `data-processing`
+- Subcategories: `tool_specific` only if a real tool is central
+- Good behaviors: log replay, checksum repair, binary or JSONL decoding, restart handling, malformed record recovery, deterministic export.
+
+### 3. Rust parser or binary decoder task
+
+- Category: `debugging`
+- Good behaviors: byte offsets, checksum validation, streaming decode, strict CLI output, error handling, deterministic artifact generation.
+
+### 4. Java service, config, or migration task
+
+- Category: `software-engineering`
+- Subcategories: `api_integration` or `db_interaction` if applicable
+- Good behaviors: config precedence, schema migration, validation, retry policy, audit export.
+
+### 5. Tool-specific local pipeline task
+
+- Category: `build-and-dependency-management` or `data-processing`
+- Subcategories: `tool_specific`
+- Good tools: FFmpeg, ImageMagick, Graphviz, jq, SQLite, Make, CMake, Cargo, npm build tools.
+- Good behaviors: repair command pipeline, validate generated artifacts semantically, generate structured metadata, produce deterministic output.
+
+### 6. DB interaction task
+
+- Category: `software-engineering` or `data-processing`
+- Subcategories: `db_interaction`
+- Preferred DB: SQLite for single-container tasks.
+- Good behaviors: migrations, constraints, indexes, backfill, rollback, query correctness, persisted reports.
+- Avoid plain CSV-only tasks unless the logic is genuinely complex.
+
+### 7. Milestone debugging task
+
+- Category: `debugging` or `software-engineering`
+- Use 2–4 milestones. Each milestone must be a prerequisite for the next.
+- Good flow: M1 ingestion/parsing → M2 state/DB consistency → M3 reporting/export.
+
+### 8. Long-context task
+
+- Subcategory: `long_context`
+- Only when the provided document is 50k+ tokens and requires semantic understanding.
+- Avoid long files solvable by grep, simple parsing, or small table lookup.
+
+## Task ideas to avoid
+
+- Simple Python script repair.
+- Python medium task.
+- One failing unit test with one obvious bug.
+- Pure CSV conversion.
+- Basic JSON formatting.
+- "Read files and calculate answer" with no code repair.
+- UI-building task unless explicitly approved.
+- New multi-container task unless explicitly approved.
+- FastAPI-only task unless unusually strong.
+- Tasks where tests reveal the exact expected output.
+- Tasks where the oracle just writes hardcoded output files.
+- Tasks where difficulty comes only from many edge cases in instruction.
+- Tasks where the prompt is long and checklist-like.
+- Tasks that require internet data or external APIs.
+- Latency or performance optimization tasks with timing thresholds.
+- Tasks copied from common TerminalBench patterns with only names changed.
+- Any task where a frontier model can likely solve it in one short edit.
+
+## Difficulty design
+
+Make the task hard because the agent must discover and connect multiple pieces of state, not because the prompt is confusing.
+
+**Good difficulty sources:** multiple interacting bugs; persistent state across runs; DB constraints and rollback; malformed input recovery; duplicate/replayed events; cross-file schema mismatch; deterministic report generation with computed fields; anti-cheat via mutated fixtures; need to inspect docs, source, sample data, and runtime behavior.
+
+**Bad difficulty sources:** vague instruction; too many random edge cases; brittle formatting; performance timing; secret exact strings not in instruction; tests enforcing unstated behavior; requiring a specific implementation instead of behavior.
+
+## Generating task ideas (mandatory)
+
+**Anyone** who asks to generate task ideas — full workflow in **`.cursor/rules/ideas/generate-ideas.mdc`**.
+
+When **creating or revising** tasks:
+
+1. Read **`shared/accepted-corpus.mdc`** (LOCKED — follow exactly).
+2. Open **≥2** folders under **`tasks/_accepted-tasks/`** for your stack.
+3. **Copy each file type verbatim** from the closest reference; change only task names, binaries, and doc paths.
+
+**Do not** invent Dockerfile/`test.sh` layouts. **Do not** use active `tasks/` WIP as template. If a file diverges from its accepted reference, fix the divergence before claiming ready.
+
+When the user asks for **task ideas** (not a named task to implement):
+
+- **Step 1:** No reference → offer **A: user gives reference** or **B: `aap gen karo` / varied** (you auto-generate, no quiz); if reference given → **distinct subdomains** under that theme.
+- **Step 2:** **10 ideas = 10 different domains**; same canned tasks **not encouraged**; assume common AI ideas are **taken** by others.
+- **Spread** languages/industries unless user locked one; lanes = **shape only**; **scan all corpus paths** (`tasks/`, `tasks/_accepted-tasks/`, `tasksubmit/`) — no slug, **family**, or near-title duplicates; **never merge** tasks or owners.
+- **No templated submissions (platform LOCKED):** each task must differ substantively from your prior work — not instruction keyword swaps on the same bash/Rust/Node skeleton, test names, or oracle copy pattern. Rejected templated tasks may affect project standing. **Full gate:** `shared/anti-spam-templated-submissions.mdc`.
+- **No spam uploads:** do not batch many same-family tasks; no zip-only artifact dumps — see **`shared/anti-spam-templated-submissions.mdc`**.
+- **Implement with no idea** → ask reference or **three novel** options.
+
+## Large Codebase Task Gallery
+
+- Claim/download the task bundle first.
+- Inspect real files before making claims.
+- Do not assume bundled task is automatically ready.
+- Still check task.toml, Dockerfile, tests, oracle, instruction alignment, dependency pins, reward writing; rubric only if present or user asks (this repo: usually no `rubric.md`).
+- Large codebase tasks still require `allow_internet = false` and no runtime internet in verifier.
+
+## Difficulty threshold rule
+
+**Agent timeout vs quality:** See **`shared/platform-preferences.mdc` §1b** — design tasks so benchmark agents may **time out or score low (Claude 0/N is OK)** under `[agent] timeout_sec = 1800`, while **oracle 1 / NOP 0 / fair docs** stay consistent on every submit. Do not weaken verifier or hide spec gaps to “fix” Claude 0%.
+
+**Benchmark agents (Jun 2026):** platform difficulty uses **Claude Opus 4.8** (`terminus-claude-opus-4-8`) and **GPT-5.5** (`terminus-gpt5-5`). **Design target = Claude first** (GPT may stay high on fair HARD). Thresholds below are unchanged. Create/revise SP path: `@prompts/sp-hard-create-revise.md`. Recalibrate TRIVIAL with `@prompts/trivial.md` Case 5 + `trivial-repo-wide.md`. See `shared/platform-preferences.mdc` §1b + §7.
+
+Evaluate in order: Hard → Medium → Easy. Stop at first match.
+
+**Hard:**
+- Best model accuracy ≤ 20%, OR
+- Best model > 20% AND worst model accuracy ≤ 20%.
+
+**Medium:**
+- Hard does not apply AND worst model accuracy > 20% and ≤ 60%.
+
+**Easy:**
+- Medium does not apply AND worst model accuracy > 60% and ≤ 80%.
+
+If no agent run results exist, use **target difficulty** only, not confirmed.

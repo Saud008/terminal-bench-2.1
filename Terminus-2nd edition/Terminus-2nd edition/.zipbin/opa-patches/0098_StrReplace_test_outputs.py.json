@@ -1,0 +1,9 @@
+{
+  "path": "d:\\Terminus-2nd edition\\Terminus-2nd edition\\tasks\\opa-bundle-signature-digest-chain-verifier-repair\\tests\\test_outputs.py",
+  "tool": "StrReplace",
+  "old_string": "    def test_tb3_hidden_fixture_directory_present(self) -> None:",
+  "new_string": "    def test_state_artifact_paths_created(self) -> None:\n        \"\"\"Instruction paths /app/state/preview-ledger.json and /app/state/eval-audit.json must exist after verify and eval.\"\"\"\n        verify(\"allow-basic\")\n        assert PREVIEW_LEDGER.is_file()\n        export = OUTPUT / \"state-paths.json\"\n        eval_bundle(\"allow-basic\", \"7\", export)\n        assert EVAL_AUDIT.is_file()\n        audit = json.loads(EVAL_AUDIT.read_text(encoding=\"utf-8\"))\n        assert audit[\"seed\"] == \"7\"\n\n    def test_tb3_hidden_fixture_directory_present(self) -> None:",
+  "contents_len": 0,
+  "contents": null,
+  "contents_omitted": false
+}

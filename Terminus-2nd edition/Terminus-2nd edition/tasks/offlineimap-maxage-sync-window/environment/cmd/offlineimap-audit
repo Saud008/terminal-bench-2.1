@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${APP_ROOT:-/app}"
+export PATH="/usr/local/bin:${PATH}"
+LIB="${APP_ROOT}/lib/offlineimap"
+
+usage() {
+  cat >&2 <<'EOF'
+usage: offlineimap-audit sync --mailbox-dir DIR --imap-meta PATH --folder-rules PATH \
+  --reference-epoch EPOCH --maxage-sec SECONDS --tz-offset MINUTES [--dry-run] --export PATH
+EOF
+  exit 1
+}
+
+[[ $# -ge 1 ]] || usage
+subcmd="$1"
+shift
+[[ "${subcmd}" == "sync" ]] || usage
+
+mailbox_dir=""
+imap_meta=""
+folder_rules=""
+reference_epoch=""
+maxage_sec=""
+tz_offset=""
+dry_run="false"
+export_path=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --mailbox-dir)
+      mailbox_dir="$2"
+      shift 2
+      ;;
+    --imap-meta)
+      imap_meta="$2"
+      shift 2
+      ;;
+    --folder-rules)
+      folder_rules="$2"
+      shift 2
+      ;;
+    --reference-epoch)
+      reference_epoch="$2"
+      shift 2
+      ;;
+    --maxage-sec)
+      maxage_sec="$2"
+      shift 2
+      ;;
+    --tz-offset)
+      tz_offset="$2"
+      shift 2
+      ;;
+    --dry-run)
+      dry_run="true"
+      shift
+      ;;
+    --export)
+      export_path="$2"
+      shift 2
+      ;;
+    *)
+      usage
+      ;;
+  esac
+done
+
+if [[ -z "${mailbox_dir}" || -z "${imap_meta}" || -z "${folder_rules}" || -z "${reference_epoch}" \
+  || -z "${maxage_sec}" || -z "${tz_offset}" || -z "${export_path}" ]]; then
+  usage
+fi
+
+# shellcheck source=/dev/null
+source "${LIB}/sync.sh"
+oi_sync_run "${mailbox_dir}" "${imap_meta}" "${folder_rules}" "${reference_epoch}" \
+  "${maxage_sec}" "${tz_offset}" "${dry_run}" "${export_path}"

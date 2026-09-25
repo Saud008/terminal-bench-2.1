@@ -1,0 +1,28 @@
+stages:
+- build
+- package
+- publish
+build:src:
+  stage: build
+  script:
+  - make build
+  artifacts:
+    paths:
+    - dist/bin
+package:tar:
+  stage: package
+  needs:
+  - job: build:src
+    artifacts: true
+  script:
+  - tar cvf pkg.tar dist/bin
+  artifacts:
+    paths:
+    - pkg.tar
+publish:cdn:
+  stage: publish
+  needs:
+  - job: package:tar
+    artifacts: true
+  script:
+  - upload pkg.tar

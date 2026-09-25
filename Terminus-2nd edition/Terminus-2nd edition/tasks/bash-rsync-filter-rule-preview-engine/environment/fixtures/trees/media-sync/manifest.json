@@ -1,0 +1,37 @@
+{
+  "tree": "media-sync",
+  "sender_paths": [
+    "albums",
+    "albums/live",
+    "albums/live/set1.flac",
+    "albums/studio",
+    "albums/studio/master.wav",
+    "cache",
+    "cache/tmp.bin",
+    "playlists/main.m3u"
+  ],
+  "receiver_paths": [
+    "albums/live/set1.flac",
+    "albums/studio/master.wav",
+    "cache/tmp.bin",
+    "old/deleted-track.flac"
+  ],
+  "root_rules": [
+    "- cache/**",
+    "+ albums/**",
+    "P old/**",
+    "R cache/**"
+  ],
+  "cascade_overlays": {
+    "albums": [
+      "+ *.m3u"
+    ],
+    "albums/live": [
+      "- *.tmp",
+      "+ *.flac"
+    ],
+    "cache": [
+      "R *.bin"
+    ]
+  }
+}

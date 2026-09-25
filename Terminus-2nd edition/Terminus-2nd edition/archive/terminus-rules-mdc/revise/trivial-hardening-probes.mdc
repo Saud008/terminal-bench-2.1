@@ -1,0 +1,173 @@
+---
+description: Mandatory probes when Case 5 / SP hardening still yields TRIVIAL — detect decorative hardening (LOCKED)
+alwaysApply: false
+---
+
+# Terminus — Trivial hardening probes (LOCKED)
+
+**When:** After `@prompts/trivial-case-5.md`, `@prompts/sp-hard-create-revise.md`, or any TRIVIAL revision — **before** zip or claiming "hardened".
+
+**Problem:** Case 5 often adds **new fields, docs, and tests** while bugs stay **sequential** (fix file A → fix file B → done). Platform still labels **TRIVIAL** when **Claude and GPT both 5/5**.
+
+**Platform TRIVIAL (reminder):** worst benchmark model **>60%** pass → not accepted. Target **≤20%** on **`terminus-claude-opus-4-8`** first (`shared/platform-preferences.mdc` §1b).
+
+---
+
+## Decorative hardening — reject before upload
+
+Do **not** submit if **any** row is true:
+
+| # | Decorative pattern | Why it fails on platform |
+|---|-------------------|--------------------------|
+| D1 | New output field (`fingerprint`, `audit_hash`, extra counter) + 2–4 new tests, **same root bugs** | Agents fix obvious math/export once; new fields are free |
+| D2 | Doc expanded to spell out new field; instruction unchanged length | Frontier agents read docs and implement in one pass |
+| D3 | All bundled tests fail on **one** wrong operator / one reversed sort | One-file patch passes 80%+ tests |
+| D4 | Hidden tests fail on **same** bug as bundled tests | No independent failure mode |
+| D5 | Cross-run tests pass after **export-only** fix (no persistence fix) | Persistence layer decorative |
+| D6 | `difficulty = "hard"` relabel only | Metadata does not change agent pass rate |
+| D7 | Second hardening round adds **more** tests without **new bug interaction** | Test inflation, not depth |
+
+**Rule:** Adding schema fields or hash columns is **not** hardening unless **≥2 independent bug layers** must be correct **simultaneously** for hidden fixtures to pass.
+
+---
+
+## Mandatory probes (run before zip)
+
+Agent or author must run **all applicable** probes and report PASS/FAIL in the reply.
+
+### Probe 1 — Single-file patch (required)
+
+Copy **one** fixed file from `solution/files/` into a clean image (or apply one-file patch). Rebuild. Run verifier.
+
+| Result | Verdict |
+|--------|---------|
+| **≥60%** of tests still fail | PASS — depth OK (default Jun 2026) |
+| **≥50%** fail | PASS — only if **no** agent runs exist yet |
+| **<50%** fail (most pass) | **FAIL** — decorative or sequential bugs → **Case 6** |
+
+### Probe 1b — Decoy module (required for Go/Rust export CLI — G-030)
+
+Apply fix to **decoy** file only (`wrap.go`, `merge/apply.go`, or similarly named “obvious” module). **Do not** patch `export_stage.go` / `staging/publish.go`. Rebuild. Run verifier.
+
+| Result | Verdict |
+|--------|---------|
+| Export / hidden / epoch / order tests **still fail** | PASS — decoy split works |
+| Most tests pass after decoy-only fix | **FAIL** — export uses decoy module; split pipeline |
+
+### Probe 2 — Two-file patch without persistence (required if task has ledger/journal/sequence)
+
+Apply fixes for parse + core logic only; **omit** persistence/state module. Rebuild. Run verifier.
+
+| Result | Verdict |
+|--------|---------|
+| Cross-run / sequence / idempotency / replay tests **fail** | PASS |
+| All tests pass | **FAIL** — state layer not wired |
+
+### Probe 3 — Bundled-only vs hidden split (required if hidden fixtures exist)
+
+Identify tests using only `/app` public fixtures vs `/opt/verifier-fixtures/` or `TB3_*`.
+
+| Result | Verdict |
+|--------|---------|
+| Hidden tests fail when bundled tests pass (under partial fix) | PASS |
+| Same single fix passes bundled **and** hidden | **FAIL** — shallow root cause |
+
+### Probe 4 — Almost-correct trap (required for 5/5 after Case 5)
+
+Design at least **one** hidden fixture where **plausible wrong fix** (e.g. numeric sort fixed but merge order wrong; closure math fixed but ratio mode wrong) passes **some** bundled assertions but fails reference on hidden input.
+
+| Result | Verdict |
+|--------|---------|
+| Such a trap exists and is tested | PASS |
+| No trap; every bug is obviously wrong on bundled data | **FAIL** |
+
+### Probe 5 — Doc discovery depth (required)
+
+Count `/app/docs/*.md` files cited in `instruction.md`. Agent must need **≥3** docs to pass **hidden** tests (not one `dedupe-key.md` sentence).
+
+| Result | Verdict |
+|--------|---------|
+| Hidden behavior split across ≥3 docs; no step-by-step fix path | PASS |
+| One doc addition explains entire fix | **FAIL** — spec leak / too easy |
+
+### Probe 6 — Escalation gate (required if platform was 5/5 after prior Case 5)
+
+If this is **second+** TRIVIAL revision on same slug:
+
+| Result | Verdict |
+|--------|---------|
+| Structural change (new stage, shared state file, second subcommand, poison-pill interaction) | PASS to submit |
+| Only more fields/tests on same pipeline | **STOP** — use `@prompts/trivial-case-6.md` redesign |
+
+### Probe 7 — Staging artifact (required for Go/Rust export CLI — G-029)
+
+After oracle run, assert staging file exists and matches independent ingest reference test.
+
+| Result | Verdict |
+|--------|---------|
+| `/app/state/*snapshot*` written + `test_*snapshot*` passes | PASS |
+| No staging file or export re-parses input only | **FAIL** — add ingest→staging→export |
+
+### Probe 8 — Ingest-only patch (required for Go/Rust export CLI — G-033)
+
+Apply fixes for **ingest/staging only** (`ingest_stage.go`, `staging/`, snapshot writer). **Do not** patch `export_stage.go` / `staging/publish.go`. Rebuild. Run verifier.
+
+| Result | Verdict |
+|--------|---------|
+| Export / replay / cross-run hidden tests **still fail** | PASS — chained poison |
+| Most tests pass after ingest-only fix | **FAIL** — export re-derives from input or same bug layer |
+
+### Probe 9 — Dual decoy (required when ≥2 obvious fix files exist — G-030)
+
+Fix **both** decoy files (`wrap.go` **and** `merge/apply.go` or equivalent). **Do not** patch export stage. Rebuild. Run verifier.
+
+| Result | Verdict |
+|--------|---------|
+| Export / order / epoch tests **still fail** | PASS |
+| Tests pass after both decoys fixed | **FAIL** — export still uses decoy helpers |
+
+---
+
+## Interaction bugs that actually work (prefer over new fields)
+
+| Pattern | Example shape | Why agents struggle |
+|---------|---------------|---------------------|
+| **Poison pill** | Fix A breaks hidden fixture until B fixed | Partial progress fails late |
+| **Decoy module** | `wrap.go` fixed but `export_stage.go` still broken | Agents stop after obvious file |
+| **Ingest→export split** | Snapshot correct; export math wrong | Two-stage pipeline |
+| **Order not sort** | Manifest merge **file order**, not basename sort | Looks like sort bug; wrong layer |
+| **Mode switch** | Open vs closed uses different ratio formula | Same field name, different semantics |
+| **Persistence gate** | Sequence bumps on failed run | CLI looks fine; cross-run fails |
+| **Per-item cascade** | Rounding propagates leg-by-leg | Global fix insufficient |
+| **Path override** | `TB3_*` absolute only; relative must fail | Env + CLI + validation interact |
+| **Rebuild dependency** | `test.sh` rebuild; stale binary passes bundled | Agent edits source; binary stale |
+
+Do **not** rely only on: wrong constant, typo, single reversed comparison, missing `tmux`, metadata.
+
+---
+
+## Output table (paste in agent reply before zip)
+
+| Probe | PASS / FAIL | Evidence (command or test names) |
+|-------|-------------|----------------------------------|
+| 1 Single-file | | |
+| 1b Decoy module only | | N/A if no decoy split |
+| 2 Persistence omitted | | N/A if no state |
+| 3 Hidden vs bundled | | |
+| 4 Almost-correct trap | | |
+| 5 Doc depth | | |
+| 6 Escalation (if 2nd+ TRIVIAL) | | |
+| 7 Staging artifact | | N/A if not export CLI |
+| 8 Ingest-only patch | | N/A if not export CLI |
+| 9 Dual decoy | | N/A if single decoy |
+
+**Any FAIL → do not claim hardened.** Fix probes or route to **`prompts/trivial-case-6.md`**.
+
+---
+
+## Related
+
+- `prompts/trivial-case-5.md` · `prompts/trivial-case-6.md` · `prompts/easy.md` · `prompts/sp-hard-create-revise.md`
+- `revise/hardness.mdc` (G-028–G-035)
+- `prompts/trivial-repo-wide.md` §13–§14
+- `shared/anti-trivial.mdc` · `shared/platform-preferences.mdc` §1b–§1c

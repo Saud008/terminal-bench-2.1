@@ -1,0 +1,11 @@
+--- internal/dirauth/acl/parse_blocks.sh
++++ internal/dirauth/acl/parse_blocks.sh
+@@ -23,7 +23,7 @@
+ line = sys.argv[1].strip()
+ if not (line.startswith("ALLOW ") or line.startswith("DENY ")):
+     sys.exit(1)
+-effect = "allow"
++effect = "allow" if line.startswith("ALLOW ") else "deny"
+ body = line.split(None, 1)[1]
+ left, attrs_part = body.split(" ATTR ", 1)
+ attrs = ",".join(a.strip() for a in attrs_part.split(","))

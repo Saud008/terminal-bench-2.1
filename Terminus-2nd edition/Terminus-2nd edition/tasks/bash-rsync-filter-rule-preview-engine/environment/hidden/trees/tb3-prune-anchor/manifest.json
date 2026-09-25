@@ -1,0 +1,26 @@
+{
+  "tree": "tb3-prune-anchor",
+  "sender_paths": [
+    "backup",
+    "backup/.cache",
+    "backup/.cache/a.bin",
+    "backup/keep",
+    "backup/keep/file.txt",
+    "notes/readme.md"
+  ],
+  "receiver_paths": [
+    "backup/.cache/a.bin",
+    "backup/keep/file.txt",
+    "notes/readme.md"
+  ],
+  "root_rules": [
+    "- /backup/.cache/**",
+    "+ backup/**",
+    "R backup/.cache/**"
+  ],
+  "cascade_overlays": {
+    "backup": [
+      "+ keep/**"
+    ]
+  }
+}

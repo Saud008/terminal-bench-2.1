@@ -1,0 +1,9 @@
+{
+  "stack_id": "007-env-gated",
+  "service": "login",
+  "entries": [
+    {"phase": "auth", "control": "required", "module": "stubs/pam_env.sh", "args": ["TOKEN=early"]},
+    {"phase": "auth", "control": "required", "module": "stubs/pam_fail_auth.sh", "args": []},
+    {"phase": "account", "control": "required", "module": "stubs/pam_env.sh", "args": ["TOKEN=late"]}
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "scenario": "critical-abort",
+  "critical_prefixes": [
+    "10.9.0.0/16"
+  ],
+  "peer_groups": [
+    {
+      "group_id": "g",
+      "filters": [
+        {
+          "filter_id": "drop-crit",
+          "priority": 50,
+          "match_mode": "origin",
+          "asn": 65050,
+          "action": "deny"
+        },
+        {
+          "filter_id": "allow-other",
+          "priority": 40,
+          "match_mode": "origin",
+          "asn": 65060,
+          "action": "accept"
+        }
+      ]
+    }
+  ],
+  "peers": [
+    {
+      "peer_id": "early",
+      "asn": 65001,
+      "group_id": "g",
+      "wave_rank": 1,
+      "med_ceiling": 3,
+      "abort_on_critical_deny": false,
+      "community_rewrite": {
+        "65001:1": "65001:2"
+      },
+      "filters": []
+    },
+    {
+      "peer_id": "late",
+      "asn": 65002,
+      "group_id": "g",
+      "wave_rank": 2,
+      "med_ceiling": null,
+      "abort_on_critical_deny": true,
+      "community_rewrite": {},
+      "filters": []
+    }
+  ],
+  "rib": [
+    {
+      "prefix": "10.8.0.0/16",
+      "as_path": [
+        65060
+      ],
+      "communities": [
+        "65001:1"
+      ],
+      "med": 9,
+      "peer_id": "early"
+    },
+    {
+      "prefix": "10.9.0.0/16",
+      "as_path": [
+        65050
+      ],
+      "communities": [],
+      "med": 1,
+      "peer_id": "late"
+    }
+  ]
+}

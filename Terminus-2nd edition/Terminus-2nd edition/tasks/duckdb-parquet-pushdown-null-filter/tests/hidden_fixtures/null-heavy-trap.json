@@ -1,0 +1,43 @@
+{
+  "table": "events",
+  "catalog_tz": "UTC",
+  "chunk_size": 2,
+  "row_groups": [
+    {
+      "id": 0,
+      "rows": [
+        {"_row_id": 900, "sensor_id": "S1", "measured_at": "2024-06-15T10:00:00Z", "hidden_flag": true},
+        {"_row_id": 901, "sensor_id": "S2", "measured_at": "2024-06-15T11:00:00Z", "hidden_flag": null},
+        {"_row_id": 902, "sensor_id": null, "measured_at": "2024-06-15T12:00:00Z", "hidden_flag": null},
+        {"_row_id": 903, "sensor_id": "S3", "measured_at": "2024-06-15T13:00:00Z", "hidden_flag": false}
+      ],
+      "columns": {
+        "sensor_id": {
+          "stats_present": true,
+          "null_count": 1,
+          "null_count_omitted": false,
+          "min": "S1",
+          "max": "S3",
+          "page_order": ["null_bitmap", "dictionary", "data"],
+          "chunk_size": 2
+        },
+        "hidden_flag": {
+          "stats_present": true,
+          "null_count": 0,
+          "null_count_omitted": true,
+          "page_order": ["dictionary", "null_bitmap", "data"],
+          "chunk_size": 2
+        },
+        "measured_at": {
+          "stats_present": true,
+          "null_count": 0,
+          "null_count_omitted": false,
+          "min": "2024-06-15T10:00:00Z",
+          "max": "2024-06-15T13:00:00Z",
+          "page_order": ["data"],
+          "chunk_size": 2
+        }
+      }
+    }
+  ]
+}

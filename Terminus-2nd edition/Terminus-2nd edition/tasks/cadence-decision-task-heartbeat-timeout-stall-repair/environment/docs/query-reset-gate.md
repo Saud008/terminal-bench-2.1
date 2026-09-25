@@ -1,0 +1,1 @@
+Workflow query tasks require last_progress_seq greater than or equal to required_progress_seq before acceptance. Reset-workflow queries follow the same heartbeat gate; is_reset_workflow does not bypass progress checks.

@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="/app"
+LIB="${APP_ROOT}/lib"
+
+# shellcheck source=/dev/null
+source "${LIB}/validate.sh"
+# shellcheck source=/dev/null
+source "${LIB}/parse.sh"
+# shellcheck source=/dev/null
+source "${LIB}/fetch_closure.sh"
+# shellcheck source=/dev/null
+source "${LIB}/hash.sh"
+# shellcheck source=/dev/null
+source "${LIB}/scan.sh"
+
+usage() {
+  echo "usage: cmake-audit parse ROOT --output FILE [--strict]" >&2
+  echo "       cmake-audit hash-audit --tree FILE --vendor DIR --pins FILE --output FILE" >&2
+  echo "       cmake-audit scan --tree FILE --prefix DIR --output FILE" >&2
+}
+
+parse_cmd() {
+  local root="" output="" strict=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --output) output="$2"; shift 2 ;;
+      --strict) strict=1; shift ;;
+      -*) echo "unknown flag $1" >&2; return 2 ;;
+      *)
+        if [[ -z "$root" ]]; then root="$1"; shift; else echo "unexpected arg $1" >&2; return 2; fi
+        ;;
+    esac
+  done
+  [[ -n "$root" && -n "$output" ]] || { usage; return 2; }
+
+  parse_cmake_tree "$root"
+
+  if [[ "$strict" -eq 1 ]]; then
+    local snap="/app/state/cmake-ingest-snapshot.json"
+    local rel
+    while IFS= read -r rel; do
+      [[ -z "$rel" ]] && continue
+      if ! validate_cmake_syntax "${root}/${rel}"; then
+        rm -f "$output"
+        return 2
+      fi
+    done < <(python3 -c 'import json,sys
+from pathlib import Path
+data=json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+for f in data.get("files", []):
+    print(f["path"])
+' "$snap")
+  fi
+
+  write_tree_json "$output"
+}
+
+hash_cmd() {
+  local tree="" vendor="" pins="" output=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --tree) tree="$2"; shift 2 ;;
+      --vendor) vendor="$2"; shift 2 ;;
+      --pins) pins="$2"; shift 2 ;;
+      --output) output="$2"; shift 2 ;;
+      *) echo "unknown flag $1" >&2; return 2 ;;
+    esac
+  done
+  [[ -n "$tree" && -n "$vendor" && -n "$pins" && -n "$output" ]] || { usage; return 2; }
+  hash_audit_deps "$tree" "$vendor" "$pins" "$output"
+}
+
+scan_cmd() {
+  local tree="" prefix="" output=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --tree) tree="$2"; shift 2 ;;
+      --prefix) prefix="$2"; shift 2 ;;
+      --output) output="$2"; shift 2 ;;
+      *) echo "unknown flag $1" >&2; return 2 ;;
+    esac
+  done
+  [[ -n "$tree" && -n "$prefix" && -n "$output" ]] || { usage; return 2; }
+  scan_install_manifest "$tree" "$prefix" "$output"
+}
+
+main() {
+  [[ $# -ge 1 ]] || { usage; exit 2; }
+  case "$1" in
+    parse) shift; parse_cmd "$@" ;;
+    hash-audit) shift; hash_cmd "$@" ;;
+    scan) shift; scan_cmd "$@" ;;
+    *) usage; exit 2 ;;
+  esac
+}
+
+main "$@"

@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+APP_ROOT="/app"
+LIB="${APP_ROOT}/internal/raidops"
+
+usage() {
+  echo "usage: mdreshape scan|compile|publish ..." >&2
+  exit 2
+}
+
+cmd="${1:-}"
+shift || true
+case "$cmd" in
+  scan|load)
+    exec bash "${LIB}/scanstage/materialize_fleet.sh" "$@"
+    ;;
+  compile)
+    exec bash "${LIB}/ledgerstage/build_reshape_ledger.sh" "$@"
+    ;;
+  publish)
+    exec bash "${LIB}/atlasstage/emit_eligibility_atlas.sh" "$@"
+    ;;
+  *)
+    usage
+    ;;
+esac

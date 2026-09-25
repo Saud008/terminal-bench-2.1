@@ -1,0 +1,61 @@
+--- a/src/snapbuf/codec.rs
++++ b/src/snapbuf/codec.rs
+@@ -19,15 +19,51 @@
+ }
+ 
+ pub fn staging_digest(stage: &AtlasStage) -> String {
+-    let body = json!({
++    let packages: Vec<serde_json::Value> = stage
++        .packages
++        .iter()
++        .map(|p| {
++            serde_json::json!({
++                "norm_purl": p.norm_purl,
++                "canonical_raw": p.canonical_raw,
++                "name": p.name,
++                "version": p.version,
++            })
++        })
++        .collect();
++    let edges: Vec<serde_json::Value> = stage
++        .edges
++        .iter()
++        .map(|e| {
++            serde_json::json!({
++                "from": e.from,
++                "to": e.to,
++                "edge_kind": e.edge_kind,
++            })
++        })
++        .collect();
++    let mut vex_rows: Vec<serde_json::Value> = Vec::new();
++    for v in &stage.vex {
++        let mut row = serde_json::json!({
++            "statement_id": v.statement_id,
++            "product_purl": v.product_purl,
++            "vuln_id": v.vuln_id,
++            "status": v.status,
++            "updated_at": v.updated_at,
++        });
++        if let Some(exp) = &v.expires_at {
++            row["expires_at"] = serde_json::json!(exp);
++        }
++        vex_rows.push(row);
++    }
++    let body = serde_json::json!({
+         "bundle_id": stage.bundle_id,
+-        "packages": stage.packages,
+-        "edges": stage.edges,
+-        "vex": stage.vex,
++        "packages": packages,
++        "edges": edges,
++        "vex": vex_rows,
+     });
+-    let mut bytes = serde_json::to_vec(&body).unwrap_or_default();
+-    bytes.reverse();
+-    hash_bytes(&bytes)
++    let bytes = serde_json::to_string(&body).unwrap_or_default();
++    hash_bytes(bytes.as_bytes())
+ }
+ 
+ fn hash_bytes(data: &[u8]) -> String {

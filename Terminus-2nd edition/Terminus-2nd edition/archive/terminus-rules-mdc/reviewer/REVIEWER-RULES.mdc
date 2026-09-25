@@ -1,0 +1,111 @@
+---
+description: "@REVIEWER RULES — triage reviewer comments, revise without trivializing (LOCKED)"
+alwaysApply: false
+---
+
+# @REVIEWER RULES — Reviewer feedback (Phase D′)
+
+**Trigger:**
+
+- Reviewer line comments, NEEDS_REVISION text, Snorkel human-review items (Phase D′)
+- **Post-creation audit** — use **read-only** with **`@prompts/audit.md`** + **`@AUDIT RULES`** + **`reviewer/reviewer-checklist.mdc`** (Phase C / pipeline Phase E). Apply severity guidance and triviality lens to audit findings; **do not edit** unless user asks.
+
+**Not this tag:** bare platform labels (TRIVIAL / oracle / verifier) → **@REVISE RULES** (`revise/`).
+
+**LOCKED.** Do not weaken unless the user explicitly overrides in this message.
+
+---
+
+## Triage before any edit (LOCKED)
+
+Do **not** implement reviewer feedback blindly. For each comment ask: does it improve **fairness/reliability**, or **expose the solution** / make the task **trivial**?
+
+**Do not merge** tasks or zips — revise **in place** only in `tasks/<name>/`.
+
+1. **Inspect** real task files (instruction, environment, tests, oracle). Do not assume the reviewer is correct.
+2. **Classify each comment** (one line per item):
+   - **Accept** — fairness, reliability, alignment, CI/static compliance, anti-cheat, metadata accuracy, accidental hint removal.
+   - **Reject** — solution leak, trivializing hint, test checklist in instruction, golden answers in environment, weakened traps.
+   - **Partial** — good intent, wrong fix; implement a stricter alternative that preserves difficulty.
+   - **Defer** — needs platform evidence or user decision; say why.
+3. **Edit only accepted/partial** unless user says “apply all feedback verbatim.”
+4. **Report triage** before or with the diff: comment → verdict → reason → files touched.
+
+### Accept examples
+
+- `test.sh` reward block, `-rA`, no runtime installs — format/CI, not solution leak.
+- `codebase_size` vs meaningful files — metadata accuracy.
+- Instruction too prescriptive → move contract to `/app/docs/` without naming bug files or fix steps.
+- Format-only tests → add behavioral verification.
+- Environment mentions verifier/golden → normal public fixture wording.
+- Instruction-test mismatch where **contract doc** already defines behavior.
+
+### Reject examples
+
+- “Patch `/app/src/foo.ts` and use `db.transaction`” — file/implementation hint.
+- Exact operator in instruction when docs already define it — debugging shortcut.
+- Add expected JSON/CSV to environment — golden leak.
+- Drop failing tests or assert only HTTP 200 — weakens difficulty.
+- BUG comment in broken file — answer leak.
+- Filler files for fake `codebase_size`.
+
+On conflict with anti-trivial rules → prefer **stricter** rule that preserves difficulty.
+
+---
+
+## Reviewer says “instruction issues” (LOCKED — do not trivialize)
+
+When feedback cites **instruction_styling**, **behavior_in_task_description**, **file_reference_mentioned**, “instruction unclear”, “add requirements to instruction”, or LLMaJ instruction gaps:
+
+**Do not** “fix” by adding **solve hints** to `instruction.md`. That often makes the task **TRIVIAL** (agents read the checklist and pass in one pass).
+
+| Reviewer ask (intent) | **Accept** (fair alignment) | **Reject** (trivializing) |
+|----------------------|----------------------------|---------------------------|
+| Missing output path / schema | Name path in instruction; put field schema in **cited** `/app/docs/*.md` | Paste full schema + algorithm into instruction |
+| Test checks behavior not in instruction | Add **one** contract sentence in instruction **or** cite existing doc path; align **tests ↔ docs** | Copy pytest assertions into instruction as a checklist |
+| Instruction too long / duplicates docs | **Shorten** instruction; move normative detail to `/app/docs/` | Expand instruction with step-by-step fix path |
+| “Clarify how to fix” / “mention the bug” | **Push back (RF6)** — not valid for agent-facing prompt | Bug file names, operators, fix order in instruction |
+| Hidden requirement / unfair test | Fix **tests** or **docs** so contract is fair; instruction stays user-like | Leak hidden test logic into instruction |
+
+**Partial accept pattern:** instruction gets absolute paths + “per `/app/docs/foo.md`” — **not** the fix recipe from that doc spelled out again in the prompt.
+
+**After any instruction edit from reviewer feedback:** re-check triviality — would a frontier model solve with **one obvious edit** after reading the new instruction? If yes → **reject** that wording; fix docs/tests instead.
+
+See also: `shared/anti-trivial.mdc` · `prompts/reviewer-feedback-6.md` · `shared/instruction-prose-style.mdc`.
+
+---
+
+## Revision workflow (after triage)
+
+- Diff against closest `tasks/_accepted-tasks/<ref>/` — fix Dockerfile, `test.sh`, `task.toml`, `solve.sh` deltas; do not copy WIP failure patterns.
+- Keep instruction concise, absolute paths; tests behavior-based; oracle deterministic.
+- Preserve **≥3 interacting bugs** (target **5+** for new tasks).
+- Re-run oracle + NOP when behavior or tests change (see **@VERIFY RULES**).
+- Do not flag missing local `rubric.md` or anonymous author/email.
+
+**Deep Snorkel checklist (required for audit):** `reviewer-checklist.mdc` in this folder — **mandatory** when invoked via **`@prompts/audit.md`**.
+
+---
+
+## Copy-paste prompts (`prompts/`)
+
+| RF | File | When |
+|----|------|------|
+| Router | `prompts/reviewer.md` | **Auto-pick** RF1–RF6 from pasted feedback |
+| RF4 | `prompts/reviewer-feedback-4.md` | **Default** — full triage + fix |
+| RF6 | `prompts/reviewer-feedback-6.md` | Triage + pushback **before** edits |
+| RF3 | `prompts/reviewer-feedback-3.md` | Agent eval OK; preserve difficulty |
+| RF1 | `prompts/reviewer-feedback-1.md` | Timeouts / Linux user-password only |
+| RF2 | `prompts/reviewer-feedback-2.md` | Fix + oracle/NOP + quality loop |
+| RF5 | `prompts/reviewer-feedback-5.md` | Standard fix + difficulty recheck |
+
+```
+@prompts/reviewer.md
+Fix tasks/<name> per reviewer feedback below.
+Auto-pick RF; do not trivialize. Re-run oracle + NOP after edits.
+
+Reviewer feedback:
+[paste here]
+```
+
+After edits → **@VERIFY RULES** → **@ZIP RULES**.

@@ -1,0 +1,82 @@
+--- internal/plugins/cache.go
++++ internal/plugins/cache.go
+@@ -1,7 +1,6 @@
+ package plugins
+
+ 
+
+ import (
+
+-	"strings"
+
+ 	"sync"
+
+ 	"time"
+
+ 
+
+@@ -40,23 +39,14 @@
+ 	return ctx.Qname + "|" + dns.TypeToString[ctx.Qtype]
+
+ }
+
+ 
+
+-func cacheStoreKey(ctx *model.QueryCtx) string {
+
+-	name := strings.TrimSuffix(ctx.Req.Question[0].Name, ".")
+
+-	return name + "|" + dns.TypeToString[ctx.Qtype]
+
+-}
+
+-
+
+ func (c *Cache) Serve(ctx *model.QueryCtx) (bool, error) {
+
+ 	key := cacheKey(ctx)
+
+ 	c.mu.Lock()
+
+ 	ent, ok := c.store[key]
+
+ 	c.mu.Unlock()
+
+ 	if ok && time.Now().Before(ent.until) {
+
+-		if ctx.Msg == nil {
+
+-			ctx.Msg = ctx.Req.Copy()
+
+-		}
+
++		ctx.Msg = ent.msg.Copy()
+
+ 		ctx.Msg.Id = ctx.Req.Id
+
+-		ctx.Msg.Rcode = dns.RcodeSuccess
+
+-		ctx.Msg.Answer = ent.msg.Answer
+
+ 		ctx.Handled = true
+
+ 		ctx.StopChain = true
+
+ 		return false, nil
+
+@@ -68,7 +58,7 @@
+ 	if ctx.Msg == nil {
+
+ 		return
+
+ 	}
+
+-	key := cacheStoreKey(ctx)
+
++	key := cacheKey(ctx)
+
+ 	c.mu.Lock()
+
+ 	c.store[key] = cacheEntry{msg: ctx.Msg.Copy(), until: time.Now().Add(time.Duration(c.ttl) * time.Second)}
+
+ 	c.mu.Unlock()

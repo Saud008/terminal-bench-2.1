@@ -1,0 +1,47 @@
+{
+  "reference_time": "2024-06-30T23:59:59Z",
+  "rules": [
+    {
+      "id": "ia-fast",
+      "priority": 500,
+      "tag_prefixes": {
+        "log_type": "access"
+      },
+      "transitions": [
+        {
+          "days": 1,
+          "storage_class": "STANDARD_IA"
+        }
+      ],
+      "expiration": {
+        "days": 999
+      },
+      "noncurrent_expiration": {
+        "days": 30
+      }
+    },
+    {
+      "id": "access-log-tier",
+      "priority": 200,
+      "tag_prefixes": {
+        "log_type": "access"
+      },
+      "transitions": [
+        {
+          "days": 30,
+          "storage_class": "STANDARD_IA"
+        },
+        {
+          "days": 120,
+          "storage_class": "GLACIER"
+        }
+      ],
+      "expiration": {
+        "days": 365
+      },
+      "noncurrent_expiration": {
+        "days": 30
+      }
+    }
+  ]
+}

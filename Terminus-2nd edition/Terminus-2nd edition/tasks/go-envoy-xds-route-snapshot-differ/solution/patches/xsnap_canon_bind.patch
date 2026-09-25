@@ -1,0 +1,11 @@
+--- internal/secbind/canon_bind.go
++++ internal/secbind/canon_bind.go
+@@ -7,7 +7,7 @@
+ )
+ 
+ func CanonicalSecretID(raw string) string {
+-    id := strings.TrimSpace(raw)
++    id := strings.TrimSpace(strings.ToLower(raw))
+     if !strings.HasPrefix(id, "secret/") {
+         id = "secret/" + id
+     }

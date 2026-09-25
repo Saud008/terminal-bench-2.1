@@ -1,0 +1,121 @@
+---
+description: "@VERIFY RULES — oracle + NOP harbor gate before upload (LOCKED)"
+alwaysApply: false
+---
+
+# @VERIFY RULES — Final verify (Phase E)
+
+**Trigger:** After revision; “recheck from scratch”, “run oracle and NOP”.
+
+**Target:** Oracle reward **1**, NOP reward **0**. If not run → say **not verified by execution yet**.
+
+**First upload (non-milestone, never on platform):** After oracle/NOP, run **Phase F′** per **`../create/first-submit-acceptance-gate.mdc`** — probe table PASS, then record before zip. **`pack_zip.sh` will not create a zip** without `jobs-local/first-submit-<name>.json` with `verdict: PASS` (skip: milestone tasks; slug in `scripts/platform_submissions.txt`).
+
+---
+
+## Harbor commands (required)
+
+```bash
+harbor run -a oracle -p tasks/<name> --debug
+harbor run -a nop -p tasks/<name> --debug --job-name <name>-nop-$(date +%Y%m%d-%H%M%S)
+```
+
+- Do **not** use `-v` with harbor; use `--debug`.
+- Unique `--job-name` on NOP to avoid collisions.
+- Oracle ≠ 1 → **@REVISE RULES** + `../revise/oracle-fix-g025-g027.mdc` + **`oracleFix.md`**
+
+**Full pre-zip checklist:** `pre-zip-audit.mdc` in this folder.
+
+---
+
+## Recheck from scratch
+
+- `task.toml`, Dockerfile, `test.sh`, instruction-test alignment
+- No environment leakage; milestone structure if applicable
+- `../shared/first-pass-blueprint.mdc` §0 + §6; `../shared/core.mdc` self-check
+
+---
+
+## Difficulty preservation (after any edit)
+
+- Bugs still interact; tests run real code paths
+- Oracle fixes implementation; instruction does not reveal fixes
+- Anti-cheat intact
+- Report: Triviality risk Low/Medium/High; ready yes/no
+
+---
+
+## Static preflight (automated — do not run harbor manually)
+
+```bash
+python3 scripts/terminus_preflight.py --task-dir tasks/<name>
+```
+
+Covers Snorkel **CI Checks** + **LLMaJ** (local Python) + **category** blocklist + **required files** layout. Reports: `jobs-local/ci-check-last.txt`, `jobs-local/llmaj-check-last.txt`.
+
+Also runs automatically on task file saves (hook) and in `./scripts/pack_zip.sh` (`--pack-gate`).
+
+**Pre-submit bundle (task dir + optional zip):**
+
+```bash
+python3 scripts/terminus_verify_submit.py --task-dir tasks/<name>
+python3 scripts/terminus_verify_submit.py --task-dir tasks/<name> --zip tasksubmit/<name>.zip
+```
+
+Includes **Phase F′** first-submit gate (`first_submit_pack_gate.py`) — same as `pack_zip.sh`; fails without `jobs-local/first-submit-<name>.json` PASS on first upload.
+
+Manual checks still required before upload:
+
+- **tmux** + **asciinema** in Dockerfile
+- `test.sh`: bootstrap `/logs/verifier`, prewrite reward `0`, seed `ctrf.json` before guards; every early exit writes `0`
+- No runtime pip/uvx/apt/npm/curl installs in `test.sh`
+- Explicit `cd /app`; `test.sh` ends with literal `if [ $? -eq 0 ]` — **nothing after `fi`**
+- Verifier Python: no Ruff F401/F841
+- `environment/.dockerignore` includes `.git`, `__pycache__`, `.pytest_cache`, `node_modules`, etc.
+
+---
+
+## Platform upload form (before zip)
+
+**“Does this task use an approved canonical base image?”**
+
+- **Yes** — final runtime `FROM` is a canonical row in `shared/canonical-base-image-gate.mdc` (exact `@sha256:` digest).
+- **No** — custom or non-listed base only.
+
+State **Yes/No** + the actual `FROM` line in the verify report.
+
+---
+
+## Phase F′ — First-submit gate (before zip — first upload only)
+
+**When:** New non-milestone task under `tasks/<name>/` that is **not** listed in `scripts/platform_submissions.txt`. **Not** required for milestone tasks (`steps/` layout) or platform resubmits (use **@REVISE RULES** for TRIVIAL after upload).
+
+**After** oracle **1.0** and NOP **0.0**:
+
+1. Run probes per **`../create/first-submit-acceptance-gate.mdc`** + **`../revise/trivial-hardening-probes.mdc`** (paste probe table in reply).
+2. Record PASS:
+
+```bash
+python3 scripts/first_submit_pack_gate.py --record --task-dir tasks/<name> \
+  --oracle 1.0 --nop 0.0 \
+  --probe 1=PASS --probe 3=PASS --probe 4=PASS --probe 5=PASS \
+  --probe 1b=PASS --probe 7=PASS --probe 8=PASS   # Go/Rust/Bash export CLI only
+```
+
+3. Confirm gate (must print PASS before zip):
+
+```bash
+python3 scripts/first_submit_pack_gate.py --pack-gate --task-dir tasks/<name>
+```
+
+**Hard block:** `./scripts/pack_zip.sh` calls `--pack-gate` **before** writing `tasksubmit/<name>.zip` — **no zip file on FAIL**. Details: `jobs-local/first-submit-last.txt`.
+
+**Override (user explicit only in current message):** `TERMINUS_FIRST_SUBMIT_SKIP=1 ./scripts/pack_zip.sh <name>`
+
+Any probe **FAIL** → fix task in place; do **not** claim ready to zip.
+
+## Report
+
+Ready to submit **yes/no**; blockers; commands + results.
+
+Then → **Phase F′** (first upload) → **@ZIP RULES**.

@@ -1,0 +1,20 @@
+{
+  "layout_id": "hot_reload_alpha",
+  "from_version": 1,
+  "to_version": 2,
+  "components": [
+    { "name": "Position", "offset": 0, "size": 8 },
+    { "name": "Velocity", "offset": 8, "size": 4 },
+    { "name": "Health", "offset": 12, "size": 2, "default_hex": "0x0064" }
+  ],
+  "migration_steps": [
+    { "order": 1, "op": "add", "component": "Health" },
+    {
+      "order": 2,
+      "op": "move",
+      "component": "Archive",
+      "target_chunk": 1,
+      "from_archetype": "Health+Position+Velocity"
+    }
+  ]
+}

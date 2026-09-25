@@ -1,0 +1,81 @@
+---
+description: LOCKED — auto-apply Snorkel ECR canonical FROM on every task touch (no user reminder)
+alwaysApply: false
+---
+
+# Terminus — Canonical ECR Dockerfile (auto-apply)
+
+**LOCKED standing default (Sanjana workflow).** User does **not** need to say “use canonical images”, “migrate docker.io”, “ECR FROM”, or “fix Dockerfile base” each chat.
+
+On **every** touch of `tasks/<name>/` — create, revise, audit (note in report), verify, zip — agent **automatically**:
+
+1. Read `environment/Dockerfile` — `grep '^FROM'` (all stages).
+2. If **any** `FROM` lacks `public.ecr.aws/docker/library/` where a Snorkel canonical row exists → **fix in place** using **exact** digest from **`shared/canonical-base-image-gate.mdc`**.
+3. **Never** copy legacy `docker.io` `FROM` from `tasks/_accepted-tasks/` — copy harness shape only; `FROM` always from canonical gate.
+4. After changing any `FROM` → **re-run oracle + NOP** before zip or “ready” (skip only on read-only audit — flag High in report).
+
+User override in the current message only → skip or use non-canonical with justification.
+
+---
+
+## Stack → canonical row (quick map)
+
+| Stack in Dockerfile | Use row in `canonical-base-image-gate.mdc` |
+|---------------------|--------------------------------------------|
+| Go / golang | `golang:1.24-bookworm` (ECR) |
+| Rust | `rust:1.85-slim` (ECR) |
+| Node | `node:22-bookworm-slim` (ECR) |
+| Python | `python:3.13-slim-bookworm` (ECR) |
+| Debian shell / C / Make | `debian:bookworm-slim` (ECR) |
+| Ruby | `ruby:3.3-slim-bookworm` (ECR) |
+| Java / Maven / GCC / Ubuntu | matching ECR row in gate table |
+
+Multi-stage: **builder** stages may use same ECR family; **final runtime** stage must be canonical for upload form **Yes**.
+
+---
+
+## Forbidden (agents)
+
+| Do not | Do instead |
+|--------|------------|
+| Ask “should I migrate to ECR?” | Fix `FROM` silently when editing the task |
+| Leave `golang:1.22`, `rust:1.78`, `node:20`, old `debian@0104b334…` | Replace with ECR digest from gate |
+| Claim ready after `FROM` change without oracle/NOP | Re-run harbor after base image change |
+| Bulk-edit all tasks unless user asks | Fix **current** task; repo-wide only via script below |
+
+---
+
+## Automated (user does not run manually)
+
+| When | Script |
+|------|--------|
+| **`./scripts/pack_zip.sh <name>`** | Runs `--ensure` on that task automatically |
+| **`pack_zip.ps1`** (Windows) | Same |
+| Agent editing a task | Fix `FROM` in place per gate table |
+| Repo-wide repair (optional) | `python3 scripts/migrate_dockerfile_canonical_ecr.py` |
+
+**Manual only if debugging:**
+
+```bash
+python3 scripts/migrate_dockerfile_canonical_ecr.py --check --task-dir tasks/<name>
+python3 scripts/migrate_dockerfile_canonical_ecr.py --task-dir tasks/<name>
+```
+
+Scans `tasks/`, `tasksss/`, `dusre-wale/` when no `--task-dir`.
+
+---
+
+## Verify report line (mandatory on zip / Phase E)
+
+- **Canonical base image:** Yes / No + final runtime `FROM` line
+- Upload form **Yes** only when final stage matches `canonical-base-image-gate.mdc` exactly
+
+---
+
+## Related
+
+- **`shared/canonical-base-image-gate.mdc`** — full digest table + non-canonical justification rules
+- **`shared/platform-preferences.mdc`** §6 — defers to canonical gate
+- **`scripts/migrate_dockerfile_canonical_ecr.py`** — check / fix / `--ensure` (wired into `pack_zip.sh`)
+- **`scripts/pack_zip.sh`** — runs `--ensure` before every zip
+- **`shared/problem-rule-loader.mdc`** §3 — ECR wins over legacy corpus

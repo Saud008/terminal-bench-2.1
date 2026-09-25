@@ -1,0 +1,31 @@
+{
+  "slot_limit": 8,
+  "items": [
+    { "id": "iron_ore", "stack_max": 64, "stackable": true },
+    { "id": "scrap_iron", "stack_max": 64, "stackable": true },
+    { "id": "coal", "stack_max": 64, "stackable": true },
+    { "id": "iron_ingot", "stack_max": 64, "stackable": true },
+    { "id": "steel_plate", "stack_max": 32, "stackable": true },
+    { "id": "forge_spark", "stack_max": 1, "stackable": false }
+  ],
+  "substitutes": {
+    "iron_ore": "scrap_iron"
+  },
+  "recipes": [
+    {
+      "id": "smelt_iron",
+      "inputs": [
+        { "item": "iron_ore", "qty": 2 },
+        { "item": "coal", "qty": 1 }
+      ],
+      "catalyst": { "item": "forge_spark", "qty": 1, "consumed": false },
+      "output": { "item": "iron_ingot", "qty": 1, "stackable": true }
+    },
+    {
+      "id": "fold_steel",
+      "inputs": [{ "item": "iron_ingot", "qty": 2 }],
+      "catalyst": { "item": "forge_spark", "qty": 1, "consumed": false },
+      "output": { "item": "steel_plate", "qty": 1, "stackable": true }
+    }
+  ]
+}

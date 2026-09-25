@@ -1,0 +1,171 @@
+{
+  "symbol_table": [
+    {
+      "path": "environment/crates/fqdn_alias/src/lib.rs",
+      "symbol": "alias_equivalent",
+      "kind": "function"
+    },
+    {
+      "path": "environment/crates/reader_default/src/lib.rs",
+      "symbol": "defaults_compatible",
+      "kind": "function"
+    },
+    {
+      "path": "environment/crates/reader_default/src/lib.rs",
+      "symbol": "promotion_ok",
+      "kind": "function"
+    },
+    {
+      "path": "environment/crates/branch_set/src/lib.rs",
+      "symbol": "union_compatible",
+      "kind": "function"
+    },
+    {
+      "path": "environment/crates/logical_check/src/lib.rs",
+      "symbol": "check_logical_constraints",
+      "kind": "function"
+    },
+    {
+      "path": "environment/crates/canonical_fp/src/lib.rs",
+      "symbol": "parsing_fingerprint",
+      "kind": "function"
+    },
+    {
+      "path": "environment/crates/ledger_ingest/src/lib.rs",
+      "symbol": "ingest_pairs",
+      "kind": "function"
+    },
+    {
+      "path": "environment/crates/migration_emit/src/lib.rs",
+      "symbol": "export_report",
+      "kind": "function"
+    },
+    {
+      "path": "environment/crates/pair_eval/src/lib.rs",
+      "symbol": "evaluate_pair",
+      "kind": "function"
+    }
+  ],
+  "oracle_frontier": [
+    {
+      "path": "environment/crates/fqdn_alias/src/lib.rs",
+      "fix_symbols": ["alias_equivalent", "resolve_type_name"],
+      "co_resident_helpers": ["full_name"],
+      "allowed_top_level_symbols": ["alias_equivalent", "resolve_type_name"]
+    },
+    {
+      "path": "environment/crates/reader_default/src/lib.rs",
+      "fix_symbols": ["defaults_compatible", "promotion_ok"],
+      "co_resident_helpers": ["field_names", "record_fields"],
+      "allowed_top_level_symbols": ["defaults_compatible", "promotion_ok", "field_names"]
+    },
+    {
+      "path": "environment/crates/branch_set/src/lib.rs",
+      "fix_symbols": ["union_compatible"],
+      "co_resident_helpers": ["branch_labels"],
+      "allowed_top_level_symbols": ["union_compatible", "branch_labels"]
+    },
+    {
+      "path": "environment/crates/logical_check/src/lib.rs",
+      "fix_symbols": ["check_logical_constraints"],
+      "co_resident_helpers": ["decimal_scale"],
+      "allowed_top_level_symbols": ["check_logical_constraints"]
+    },
+    {
+      "path": "environment/crates/canonical_fp/src/lib.rs",
+      "fix_symbols": ["parsing_fingerprint", "canonicalize"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": ["parsing_fingerprint", "canonicalize"]
+    },
+    {
+      "path": "environment/crates/ledger_ingest/src/lib.rs",
+      "fix_symbols": ["ingest_pairs"],
+      "co_resident_helpers": ["PairRow"],
+      "allowed_top_level_symbols": ["ingest_pairs", "PairRow"]
+    },
+    {
+      "path": "environment/crates/migration_emit/src/lib.rs",
+      "fix_symbols": ["export_report", "classify_risk"],
+      "co_resident_helpers": ["Totals"],
+      "allowed_top_level_symbols": ["export_report", "classify_risk", "Totals"]
+    }
+  ],
+  "flipping_point_contract": {
+    "locations": [
+      {
+        "id": "namespace-alias",
+        "path": "environment/crates/fqdn_alias/src/lib.rs",
+        "controls_tests": [
+          "test_avsc_compat_user_namespace_alias",
+          "test_avsc_compat_user_reader_writer_ok"
+        ]
+      },
+      {
+        "id": "reader-default",
+        "path": "environment/crates/reader_default/src/lib.rs",
+        "controls_tests": [
+          "test_envelope_int_to_long_promotion",
+          "test_user_pair_compatible_reference"
+        ]
+      },
+      {
+        "id": "union-branches",
+        "path": "environment/crates/branch_set/src/lib.rs",
+        "controls_tests": [
+          "test_union_order_status_field",
+          "test_payment_pair_compatible_reference"
+        ]
+      },
+      {
+        "id": "logical-types",
+        "path": "environment/crates/logical_check/src/lib.rs",
+        "controls_tests": [
+          "test_metric_timestamp_logical_type",
+          "test_full_staging_matches_reference"
+        ]
+      },
+      {
+        "id": "canonical-fp",
+        "path": "environment/crates/canonical_fp/src/lib.rs",
+        "controls_tests": [
+          "test_fingerprint_stable_user_v1",
+          "test_report_subjects_match_reference"
+        ]
+      },
+      {
+        "id": "staging-ingest",
+        "path": "environment/crates/ledger_ingest/src/lib.rs",
+        "controls_tests": [
+          "test_staging_written_on_ingest",
+          "test_staging_sorted_by_subject"
+        ]
+      },
+      {
+        "id": "migration-export",
+        "path": "environment/crates/migration_emit/src/lib.rs",
+        "controls_tests": [
+          "test_compatible_pairs_risk_low",
+          "test_report_totals_reference"
+        ]
+      },
+      {
+        "id": "build-script",
+        "path": "environment/scripts/build_all.sh",
+        "controls_tests": [
+          "test_rebuild_succeeds",
+          "test_pipeline_exit_zero"
+        ]
+      }
+    ],
+    "no_single_location_flips_majority": true,
+    "concentration_cap": 0.5
+  },
+  "decoy_manifest": [
+    {
+      "path": "environment/crates/telemetry_decoy/src/wrap.rs",
+      "kind": "module",
+      "non_fix_purpose": "byte length wrapper not on ingest/export hot path"
+    }
+  ],
+  "task_slug": "rust-avro-schema-evolution-compatibility-ledger"
+}

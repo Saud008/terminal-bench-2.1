@@ -1,0 +1,82 @@
+---
+description: "@AUDIT RULES — read-only post-creation audit (LOCKED; use with prompts/audit.md + @REVIEWER RULES)"
+alwaysApply: false
+---
+
+# @AUDIT RULES — Post-creation audit (Phase C / CREATE Phase E)
+
+**Read-only** for standalone `@audit` requests **unless** the user asks to fix.
+
+**CREATE auto mode (LOCKED — ENGINE_3):** After **new-task** Phase D, agents **must** enter **fix mode** automatically per **`create/post-create-audit-loop.mdc`** — **no user prompt**. Fix **High** then **Medium**; **Low** optional/non-blocking. The read-only rule **does not apply** during CREATE Phase E.
+
+List real files first — do not assume any file exists.
+
+**LOCKED entry prompt:** **`prompts/audit.md`** — always use together with **`@REVIEWER RULES`** and **`reviewer/reviewer-checklist.mdc`**.
+
+---
+
+## Mandatory trio (never audit with one file only)
+
+| Load | Purpose |
+|------|---------|
+| **`prompts/audit.md`** | Steps, invoke, report format |
+| **`@AUDIT RULES`** (this file) | Structural checklist + difficulty gate |
+| **`@REVIEWER RULES`** | Severity + fairness/triviality lens on proposed fixes |
+| **`reviewer/reviewer-checklist.mdc`** | Full Snorkel TB2 criteria — **required**, not optional |
+
+---
+
+## Audit checklist
+
+- Task type (milestone vs non-milestone), root structure, `task.toml`
+- `[environment] allow_internet = false`; timeouts per `../shared/platform-preferences.mdc`
+- `subcategories`: **`[]` only** (empty — do not assign Harbor subcategory labels)
+- Dockerfile: digest-pinned base, **tmux** + **asciinema**, pinned deps, verifier preinstalled; no tests/solution in image
+- `tests/test.sh`: bootstrap `/logs/verifier` + reward `0` + `ctrf.json` **before** guards; no runtime installs; ends with Harbor `if [ $? -eq 0 ]` block — **nothing after `fi`**
+- `instruction.md`: concise, absolute paths, no hints/canary; aligned with tests
+- Tests: docstrings, behavior (not grep-only); oracle deterministic, real fixes not hardcoded outputs
+- No leakage in `environment/` (solution, ground truth, BUG comments, hints)
+- `codebase_size` vs meaningful files; difficulty evidenced not metadata-only
+- Do not flag missing `rubric.md` or anonymous author/email
+
+---
+
+## Difficulty gate
+
+- 3–5 distinct bugs/behaviors the agent must fix (**≥5 / ≥4 modules** for new CREATE)
+- Why one-file shallow patch cannot pass — cite **Probe 1** prediction (≥60% tests still fail)
+- Why hardcoded output cannot pass
+- Which tests force real execution / rebuild-from-source
+- Likely weaker-agent mistakes
+- If one obvious edit solves it → mark **too easy (High)**; point to **`create/first-submit-acceptance-gate.mdc`** — do not approve first zip without F′
+- Go/Rust/Bash CLI export: staging artifact + decoy split + ingest-only trap — else **High**
+- Report line: **First-submit risk: Low / Medium / High** (Medium/High → F′ required before zip)
+
+---
+
+## Report format (per issue)
+
+- **severity:** High / Medium / Low (per `reviewer/reviewer-checklist.mdc` guidance)
+- **exact file/path**
+- **exact problem**
+- **exact fix** (must not trivialize or leak solution — `@REVIEWER RULES` lens)
+
+Do not say ready without evidence. Do not edit unless asked.
+
+---
+
+## Copy-paste prompt
+
+```
+@prompts/audit.md
+@AUDIT RULES
+@REVIEWER RULES
+
+Audit tasks/<name> against Terminus rules.
+
+First inspect the real task directory and list actual files. Do not assume any file exists.
+Apply reviewer/reviewer-checklist.mdc in full. Do not modify files.
+Do not flag rubric.md or author name/email.
+```
+
+After audit → fix blockers → **@VERIFY RULES** → **@ZIP RULES**.

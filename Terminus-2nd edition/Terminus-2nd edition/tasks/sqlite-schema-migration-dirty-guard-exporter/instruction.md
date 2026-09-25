@@ -1,0 +1,5 @@
+Build the hospital EHR SQLite schema migration journal applier and version ledger exporter migratectl under /app. The working baseline ingests JSONL migration journals, applies SQL steps into the SQLite database at /app/state/migrations.db with a schema_migrations row, materializes /app/state/migrate-stage.json, and supports migratectl apply and migratectl export subcommands.
+
+Apply must honor dirty-version guard invariants, deterministic post-commit version bumps, literal-safe multi-statement splitting, and failed-step down rollback accounting per /app/docs/dirty-version-guard.md and /app/docs/statement-split-literals.md. Export reads the database and stage snapshot to write /app/output/version-ledger.json using integer max-version ordering and the schema in /app/docs/version-ledger-export.md. Journal wire fields are defined in /app/docs/migration-journal-format.md.
+
+The internal/decoy package is not on the apply or export hot path. Rebuild migratectl and verify with bundled journals under /app/data.

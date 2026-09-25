@@ -1,0 +1,28 @@
+{
+  "routes": [
+    {
+      "@id": "tb3-broad",
+      "match": [{ "path": ["/tb3/api/*"], "method": ["GET"] }],
+      "handle": [{ "handler": "static_response", "body": "broad" }],
+      "terminal": true
+    },
+    {
+      "@id": "tb3-specific",
+      "match": [
+        {
+          "path": ["/tb3/api/report"],
+          "method": ["GET"],
+          "header": { "X-Scope": ["internal"] }
+        }
+      ],
+      "handle": [{ "handler": "static_response", "body": "specific" }],
+      "terminal": true
+    },
+    {
+      "@id": "tb3-fallback",
+      "match": [{ "path": ["/*"] }],
+      "handle": [{ "handler": "static_response", "body": "fallback" }],
+      "terminal": false
+    }
+  ]
+}

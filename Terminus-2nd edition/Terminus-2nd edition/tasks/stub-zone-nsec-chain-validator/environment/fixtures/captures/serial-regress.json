@@ -1,0 +1,37 @@
+{
+  "zone": "serial.drop.",
+  "soa_serial": 900,
+  "nsec3_params": {
+    "salt_hex": "f00d",
+    "iterations": 1,
+    "hash_algorithm": 1
+  },
+  "records": [
+    {
+      "owner": "serial.drop.",
+      "rtype": "NSEC",
+      "next": "m.serial.drop.",
+      "type_bitmap": ["NS", "SOA", "NSEC"]
+    },
+    {
+      "owner": "m.serial.drop.",
+      "rtype": "NSEC",
+      "next": "serial.drop.",
+      "type_bitmap": ["A", "NSEC"]
+    }
+  ],
+  "queries": [
+    {
+      "qname": "gap.serial.drop.",
+      "qtype": "TXT",
+      "expect": "invalid",
+      "soa_serial": 120
+    },
+    {
+      "qname": "gap.serial.drop.",
+      "qtype": "TXT",
+      "expect": "invalid",
+      "soa_serial": 80
+    }
+  ]
+}

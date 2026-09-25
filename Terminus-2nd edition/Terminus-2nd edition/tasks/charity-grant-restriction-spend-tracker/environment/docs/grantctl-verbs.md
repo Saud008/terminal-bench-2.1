@@ -1,0 +1,3 @@
+# grantctl verbs
+
+grantctl is the nonprofit portfolio analyzer. Verbs are load-portfolio, apply-amendments, and publish-spend-atlas. Only load-portfolio takes --scenario and optional --fixture-dir; that verb selects the fixture bundle and writes scenario_id into /app/state/grant-portfolio.db. apply-amendments and publish-spend-atlas take no scenario flags; they operate on the portfolio already stored in that database and must fail if no portfolio has been loaded. load-portfolio always clears staged tables for the active scenario id. apply-amendments never writes spend-atlas.json. publish-spend-atlas is the only verb that touches /app/output/spend-atlas.json.

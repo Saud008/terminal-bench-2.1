@@ -1,0 +1,9 @@
+{
+  "path": "d:\\Terminus-2nd edition\\Terminus-2nd edition\\tasks\\opa-bundle-signature-digest-chain-verifier-repair\\environment\\internal\\eval\\audit.go",
+  "tool": "Write",
+  "old_string": null,
+  "new_string": null,
+  "contents_len": 1000,
+  "contents": "package eval\n\nimport (\n\t\"encoding/json\"\n\t\"os\"\n)\n\ntype EvalAudit struct {\n\tBundle        string `json:\"bundle\"`\n\tSeed          string `json:\"seed\"`\n\tAllow         bool   `json:\"allow\"`\n\tBindingCount  int    `json:\"binding_count\"`\n}\n\nconst evalAuditPath = \"/app/state/eval-audit.json\"\n\nfunc WriteEvalAudit(bundleDir, seed string, res *EvalResult) error {\n\taudit := EvalAudit{\n\t\tBundle:       bundleDir,\n\t\tSeed:         seed,\n\t\tAllow:        res.Allow,\n\t\tBindingCount: len(res.Trace.Bindings) - 1,\n\t}\n\tif audit.BindingCount < 0 {\n\t\taudit.BindingCount = 0\n\t}\n\traw, err := json.MarshalIndent(audit, \"\", \"  \")\n\tif err != nil {\n\t\treturn err\n\t}\n\tif err := os.MkdirAll(\"/app/state\", 0o755); err != nil {\n\t\treturn err\n\t}\n\treturn os.WriteFile(evalAuditPath, raw, 0o644)\n}\n\nfunc LoadEvalAudit() (*EvalAudit, error) {\n\traw, err := os.ReadFile(evalAuditPath)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tvar audit EvalAudit\n\tif err := json.Unmarshal(raw, &audit); err != nil {\n\t\treturn nil, err\n\t}\n\treturn &audit, nil\n}\n",
+  "contents_omitted": false
+}

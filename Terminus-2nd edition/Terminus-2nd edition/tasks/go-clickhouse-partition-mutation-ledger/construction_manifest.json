@@ -1,0 +1,90 @@
+{
+  "task_slug": "go-clickhouse-partition-mutation-ledger",
+  "symbol_table": [
+    {"path": "internal/pipeline/partindex.go", "symbol": "buildPartIndex", "kind": "function"},
+    {"path": "internal/mutver/order.go", "symbol": "Greater", "kind": "function"},
+    {"path": "internal/replag/suppress.go", "symbol": "Suppressed", "kind": "function"},
+    {"path": "internal/detach/filter.go", "symbol": "IsDetached", "kind": "function"},
+    {"path": "internal/sqlledger/store.go", "symbol": "Upsert", "kind": "function"},
+    {"path": "internal/ledgerbuf/io.go", "symbol": "Write", "kind": "function"},
+    {"path": "internal/readiness/score.go", "symbol": "State", "kind": "function"}
+  ],
+  "oracle_frontier": [
+    {"path": "internal/pipeline/partindex.go", "fix_symbols": ["buildPartIndex"], "co_resident_helpers": [], "allowed_top_level_symbols": ["buildPartIndex"]},
+    {"path": "internal/mutver/order.go", "fix_symbols": ["Greater"], "co_resident_helpers": ["MaxVersion"], "allowed_top_level_symbols": ["Greater", "MaxVersion"]},
+    {"path": "internal/replag/suppress.go", "fix_symbols": ["Suppressed"], "co_resident_helpers": ["MaxLag"], "allowed_top_level_symbols": ["Suppressed", "MaxLag"]},
+    {"path": "internal/detach/filter.go", "fix_symbols": ["IsDetached"], "co_resident_helpers": [], "allowed_top_level_symbols": ["IsDetached"]},
+    {"path": "internal/sqlledger/store.go", "fix_symbols": ["Upsert"], "co_resident_helpers": ["Open"], "allowed_top_level_symbols": ["Upsert", "Open"]},
+    {"path": "internal/ledgerbuf/io.go", "fix_symbols": ["Write"], "co_resident_helpers": ["Read"], "allowed_top_level_symbols": ["Write", "Read"]},
+    {"path": "internal/readiness/score.go", "fix_symbols": ["State"], "co_resident_helpers": [], "allowed_top_level_symbols": ["State"]}
+  ],
+  "flipping_point_contract": {
+    "concentration_cap": 0.5,
+    "locations": [
+      {
+        "id": "partkey",
+        "path": "pipeline/partindex.go",
+        "controls_tests": [
+          "test_8a3f2e1b_reconcile_matches_refmath",
+          "test_t8d9473_8a3f2e1b_hidden_refmath_pipeline_match"
+        ]
+      },
+      {
+        "id": "mutver",
+        "path": "mutver/order.go",
+        "controls_tests": [
+          "test_8a3f2e1b_version_ladder_ten_beats_nine",
+          "test_8a3f2e1b_staging_row_order_contract"
+        ]
+      },
+      {
+        "id": "replag",
+        "path": "replag/suppress.go",
+        "controls_tests": [
+          "test_8a3f2e1b_lag_suppression_strict_gt",
+          "test_8a3f2e1b_metrics_threshold_edge_ready",
+          "test_t8d9473_8a3f2e1b_hidden_tb3_lag_suppression"
+        ]
+      },
+      {
+        "id": "detach",
+        "path": "detach/filter.go",
+        "controls_tests": [
+          "test_8a3f2e1b_detached_partition_excluded",
+          "test_t8d9473_8a3f2e1b_totals_bucket_counts"
+        ]
+      },
+      {
+        "id": "ledgerbuf",
+        "path": "ledgerbuf/io.go",
+        "controls_tests": [
+          "test_8a3f2e1b_staging_row_order_contract",
+          "test_8a3f2e1b_reconcile_writes_chledger_staging"
+        ]
+      },
+      {
+        "id": "sqlledger",
+        "path": "sqlledger/store.go",
+        "controls_tests": [
+          "test_t8d9473_8a3f2e1b_emit_idempotent_sqlite_upsert",
+          "test_t8d9473_8a3f2e1b_sqlite_row_count_floor"
+        ]
+      },
+      {
+        "id": "readiness",
+        "path": "readiness/score.go",
+        "controls_tests": [
+          "test_8a3f2e1b_metrics_threshold_edge_ready",
+          "test_t8d9473_8a3f2e1b_totals_bucket_counts"
+        ]
+      }
+    ]
+  },
+  "decoy_manifest": [
+    {
+      "path": "internal/decoy/partmerge.go",
+      "kind": "module",
+      "non_fix_purpose": "partition count average heuristic not on reconcile/emit hot path"
+    }
+  ]
+}

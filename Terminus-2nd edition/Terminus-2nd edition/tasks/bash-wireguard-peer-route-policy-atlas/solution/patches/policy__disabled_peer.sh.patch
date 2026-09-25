@@ -1,0 +1,10 @@
+--- a/internal/wgpa91/policy/disabled_peer.sh
++++ b/internal/wgpa91/policy/disabled_peer.sh
+@@ -4,6 +4,5 @@
+ is_peer_disabled() {
+   local peer_id="$1"
+   local policy_json="$2"
+-  
+-  return 1
++  echo "$policy_json" | jq -e --arg p "$peer_id" '.disabled_peers | index($p) != null' >/dev/null
+ }

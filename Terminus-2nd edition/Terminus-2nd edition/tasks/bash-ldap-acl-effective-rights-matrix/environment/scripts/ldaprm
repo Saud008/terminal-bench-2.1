@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+LDAPRM_LIB="${LDAPRM_LIB:-/app/internal/dirauth}"
+source "${LDAPRM_LIB}/common.sh"
+
+usage() { echo "usage: ldaprm ingest|export ..." >&2; exit 1; }
+
+cmd="${1:-}"; shift || usage
+case "$cmd" in
+  ingest)
+    ldif="" groups="" acls="" defaults="" staging=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --ldif) ldif="$2"; shift 2 ;;
+        --groups) groups="$2"; shift 2 ;;
+        --acls) acls="$2"; shift 2 ;;
+        --defaults) defaults="$2"; shift 2 ;;
+        --staging) staging="$2"; shift 2 ;;
+        *) usage ;;
+      esac
+    done
+    [[ -n "$ldif" && -n "$groups" && -n "$acls" && -n "$defaults" && -n "$staging" ]] || usage
+    source "${LDAPRM_LIB}/ingest/staging_writer.sh"
+    write_staging_snapshot "$ldif" "$groups" "$acls" "$defaults" "$staging"
+    ;;
+  export)
+    staging="" subjects="" out=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --staging) staging="$2"; shift 2 ;;
+        --subjects) subjects="$2"; shift 2 ;;
+        --out) out="$2"; shift 2 ;;
+        *) usage ;;
+      esac
+    done
+    [[ -n "$staging" && -n "$subjects" && -n "$out" ]] || usage
+    source "${LDAPRM_LIB}/export/matrix_builder.sh"
+    build_effective_matrix "$staging" "$subjects" "$out"
+    ;;
+  *) usage ;;
+esac

@@ -1,0 +1,88 @@
+---
+description: LOCKED — TRIVIAL/EASY summary pasted → mandatory 14-step order; no skips
+alwaysApply: true
+---
+
+# Terminus — TRIVIAL / EASY mandatory steps (LOCKED — do not skip)
+
+**Trigger (automatic):** User message has **`tasks/<slug>/` or `pending/<slug>/`** AND platform summary with **`TRIVIAL`**, **`EASY`**, **`≥3/5`**, **`4/5`**, **`5/5`**, or worst **>60%**.
+
+**Hook routes:** `prompts/trivial-fix-invoke.md` + **Case 6**. User does **not** @-tag invoke.
+
+**On conflict:** this file wins over speed, habit, or “I'll just patch one file.”
+
+---
+
+## Forbidden (instant FAIL — do not claim done)
+
+| Skip | Why blocked |
+|------|-------------|
+| Edit task files **before** Steps 1–5 | Under-fix; Case 4/5 drift |
+| Skip **`Read` `prompts/trivial-fix-invoke.md`** | Invoke is the contract |
+| Skip **§3 fix prompt** in first reply | No structural plan |
+| Use **Case 4/5 only** or `trivial-harden.md` alone | Platform will stay TRIVIAL/EASY |
+| Decorative fields only (hash/fingerprint) | Probes PASS, agents still 5/5 |
+| Skip **`terminus_auto_probes.py`** | G-028 |
+| Skip **probe table** (`trivial-hardening-probes.mdc`) | Upload blocker |
+| Skip **`create_finish_to_zip.sh`** | Standing §0 |
+| Say **ready** without oracle **1** + NOP **0** evidence | Anti-hallucination |
+| **`TERMINUS_*_SKIP`** flags without user override in **this** message | Policy |
+
+---
+
+## Mandatory order (every step — same turn or until PASS)
+
+Execute **in order**. Do **not** reorder. Do **not** merge steps.
+
+| Step | Action | Evidence in reply |
+|------|--------|-------------------|
+| **1** | Quote **2–3 facts** from platform summary (difficulty, Opus/GPT, weakest tests) | Quoted lines |
+| **2** | **`Read`** `prompts/trivial-fix-invoke.md` | “Read invoke” |
+| **3** | **`Read`** trio: `prompts/trivial.md` → `prompts/trivial-case-6.md` → `prompts/sp-hard-create-revise.md` | “Read trio” |
+| **4** | **`Read`** `prompts/trivial-repo-wide.md` + `revise/trivial-hardening-probes.mdc` | “Read probes contract” |
+| **5** | Write **`prompts/trivial-fix-invoke.md` §3** fix prompt (facts, weakest tests, **named** structural plan) | Full §3 block **before any edit** |
+| **6** | List **real** files under `tasks/<slug>/` or `pending/<slug>/` — no hallucination | Tree or file list |
+| **7** | **Case 6** edits in place only: staging artifact, decoy split, export-only bugs, ≥2 hidden traps, persistence if applicable | Files changed |
+| **8** | `terminus_auto_probes.py` | exit **0** + JSON path | **AUTO** — `trivial_easy_auto_finish` on save + prompt |
+| **9** | `preupload_agent_calibration.py --record` | verdict line (opus/gpt from saved context) | **AUTO** — same pipeline |
+| **10** | Paste **probe table** (`trivial-hardening-probes.mdc`) | PASS/FAIL table in reply | Agent — from step 8 output |
+| **11–13** | `trivial_easy_auto_finish.sh` → `create_finish_to_zip` | `jobs-local/trivial-easy-pipeline-last.json` | **AUTO** on save + prompt |
+| **12** | Oracle **1.0** + NOP **0.0** | harbor output / cache | **AUTO** inside finish |
+| **13** | `tasksubmit/<slug>.zip` + anti-spam **PASS** | pack line | **AUTO** when gates pass |
+| **14** | **Ready** only if 8–13 PASS | Explicit yes/no | Agent reports after AUTO run |
+
+**Step 5 is a hard gate:** no `StrReplace` / `Write` on `tasks/<slug>/` until §3 is in the chat.
+
+---
+
+## First-reply template (agent must match shape)
+
+```text
+## TRIVIAL/EASY — mandatory steps
+
+Facts: …
+Router: trivial-fix-invoke.md → Case 6 because …
+
+## Fix prompt (invoke §3) — BEFORE edits
+… structural plan …
+
+Steps 2–4: Read invoke + trio + probes — done.
+Step 6: Files found: …
+```
+
+## Automation (LOCKED — steps 8–14)
+
+**Hooks run these — agent does not invoke manually:**
+
+| Event | Script |
+|-------|--------|
+| TRIVIAL/EASY summary pasted | `trivial_easy_context.py` saves opus/gpt → `jobs-local/trivial-easy-context-<slug>.json` |
+| Prompt submit + task save | `./scripts/trivial_easy_auto_finish.sh <slug> --hook-mode` |
+
+Steps **1–7** remain agent work (read prompts, §3 fix prompt before edits, Case 6 code).
+
+Manual re-run (optional): `./scripts/trivial_easy_auto_finish.sh <slug> --opus 1/5 --gpt 1/5` after local smoke.
+
+- `prompts/trivial-fix-invoke.md` · `shared/trivial-first-upload-lock.mdc`
+- `revise/trivial-easy-difficulty-prompt-lock.mdc` · `sanjana-standing-requirements.mdc` §H
+- `.cursor/hooks/route-terminus-prompt.py` — injects checklist on TRIVIAL/EASY

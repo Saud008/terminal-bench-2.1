@@ -1,0 +1,7 @@
+            bucket = pending_map.pop(key, []) + [sentence]
+            idx += 1
+            while idx < len(parsed) and parsed[idx]["is_multipart"] and group_key(parsed[idx]) == key:
+                observe_rmc(parsed[idx], rmc, pending_map, use_session)
+                bucket.append(parsed[idx])
+                idx += 1
+            bucket.sort(key=lambda s: int(s["fields"][1]))

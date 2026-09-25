@@ -1,0 +1,33 @@
+{
+  "policy_version": 1,
+  "evaluated_on": "2026-06-29",
+  "tag_key_map": {
+    "cost_center": "CostCenter",
+    "environment": "Environment",
+    "owner": "Owner"
+  },
+  "provider_aliases": {
+    "aws.east": "aws",
+    "aws.west": "aws",
+    "azurerm.gov": "azurerm"
+  },
+  "module_defaults": [],
+  "deny_rules": [
+    {
+      "id": "aws-require-cc",
+      "provider_scope": "aws",
+      "require_keys": ["cost_center"],
+      "on_actions": ["create", "update"]
+    }
+  ],
+  "waivers": [
+    {
+      "id": "expired-lab",
+      "match": {
+        "resource": "aws_instance.expired_waiver"
+      },
+      "keys": ["cost_center"],
+      "expires": "2020-01-01"
+    }
+  ]
+}

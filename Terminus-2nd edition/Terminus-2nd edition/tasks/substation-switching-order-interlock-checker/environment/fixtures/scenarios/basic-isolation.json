@@ -1,0 +1,39 @@
+{
+  "scenario_id": "basic-isolation",
+  "buses": [
+    {
+      "bus_id": "bus-src"
+    },
+    {
+      "bus_id": "bus-load"
+    }
+  ],
+  "energized_sources": [
+    "bus-src"
+  ],
+  "breakers": [
+    {
+      "breaker_id": "brk-main",
+      "from_bus": "bus-src",
+      "to_bus": "bus-load",
+      "initial_state": "open"
+    }
+  ],
+  "lockouts": [
+    {
+      "tag_id": "lot-main",
+      "equipment_ids": [
+        "brk-main"
+      ],
+      "active": true
+    }
+  ],
+  "procedure": [
+    {
+      "step_index": 1,
+      "action": "close",
+      "breaker_id": "brk-main",
+      "requires_isolation": false
+    }
+  ]
+}

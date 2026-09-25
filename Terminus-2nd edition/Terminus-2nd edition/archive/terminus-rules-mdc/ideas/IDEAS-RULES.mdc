@@ -1,0 +1,32 @@
+---
+description: @IDEAS RULES — brainstorm task ideas (Phase A) (LOCKED)
+alwaysApply: false
+---
+
+# @IDEAS RULES — Task ideas (Phase A) — LOCKED
+
+**Trigger:** `@prompts/newidea.md`, "gen ideas", brainstorm.
+
+**LOCKED:** **`ideas/IDEAS-ASK-FIRST.mdc`** + **`ideas/idea-similarity-gate.mdc`** + **`prompts/newidea.md`**
+
+---
+
+## Do
+
+- On "gen ideas" → **ask** language, domain, user's idea (one message); **wait**
+- After user answers → corpus scan + **`python3 scripts/idea_similarity_gate.py`** (mandatory)
+- Cite **real** `weighted_score` from `jobs-local/idea-similarity-gate-last.json`
+- **sim > 0.10** → BLOCK — tell user nearest neighbor
+- **sim == 0.0** → **auto @CREATE** Phase A (no “build it”)
+- **0 < sim ≤ 0.10** → PASS — CREATE after user says build
+
+## Do not
+
+- Guess similarity without running the script
+- Auto 10/25 idea batches or invented domain lists
+- Write `ideas-draft.json` with agent-made titles on first turn
+- `@CREATE` when weighted **> 0.10**
+- Wait for “build it” when **sim == 0** and AUTO_CREATE=yes
+- Scan `dusre-wale/` · clone families · lane saturation (3+ same family)
+
+**sim == 0 PASS** → **@CREATE RULES** immediately. **0 < sim ≤ 0.10** → CREATE after user says build.

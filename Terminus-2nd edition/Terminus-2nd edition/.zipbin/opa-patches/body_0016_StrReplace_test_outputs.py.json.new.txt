@@ -1,0 +1,49 @@
+def _apply_partial_stubs(
+    *,
+    digest_stub: str | None = None,
+    trace_stub: str | None = None,
+    preview_stub: str | None = None,
+) -> tuple[dict[str, str], dict[str, bool]]:
+    """Swap stub sources; when a combined swap breaks compile, keep each stub that still builds."""
+    stubs = Path(__file__).parent / "stubs"
+    paths = _go_paths()
+    backups = {key: paths[key].read_text(encoding="utf-8") for key in paths}
+    mapping: dict[str, str | None] = {
+        "digest": digest_stub,
+        "trace": trace_stub,
+        "preview": preview_stub,
+    }
+    requested = [key for key, stub_name in mapping.items() if stub_name]
+
+    def _build() -> subprocess.CompletedProcess[str]:
+        return run(["go", "build", "-mod=readonly", "-o", str(CLI), "./cmd/bundlectl"], check=False)
+
+    def _restore_base() -> None:
+        for key in paths:
+            paths[key].write_text(backups[key], encoding="utf-8")
+        build_install()
+
+    def _apply_combo(combo: dict[str, str]) -> bool:
+        _restore_base()
+        for key, stub_name in combo.items():
+            shutil.copy(stubs / stub_name, paths[key])
+        return _build().returncode == 0
+
+    applied = {key: False for key in requested}
+    if not requested:
+        return backups, applied
+
+    combo = {key: mapping[key] for key in requested if mapping[key]}
+    if _apply_combo(combo):
+        return backups, {key: True for key in requested}
+
+    active: dict[str, str] = {}
+    for key in requested:
+        stub_name = mapping[key]
+        assert stub_name
+        trial = {**active, key: stub_name}
+        if _apply_combo(trial):
+            active = trial
+            applied[key] = True
+    assert _apply_combo(active), "bundlectl must compile after partial stub selection"
+    return backups, applied

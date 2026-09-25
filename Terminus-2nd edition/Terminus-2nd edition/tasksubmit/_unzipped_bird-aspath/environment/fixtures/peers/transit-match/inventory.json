@@ -1,0 +1,42 @@
+{
+  "scenario": "transit-match",
+  "critical_prefixes": [],
+  "peer_groups": [
+    {
+      "group_id": "t",
+      "filters": [
+        {
+          "filter_id": "tr",
+          "priority": 20,
+          "match_mode": "transit",
+          "asn": 64500,
+          "action": "accept"
+        }
+      ]
+    }
+  ],
+  "peers": [
+    {
+      "peer_id": "peer-c",
+      "asn": 65030,
+      "group_id": "t",
+      "wave_rank": 1,
+      "med_ceiling": 5,
+      "abort_on_critical_deny": false,
+      "community_rewrite": {},
+      "filters": []
+    }
+  ],
+  "rib": [
+    {
+      "prefix": "203.0.113.8/32",
+      "as_path": [
+        64500,
+        65088
+      ],
+      "communities": [],
+      "med": 9,
+      "peer_id": "peer-c"
+    }
+  ]
+}

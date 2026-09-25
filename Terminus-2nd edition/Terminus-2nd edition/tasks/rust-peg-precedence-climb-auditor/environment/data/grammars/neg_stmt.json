@@ -1,0 +1,25 @@
+{
+  "grammar_id": "neg_stmt",
+  "start": "guard",
+  "rules": [
+    {
+      "name": "guard",
+      "decl_order": 1,
+      "prec": 0,
+      "left_recursive": false,
+      "rhs": {
+        "type": "seq",
+        "items": [
+          {
+            "type": "pattern",
+            "value": {
+              "type": "neg_pred",
+              "inner": {"type": "token", "lit": "partial"}
+            }
+          },
+          {"type": "pattern", "value": {"type": "token", "lit": "NUMBER"}}
+        ]
+      }
+    }
+  ]
+}

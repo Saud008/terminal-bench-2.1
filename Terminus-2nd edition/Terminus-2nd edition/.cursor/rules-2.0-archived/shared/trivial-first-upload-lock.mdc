@@ -1,0 +1,164 @@
+---
+description: LOCKED — block TRIVIAL/EASY first upload; Case 6 at CREATE; auto probes before zip
+alwaysApply: true
+---
+
+# Terminus — TRIVIAL first-upload lock (LOCKED)
+
+**Problem:** Audit + oracle pass → first upload → platform **TRIVIAL** → many revise rounds. User wants **accept in one go**.
+
+**User does not repeat this.** Agents treat every **new** task and every **REVISE after TRIVIAL** as below.
+
+On conflict: **stricter** wins. This blocks zip when depth is shallow.
+
+---
+
+## When this applies
+
+| Situation | Action |
+|-----------|--------|
+| **New** task under `tasks/` or `pending/` (not in `platform_submissions.txt`) | **Case 6 shape at CREATE** — not Case 4/5 playbook |
+| Platform **TRIVIAL** / **EASY** / either model **≥3/5** | **`prompts/trivial.md` trio** → **Case 6 only** |
+| User says “ready to upload” on never-submitted slug | Full probe table + `create_finish_to_zip.sh` |
+| Agent **creates** or **revises** any task | Read this file + `create/first-submit-acceptance-gate.mdc` |
+
+**Skip F′ record only:** slug already in `scripts/platform_submissions.txt` (resubmit after platform eval).
+
+---
+
+## CREATE — mandatory shape (before first zip)
+
+Do **not** ship “fix one obvious bug” tasks. Minimum for **all** new non-milestone tasks:
+
+| # | Requirement |
+|---|-------------|
+| 1 | **≥5 interacting bugs** across **≥5 modules** (not one file) |
+| 2 | **Independent `reference_*`** in pytest — **subprocess** CLI every run |
+| 3 | **≥12** behavioral tests; **≥18** if `difficulty = "hard"` |
+| 4 | **≥3** `/app/docs/*.md` in `instruction.md`; hidden behavior split across docs |
+| 5 | **≥2 hidden traps** (`/opt/verifier-fixtures/` or `TB3_*`) — **different** failure mode than bundled |
+| 6 | **Rebuild** in `test.sh` before pytest (compiled stacks) |
+| 7 | **Auto probes PASS** — `python3 scripts/terminus_auto_probes.py --task-dir …` |
+
+### Go / Rust / Bash CLI export (LOCKED — no first upload without)
+
+Implement **`prompts/trivial-case-6.md` path A at CREATE**:
+
+- **Ingest → staging file** on disk + pytest asserts snapshot/schema
+- **Decoy module** (`wrap.go`, `merge/apply.go`, …) **not** on export hot path
+- **Export-only** bugs separate from ingest/staging
+- Probes **1b, 7, 8** PASS (decoy-only / staging / ingest-only poison)
+
+If you would not bet Opus stops after fixing **one obvious file** → still too shallow.
+
+---
+
+## REVISE — after platform TRIVIAL (mandatory)
+
+1. Load **`prompts/trivial.md`** → **`prompts/trivial-case-6.md`** → **`prompts/sp-hard-create-revise.md`**
+2. **Forbidden:** Case 4/5 only, new JSON fields on same bugs, instruction fix recipes, `difficulty` relabel
+3. **Required:** structural change (staging, decoy, persistence gate, poison-pill interaction)
+4. Re-run **`./scripts/create_finish_to_zip.sh <name>`** — probes must PASS again
+
+Second **TRIVIAL** on same slug → **new structural layer or new slug** — not more tests on same pipeline.
+
+---
+
+## Manual paste — TRIVIAL / EASY fix invoke (LOCKED)
+
+**Mandatory steps (no skips):** **`shared/trivial-fix-invoke-mandatory-steps.mdc`** — **14 steps in order**; Step 5 §3 fix prompt **before** any file edit.
+
+**Canonical copy-paste:** **`prompts/trivial-fix-invoke.md`** Section 1 (user) + Section 3 (agent-written fix prompt before edits).
+
+**Hook:** `route-terminus-prompt.py` injects Case 6 checklist when summary shows TRIVIAL/EASY.
+
+### Bad vs good (user message)
+
+| Bad | Good |
+|-----|------|
+| Fix task | Full block in `prompts/trivial-fix-invoke.md` with slug + verbatim summary + per-test table |
+| Harden it | Case 6 only + probe table + `create_finish_to_zip.sh` |
+| @trivial alone | `tasks/<slug>/` + platform summary |
+
+### Agent must reject vague messages
+
+If user sends only **fix task** / **harden** / **trivial fix** / **@trivial** without slug or platform summary → **one question only:**
+
+“Paste `tasks/<slug>/` + full platform summary (Difficulty, agents, per-test table) using `prompts/trivial-fix-invoke.md` Section 1.”
+
+Do **not** start Case 6 edits without summary + path.
+
+### Agent must write a specific fix prompt first
+
+Before editing files, agent outputs **`prompts/trivial-fix-invoke.md` Section 3** filled with real slug, agent scores, weakest tests, and **named structural plan** (staging/decoy/hidden/cross-run) — not “fix the bugs.”
+
+---
+
+## Pack / finish gates (automatic — no manual PASS lying)
+
+| Gate | Blocks zip when |
+|------|-----------------|
+| `terminus_auto_probes.py` | Any probe **FAIL** |
+| `first_submit_pack_gate.py --pack-gate` | No F′ record or **live probes ≠ PASS** |
+| **Agent calibration** (first upload) | Worst **≤20%** (hard) / **≤60%** (medium only); platform EASY needs **`--post-harden`** |
+| **Difficulty design** | `difficulty = "hard"`; no platform EASY without post-harden; per-test ≥75% at 9/10 → block |
+| `create_finish_to_zip.sh` | Audit, harbor, auto probes, pack chain |
+
+**Forbidden:** `--probe 1=PASS` by hand when `terminus_auto_probes.py` exits **1**.  
+**Forbidden:** `TERMINUS_FIRST_SUBMIT_SKIP` unless user **explicitly overrides in that message**.
+
+---
+
+## Probes PASS ≠ platform MEDIUM (LOCKED)
+
+**Evidence:** Tasks with **all auto probes PASS** still land **EASY** when Opus **4/5 (80%)** and GPT **5/5 (100%)**. Local structure gates catch **shallow** tasks; they do **not** replace **agent calibration**.
+
+### Platform bands (worst model sets the floor)
+
+| Worst model pass rate | Platform label | First-upload OK? |
+|----------------------|----------------|------------------|
+| **>80%** | Not accepted | **No** |
+| **>60% – 80%** | **EASY** (your case: 80%) | **No** — needs at least **MEDIUM** |
+| **>20% – 60%** | MEDIUM | **No** for first upload unless `difficulty = "medium"` + user accepts |
+| **≤20%** | HARD | **Yes** — **repo default target** |
+
+**Your summary:** Claude **80%** = worst model → **EASY**. GPT **100%** confirms task is still too shallow for training.
+
+### Mandatory before **first** upload (after probes PASS)
+
+Run **≥2** local benchmark runs **each** (when Harbor/API available):
+
+```bash
+stb harbor run -m @openai/gpt-5.5 -p tasks/<name>
+stb harbor run -m @anthropic/claude-opus-4-8 -p tasks/<name>
+```
+
+Record in `jobs-local/agent-smoke-<slug>.json` (or paste platform-style summary in chat).
+
+| Smoke result | Action |
+|--------------|--------|
+| Either model **≥3/5** or worst **>20%** (hard) | **Do not upload** — Case 6 deepen |
+| Worst **≤20%**, Opus **≤20%**, `--post-harden` | OK to pack + upload |
+| Probes FAIL | Fix structure first |
+
+**Do not upload hoping platform will rate MEDIUM** when local smoke or prior eval shows **>60%** worst.
+
+---
+
+## Agent reply before zip (mandatory table)
+
+Paste probe table from `revise/trivial-hardening-probes.mdc` + line:
+
+`First-upload TRIVIAL lock: PASS/FAIL — auto-probes jobs-local/auto-probes-<slug>.json`
+
+**Do not say ready** if any probe FAIL or `create-finish-last.json` verdict ≠ PASS.
+
+---
+
+## Related
+
+- **`prompts/trivial-fix-invoke.md`** — user paste + agent fix-prompt template
+- `create/first-submit-acceptance-gate.mdc` · `revise/trivial-hardening-probes.mdc` · `revise/hardness.mdc` G-028–G-035
+- `prompts/sp-hard-create-revise.md` · `prompts/trivial-case-6.md`
+- `scripts/terminus_auto_probes.py` · `scripts/preupload_agent_calibration.py` · `scripts/preupload_difficulty_design_gate.py` · `scripts/create_finish_to_zip.sh`
+- **`shared/no-easy-upload-lock.mdc`**

@@ -1,0 +1,8 @@
+package cache
+
+import "github.com/chronostack/metricrollup/internal/model"
+
+func IsExpired(entry model.CacheEntry, ttlSec int, queryMs int64) bool {
+	ageMs := queryMs - entry.LastSampleTsMs
+	return ageMs > int64(ttlSec)*1000
+}

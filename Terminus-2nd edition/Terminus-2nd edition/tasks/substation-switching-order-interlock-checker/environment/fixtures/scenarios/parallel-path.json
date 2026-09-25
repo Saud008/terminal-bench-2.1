@@ -1,0 +1,17 @@
+{
+  "scenario_id": "parallel-path",
+  "buses": [
+    {"bus_id": "bus-left"},
+    {"bus_id": "bus-mid"},
+    {"bus_id": "bus-right"}
+  ],
+  "energized_sources": ["bus-left"],
+  "breakers": [
+    {"breaker_id": "brk-lm", "from_bus": "bus-left", "to_bus": "bus-mid", "initial_state": "closed"},
+    {"breaker_id": "brk-mr", "from_bus": "bus-mid", "to_bus": "bus-right", "initial_state": "open"}
+  ],
+  "lockouts": [],
+  "procedure": [
+    {"step_index": 1, "action": "open", "breaker_id": "brk-lm", "parallel_path_guard": true}
+  ]
+}

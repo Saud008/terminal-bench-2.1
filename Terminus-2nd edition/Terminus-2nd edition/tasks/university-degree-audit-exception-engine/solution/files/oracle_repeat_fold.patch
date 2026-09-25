@@ -1,0 +1,22 @@
+--- a/internal/repeatfold/dedupe.go
++++ b/internal/repeatfold/dedupe.go
+@@ -15,13 +15,12 @@
+         if !ok {
+             continue
+         }
+-        if _, exists := seen[e.CourseCode]; exists {
+-            continue
+-        }
+-        seen[e.CourseCode] = FoldedCourse{
+-            CourseCode:  e.CourseCode,
+-            GradePoints: e.GradePoints,
+-            Credits:     c.Credits,
++        if prev, exists := seen[e.CourseCode]; !exists || e.GradePoints > prev.GradePoints {
++            seen[e.CourseCode] = FoldedCourse{
++                CourseCode:  e.CourseCode,
++                GradePoints: e.GradePoints,
++                Credits:     c.Credits,
++            }
+         }
+     }
+     out := make([]FoldedCourse, 0, len(seen))

@@ -1,0 +1,55 @@
+{
+  "scenario_id": "hold-precedence",
+  "billing_through": "2026-07-12",
+  "containers": [
+    {
+      "container_id": "CNT-PREC-55",
+      "carrier_id": "CAR-MSC"
+    }
+  ],
+  "gate_events": [
+    {
+      "container_id": "CNT-PREC-55",
+      "event": "gate_in",
+      "ts": "2026-07-01T07:00:00Z"
+    },
+    {
+      "container_id": "CNT-PREC-55",
+      "event": "gate_out",
+      "ts": "2026-07-11T16:00:00Z"
+    }
+  ],
+  "contracts": [
+    {
+      "container_id": "CNT-PREC-55",
+      "free_days": 1,
+      "currency": "USD"
+    }
+  ],
+  "holds": [
+    {
+      "hold_id": "H-CARRIER-02",
+      "container_id": "CNT-PREC-55",
+      "code": "CARRIER_DISPUTE",
+      "start": "2026-07-04",
+      "end": "2026-07-07"
+    },
+    {
+      "hold_id": "H-CUSTOMS-09",
+      "container_id": "CNT-PREC-55",
+      "code": "CUSTOMS",
+      "start": "2026-07-05",
+      "end": "2026-07-06"
+    }
+  ],
+  "closures": [],
+  "tariffs": [
+    {
+      "carrier_id": "CAR-MSC",
+      "tier1_days": 3,
+      "tier1_rate_cents": 11000,
+      "tier2_rate_cents": 16000,
+      "tier3_rate_cents": 23000
+    }
+  ]
+}

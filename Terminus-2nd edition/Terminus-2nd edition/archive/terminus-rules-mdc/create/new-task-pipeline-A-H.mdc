@@ -1,0 +1,244 @@
+---
+description: "@CREATE RULES — A→H pipeline steps (LOCKED; read with create/CREATE-RULES.mdc)"
+alwaysApply: false
+---
+
+# Terminus — New task pipeline (Phases A–H)
+
+**When:** user asks to create a **new** task under `tasks/` (Sanjana owner). Follow **A→H in order** (letters **A–H only** — not lifecycle A–F). Load **`.cursor/rules/shared/task-lifecycle.mdc`** for revise/audit context. On conflict, prefer the **stricter** rule.
+
+**READ-ONLY (never edit during A–H except the one new folder):**
+
+- `tasks/_accepted-tasks/` (platform ACCEPTED corpus — user may say “Accepted Tasks/”)
+- Every `tasks/<existing>/` folder **except** the single new `tasks/<new-unique-name>/` you create
+- `Default_Task_Skeleton/` (skeleton — user may say `_skeleton_default/`)
+- `.cursor/rules/` (rules only — no task content edits)
+
+**Do NOT** edit any existing task folder. **Do NOT** merge tasks or copy whole trees with find-replace only.
+
+---
+
+## Phase A — Read references (before ideation)
+
+1. Read **≥2 real tasks** from `tasks/_accepted-tasks/` (different shapes — e.g. Rust protocol CLI + merge CLI).
+2. Read **`Default_Task_Skeleton/`** (`task.toml`, `environment/Dockerfile`, `tests/test.sh`, structure).
+3. Read upload docs: **`tasksubmit/UPLOAD.md`** and repo-root **`upload_readme`** (user may say `tasksubmit/UPLOAD_README.txt` — use actual paths above).
+4. Skim **`.cursor/rules/shared/accepted-corpus.mdc`** + **`shared/first-pass-blueprint.mdc`**.
+
+**In reply:** cite both accepted task paths and what structural pattern you will copy (not domain/title).
+
+---
+
+## Phase B — Mandatory corpus scan + similarity gate (LOCKED)
+
+**List real folder names** (paste output or count + representative sample — do not guess):
+
+```bash
+ls tasks/
+ls tasks/_accepted-tasks/
+ls tasksubmit/*.zip 2>/dev/null | head -20
+```
+
+**Run idea gate** when intake came from user idea (Phase B or end of ENGINE_1):
+
+```bash
+python3 scripts/idea_similarity_gate.py --language ... --domain ... --title ... --summary ...
+```
+
+**Task-generation (mandatory — no skip):** idea must **not** be fix/repair/debug/broken-repo objective. Gate runs inside `idea_similarity_gate.py`. Full policy: **`shared/task-generation-mandatory.mdc`**.
+
+| Weighted sim | Action |
+|--------------|--------|
+| **> 0.10** | **STOP** — do not Phase C/D |
+| **== 0.0** | **AUTO** — proceed to Phase C implement immediately |
+| **0 < sim ≤ 0.10** | Proceed only if user confirmed build |
+
+**Build a similarity table** in the design reply:
+
+| Proposed idea | Nearest neighbor (path) | Same family? | ≥2 structural differences |
+|---------------|-------------------------|--------------|---------------------------|
+
+**Blockers (do not proceed to Phase C):**
+
+- **Debugging-shaped idea or task** — fix/repair/patch/broken repo (`shared/task-generation-mandatory.mdc`)
+- Exact or near slug match anywhere in `tasks/`, `_accepted-tasks/`, or zip names
+- Whole-tree clone with find-replace only
+- **Templated task (platform rejection / flag):** structurally near-identical to a prior submission — same pipeline shape, same bug count/modules, same test harness pattern with surface keyword swaps only — see **`shared/anti-spam-templated-submissions.mdc`**
+- **Spam pattern:** batching many same-family uploads or zip-only dumps — **block** unless user explicitly overrides
+- **Lane saturation:** do **not** create `*-custody-reconciler`, `*-ledger-repair`, or same **family** if `tasks/` already has **3+** in that lane unless **clearly distinct** domain + proved in similarity table
+- Copying domain from `_accepted-tasks/` (structure OK; domain/family not OK)
+
+Also scan **`tasksubmit/`** zips per `ideas/generate-ideas.mdc`.
+
+---
+
+## Phase C — ONE non-trivial idea → implement immediately
+
+**Phase C (ideas):** output **exactly ONE** accepted-likely idea:
+
+- Primary language **non-Python** (prefer Rust, Go, Bash — `shared/platform-preferences.mdc`)
+- Target **`difficulty = "hard"`** (medium only if strongly justified)
+- **≥5 interacting bugs/behaviors** across **3+ modules** (planned)
+- Single-container; `codebase_size = "small"` with **20+ meaningful** env files (not filler)
+
+**Then immediately implement** — do **not** stop and wait for user approval unless user explicitly asked for ideas-only.
+
+Deep spec: **`.cursor/rules/ideas/generate-ideas.mdc`** Step 2B (single deep idea).
+
+---
+
+## Phase D — Create ONLY the new task tree
+
+Create **only**:
+
+```text
+tasks/<new-unique-name>/
+tasksubmit/<new-unique-name>.zip   (after Phase G — not before F passes)
+```
+
+**Forbidden during D:**
+
+- Editing any other `tasks/<existing>/`
+- Adding `rubric.md` to the task folder (platform rubric goes in Phase H output only — `shared/repo-workflow.mdc`)
+- Copying tests/solution into `environment/`
+
+Use **`Default_Task_Skeleton/`** + ≥2 `_accepted-tasks/` references for shape. **`author_name` / `author_email`** = `anonymous` unless user overrides.
+
+**Immediately after create:** no manual step — **Cursor `postToolUse` hook** runs post-create when agent saves `task.toml`, `instruction.md`, `tests/*`, or `environment/Dockerfile`. Optional manual check: `./scripts/after_create.sh <name>`. Report: `jobs-local/anti-spam-hook-last.txt`.
+
+---
+
+## Phase E — Auto audit / fix loop (LOCKED — no user prompt)
+
+**Trigger:** **Automatically** when Phase D completes — **same chat turn**, **no stop**, **no question**.
+
+**Forbidden:** “Should I audit?”, “Want me to run audit?”, ending message at “task created”, skipping to zip without Phase E.
+
+**Load:** **`create/post-create-audit-loop.mdc`** + mandatory audit trio:
+
+```
+@prompts/audit.md
+@AUDIT RULES
+@REVIEWER RULES
+```
+
+Apply **`reviewer/reviewer-checklist.mdc`** in full. **Fix mode** (not read-only) for **High** and **Medium**.
+
+**Each round:**
+
+1. Read `jobs-local/post-create-audit-last.json` (hook already ran static gate on save) **or** `python3 scripts/post_create_audit_loop.py --task-dir tasks/<new-unique-name> --round N`
+2. Semantic audit per `prompts/audit.md` — merge with static issues; **fix High → Medium**
+3. Optional Low (non-blocking)
+4. Re-run oracle/NOP if behavior/tests/oracle/Dockerfile changed
+
+**Do not** wait for user approval between rounds. **Do not** ask user to run `after_create.sh` (hook handles static checks).
+
+**Stop when:** zero **High** and zero **Medium** (early stop OK after round 1 if clean; if round 1 had issues, minimum **2** rounds). **Max 4** rounds — then BLOCKED if still High/Medium.
+
+**Do not** say ready. **Do not** zip until Phase F + F′ pass.
+
+Loads: `create/post-create-audit-loop.mdc`, `reviewer/reviewer-checklist.mdc`, `shared/anti-trivial.mdc`, `shared/dockerfile.mdc`, `shared/runtime-verifier.mdc`, `create/first-submit-acceptance-gate.mdc`.
+
+---
+
+## Phase F — Harbor verify (automated — do not skip)
+
+**Agent runs** (subprocess OK):
+
+```bash
+./scripts/create_finish_to_zip.sh <new-unique-name>
+```
+
+Or stepwise:
+
+```bash
+python3 scripts/terminus_harbor_verify.py --task-dir tasks/<new-unique-name>
+ruff check tasks/<new-unique-name>/tests
+```
+
+WSL / evidence already collected:
+
+```bash
+./scripts/create_finish_to_zip.sh <name> --skip-harbor --oracle 1.0 --nop 0.0
+```
+
+**Do not claim ready** without oracle **1.0** and NOP **0.0** in `jobs-local/harbor-verify-<slug>.json` or create-finish record.
+
+---
+
+## Phase F′ — First-submit acceptance gate (LOCKED — automated record)
+
+**Script:** `create_finish_to_zip.sh` runs `terminus_auto_probes.py` + `first_submit_pack_gate.py --record`.
+
+**Agent still:** semantic audit per `prompts/audit.md`; deepen probes if auto-probes FAIL.
+
+1. Run **all applicable probes** (minimum: 1, 3, 4, 5; Go/Rust/Bash CLI export also 1b, 7, 8).
+2. Output **probe table** in Phase H message.
+3. **Any FAIL → do not pack** — fix in place, re-run `create_finish_to_zip.sh`.
+
+---
+
+## Phase G — Flat-root zip (inside create_finish_to_zip.sh)
+
+**LOCKED** — from repo root (`zip/ZIP-RULES.mdc`):
+
+```bash
+./scripts/pack_zip.sh <new-unique-name>
+```
+
+Script verifies: `environment/Dockerfile` + `tests/test.sh` at archive root, no nested task folder, no `rubric.md`, no backslash paths (G-027), **anti-spam/templated PASS** (if FAIL → **`shared/anti-spam-templated-submissions.mdc` § When FAIL → fix** in place, re-pack; no skip without user override).
+
+---
+
+## Phase H — ONE final message (required shape)
+
+**Single message only** — do not split verification and rubric across multiple replies.
+
+### (a) Verification table
+
+| Check | Result | Evidence |
+|-------|--------|----------|
+| Oracle | 1.0 / fail | job path or reward line |
+| NOP | 0.0 / fail | job path or reward line |
+| First-submit gate (F′) | PASS / FAIL | probe table in `first-submit-acceptance-gate.mdc` |
+| ruff | pass / fail | command output |
+| Zip path + size | | `tasksubmit/<new-unique-name>.zip` |
+| Flat-root | pass / fail | unzip listing |
+| Files touched | | list under `tasks/<new-unique-name>/` only |
+
+### (b) Upload path
+
+Full path: **`tasksubmit/<new-unique-name>.zip`** — this is what the user uploads.
+
+### (c) Platform rubric copy-paste block
+
+- **Non-milestone:** plain `Agent …, ±N` lines only (no heading, no `rubric.md` in task folder)
+- **Milestone:** `#rubric 1` / `#rubric 2` / … per milestone, then lines under each
+- **≥3 negative** criteria total; scores only **+1/+2/+3/+5** and **-1/-2/-3/-5** (never 4)
+- Do **not** mention tests, pytest, instruction.md, oracle, or pass/fail
+
+---
+
+## Copy-paste master prompt (user → Cursor)
+
+```
+Follow Phase A–H (.cursor/rules/create/new-task-pipeline-A-H.mdc).
+
+READ-ONLY: tasks/_accepted-tasks/, all tasks/* except the ONE new folder you create, Default_Task_Skeleton/, .cursor/rules/.
+
+1) Read ≥2 tasks/_accepted-tasks/ + Default_Task_Skeleton/ + tasksubmit/UPLOAD.md
+2) MANDATORY SCAN — ls tasks/ and ls tasks/_accepted-tasks/ — similarity table; prove 2+ structural differences; no lane-saturated clones
+3) Phase C: ONE non-trivial idea (≥5 bugs, non-Python, hard) — implement immediately
+4) Create ONLY tasks/<new-unique-name>/ (+ tasksubmit zip after Phase G)
+5) Phase E **auto** audit/fix loop (post-create-audit-loop.mdc) — 2–4 rounds, High→Medium→Low, no user ask
+6) **Run `./scripts/create_finish_to_zip.sh <new-unique-name>`** until exit 0 (F oracle/NOP, F′ record, G zip) — do not stop early
+7) Phase H: ONE message — verification table, First-submit gate, zip path, platform rubric block
+
+Do NOT edit any existing task folder. Do NOT say ready until `tasksubmit/<new-unique-name>.zip` exists and create-finish-last.json verdict PASS.
+```
+
+---
+
+## Revision tasks (not new creation)
+
+Existing tasks use **`shared/task-lifecycle.mdc`** revision phases (platform **D**, reviewer **D′**, final **E**, zip **F**) — not A–H. **Edit in place only**; do not run A–H on existing folders unless user explicitly requests a full rebuild as a **new** slug.

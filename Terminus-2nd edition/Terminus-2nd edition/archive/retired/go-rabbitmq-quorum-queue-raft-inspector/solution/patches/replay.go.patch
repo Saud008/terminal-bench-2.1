@@ -1,0 +1,30 @@
+--- a/internal/ocfcore/replay.go
++++ b/internal/ocfcore/replay.go
+@@ -30,12 +30,23 @@
+ 	for k, v := range base.QueueStates {
+ 		queues[k] = v
+ 	}
++	var pending []model.LogEntry
+ 
+ 	for _, e := range entries {
+-		ApplyElection(&elect, e)
+-		ApplyEntry(&commit, e)
+-		votercfg.ApplyConfig(&mem, e)
+-		if e.Kind == "queue" && Committed(commit, e.Index) {
++		switch e.Kind {
++		case "election":
++			ApplyElection(&elect, e)
++		case "commit":
++			ApplyEntry(&commit, e)
++		case "config":
++			votercfg.ApplyConfig(&mem, e)
++		case "queue":
++			pending = append(pending, e)
++		}
++	}
++
++	for _, e := range pending {
++		if Committed(commit, e.Index) {
+ 			if v, ok := e.Payload["messages"].(float64); ok {
+ 				queues[e.QueueID] = int64(v)
+ 			}

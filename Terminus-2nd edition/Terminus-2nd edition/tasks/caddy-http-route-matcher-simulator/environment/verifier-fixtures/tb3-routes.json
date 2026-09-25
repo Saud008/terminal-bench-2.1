@@ -1,0 +1,49 @@
+{
+  "routes": [
+    {
+      "id": "regexp_admin_exact",
+      "group": "tb3",
+      "terminal": true,
+      "handle_path": false,
+      "match": [
+        {"path_regexp": ["/admin"]}
+      ]
+    },
+    {
+      "id": "prefix_x_admin",
+      "group": "tb3",
+      "terminal": false,
+      "handle_path": false,
+      "match": [
+        {"path": ["/x/admin/*"]}
+      ]
+    },
+    {
+      "id": "header_bearer_fold",
+      "group": "tb3",
+      "terminal": true,
+      "handle_path": false,
+      "match": [
+        {"header": {"Authorization": ["bearer secret"]}}
+      ]
+    },
+    {
+      "id": "terminal_block_fallback",
+      "group": "tb3",
+      "terminal": true,
+      "handle_path": false,
+      "match": [
+        {"path": ["/tb3/halt"], "method": ["POST"]}
+      ]
+    },
+    {
+      "id": "tb3_handle_path_late",
+      "group": "tb3",
+      "terminal": false,
+      "handle_path": true,
+      "match": [
+        {"path": ["/tb3/halt"]}
+      ]
+    }
+  ]
+}

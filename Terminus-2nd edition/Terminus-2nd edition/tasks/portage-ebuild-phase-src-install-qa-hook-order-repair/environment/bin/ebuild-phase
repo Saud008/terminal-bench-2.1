@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC1091
+set -euo pipefail
+
+LIB="/app/lib/ebuild-phase"
+# shellcheck source=/dev/null
+source "${LIB}/common.sh"
+# shellcheck source=/dev/null
+source "${LIB}/normalize.sh"
+# shellcheck source=/dev/null
+source "${LIB}/install.sh"
+# shellcheck source=/dev/null
+source "${LIB}/qa.sh"
+# shellcheck source=/dev/null
+source "${LIB}/die.sh"
+# shellcheck source=/dev/null
+source "${LIB}/merge-ledger.sh"
+# shellcheck source=/dev/null
+source "${LIB}/driver.sh"
+
+usage() {
+  echo "usage: ebuild-phase run --tree PATH --d DEST [--phase src_install|src_test|full]" >&2
+  exit 2
+}
+
+TREE=""
+DEST=""
+PHASE="src_install"
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    run) shift ;;
+    --tree) TREE="$2"; shift 2 ;;
+    --d) DEST="$2"; shift 2 ;;
+    --phase) PHASE="$2"; shift 2 ;;
+    -h|--help) usage ;;
+    *) echo "unknown arg: $1" >&2; usage ;;
+  esac
+done
+
+[ -n "${TREE}" ] && [ -n "${DEST}" ] || usage
+[ -f "${TREE}/manifest.json" ] || { echo "missing manifest.json under ${TREE}" >&2; exit 2; }
+
+export EBUILD_TREE="${TREE}"
+export D="${DEST}"
+mkdir -p "${D}" /app/state /app/output
+
+case "${PHASE}" in
+  src_install) run_src_install "${TREE}" ;;
+  src_test) run_src_test "${TREE}" ;;
+  full) run_full "${TREE}" ;;
+  *) echo "unknown phase ${PHASE}" >&2; exit 2 ;;
+esac

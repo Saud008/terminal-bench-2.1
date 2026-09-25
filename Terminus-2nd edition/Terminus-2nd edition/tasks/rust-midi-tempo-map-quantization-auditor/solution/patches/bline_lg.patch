@@ -1,0 +1,23 @@
+--- a/bline_lg/reject.rs
++++ b/bline_lg/reject.rs
+@@ -1,8 +1,17 @@
+ use crate::types::NoteEvent;
+ 
+-        pub fn overlaps(a: &NoteEvent, b: &NoteEvent) -> bool {
+-            a.lane == b.lane && a.tick == b.tick
+-        }
++fn interval_overlap(a0: u64, a1: u64, b0: u64, b1: u64) -> bool {
++    a0 < b1 && b0 < a1
++}
++
++pub fn overlaps(a: &NoteEvent, b: &NoteEvent) -> bool {
++    if a.lane != b.lane {
++        return false;
++    }
++    let a_end = a.tick.saturating_add(a.duration);
++    let b_end = b.tick.saturating_add(b.duration);
++    interval_overlap(a.tick, a_end, b.tick, b_end)
++}
+ 
+ pub fn rejected_ids(notes: &[NoteEvent]) -> std::collections::BTreeSet<String> {
+     let mut rejected = std::collections::BTreeSet::new();

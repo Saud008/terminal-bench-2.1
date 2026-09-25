@@ -1,0 +1,178 @@
+Terminus Edition 2 — flat-root upload zip (CodeBuild / Harbor)
+================================================================
+
+USER tasks — upload:     tasksubmit\<task-name>.zip
+USER source (edit):      tasks\<task-name>\
+
+DUSRE-WALE tasks — upload:  submission-dusre-wale\<task-name>.zip
+DUSRE-WALE source (edit):   dusre-wale\<task-name>\
+
+(One folder only — not submission-wale or "submission - dusre wale".)
+
+If unsure which owner, ask before packing. Cursor: `.cursor/rules/zip/ZIP-RULES.mdc` (LOCKED).
+
+CodeBuild runs:  cp -r $CODEBUILD_SRC_DIR/* ~/tasks/tbench-task/
+
+So the ZIP ROOT must BE the task — not a folder named after the task.
+
+
+CORRECT — after unzip on Linux (archive root)
+----------------------------------------------
+
+  Non-milestone:
+    instruction.md
+    task.toml
+    environment/
+      Dockerfile
+    tests/
+      test.sh
+      test_outputs.py
+    solution/
+      solve.sh
+
+  Milestone (Harbor multi-step):
+    task.toml
+    environment/
+    steps/milestone_1/instruction.md
+    steps/milestone_1/tests/test.sh
+    steps/milestone_1/solution/solve.sh
+    steps/milestone_2/...
+    steps/milestone_3/...
+    (No root instruction.md, tests/, solution/, or milestone_N.md)
+
+
+WRONG layouts (static check fails)
+----------------------------------
+
+  1) Nested task folder (Explorer "Compress folder" from parent):
+       my-task/
+         instruction.md
+         environment/
+         tests/test.sh
+
+  2) Zipping tasks/ or tasksubmit/ parent, or zip inside zip.
+
+  3) Windows Compress-Archive (PowerShell) — BACKSLASH PATHS:
+       Zip entries look like:  environment\Dockerfile   tests\test.sh
+       On Linux they do NOT become environment/ and tests/ directories.
+       Symptom: milestone_1.md PASSES but environment/ and tests/test.sh FAIL.
+       Fix: use tar or pack_zip.ps1 below — never Compress-Archive for upload.
+
+
+HOW TO PACK (flat root, forward slashes)
+----------------------------------------
+
+Always:  cd into the LIVE task folder first.  Pack contents, not the parent folder.
+
+  Linux / Git Bash — USER (tasks/):
+    cd tasks/<task-name>
+    zip -r ../../tasksubmit/<task-name>.zip . \
+      -x "**/.pytest_cache/*" -x "**/.ruff_cache/*" -x "output/*" -x "jobs/**" \
+      -x "**/__pycache__/*" -x "**/*.pyc"
+
+  Linux / Git Bash — DUSRE-WALE:
+    cd dusre-wale/<task-name>
+    zip -r ../../submission-dusre-wale/<task-name>.zip . \
+      -x "**/.pytest_cache/*" -x "**/.ruff_cache/*" -x "output/*" -x "jobs/**" \
+      -x "**/__pycache__/*" -x "**/*.pyc"
+
+  Windows — Option A (tar; use for every upload):
+    cd tasks\<task-name>
+    tar -a -cf ..\..\tasksubmit\<task-name>.zip ^
+      --exclude=.pytest_cache --exclude=.ruff_cache --exclude=output --exclude=jobs ^
+      --exclude=**/__pycache__ ^
+      instruction.md task.toml environment tests solution
+
+    Milestone task (no root instruction.md / tests / solution):
+    tar -a -cf ..\..\tasksubmit\<task-name>.zip ^
+      --exclude=.pytest_cache --exclude=.ruff_cache --exclude=output --exclude=jobs ^
+      --exclude=**/__pycache__ ^
+      task.toml environment steps
+
+  Windows — Option B (pack_zip.ps1 in task folder; best):
+    cd tasks\<task-name>
+    powershell -ExecutionPolicy Bypass -File pack_zip.ps1
+    Writes tasksubmit\<task-name>.zip and checks flat root + no backslashes in zip.
+
+
+VERIFY BEFORE UPLOAD
+--------------------
+
+  PowerShell (after pack_zip.ps1 or tar):
+
+    $z = "tasksubmit\<task-name>.zip"
+    $v = Join-Path $env:TEMP "zip_check"
+    Remove-Item $v -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Path $v | Out-Null
+    tar -xf $z -C $v
+    Test-Path "$v\environment\Dockerfile"    # True
+    Test-Path "$v\tests\test.sh"            # True
+    Test-Path "$v\<task-name>\environment"  # False (no nested root)
+
+  Optional — no backslash paths inside zip (Linux safety):
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $zip = [System.IO.Compression.ZipFile]::OpenRead((Resolve-Path $z))
+    ($zip.Entries | Where-Object { $_.FullName -match '\\' }).Count  # must be 0
+    $zip.Dispose()
+
+  Do NOT rely only on Expand-Archive for verification — it hides the backslash bug.
+
+
+DO NOT PUT IN THE ZIP
+---------------------
+  .pytest_cache/  .ruff_cache/  output/  jobs/  __pycache__/  *.pyc
+  environment/target/  environment/app/build/  (if present)
+
+
+DO NOT USE FOR HARBOR UPLOAD
+----------------------------
+  Compress-Archive
+  Right-click → Compress to ZIP on the task folder from outside the folder
+  zip from repo root without cd into tasks\<task-name>
+
+
+task.toml (Harbor static checks — copy this block)
+--------------------------------------------------
+  [agent]
+  timeout_sec = 1800
+
+  [verifier]
+  timeout_sec = 900
+
+  [environment]
+  allow_internet = false
+  build_timeout_sec = 900.0
+  cpus = 2
+  memory_mb = 4096
+  storage_mb = 10240
+  workdir = "/app"
+
+  build_timeout_sec: use 600.0 or 900.0 only (pick one; 900.0 for heavy C++/Qt builds).
+
+  Milestone tasks (number_of_milestones > 0) ALSO need:
+    steps/milestone_N/instruction.md, tests/test.sh, solution/solve.sh per step
+    [[steps]] with [steps.agent] and [steps.verifier] per milestone
+    Root [agent] and [verifier] (CodeBuild static checks)
+
+
+MORE DETAIL
+-----------
+  upload.md (repo root)
+  .cursor/rules/zip/ZIP-RULES.mdc  (LOCKED — Cursor must follow)
+  .cursor/rules/shared/repo-workflow.mdc
+  tasks/PACKAGING.md (if present)
+
+This repo does NOT require rubric.md in the zip.
+
+
+PLATFORM SUBMISSION FORM (website — not in zip)
+----------------------------------------------
+  Approved canonical base image?
+    Yes  — first FROM matches canonical image for stack (+ @sha256 digest)
+    No   — fill justification textbox (why non-canonical is required)
+
+  Task Inspiration ID
+    Required if task is based on a gallery inspiration (ID under title on website)
+    Blank if original idea (not from gallery)
+
+  See .cursor/rules/shared/platform-preferences.mdc section 6 for canonical FROM table.

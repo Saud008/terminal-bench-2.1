@@ -1,0 +1,48 @@
+--- internal/splitpath/resolve.go
++++ internal/splitpath/resolve.go
+@@ -5,14 +5,23 @@
+     "sort"
+ 
+     "github.com/terminus/coreidx/internal/model"
++    "github.com/terminus/coreidx/internal/symcatalog"
+ )
+ 
+-func ResolveSymbol(entry model.CatalogEntry, fileOffset uint64, mappedPath string) string {
++func ResolveSymbol(entry model.CatalogEntry, fileOffset uint64, mappedPath string, cat *symcatalog.Index) string {
+     symbols := entry.Symbols
+     if entry.Stripped {
+         if entry.DebugPath != "" {
+-            if alt, ok := lookupFile(entry.DebugPath, fileOffset); ok {
+-                return alt
++            if alt, ok := cat.LookupPath(entry.DebugPath); ok {
++                if sym := lookupNearest(alt.Symbols, fileOffset); sym != "" {
++                    return sym
++                }
++            }
++        }
++        dbg := filepath.Join(filepath.Dir(mappedPath), ".debug", filepath.Base(mappedPath))
++        if alt, ok := cat.LookupPath(dbg); ok {
++            if sym := lookupNearest(alt.Symbols, fileOffset); sym != "" {
++                return sym
+             }
+         }
+         return lookupNearest(symbols, fileOffset)
+@@ -20,10 +29,6 @@
+     return lookupNearest(symbols, fileOffset)
+ }
+ 
+-func lookupFile(path string, off uint64) (string, bool) {
+-    return "", false
+-}
+-
+ func lookupNearest(symbols []model.SymbolEntry, off uint64) string {
+     if len(symbols) == 0 {
+         return ""
+@@ -40,7 +45,3 @@
+     }
+     return best
+ }
+-
+-func Basename(path string) string {
+-    return filepath.Base(path)
+-}

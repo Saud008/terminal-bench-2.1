@@ -1,0 +1,21 @@
+--- a/src/idcanon/canon.rs
++++ b/src/idcanon/canon.rs
+@@ -10,7 +10,17 @@
+     } else {
+         format!("pkg:cargo/{trimmed_name}@{trimmed_version}")
+     };
+-    base
++    if let Some(slash) = base.find('/') {
++        let prefix = &base[..slash];
++        let rest = &base[slash..];
++        let lowered = prefix
++            .split(':')
++            .map(|part| part.to_ascii_lowercase())
++            .collect::<Vec<_>>()
++            .join(":");
++        return format!("{lowered}{rest}");
++    }
++    base.to_ascii_lowercase()
+ }
+ 
+ pub fn collapse_packages(raw: &[RawPackage]) -> Vec<(String, String, String, String)> {

@@ -1,0 +1,47 @@
+--- src/manifest_writer/mod.rs
+
++++ src/manifest_writer/mod.rs
+
+@@ -35,7 +35,7 @@
+
+     let mut missing_sum = 0u64;
+
+     for row in &staged {
+
+         expected_sum += row.expected_chunk_count;
+
+-        missing_sum += row.present_chunk_count;
+
++        missing_sum += row.missing_chunk_keys.len() as u64;
+
+         arrays.push(ExportedArray {
+
+             name: row.array_name.clone(),
+
+             shape: row.shape.clone(),
+
+@@ -45,11 +45,6 @@
+
+             compressor_fingerprint: row.compressor_fingerprint.clone(),
+
+             coordinate_span: row.coordinate_span.clone(),
+
+         });
+
+-        let _ = CompressorSpec {
+
+-            id: row.compressor_fingerprint.clone(),
+
+-            level: 0,
+
+-            shuffle: 0,
+
+-        };
+
+     }
+
+     arrays.sort_by(|a, b| a.name.cmp(&b.name));
+
+     let manifest = ConsolidatedManifest {
+
+

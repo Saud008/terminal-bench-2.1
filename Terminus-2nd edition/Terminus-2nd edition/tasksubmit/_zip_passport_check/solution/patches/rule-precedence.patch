@@ -1,0 +1,22 @@
+--- environment/internal/rules/precedence.go
++++ environment/internal/rules/precedence.go
+@@ -2,7 +2,6 @@
+ 
+ import "github.com/terminus/borderdocctl/internal/model"
+ 
+-// EffectiveMaxStay picks the applicable max_stay cap for a port.
+ func EffectiveMaxStay(portCode string, ruleRows []model.Rule) int {
+ 	federal := 0
+ 	portCap := 0
+@@ -18,8 +17,8 @@
+ 			}
+ 		}
+ 	}
+-	if portCap > 0 {
+-		return portCap
++	if federal > 0 {
++		return federal
+ 	}
+-	return federal
++	return portCap
+ }

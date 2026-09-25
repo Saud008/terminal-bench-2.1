@@ -1,0 +1,90 @@
+---
+description: "@ZIP RULES — pack flat tasksubmit zip via scripts/ only (LOCKED)"
+alwaysApply: false
+---
+
+# @ZIP RULES — Pack upload zip (Phase G)
+
+**Gate:** **@VERIFY RULES** passed — Oracle **1**, NOP **0**. **Unacceptable-class: PASS** — all 8 classes (`scripts/unacceptable_class_gate.py` — **hard block** in `pack_zip.sh`; zero tolerance). **First-submit gate (F′):** `jobs-local/first-submit-<name>.json` with `verdict: PASS`. **Anti-spam/templated: PASS** (automatic; if FAIL → fix in place § When FAIL, re-pack).
+
+**LOCKED:** Use **only** `scripts/` pack tools. **Never** manual `zip -r`, `Compress-Archive`, or Explorer compress for upload. **Never** `TERMINUS_ANTI_SPAM_SKIP` or `TERMINUS_FIRST_SUBMIT_SKIP` unless user explicitly overrides in the current message.
+
+---
+
+## Path (LOCKED)
+
+| Live | Zip |
+|------|-----|
+| `tasks/<name>/` | `tasksubmit/<name>.zip` |
+
+Flat root — `task.toml` at archive top. **No** nested folder. **No** `rubric.md`. **`subcategories = []`** in every `task.toml`. **`category`** must not be `debugging` or `software-engineering` (`shared/task-toml-category-gate.mdc`).
+
+---
+
+## Pack commands (LOCKED — copy exactly)
+
+**One task (Mac / Linux / WSL):**
+
+```bash
+./scripts/pack_zip.sh <task-name>
+```
+
+**Milestone task:**
+
+```bash
+./scripts/pack_zip.sh <task-name> --milestone
+```
+
+**All tasks under `tasks/`:**
+
+```bash
+./scripts/pack-all-upload-zips.sh
+# same as: ./scripts/pack_zip.sh --all
+```
+
+**Windows:**
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\pack_zip.ps1 -TaskName <task-name>
+powershell -ExecutionPolicy Bypass -File scripts\pack_zip.ps1 -TaskName <task-name> -Milestone
+```
+
+---
+
+## What `pack_zip.sh` does (do not duplicate by hand)
+
+0. **Canonical ECR (automatic):** `migrate_dockerfile_canonical_ecr.py --ensure` on the task.
+0b. **`subcategories = []` (automatic):** `ensure_subcategories_empty.py --ensure` on the task.
+0c. **`category` blocklist (automatic):** `ensure_category_allowed.py --check` on the task.
+0d. **Anti-spam / templated (automatic):** `terminus_anti_spam_auto.py pack`; on FAIL blocks zip — fix per **`shared/anti-spam-templated-submissions.mdc` § When FAIL → fix** (not skip).
+0e. **Unacceptable-class (automatic):** `unacceptable_class_gate.py --pack-gate` — **all 8** must PASS; any FAIL blocks zip (`shared/unacceptable-task-classes.mdc`).
+0f. **First-submit F′ (automatic):** `first_submit_pack_gate.py --pack-gate` — blocks zip until `--record` PASS; skip if slug in `scripts/platform_submissions.txt`.
+0g. **Preflight (automatic):** `terminus_ci_check.py --pack-gate` — CI + LLMaJ + category + files (`jobs-local/ci-check-last.txt`).
+0h. **Register packed slug (automatic):** `scripts/packed_for_upload.txt` after successful zip.
+1. `cd tasks/<name>/` then `zip -r tasksubmit/<name>.zip .`
+2. Excludes: `.pytest_cache`, `.ruff_cache`, `output/`, `jobs/`, `__pycache__`, `*.pyc`, `environment/target/`, `rubric.md`
+3. Verifies flat root: `task.toml`, `environment/Dockerfile`, `tests/test.sh` (non-milestone)
+4. Verifies **G-026:** `tests/test_outputs.py` in zip (non-milestone)
+5. Verifies **G-027:** no backslash paths in zip entries
+6. Rejects nested `<task-name>/` folder at zip root
+7. Rejects `rubric.md` inside zip
+
+---
+
+## Forbidden (CI / Harbor fail)
+
+| Do not | Why |
+|--------|-----|
+| `zip -r` by hand | Wrong excludes, no G-026/G-027 checks |
+| `Compress-Archive` from repo root | Nested folder + backslashes (G-027) |
+| Zip `tasks/` or `tasksubmit/` as root | Wrong layout |
+| Include `rubric.md` | Repo policy |
+| `dusre-wale/` / `submission-dusre-wale/` | Not this workflow |
+
+---
+
+## Optional verify (if script exists)
+
+```bash
+python scripts/terminus_verify_submit.py --task-dir tasks/<name> --zip tasksubmit/<name>.zip
+```

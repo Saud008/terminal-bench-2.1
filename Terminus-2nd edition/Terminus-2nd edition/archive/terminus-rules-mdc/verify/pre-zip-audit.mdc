@@ -1,0 +1,241 @@
+---
+description: Pre-zip local audit — oracle, NOP, verifier, Harbor checks, instruction-test alignment (run before upload)
+globs: tasks/**/* (LOCKED)
+alwaysApply: false
+---
+
+# Terminus — Pre-zip local verification (before upload)
+
+**Lifecycle Phase E** (verify), **Phase F′** (first-submit gate — first upload), and **Phase F** (zip). Load **`../create/first-submit-acceptance-gate.mdc`** when the slug is not in `scripts/platform_submissions.txt` and the task is non-milestone. Also load **`.cursor/rules/shared/task-lifecycle.mdc`**, **`shared/WORKFLOW-MAP.mdc`**, **`.cursor/rules/zip/ZIP-RULES.mdc`**, **`.cursor/rules/reviewer/ci-checks-reference.mdc`**, **`.cursor/rules/reviewer/llmaj-checks-reference.mdc`**, and **`.cursor/rules/reviewer/agent-review-reference.mdc`**.
+
+Use when the user asks for a **pre-zip audit**, **pre-submit check**, or **before zipping** a task under `tasks/<task-name>/`.
+
+**Do not modify files** unless the user asks. **Do not claim ready** without real file reads and command output.
+
+---
+
+## User trigger (copy-paste)
+
+Replace `<<task-name>>` and optional API block:
+
+```
+Pre-zip audit for tasks/<<task-name>>. Run the full checklist in verify/pre-zip-audit.mdc. Do not edit files. Evidence only.
+
+API (optional — for agent runs):
+export OPENAI_API_KEY=<<key>>
+export OPENAI_BASE_URL=https://api.portkey.ai/v1
+```
+
+**Minimal trigger:** `Pre-zip audit — tasks/<<task-name>>` (agent loads this rule when working under `tasks/`).
+
+---
+
+## Step 0 — Inspect real files (no assumptions)
+
+1. List the actual task directory tree.
+2. Compare structure against **`shared/accepted-corpus.mdc`** and **≥2** tasks in `tasks/_accepted-tasks/` (same language/shape if possible).
+3. State task type: **non-milestone** OR **milestone** (structure + `task.toml`).
+4. Read and summarize: `task.toml`, `instruction.md` (or `steps/milestone_N/instruction.md`), `environment/Dockerfile`, `tests/test.sh`, `tests/test_outputs.py` (or `test_mN.py`), `solution/solve.sh` (and `solveN.sh` if milestone).
+5. Every claim in the final report must cite a **file path**, **line**, or **command output**. If not run or not read, say **not verified**.
+
+---
+
+## Step 1 — Local Harbor runs (run commands)
+
+From repo root, run and capture full output:
+
+### 1. Oracle (must PASS)
+
+```bash
+stb harbor run -a oracle -p ./tasks/<name> --debug --force-build
+```
+
+### 2. Verifier after oracle
+
+Confirm from oracle run (or re-run if needed): pytest/all tests pass, **`/logs/verifier/reward.txt` = 1**.
+
+### 3. NOP — clean environment without oracle (must FAIL)
+
+Run verifier on environment **without** applying `solution/solve.sh` (fresh container / clean state).
+
+→ Must **FAIL** with **reward 0**. Do not apply oracle before this check.
+
+### 4. reward.txt always written
+
+Inspect `tests/test.sh`: writes **`0` or `1`** to `/logs/verifier/reward.txt` on both success and failure; **no partial rewards**; must not exit before writing reward. File must **end** with Harbor block using **`if [ $? -eq 0 ]`** (not `PYTEST_RC`); **no lines after `fi`** — see `zip/ZIP-RULES.mdc`.
+
+### 4b. `task.toml` category (LOCKED)
+
+`category` must **not** be `debugging` or `software-engineering` (project blocklist — CodeBuild error). See `shared/task-toml-category-gate.mdc`.
+
+### 5. Static CI
+
+```bash
+harbor tasks check tasks/<<task-name>> -m openai/@openai/gpt-5.5
+```
+
+Report pass/fail per check (pinned deps, tests not in image, absolute paths, etc.).
+
+### 6. Agent difficulty (if API key provided; else SKIP)
+
+Run **2–3 times** each (platform difficulty benchmark models — thresholds unchanged):
+
+```bash
+harbor run -a terminus-2 -m openai/@openai/gpt-5.5 -p tasks/<<task-name>>
+harbor run -a terminus-2 -m anthropic/@anthropic/claude-opus-4-8 -p tasks/<<task-name>>
+```
+
+Platform metrics label these as `terminus-gpt5-5` and `terminus-claude-opus-4-8`. Stronger than legacy GPT-5.2 / Opus 4.6 — recalibrate hardness if pass rates drift up.
+
+- **Worst-model pass rate must be &lt; 80%** (not easy).
+- **Hard:** best ≤20% OR worst ≤20%.
+- **Medium:** worst &gt;20% and ≤60%.
+- **Easy:** worst &gt;60% and ≤80% → **blocker for submit**.
+
+If any command fails or Harbor is unavailable, list what must be run manually.
+
+---
+
+## Step 1b — Phase F′ first-submit gate (first upload only)
+
+**Skip when:** milestone task (`steps/` + `task.toml`); slug already in `scripts/platform_submissions.txt`.
+
+**After** oracle **1.0** and NOP **0.0**:
+
+1. Run applicable probes from **`create/first-submit-acceptance-gate.mdc`** + **`revise/trivial-hardening-probes.mdc`** — include full probe table in report.
+2. If all required probes **PASS**, record:
+
+```bash
+python3 scripts/first_submit_pack_gate.py --record --task-dir tasks/<<task-name>> \
+  --oracle 1.0 --nop 0.0 \
+  --probe 1=PASS --probe 3=PASS --probe 4=PASS --probe 5=PASS \
+  --probe 1b=PASS --probe 7=PASS --probe 8=PASS
+```
+
+(Go/Rust/Bash export CLI: include probes **1b, 7, 8**; persistence tasks: probe **2** when applicable.)
+
+3. Verify pack gate (also enforced by `terminus_verify_submit.py` and `pack_zip.sh`):
+
+```bash
+python3 scripts/first_submit_pack_gate.py --pack-gate --task-dir tasks/<<task-name>>
+python3 scripts/terminus_verify_submit.py --task-dir tasks/<<task-name>>
+```
+
+→ Must **PASS** before `./scripts/pack_zip.sh` will write a zip (`jobs-local/first-submit-last.txt`).
+
+**Any FAIL → Ready to zip: NO** (even if oracle/NOP passed).
+
+---
+
+## Step 2 — File and schema checks (read actual files)
+
+### task.toml
+
+- `version = "2.0"`
+- `[metadata]`: author_name, author_email, category, subcategories, difficulty, codebase_size, number_of_milestones, languages, tags, expert_time_estimate_min, junior_time_estimate_min
+- **Non-milestone:** `[agent]` timeout_sec, `[verifier]` timeout_sec
+- **Milestone:** `[[steps]]` count = `number_of_milestones`; per-step timeouts; **no** root `[agent]` / `[verifier]`
+- `[environment]`: build_timeout_sec, cpus, memory_mb, storage_mb, **`workdir = "/app"`**, **`allow_internet = false`**
+
+### Milestone root hygiene (if milestone)
+
+- **No** root `instruction.md`, `tests/`, `solution/`, `milestones.md`, `milestone_*.md`
+- Each `steps/milestone_N/`: `instruction.md`, `tests/test.sh`, `tests/test_mN.py` (class `TestMilestoneN`), `solution/solve.sh`, `solution/solveN.sh`
+
+### Dockerfile / environment
+
+- **Platform form:** “Approved canonical base image?” → **Yes** only if final runtime `FROM` matches `shared/canonical-base-image-gate.mdc` (exact digest); else **No**
+- Every `FROM` uses **`@sha256:`** digest (or flag High/blocker)
+- **`tmux`** and **`asciinema`** installed
+- App + **verifier** deps pinned; verifier in Dockerfile (e.g. pytest), **not** installed in `test.sh`
+- **No** `COPY` of `tests/` or `solution/` into image
+- **No** solution, ground truth, expected outputs, or hidden hints under `environment/`
+- **No** runtime installs in `tests/test.sh` (no pip/curl/apt/uv/uvx/npm install)
+- **Rust tasks:** `FROM --platform=linux/amd64`, amd64 manifest digest, `CARGO_INCREMENTAL=0`, `build_timeout_sec` ≥ 900, verifier `pytest==9.0.3` / `pytest-json-ctrf==0.5.0` (`shared/platform-preferences.mdc` §5)
+
+### instruction.md
+
+- Concise, realistic prompt; no step-by-step solution hints
+- **Absolute paths** only (`/app/...`)
+- Every tested output/schema stated or clearly implied
+- No canary string; no task name in instruction
+
+### tests
+
+- Map each test → instruction requirement; map each requirement → test(s)
+- Behavior/correctness, not only existence or source grep
+- Test docstrings; real anti-cheat (not paste-only checks)
+
+### solution
+
+- Deterministic; no web downloads; no hardcoded final answers only
+
+### rubric
+
+- **This repo:** `rubric.md` usually omitted — skip file check; remind user to edit **platform-generated rubric** after upload (≥3 negative criteria).
+- **If `rubric.md` exists or user pasted rubric:** each line starts with `Agent`, ends with `, <score>`; scores ∈ {±1, ±2, ±3, ±5}; ≥3 negatives; no tests/pytest/instruction.md/task.toml/oracle/NOP mentions.
+
+### codebase_size
+
+- Count meaningful `environment/` files; justify vs `task.toml` (minimal / small / large).
+
+### ZIP
+
+Flat-root archive (`task.toml` at zip root, not nested folder). **`pack_zip.sh` hard-blocks** until Phase F′ PASS is recorded (first upload) and anti-spam PASS:
+
+```bash
+python3 scripts/first_submit_pack_gate.py --pack-gate --task-dir tasks/<<task-name>>   # first upload
+./scripts/pack_zip.sh <<task-name>>
+```
+
+---
+
+## Step 3 — Mandatory output format
+
+### A. Evidence table
+
+| Check | PASS / FAIL / SKIP | Evidence |
+|-------|-------------------|----------|
+| Oracle pass | | |
+| Verifier after oracle (reward 1) | | |
+| NOP without oracle (reward 0) | | |
+| reward.txt always written | | test.sh |
+| task.toml schema + timeouts | | |
+| Milestone forbidden root files | | |
+| Dependencies pinned | | Dockerfile |
+| Absolute paths in instruction | | |
+| Instruction ↔ tests aligned | | |
+| No leakage in environment | | |
+| Rubric (if applicable) | | |
+| Agent difficulty not easy (&lt;80% worst) | | |
+| Dockerfile digest / tmux / asciinema | | |
+| Anti-spam / templated (similarity + family) | | automatic in `./scripts/pack_zip.sh` → `jobs-local/anti-spam-last.txt` |
+| First-submit gate F′ (first upload) | | `first_submit_pack_gate.py --pack-gate` → `jobs-local/first-submit-last.txt` |
+
+### B. Instruction ↔ test mapping
+
+| Requirement | Test(s) |
+|-------------|---------|
+| … | … |
+
+### C. Issues
+
+Per issue: **Severity** (High/Medium/Low), **file/path**, **problem**, **exact fix**.
+
+### D. Final verdict
+
+- **Ready to zip:** YES / NO
+- **Ready for reviewer** (platform CI + rubric): YES / NO / NOT YET
+- **Commands run** (with exit codes)
+- **Commands not run**
+- **Difficulty:** confirmed from agent runs OR **target only**
+
+Do not say “should pass CI” or “ready” without evidence.
+
+---
+
+## Repo-specific reminders (`shared/repo-workflow.mdc`)
+
+- `author_name` / `author_email` = `anonymous` is **required** here — not a defect.
+- New tasks: `difficulty` = **medium** or **hard** only.
+- Prefer stricter rules over older platform doc examples (e.g. no `uvx` in `test.sh`).

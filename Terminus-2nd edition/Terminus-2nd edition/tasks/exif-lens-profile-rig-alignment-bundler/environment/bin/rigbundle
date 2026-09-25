@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# rigbundle — dispatch ingest / align / export / run subcommands.
+set -euo pipefail
+
+APP_ROOT="${APP_ROOT:-/app}"
+export APP_ROOT
+
+usage() {
+  cat <<'EOF'
+Usage:
+  rigbundle ingest --exif <captures.jsonl> --mount <inventory.json>
+  rigbundle align --lenses <profiles.json> --checkerboard <board.jsonl>
+  rigbundle export
+  rigbundle run --exif <captures.jsonl> --mount <inventory.json> --lenses <profiles.json> --checkerboard <board.jsonl>
+EOF
+  exit 1
+}
+
+[ $# -ge 1 ] || usage
+cmd="$1"
+shift
+
+case "${cmd}" in
+  ingest) exec bash "${APP_ROOT}/scripts/ingest.sh" "$@" ;;
+  align) exec bash "${APP_ROOT}/scripts/align.sh" "$@" ;;
+  export) exec bash "${APP_ROOT}/scripts/export.sh" "$@" ;;
+  run) exec bash "${APP_ROOT}/scripts/run.sh" "$@" ;;
+  *) usage ;;
+esac

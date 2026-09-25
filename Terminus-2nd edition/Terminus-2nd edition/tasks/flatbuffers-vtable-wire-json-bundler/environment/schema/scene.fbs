@@ -1,0 +1,33 @@
+namespace scene;
+
+struct Vec3 (force_align: 4) {
+  x: float;
+  y: float;
+  z: float;
+}
+
+table Metrics {
+  distance_m: float = 1.0;
+  flag_count: ushort;
+}
+
+table Tag {
+  key: string;
+  value: string;
+}
+
+table Entity {
+  id: uint;
+  name: string;
+  position: Vec3;
+  tags: [Tag];
+  parent: Entity;
+  metrics: Metrics;
+}
+
+table Scene {
+  revision: uint;
+  root: Entity;
+}
+
+root_type Scene;

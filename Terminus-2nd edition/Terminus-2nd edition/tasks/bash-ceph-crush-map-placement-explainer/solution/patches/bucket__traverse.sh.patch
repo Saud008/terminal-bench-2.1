@@ -1,0 +1,23 @@
+--- a/internal/crpe91/bucket/traverse.sh
++++ b/internal/crpe91/bucket/traverse.sh
+@@ -12,11 +12,17 @@
+ by_name = {b["name"]: b for b in crush["buckets"]}
+ root = by_name[root_name]
+ hosts = []
+-for child in root.get("children", []):
+-    bid = int(child["id"])
++
++def walk(bid):
+     b = bmap[bid]
+-    if b["type"] == "rack":
++    if b["type"] == "host":
+         hosts.append(b)
++        return
++    for child in b.get("children", []):
++        walk(int(child["id"]))
++
++walk(int(root["id"]))
++hosts.sort(key=lambda h: h["name"])
+ print(json.dumps(hosts))
+ PY
+ }

@@ -1,0 +1,96 @@
+{
+  "scenario_id": "dual-pass-basic",
+  "constellation_id": "LEO-A",
+  "sensor_profile": {
+    "sensor_id": "MSI-1",
+    "default_mode": "stripmap"
+  },
+  "pass_windows": [
+    {
+      "pass_id": "P1",
+      "orbit_id": "O101",
+      "start_sec": 1000,
+      "end_sec": 1120,
+      "cells": [
+        "C-A1",
+        "C-A2"
+      ]
+    },
+    {
+      "pass_id": "P2",
+      "orbit_id": "O102",
+      "start_sec": 2000,
+      "end_sec": 2060,
+      "cells": [
+        "C-B1"
+      ]
+    }
+  ],
+  "imaging_requests": [
+    {
+      "request_id": "R1",
+      "cell_id": "C-A1",
+      "mode": "stripmap",
+      "priority_tier": 2,
+      "contract_id": "K1",
+      "imaging_duration_sec": 30
+    },
+    {
+      "request_id": "R2",
+      "cell_id": "C-A2",
+      "mode": "stripmap",
+      "priority_tier": 1,
+      "contract_id": "K2",
+      "imaging_duration_sec": 30
+    },
+    {
+      "request_id": "R3",
+      "cell_id": "C-B1",
+      "mode": "spotlight",
+      "priority_tier": 3,
+      "contract_id": "K3",
+      "imaging_duration_sec": 25
+    }
+  ],
+  "sensor_modes": {
+    "stripmap": {
+      "cold_setup_sec": 12,
+      "warm_setup_sec": 6
+    },
+    "spotlight": {
+      "cold_setup_sec": 18,
+      "warm_setup_sec": 10
+    }
+  },
+  "cloud_forecasts": [
+    {
+      "pass_id": "P1",
+      "cell_id": "C-A1",
+      "risk_score": 0.1
+    },
+    {
+      "pass_id": "P1",
+      "cell_id": "C-A2",
+      "risk_score": 0.2
+    },
+    {
+      "pass_id": "P2",
+      "cell_id": "C-B1",
+      "risk_score": 0.05
+    }
+  ],
+  "priority_contracts": [
+    {
+      "contract_id": "K1",
+      "preempt_rank": 50
+    },
+    {
+      "contract_id": "K2",
+      "preempt_rank": 30
+    },
+    {
+      "contract_id": "K3",
+      "preempt_rank": 80
+    }
+  ]
+}

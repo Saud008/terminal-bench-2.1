@@ -1,0 +1,19 @@
+user_visible_outputs = [
+  "/app/output/mutation-readiness-atlas.json",
+  "/app/output/chledger-rows.sqlite",
+]
+
+internal_harness_files = [
+  "/app/state/chledger-staging.jsonl",
+  "/app/docs/staging_pipeline.md",
+]
+
+[structured_outputs.mutation_readiness]
+target = "/app/output/mutation-readiness-atlas.json"
+format = "json"
+instruction_checks = [
+  "mutations",
+  "totals",
+  "readiness_state",
+  "replica_lag_max",
+]

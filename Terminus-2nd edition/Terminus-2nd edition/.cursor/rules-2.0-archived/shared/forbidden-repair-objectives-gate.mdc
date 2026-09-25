@@ -1,0 +1,107 @@
+---
+description: LOCKED — reject and REGENERATE repair/debug tasks; automated gate
+alwaysApply: true
+---
+
+# Terminus — Forbidden repair objectives gate (LOCKED)
+
+**When:** Every ideas intake, CREATE, revise, pack, and post-create hook.
+
+**Automated:** `scripts/task_generation_policy.py` · `scripts/repository_state_gate.py` · `scripts/idea_similarity_gate.py`
+
+**Verdict `REGENERATE`:** Gate blocks zip/CREATE. Agent must **discard repair framing** and **regenerate** the task (new slug, new scenario, build-on-working-baseline) — **not** patch the same repair-shaped tree in place.
+
+**On REGENERATE:** load **`shared/repository-state-fail-fix.mdc`** only for H2/H4/H6 metadata fixes; for H1/H3/H5/H7 repair objective → **regenerate**, do not reword instruction only.
+
+---
+
+## REJECT and REGENERATE if primary objective is any of
+
+| Forbidden primary objective |
+|----------------------------|
+| Fixing bugs |
+| Repairing broken functionality |
+| Correcting existing behavior |
+| Patching source code |
+| Restoring missing functionality |
+| Completing an intentionally incomplete implementation |
+| Resolving failing tests |
+| Making a broken repository work |
+| Finding defects in existing code |
+| Repairing parsers, validators, schedulers, engines, or services |
+| Investigating seeded bugs |
+| Updating code solely to satisfy existing tests |
+
+**7/7 PASS** still required after regeneration. Repair-shaped tasks **never** zip.
+
+---
+
+## Forbidden terminology (core objective)
+
+If any phrase below is the **core objective** (instruction opening, idea title/summary, slug, tags) → **REGENERATE**:
+
+| Term / phrase |
+|---------------|
+| fix · repair · patch · debug · broken · incomplete |
+| restore · correct |
+| resolve bug · resolve failure |
+| make tests pass |
+| failing implementation · repair implementation |
+| broken module · unfinished implementation |
+
+**Allowed:** same words only in **negation** or **historical** context (e.g. “must not be a fix-the-broken-service task”) — not as the agent’s job.
+
+Automated: opening-paragraph scan + slug tokens + `OBJECTIVE_PATTERNS` in `task_generation_policy.py`.
+
+---
+
+## REGENERATE workflow (mandatory)
+
+1. **Stop** — do not zip, do not submit, do not “reframe” one paragraph on the same repair slug.
+2. **New design** — functional /app baseline + **add/build/implement** new capability (see `repository-state-requirement.mdc` goal table).
+3. **New slug** — no `fix-`, `repair-`, `debug-`, `patch-`, `restore-` tokens.
+4. **New environment** — no seeded `BUG:` / `INTENTIONALLY BROKEN`; oracle builds new artifacts.
+5. **Re-gate:**
+
+```bash
+python3 scripts/repository_state_gate.py --pack-gate --task-dir tasks/<new-slug>
+```
+
+Ideas before CREATE:
+
+```bash
+python3 scripts/idea_similarity_gate.py --language <lang> --domain "..." \
+  --title "<build new …>" --summary "<add capability on working baseline …>"
+```
+
+Report: `Repository-state: REGENERATE — <reason> — regenerated as <new-slug>`
+
+---
+
+## Gate mapping
+
+| Signal | Verdict | Action |
+|--------|---------|--------|
+| H1 / H3 / H5 / H7 + forbidden opening term | **REGENERATE** | New task design |
+| H2 seeded broken env | **FAIL** → fix env or regenerate |
+| H4 no new capability | **FAIL** → add build goal or regenerate |
+| H6 blocked category | **FAIL** → change category |
+
+---
+
+## Forbidden on REGENERATE
+
+| Do not | Do instead |
+|--------|------------|
+| Patch instruction only on same repair slug | Regenerate slug + scenario + env |
+| `TERMINUS_TASK_GENERATION_SKIP=1` without user message | Regenerate per table |
+| Weaken gate patterns | Build new capability task |
+| Upload anyway | Gate must show PASS 7/7 |
+
+---
+
+## Related
+
+- `shared/repository-state-requirement.mdc`
+- `shared/repository-state-fail-fix.mdc`
+- `shared/task-generation-mandatory.mdc`

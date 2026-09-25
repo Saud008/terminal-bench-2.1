@@ -1,0 +1,14 @@
+--- a/internal/wgpa91/parse/parse_wg_conf.sh
++++ b/internal/wgpa91/parse/parse_wg_conf.sh
+@@ -26,8 +26,9 @@
+         iface[k] = v
+     elif section == "Peer":
+         if k == "AllowedIPs":
+-            
+-            cur[k] = [v.split(",")[0].strip()]
++            cur[k] = [p.strip() for p in v.split(",") if p.strip()]
++        elif k == "Name":
++            cur[k] = v
+         else:
+             cur[k] = v
+ if section == "Peer" and cur:

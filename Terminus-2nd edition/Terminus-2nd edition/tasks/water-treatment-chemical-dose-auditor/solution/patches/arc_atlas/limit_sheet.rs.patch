@@ -1,0 +1,23 @@
+--- a/arc_atlas/limit_sheet.rs
++++ b/arc_atlas/limit_sheet.rs
+@@ -1,5 +1,6 @@
+ use crate::arc_cache;
+ use crate::plant_schema::{BreachRow, SafetyReport, SafetySummary};
++use std::cmp::{Greater, Less};
+ use sha2::{Digest, Sha256};
+ use std::fs;
+ use std::path::Path;
+@@ -24,9 +25,11 @@ pub fn build_safety(ledger_path: &str, plant_id: &str) -> Result<SafetyReport, St
+         })
+         .collect();
+     breaches.sort_by(|a, b| {
+-        a.severity_pct
+-            .partial_cmp(&b.severity_pct)
+-            .then_with(|| a.chem_id.cmp(&b.chem_id))
++        match b.severity_pct.partial_cmp(&a.severity_pct) {
++            Some(Less) => Less,
++            Some(Greater) => Greater,
++            _ => a.chem_id.cmp(&b.chem_id),
++        }
+     });
+     let summary = SafetySummary {

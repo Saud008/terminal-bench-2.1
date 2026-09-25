@@ -1,0 +1,36 @@
+{
+  "table": "events",
+  "catalog_tz": "UTC",
+  "chunk_size": 2,
+  "row_groups": [
+    {
+      "id": 0,
+      "rows": [
+        {"_row_id": 0, "sensor_id": null, "measured_at": "2024-06-15T10:00:00Z", "note": "null-a"},
+        {"_row_id": 1, "sensor_id": "S1", "measured_at": "2024-06-15T11:00:00Z", "note": "set-b"},
+        {"_row_id": 2, "sensor_id": null, "measured_at": "2024-06-15T12:00:00Z", "note": "null-c"},
+        {"_row_id": 3, "sensor_id": "S2", "measured_at": "2024-06-15T13:00:00Z", "note": "set-d"}
+      ],
+      "columns": {
+        "sensor_id": {
+          "stats_present": true,
+          "null_count": 2,
+          "null_count_omitted": false,
+          "min": "S1",
+          "max": "S2",
+          "page_order": ["null_bitmap", "dictionary", "data"],
+          "chunk_size": 2
+        },
+        "measured_at": {
+          "stats_present": true,
+          "null_count": 0,
+          "null_count_omitted": false,
+          "min": "2024-06-15T10:00:00Z",
+          "max": "2024-06-15T13:00:00Z",
+          "page_order": ["data"],
+          "chunk_size": 2
+        }
+      }
+    }
+  ]
+}

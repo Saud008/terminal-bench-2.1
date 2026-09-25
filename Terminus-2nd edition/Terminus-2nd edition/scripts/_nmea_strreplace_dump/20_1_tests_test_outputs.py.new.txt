@@ -1,0 +1,19 @@
+    def test_session_replay_replaces_duplicate_fragment(self) -> None:
+        """Session replay must keep the later duplicate message-number fragment."""
+        reset()
+        build()
+        seed = os.environ.get("VERIFIER_SEED", "nmea-merge")
+        part1, part2 = build_session_duplicate_replay_streams(seed)
+        try:
+            assert merge(part1, state=STATE).returncode == 0
+            session_before_part2 = load_session_file(STATE)
+            assert merge(part2, state=STATE).returncode == 0
+            doc = json.loads(OUT.read_text())
+            ref, _ = reference_merge(part2, session_before_part2, use_session=True)
+            gsv = next(g for g in doc["groups"] if g["sentence"] == "GSV")
+            ref_gsv = next(g for g in ref["groups"] if g["sentence"] == "GSV")
+            assert gsv == ref_gsv
+        finally:
+            for path in (part1, part2):
+                if path.exists():
+                    path.unlink()

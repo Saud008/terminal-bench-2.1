@@ -1,0 +1,12 @@
+--- a/internal/logparse/reader.go
++++ b/internal/logparse/reader.go
+@@ -25,6 +25,9 @@
+         out = append(out, rows...)
+     }
+     sort.Slice(out, func(i, j int) bool {
++        if out[i].Term != out[j].Term {
++            return out[i].Term < out[j].Term
++        }
+         return out[i].Index < out[j].Index
+     })
+     return out, nil

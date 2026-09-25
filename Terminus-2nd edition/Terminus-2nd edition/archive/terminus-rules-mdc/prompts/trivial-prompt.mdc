@@ -1,0 +1,15 @@
+---
+description: "@TRIVIAL PROMPT — TRIVIAL/EASY; paste summary → analyze + auto-pick case"
+alwaysApply: false
+---
+
+# @TRIVIAL PROMPT
+
+**@ tag is a hint only.** Paste the **platform summary** with the task path → **analyze summary first** — do **not** pick a case from this tag alone.
+
+1. Quote **2–3 facts** from the summary (Difficulty, Status, `terminus-claude-opus-4-8` / `terminus-gpt5-5` scores, per-test table).
+2. If the summary is **not** TRIVIAL/EASY (0%-forever, not solvable, oracle fail only) → override router; say why.
+3. **`Read` `prompts/trivial.md`** (or **`prompts/easy.md`** if label is **EASY**) → pick **one** case from **Step B priority table** — **first row that matches the summary**; state case + **why** in one line.
+4. Inspect `tasks/<name>/`, fix, oracle **1** NOP **0**, `./scripts/pack_zip.sh <name>`.
+
+**Never** default to Case 4 or Case 6 without summary evidence. Case table: `prompts/trivial.md` Step B · `shared/prompt-router.mdc`

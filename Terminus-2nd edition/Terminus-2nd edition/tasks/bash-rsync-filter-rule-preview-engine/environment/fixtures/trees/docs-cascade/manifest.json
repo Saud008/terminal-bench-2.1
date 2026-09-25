@@ -1,0 +1,33 @@
+{
+  "tree": "docs-cascade",
+  "sender_paths": [
+    "docs",
+    "docs/api",
+    "docs/api/openapi.yaml",
+    "docs/archive",
+    "docs/archive/old.md",
+    "src/main.py",
+    "src/.cache/state.bin"
+  ],
+  "receiver_paths": [
+    "docs/api/openapi.yaml",
+    "docs/archive/old.md",
+    "src/main.py",
+    "src/.cache/state.bin"
+  ],
+  "root_rules": [
+    "+ docs/**",
+    "- docs/archive/**",
+    "+ src/**",
+    "- *.bin"
+  ],
+  "cascade_overlays": {
+    "docs/api": [
+      "+ *.yaml"
+    ],
+    "src": [
+      "- .cache/**",
+      "R .cache/**"
+    ]
+  }
+}

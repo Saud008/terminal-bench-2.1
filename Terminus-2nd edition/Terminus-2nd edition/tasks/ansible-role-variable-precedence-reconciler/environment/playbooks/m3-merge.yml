@@ -1,0 +1,16 @@
+hash_behaviour: merge
+roles:
+  - nginx
+  - app
+vars:
+  deploy_mode: playbook-rolling
+  feature_gate:
+    channel: playbook
+playbook_marker: full-stack
+include_vars:
+  - path: ../vars/aaa-depth3.yml
+    depth: 3
+  - path: ../vars/zzz-depth1.yml
+    depth: 1
+  - path: ../vars/mmm-depth2.yml
+    depth: 2

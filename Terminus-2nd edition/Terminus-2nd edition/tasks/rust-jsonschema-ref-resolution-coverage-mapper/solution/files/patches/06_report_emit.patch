@@ -1,0 +1,11 @@
+--- environment/crates/report_emit/src/lib.rs
++++ solution/oracle/golden/crates/report_emit/src/lib.rs
+@@ -39,7 +39,7 @@
+     }
+     let totals = CoverageTotals {
+         schema_count: schema_ids.len() as u32,
+-        resolved_ref_count: ref_edges.len() as u32,
++        resolved_ref_count: ref_edges.iter().filter(|e| e.status == "resolved").count() as u32,
+         unresolved_ref_count: unresolved.len() as u32,
+         recursive_ref_count: ref_edges.iter().filter(|e| e.status == "recursive").count() as u32,
+         example_count: example_coverage.len() as u32,

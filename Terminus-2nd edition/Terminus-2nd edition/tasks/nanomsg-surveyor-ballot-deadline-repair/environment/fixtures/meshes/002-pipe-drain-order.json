@@ -1,0 +1,18 @@
+{
+  "mesh_id": "mesh-002-pipe-drain-order",
+  "survey_id": "SURVEY0012345678",
+  "deadline_ms": 1000,
+  "default_ttl_ms": 10000,
+  "topology": {
+    "kind": "star",
+    "hub": "surveyor",
+    "edges": [["surveyor", "r1"]]
+  },
+  "events": [
+    {"offset_ms": 0, "type": "start"},
+    {"offset_ms": 100, "type": "ballot", "respondent": "r1", "vote": 5, "header_hex": "4e5353555256455930303132333435363738"},
+    {"offset_ms": 200, "type": "pipe_drained", "respondent": "r1"},
+    {"offset_ms": 1000, "type": "deadline"},
+    {"offset_ms": 1100, "type": "close"}
+  ]
+}

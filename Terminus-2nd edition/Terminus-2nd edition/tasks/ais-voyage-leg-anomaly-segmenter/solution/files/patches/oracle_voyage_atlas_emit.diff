@@ -1,0 +1,25 @@
+--- src/atlas_emit/mod.rs
++++ src/atlas_emit/mod.rs
+@@ -3,12 +3,11 @@
+ use crate::voyage_err::SegmentError;
+ use crate::port_polygons::PortCatalog;
+ use crate::maritime_types::{AnomalyCounts, Policy};
++use crate::sort_lane::leg_sort_key;
+ use crate::leg_builder::segment_voyages;
+ use crate::sog_gate;
+ use crate::track_snapshot::read_snapshot;
+-use crate::sort_lane::decoy_shuffle;
+ 
+-// Atlas emission stage (legacy atlas path retired; distinct routing traps).
+ pub fn run_atlas_emit(snapshot_path: &str, output_path: &str, ports_path: &str) -> Result<i32, SegmentError> {
+     let snap = match read_snapshot(snapshot_path) {
+         Ok(s) => s,
+@@ -24,7 +23,7 @@
+     let burst_duplicate = snap.feed_stats.after_mmsi_dedupe - snap.feed_stats.after_burst;
+     let out_of_order = snap.feed_stats.out_of_order;
+     let mut ordered = snap.points.clone();
+-    decoy_shuffle::arrange_points(&mut ordered);
++    leg_sort_key::stable_track_order(&mut ordered);
+     let (filtered, impossible_speed) = sog_gate::suppress_impossible_speed(ordered, policy);
+     let anomalies = AnomalyCounts {
+         impossible_speed,

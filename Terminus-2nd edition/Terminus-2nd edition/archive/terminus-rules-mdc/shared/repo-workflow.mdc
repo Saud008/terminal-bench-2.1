@@ -1,0 +1,88 @@
+---
+description: This repo — where to create Terminus tasks, how to zip for submit (LOCKED)
+alwaysApply: false
+---
+
+# Terminus — This repository (Sanjana)
+
+**Entry:** `shared/WORKFLOW-MAP.mdc` + `shared/terminus-master-engine.mdc` (ENGINE_0 hub). Platform/live work in **`tasks/`**; pack-ready WIP in **`pending/`**. Zip to **`tasksubmit/`**.
+
+**Quick tags:** `@CREATE RULES` · `@REVIEWER RULES` · `@AUDIT RULES` · `@REVISE RULES` · `@VERIFY RULES` · `@ZIP RULES` · `@IDEAS RULES`
+
+## Paths (LOCKED)
+
+| Live | Zip |
+|------|-----|
+| `tasks/<name>/` or `pending/<name>/` | `tasksubmit/<name>.zip` |
+
+- Accepted examples: **`tasks/_accepted-tasks/`** (local — `ls` + read 2 folders before new work)
+- `author_name` / `author_email` = `anonymous`
+- **No `rubric.md`** in task folders or zips — rubric in chat only
+- `difficulty` = `medium` or `hard` only
+
+## File patterns (LOCKED)
+
+Before create/revise: `ls tasks/_accepted-tasks/` → copy harness from closest stack per **`shared/accepted-corpus.mdc`**.
+
+## Task diversity — no copies, no templates, no spam (LOCKED)
+
+**Full gate:** **`shared/anti-spam-templated-submissions.mdc`** (Jun 2026 platform policy — flags, family saturation, pre-upload checklist).
+
+Scan **`tasks/`**, **`pending/`**, **`tasks/_accepted-tasks/`**, **`tasksubmit/`**, and **`tasks/tasksss/`** before any new idea or build. Reject slug, near-title, or **family** duplicates.
+
+**Platform policy — templated / spam uploads are NOT allowed:**
+
+- Each submission must be **substantively different** from your prior tasks — not a re-skin.
+- **Forbidden:** same structure, solution approach, or test patterns with keyword swaps only (e.g. swap domain nouns in instruction while keeping identical bash pipeline / Rust replay / TB3 env override layout).
+- **Forbidden:** bulk uploading many same-family tasks (volume spam) — pick **one per family** per batch unless user explicitly overrides.
+- **Required:** distinct problem domain, distinct failure modes, distinct verifier semantics — not plug-and-play clones.
+- Templated or spam-pattern submissions may be **rejected**, **flagged**, and can affect **project standing**.
+
+Before create: prove **≥2 structural differences** from nearest neighbor in a similarity table (`create/new-task-pipeline-A-H.mdc` Phase B). Before zip: **`Anti-spam/templated: PASS/FAIL`** line (`anti-spam-templated-submissions.mdc`).
+
+```
+ls tasks/_accepted-tasks/ + read 2 folders
+→ scan tasks/ + tasksubmit/ zips
+→ build tasks/<new-name>/   (unique domain + structure)
+→ oracle + NOP → ./scripts/pack_zip.sh <name>
+```
+
+**SP hard (Jun 2026):** new HARD tasks → `@prompts/sp-hard-create-revise.md` CREATE — target **Claude Opus 4.8** (0%/timeout @ 1800s OK); REVISE too-easy → same + Case 5 + `trivial-repo-wide.md`.
+
+## task.toml defaults
+
+```toml
+[agent]
+timeout_sec = 1800
+[verifier]
+timeout_sec = 900
+[environment]
+allow_internet = false
+workdir = "/app"
+build_timeout_sec = 600.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
+```
+
+**`subcategories` (LOCKED — this repo):** always `subcategories = []`. Do not populate Harbor subcategory labels (`api_integration`, `tool_specific`, etc.) in `task.toml`.
+
+**`category` (LOCKED — this repo + platform):** never `debugging` or `software-engineering` on **new** submissions — platform blocked. Use `data-processing`, `build-and-dependency-management`, `security`, etc. (`shared/task-toml-category-gate.mdc`).
+
+**`allow_internet`:** default **`false`**. Static check fails if `false` but solve/agent needs network (`shared/allow-internet-gate.mdc`). Set **`true` only** when the task genuinely requires live internet (e.g. gallery **Requires Internet** inspirations).
+
+## Zip (LOCKED)
+
+```bash
+./scripts/pack_zip.sh <name>
+./scripts/pack-all-upload-zips.sh
+```
+
+Uses `@ZIP RULES` — flat root, no `rubric.md`, G-027 forward slashes. **`pack_zip.sh` auto-runs canonical ECR `--ensure`** on the task before zipping (no separate migrate step).
+
+## Platform submission form (LOCKED — fill at upload)
+
+| Field | Rule |
+|-------|------|
+| **Approved canonical base image?** | **Yes** only if final runtime `FROM` matches `shared/canonical-base-image-gate.mdc` (Snorkel ECR table). Else **No** + short **justification** in the textbox. |
+| **Task Inspiration ID** | Required when the task is based on a gallery inspiration — copy the ID from under the inspiration title on the project website. Leave blank only if not inspiration-based. |

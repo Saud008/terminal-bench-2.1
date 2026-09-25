@@ -1,0 +1,49 @@
+{
+  "scenario": "basic-wave",
+  "critical_prefixes": [
+    "203.0.113.0/24"
+  ],
+  "peer_groups": [
+    {
+      "group_id": "edge",
+      "filters": [
+        {
+          "filter_id": "orig-ok",
+          "priority": 50,
+          "match_mode": "origin",
+          "asn": 65099,
+          "action": "accept"
+        }
+      ]
+    }
+  ],
+  "peers": [
+    {
+      "peer_id": "peer-a",
+      "asn": 65010,
+      "group_id": "edge",
+      "wave_rank": 1,
+      "med_ceiling": 40,
+      "abort_on_critical_deny": false,
+      "community_rewrite": {
+        "65010:1": "65010:9"
+      },
+      "filters": []
+    }
+  ],
+  "rib": [
+    {
+      "prefix": "192.0.2.0/24",
+      "as_path": [
+        65001,
+        65099
+      ],
+      "communities": [
+        "65010:1",
+        "0:1"
+      ],
+      "med": 77,
+      "peer_id": "peer-a"
+    }
+  ]
+}

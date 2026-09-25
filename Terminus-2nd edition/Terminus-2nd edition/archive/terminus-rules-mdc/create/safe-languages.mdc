@@ -1,0 +1,41 @@
+---
+description: Terminus safest primary languages for new task ideas (tiered list) (LOCKED)
+alwaysApply: false
+---
+
+# Terminus — Safe languages for task ideas
+
+Use this tier list when generating or choosing **new** Terminus tasks. Prefer higher tiers; do not default to Python for medium difficulty.
+
+**Platform preference (EC Training):** prefer **Rust, Go, and Bash** for **new** tasks when the scenario fits — these stacks currently get **fewer revision cycles**. Also rotate **TypeScript/Node**, **Java**, and **C++** for genuine domain fit (see Tier 1). See `shared/platform-preferences.mdc`.
+
+## Tier 1 — Best (prefer for new ideas)
+
+- **Go** — CLI, log replay, JSONL/binary decode, checksum repair (**platform-preferred**)
+- **Rust** — parsers, binary decoders, streaming CLI (**platform-preferred**)
+- **Bash** — pipelines, Make/CMake glue, shell repair (**platform-preferred** when behavior is CLI-testable)
+- **TypeScript / Node** — API + SQLite, Express/Fastify-style services, npm tooling, structured JSON pipelines
+- **Java** — Maven/Gradle services, JDBC/SQLite, config/migration, LDIF/XML/enterprise parsers on **debian:bookworm-slim + OpenJDK 17**
+- **C++** — binary parsers, WAL/chunk reassembly, CMake/Cargo-adjacent native CLIs on **debian:bookworm-slim + g++/cmake** (or stack-specific canonical base when listed)
+
+Set `difficulty = "medium"` or `"hard"` and `codebase_size = "small"` or `"large"` (never `"minimal"` for new submissions).
+
+## Tier 2 — Also okay
+
+- **C / C# / Kotlin** — when Tier 1 stack is unnatural; services and tooling when stack fits single-container
+- **Ruby / PHP** — backend repair when behavior is testable without UI
+- **Bash / AWK / shell tooling** — pipelines, Make/CMake glue, local tool chains
+- **SQL** — migrations, constraints, backfill (usually paired with another primary language)
+- **Make / CMake** — build-and-dependency-management tasks with real artifacts
+
+## Tier 3 — Python (restricted)
+
+- **Allowed only if the task is genuinely HARD** — multiple interacting bugs, state across runs, non-trivial DB/API behavior, strong anti-cheat.
+- **Avoid:** simple script repair, one obvious bug, `difficulty = "medium"` Python, pure CSV/JSON formatting, read-files-and-answer with no real code repair.
+- In `task.toml`, list Python in `languages` only when Python is the **primary** task language.
+
+## Quick checks for idea prompts
+
+- Single-container; no new UI-building or multi-container unless explicitly approved.
+- 20+ meaningful environment files for `codebase_size = "small"` (not filler).
+- Non-Python primary → target **medium** or **hard**; Python primary → target **hard** only.

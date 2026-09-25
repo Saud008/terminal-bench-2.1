@@ -1,0 +1,26 @@
+---
+description: Optional manual advisory — A-001…A-010; NOT in pack_zip or CI preflight
+alwaysApply: false
+---
+
+# Accepted-feedback gates (A-001 … A-010) — reviewer path (LOCKED)
+
+**On reviewer paste:** `scripts/reviewer_feedback_gate.py` runs automatically (hook) — compares each comment to **A-001…A-010** + **trivial-risk**. Report: `jobs-local/reviewer-feedback-gate-last.json`.
+
+**Not a separate pack blocker** — complements anti-spam sim **0.0**, F′, probes. Agent **REJECT**s reviewer comments that would trivialize; if verdict **ROUTE_CASE6** → Case 6 before zip.
+
+**Manual (debug):**
+
+```bash
+python3 scripts/reviewer_feedback_gate.py --task-dir tasks/<name> --context
+```
+
+**CREATE:** audit automatic on save; pack only when **sim 0.0** + `create_finish_to_zip` PASS.
+
+Optional advisory-only duplicate:
+
+```bash
+python3 scripts/terminus_accepted_feedback_gates.py --task-dir tasks/<name>
+```
+
+Report: `jobs-local/accepted-feedback-gates-last.json`

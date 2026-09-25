@@ -1,0 +1,34 @@
+--- a/src/waiverq/rank.rs
++++ b/src/waiverq/rank.rs
+@@ -2,22 +2,20 @@
+ 
+ pub fn status_rank(status: &str) -> i32 {
+     match status {
++        STATUS_NOT_AFFECTED => 5,
+         STATUS_FIXED => 4,
+-        STATUS_NOT_AFFECTED => 3,
+-        STATUS_UNDER => 2,
+-        STATUS_AFFECTED => 1,
+-        _ => 0,
++        STATUS_UNDER => 3,
++        STATUS_AFFECTED => 2,
++        _ => 1,
+     }
+ }
+ 
+ pub fn pick_effective<'a>(statements: &'a [StageVex]) -> Option<&'a StageVex> {
+-    statements
+-        .iter()
+-        .max_by(|a, b| {
+-            status_rank(&a.status)
+-                .cmp(&status_rank(&b.status))
+-                .then_with(|| a.updated_at.cmp(&b.updated_at))
+-        })
++    statements.iter().max_by(|a, b| {
++        status_rank(&a.status)
++            .cmp(&status_rank(&b.status))
++            .then_with(|| a.updated_at.cmp(&b.updated_at))
++    })
+ }
+ 
+ pub fn effective_status(statements: &[StageVex]) -> String {

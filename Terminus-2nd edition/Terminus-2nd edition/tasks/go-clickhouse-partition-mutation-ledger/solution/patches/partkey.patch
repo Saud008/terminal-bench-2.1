@@ -1,0 +1,43 @@
+--- a/internal/pipeline/partindex.go
++++ b/internal/pipeline/partindex.go
+@@ -1,25 +1,25 @@
+ package pipeline
+ 
+ import (
+-	"github.com/terminus/chmutled/internal/model"
+-	"github.com/terminus/chmutled/internal/partkey"
++    "github.com/terminus/chmutled/internal/model"
++    "github.com/terminus/chmutled/internal/partkey"
+ )
+ 
+ type partInfo struct {
+-	table         string
+-	partCount     int
+-	detachedFlags []bool
++    table         string
++    partCount     int
++    detachedFlags []bool
+ }
+ 
+ func buildPartIndex(parts []model.PartMeta) map[string]partInfo {
+-	idx := map[string]partInfo{}
+-	for _, p := range parts {
+-		pid := partkey.PartitionIDByValue(p)
+-		cur := idx[pid]
+-		cur.table = p.TableName
+-		cur.partCount += p.PartCount
+-		cur.detachedFlags = append(cur.detachedFlags, p.Detached)
+-		idx[pid] = cur
+-	}
+-	return idx
++    idx := map[string]partInfo{}
++    for _, p := range parts {
++        pid := partkey.PartitionID(p)
++        cur := idx[pid]
++        cur.table = p.TableName
++        cur.partCount += p.PartCount
++        cur.detachedFlags = append(cur.detachedFlags, p.Detached)
++        idx[pid] = cur
++    }
++    return idx
+ }

@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# sel-chain — dispatch ingest / export subcommands.
+set -euo pipefail
+
+APP_ROOT="/app"
+export APP_ROOT
+
+usage() {
+  cat <<'EOF'
+Usage:
+  sel-chain ingest --input <sel.bin> --db <sel.db>
+  sel-chain export --db <sel.db> --out <events.csv>
+EOF
+  exit 1
+}
+
+[ $# -ge 1 ] || usage
+cmd="$1"
+shift
+
+case "${cmd}" in
+  ingest)
+    exec bash "${APP_ROOT}/scripts/sel-ingest.sh" "$@"
+    ;;
+  export)
+    exec bash "${APP_ROOT}/scripts/sel-export.sh" "$@"
+    ;;
+  *)
+    usage
+    ;;
+esac

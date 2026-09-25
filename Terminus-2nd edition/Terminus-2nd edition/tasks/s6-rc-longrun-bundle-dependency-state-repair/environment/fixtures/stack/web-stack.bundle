@@ -1,0 +1,12 @@
+bundle web-stack
+service boot oneshot
+service logger longrun
+service relay longrun
+service edge longrun
+service probe oneshot
+dep logger hard boot
+dep relay hard logger
+dep edge hard relay
+longrun logger
+longrun relay
+longrun edge

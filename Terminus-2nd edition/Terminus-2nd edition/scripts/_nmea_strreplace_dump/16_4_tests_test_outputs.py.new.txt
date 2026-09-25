@@ -1,0 +1,17 @@
+def merge_payload(fragments: list[dict]) -> tuple[int, int, list[str]]:
+    total = int(fragments[0]["fields"][0])
+    ordered = sorted(fragments, key=lambda s: int(s["fields"][1]))
+    payload: list[str] = []
+    for sentence in ordered:
+        payload.extend(sentence["fields"][3:])
+    return total, len(ordered), payload
+
+
+def reconcile_fragments(fragments: list[dict]) -> list[dict]:
+    by_num: dict[str, dict] = {}
+    for sentence in fragments:
+        if len(sentence["fields"]) < 2:
+            continue
+        num = sentence["fields"][1]
+        by_num[num] = sentence
+    return sorted(by_num.values(), key=lambda s: int(s["fields"][1]))

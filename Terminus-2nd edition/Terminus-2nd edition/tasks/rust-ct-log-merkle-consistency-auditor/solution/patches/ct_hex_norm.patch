@@ -1,0 +1,23 @@
+--- src/ledgerfmt/hex_norm.rs
++++ src/ledgerfmt/hex_norm.rs
+@@ -51,8 +51,19 @@
+ #[derive(Debug)]
+ pub struct ParseError;
+ 
++fn strip_root_prefix(hex_str: &str) -> &str {
++    hex_str.trim()
++}
++
++fn hex_is_normalized(value: &str) -> bool {
++    value.chars().all(|c| c.is_ascii_hexdigit())
++}
++
+ pub fn normalize_root(hex_str: &str) -> String {
+-    hex_str.to_string()
++    let trimmed = strip_root_prefix(hex_str);
++    let lower = trimmed.to_ascii_lowercase();
++    debug_assert!(hex_is_normalized(&lower));
++    lower
+ }
+ 
+ pub fn load_audit_bundle(path: &Path) -> Result<AuditBundle, ParseError> {

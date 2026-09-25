@@ -1,0 +1,18 @@
+{
+  "component_names": ["Transform", "Velocity", "Health"],
+  "components": {
+    "Transform": {"size": 16, "align": 8},
+    "Velocity": {"size": 12, "align": 4},
+    "Health": {"size": 4, "align": 4}
+  },
+  "entities": [
+    {"id": 1, "components": {"Transform": "01", "Velocity": "02", "Health": "64"}},
+    {"id": 2, "components": {"Transform": "03", "Velocity": "04", "Health": "32"}}
+  ],
+  "journal": [
+    {"op": "remove_entity", "entity": 2},
+    {"op": "tombstone", "entity": 2},
+    {"op": "spawn", "entity": 2, "components": {"Transform": "ff", "Health": "01"}}
+  ],
+  "queries": [{"component_ids": [0, 1]}]
+}

@@ -1,0 +1,39 @@
+{
+  "process_id": "boundary-window",
+  "partition_id": 3,
+  "broker_clock_ms": 6000,
+  "process_clock_ms": 6000,
+  "job_timeout_ms": 1000,
+  "incidents": [],
+  "jobs": [
+    {
+      "job_key": "job-notify",
+      "element_id": "task-notify",
+      "type": "send-alert",
+      "intent_at_ms": 100,
+      "activating_until_ms": 400
+    }
+  ],
+  "boundaries": [
+    {
+      "boundary_id": "bnd-escalate",
+      "attached_element": "task-notify",
+      "fire_at_ms": 350,
+      "interrupting": true
+    },
+    {
+      "boundary_id": "bnd-ok",
+      "attached_element": "task-notify",
+      "fire_at_ms": 450,
+      "interrupting": false
+    }
+  ],
+  "variables": {
+    "inputs": {"level": 1},
+    "output_mapping": {"alert_level": "level"},
+    "incident_overlay": {}
+  },
+  "replay_batches": [
+    {"batch_id": "bnd", "job_keys": ["job-notify"], "idempotent": false}
+  ]
+}

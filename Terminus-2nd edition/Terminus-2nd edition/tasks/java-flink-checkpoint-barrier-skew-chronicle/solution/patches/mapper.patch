@@ -1,0 +1,15 @@
+--- a/src/main/java/com/flinkskew/map/SubtaskOperatorMapper.java
++++ b/src/main/java/com/flinkskew/map/SubtaskOperatorMapper.java
+@@ -31,11 +31,7 @@
+     }
+ 
+     public static String mapOperator(EventRecord ev, Graph graph) {
+-        if (graph.operators().isEmpty()) {
+-            return ev.operatorId;
+-        }
+-        int slot = ev.subtaskIndex % graph.operators().size();
+-        return graph.operators().get(slot).operatorId();
++        return ev.operatorId;
+     }
+ 
+     public static int expectedSubtasks(String operatorId, Graph graph) {

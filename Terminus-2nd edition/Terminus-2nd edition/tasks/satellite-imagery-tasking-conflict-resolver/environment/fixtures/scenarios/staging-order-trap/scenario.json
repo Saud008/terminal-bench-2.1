@@ -1,0 +1,74 @@
+{
+  "scenario_id": "staging-order-trap",
+  "constellation_id": "LEO-F",
+  "sensor_profile": {
+    "sensor_id": "MSI-6",
+    "default_mode": "stripmap"
+  },
+  "pass_windows": [
+    {
+      "pass_id": "P2",
+      "orbit_id": "O602",
+      "start_sec": 2000,
+      "end_sec": 2100,
+      "cells": [
+        "C-S2"
+      ]
+    },
+    {
+      "pass_id": "P1",
+      "orbit_id": "O601",
+      "start_sec": 1000,
+      "end_sec": 1100,
+      "cells": [
+        "C-S1"
+      ]
+    }
+  ],
+  "imaging_requests": [
+    {
+      "request_id": "R-b",
+      "cell_id": "C-S2",
+      "mode": "stripmap",
+      "priority_tier": 2,
+      "contract_id": "K-b",
+      "imaging_duration_sec": 25
+    },
+    {
+      "request_id": "R-a",
+      "cell_id": "C-S1",
+      "mode": "stripmap",
+      "priority_tier": 2,
+      "contract_id": "K-a",
+      "imaging_duration_sec": 25
+    }
+  ],
+  "sensor_modes": {
+    "stripmap": {
+      "cold_setup_sec": 10,
+      "warm_setup_sec": 5
+    }
+  },
+  "cloud_forecasts": [
+    {
+      "pass_id": "P1",
+      "cell_id": "C-S1",
+      "risk_score": 0.05
+    },
+    {
+      "pass_id": "P2",
+      "cell_id": "C-S2",
+      "risk_score": 0.05
+    }
+  ],
+  "priority_contracts": [
+    {
+      "contract_id": "K-a",
+      "preempt_rank": 50
+    },
+    {
+      "contract_id": "K-b",
+      "preempt_rank": 50
+    }
+  ]
+}

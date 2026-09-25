@@ -1,0 +1,5 @@
+The sssdcache tool under /app replays offline SSSD-style identity cache operation logs and must keep negative TTL refresh, domain-scoped name keys, nested group invalidation, export filtering, and same-timestamp replay ordering consistent with site policy. Public operation bundles live under /app/fixtures/ops/ and runtime policy is /app/config/sssdcache.json.
+
+Extend the Go replay and export implementation under /app/internal/ so ingest and export honor /app/docs/cache-op-format.md, /app/docs/negative-ttl-contract.md, /app/docs/name-key-canonical.md, /app/docs/nested-group-invalidation.md, /app/docs/replay-ordering.md, /app/docs/cache-snapshot-schema.md, /app/docs/export-report-schema.md, and /app/docs/fixture-catalog.md. Ingest creates /app/state/sssd-cache-snapshot.json plus /app/state/sssd-cache.db in the state directory. Export reads the staging snapshot only and creates /app/output/sssd-cache-report.json in the output directory. CLI usage is in /app/README.md.
+
+Do not edit /app/docs/, /app/fixtures/, /app/config/sssdcache.json, or anything under /tests/.

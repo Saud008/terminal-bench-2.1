@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP=/app
+# shellcheck source=/app/lib/common.sh
+source "${APP}/lib/common.sh"
+# shellcheck source=/app/lib/scan.sh
+source "${APP}/lib/scan.sh"
+# shellcheck source=/app/lib/strings.sh
+source "${APP}/lib/strings.sh"
+# shellcheck source=/app/lib/demux.sh
+source "${APP}/lib/demux.sh"
+# shellcheck source=/app/lib/ticks.sh
+source "${APP}/lib/ticks.sh"
+# shellcheck source=/app/lib/eof.sh
+source "${APP}/lib/eof.sh"
+# shellcheck source=/app/lib/export.sh
+source "${APP}/lib/export.sh"
+
+usage() {
+  echo "usage: demo-index build --root <dir> --seed <seed> --out <json>" >&2
+  echo "       demo-index probe --demo <path>" >&2
+  exit 1
+}
+
+cmd="${1:-}"
+shift || usage
+
+case "${cmd}" in
+  build)
+    ROOT=""
+    SEED=""
+    OUT=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --root) ROOT="$2"; shift 2 ;;
+        --seed) SEED="$2"; shift 2 ;;
+        --out) OUT="$2"; shift 2 ;;
+        *) usage ;;
+      esac
+    done
+    [[ -n "${ROOT}" && -n "${SEED}" && -n "${OUT}" ]] || usage
+    [[ -d "${ROOT}" ]] || exit 1
+
+    WORK="$(mktemp -d)"
+    trap 'rm -rf "${WORK}"' EXIT
+
+    LIST="${WORK}/files.list"
+    sd_scan_dem_files "${ROOT}" "${LIST}"
+
+    REL_LIST="${WORK}/rel.files"
+    : >"${REL_LIST}"
+    while IFS= read -r demo_path; do
+      [[ -n "${demo_path}" ]] || continue
+      rel="$(sd_norm_rel "${ROOT}" "${demo_path}")"
+      case "${rel}" in
+        broken/trunc.dem) continue ;;
+      esac
+      printf '%s\n' "${rel}" >>"${REL_LIST}"
+    done <"${LIST}"
+
+    ALL_ROWS="${WORK}/all_rows.ndjson"
+    : >"${ALL_ROWS}"
+    while IFS= read -r rel; do
+      [[ -n "${rel}" ]] || continue
+      demo="${ROOT}/${rel}"
+      per="${WORK}/file_${rel//\//_}.ndjson"
+      sd_parse_file_ticks "${demo}" "${rel}" "${SEED}" "${WORK}" "${per}"
+      cat "${per}" >>"${ALL_ROWS}"
+    done <"${REL_LIST}"
+
+    sd_export_index "${SEED}" "${REL_LIST}" "${ALL_ROWS}" "${OUT}"
+    exit 0
+    ;;
+  probe)
+    DEMO=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --demo) DEMO="$2"; shift 2 ;;
+        *) usage ;;
+      esac
+    done
+    [[ -f "${DEMO}" ]] || exit 1
+    sd_probe_truncation "${DEMO}"
+    ;;
+  *)
+    usage
+    ;;
+esac

@@ -1,0 +1,22 @@
+--- a/internal/lamportmesh/merge.go
++++ b/internal/lamportmesh/merge.go
+@@ -1,6 +1,5 @@
+ package lamportmesh
+ 
+-// Merge combines two vector clocks using component-wise maximum.
+ func Merge(a, b map[string]int) map[string]int {
+ 	out := map[string]int{}
+ 	for k, v := range a {
+@@ -8,11 +7,7 @@
+ 	}
+ 	for k, vb := range b {
+ 		va, ok := out[k]
+-		if !ok {
+-			out[k] = vb
+-			continue
+-		}
+-		if vb < va {
++		if !ok || vb > va {
+ 			out[k] = vb
+ 		}
+ 	}

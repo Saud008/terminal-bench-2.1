@@ -1,0 +1,10 @@
+{
+  "stack_id": "013-auth-multi-env",
+  "service": "login",
+  "entries": [
+    {"phase": "auth", "control": "required", "module": "stubs/pam_env.sh", "args": ["ALPHA=1"]},
+    {"phase": "auth", "control": "required", "module": "stubs/pam_env.sh", "args": ["BETA=2"]},
+    {"phase": "auth", "control": "required", "module": "stubs/pam_permit.sh", "args": []},
+    {"phase": "session", "control": "required", "module": "stubs/pam_permit.sh", "args": []}
+  ]
+}

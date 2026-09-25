@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# wal-chain — dispatch reconcile / stage / export subcommands.
+set -euo pipefail
+
+APP_ROOT="/app"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export APP_ROOT SCRIPT_DIR
+
+usage() {
+  cat <<'EOF'
+Usage:
+  wal-chain reconcile --db <ledger.db>
+  wal-chain stage --db <ledger.db>
+  wal-chain export --db <ledger.db> --out <report.json>
+EOF
+  exit 1
+}
+
+[ $# -ge 1 ] || usage
+cmd="$1"
+shift
+
+case "${cmd}" in
+  reconcile)
+    exec bash "${APP_ROOT}/scripts/reconcile.sh" "$@"
+    ;;
+  stage)
+    exec bash "${APP_ROOT}/scripts/stage.sh" "$@"
+    ;;
+  export)
+    exec bash "${APP_ROOT}/scripts/export.sh" "$@"
+    ;;
+  *)
+    usage
+    ;;
+esac

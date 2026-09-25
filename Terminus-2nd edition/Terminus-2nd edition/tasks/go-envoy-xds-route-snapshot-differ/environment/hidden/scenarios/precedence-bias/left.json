@@ -1,0 +1,62 @@
+{
+  "version": "snap-1",
+  "listeners": [
+    {
+      "name": "ingress",
+      "filter_chains": [
+        {
+          "filters": [
+            {
+              "name": "envoy.filters.http.router",
+              "type": "http"
+            },
+            {
+              "name": "envoy.filters.network.http_connection_manager",
+              "type": "network"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "domain": "*",
+      "routes": [
+        {
+          "match": {
+            "prefix": "/api"
+          },
+          "cluster": "api",
+          "precedence": 5
+        },
+        {
+          "match": {
+            "prefix": "/api/v1"
+          },
+          "cluster": "api",
+          "precedence": 10
+        },
+        {
+          "match": {
+            "path": "/health"
+          },
+          "cluster": "health",
+          "precedence": 1
+        }
+      ]
+    }
+  ],
+  "clusters": [
+    {
+      "name": "api",
+      "endpoints": [
+        {
+          "host": "10.0.0.1",
+          "weight": 100
+        }
+      ]
+    }
+  ],
+  "secrets": []
+}

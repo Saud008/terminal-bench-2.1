@@ -1,0 +1,47 @@
+{
+  "process_id": "hidden-overlap-trap",
+  "partition_id": 9,
+  "broker_clock_ms": 9000,
+  "process_clock_ms": 8920,
+  "job_timeout_ms": 1800,
+  "incidents": [
+    {
+      "incident_key": "inc-hidden",
+      "element_id": "task-audit",
+      "job_key": "job-audit",
+      "resolved_at_ms": 250,
+      "marker_persisted_at_ms": 500
+    }
+  ],
+  "jobs": [
+    {
+      "job_key": "job-audit",
+      "element_id": "task-audit",
+      "type": "audit-step",
+      "intent_at_ms": 400,
+      "activating_until_ms": 480
+    }
+  ],
+  "boundaries": [
+    {
+      "boundary_id": "bnd-hidden",
+      "attached_element": "task-audit",
+      "fire_at_ms": 470,
+      "interrupting": true
+    },
+    {
+      "boundary_id": "bnd-hidden-ok",
+      "attached_element": "task-audit",
+      "fire_at_ms": 520,
+      "interrupting": false
+    }
+  ],
+  "variables": {
+    "inputs": {"score": 10, "flag": 0},
+    "output_mapping": {"audit_score": "score", "audit_flag": "flag"},
+    "incident_overlay": {"score": 99, "flag": 1}
+  },
+  "replay_batches": [
+    {"batch_id": "hid", "job_keys": ["job-audit"], "idempotent": false}
+  ]
+}

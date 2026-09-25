@@ -1,0 +1,23 @@
+--- a/src/je67.rs
++++ b/src/je67.rs
+@@ -1,18 +1,10 @@
+ use anyhow::Result;
+ use serde_json::Value;
+ 
+-use crate::gp94::{EntityJson, SceneJson};
+-
+-fn sort_root_tags(entity: &mut EntityJson) {
+-    if let Some(tags) = entity.tags.as_mut() {
+-        tags.sort_by(|a, b| a.key.cmp(&b.key));
+-    }
+-}
++use crate::gp94::SceneJson;
+ 
+ pub fn scene_to_json(scene: &SceneJson) -> Result<Value> {
+-    let mut scene = scene.clone();
+-    sort_root_tags(&mut scene.root);
+-    Ok(serde_json::to_value(&scene)?)
++    Ok(serde_json::to_value(scene)?)
+ }
+ 
+ pub fn render_stdout(scene: &SceneJson) -> Result<String> {

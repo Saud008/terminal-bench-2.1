@@ -1,0 +1,1 @@
+History shards advance history_cursor_seq by event seq, not raw event_id. Duplicate event_id replays increment duplicate_events_skipped and must not move history_cursor_seq backward or jump to the duplicate id. Applied event names append only on first sight of an event_id.

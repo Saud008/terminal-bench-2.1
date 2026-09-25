@@ -1,0 +1,11 @@
+    def test_eval_audit_records_binding_count(self) -> None:
+        """Eval must persist audit record with full binding count."""
+        export = OUTPUT / "audit-check.json"
+        proc = eval_bundle("allow-basic", "3", export)
+        assert proc.returncode == 0, proc.stderr or proc.stdout
+        audit_path = EVAL_AUDIT
+        assert audit_path.is_file(), "/app/state/eval-audit.json missing"
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        got = json.loads(export.read_text(encoding="utf-8"))
+        assert audit["binding_count"] == len(got["trace"]["bindings"])
+        assert audit["seed"] == "3"

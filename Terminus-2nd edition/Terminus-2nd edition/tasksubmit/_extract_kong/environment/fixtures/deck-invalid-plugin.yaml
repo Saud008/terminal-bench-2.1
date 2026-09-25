@@ -1,0 +1,13 @@
+services:
+  - name: broken-svc
+    url: http://127.0.0.1:8000/upstream/broken
+    plugins:
+      - name: phantom-plugin
+        config: {}
+routes:
+  - name: broken-route
+    service: broken-svc
+    paths:
+      - /api/broken
+    methods:
+      - GET

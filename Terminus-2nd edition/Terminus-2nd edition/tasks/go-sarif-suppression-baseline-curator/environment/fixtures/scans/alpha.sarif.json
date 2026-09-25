@@ -1,0 +1,123 @@
+{
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "semgrep",
+          "rules": []
+        }
+      },
+      "results": [
+        {
+          "ruleId": "python.lang.security.audit.exec-detected",
+          "level": "warning",
+          "message": {
+            "text": "Detected exec"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/main.py"
+                },
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 5
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash": "fp-alpha-001"
+          },
+          "properties": {
+            "finding_id": "f-001",
+            "observed_at": "2024-06-01T14:00:00Z"
+          }
+        },
+        {
+          "ruleId": "python.lang.security.audit.exec-detected@v2",
+          "level": "error",
+          "message": {
+            "text": "Duplicate exec line"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "src/main.py"
+                },
+                "region": {
+                  "startLine": 10,
+                  "startColumn": 5
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash": "fp-alpha-dup"
+          },
+          "properties": {
+            "finding_id": "f-002",
+            "observed_at": "2024-06-01T14:01:00Z"
+          }
+        },
+        {
+          "ruleId": "go.lang.security.audit.unsafe",
+          "level": "note",
+          "message": {
+            "text": "unsafe usage"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "/home/runner/work/repo/internal/util.go"
+                },
+                "region": {
+                  "startLine": 42,
+                  "startColumn": 1
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash": "fp-alpha-003"
+          },
+          "properties": {
+            "finding_id": "f-003",
+            "observed_at": "2024-06-01T15:00:00Z"
+          }
+        },
+        {
+          "ruleId": "custom.expired-rule",
+          "level": "warning",
+          "message": {
+            "text": "expired suppression candidate"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "legacy/old.py"
+                },
+                "region": {
+                  "startLine": 3,
+                  "startColumn": 1
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "primaryLocationLineHash": "fp-alpha-004"
+          },
+          "properties": {
+            "finding_id": "f-004",
+            "observed_at": "2024-06-02T10:00:00Z"
+          }
+        }
+      ]
+    }
+  ]
+}

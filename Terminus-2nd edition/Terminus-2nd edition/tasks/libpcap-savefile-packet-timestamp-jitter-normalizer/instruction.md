@@ -1,0 +1,5 @@
+The libpcap savefile timestamp normalizer under /app/crates/pcapjitter reads classic PCAP captures and writes a normalized packet timeline plus a gap side ledger, but exports disagree with site policy. Repair the tool so ingest and export follow /app/docs/savefile-format.md, /app/docs/timeline-normalization.md, /app/docs/tolerance-window.md, /app/docs/truncation-penalty.md, /app/docs/gap-ledger.md, /app/docs/staging-schema.md, /app/docs/export-contract.md, and /app/docs/cli.md.
+
+Use pcapjitter ingest with --input pointing at a PCAP path, --staging at /app/state/pcap-stage.json, and --ledger-root at /app/state. Use pcapjitter export with the same staging and ledger-root paths plus --output at /app/output/timeline.json. Bundled captures live under /app/fixtures/captures/. Re-exporting without changing inputs must append gap ledger rows with monotonic sequence numbers persisted under the ledger root. When TB3_PCAP_DIR is set to an absolute directory, ingest must resolve --input basenames only from that directory.
+
+Do not edit /app/fixtures/captures/, /app/docs/, or /tests.

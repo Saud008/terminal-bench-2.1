@@ -1,0 +1,21 @@
+--- a/assay_coupling/lot_resolver.rs
++++ b/assay_coupling/lot_resolver.rs
+@@ -1,12 +1,16 @@
+ use crate::win_schema::{LotRecord, TelemetryRow};
++
++fn alias_eq(a: &str, b: &str) -> bool {
++    a.eq_ignore_ascii_case(b)
++}
+
+ pub fn resolve_lot_id(alias: &str, lots: &[LotRecord]) -> Option<String> {
+     for lot in lots {
+-        if lot.lot_id == alias {
++        if alias_eq(&lot.lot_id, alias) {
+             return Some(lot.lot_id.clone());
+         }
+         for a in &lot.aliases {
+-            if a == alias {
++            if alias_eq(a, alias) {
+                 return Some(lot.lot_id.clone());
+             }
+         }

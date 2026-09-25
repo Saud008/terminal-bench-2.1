@@ -1,0 +1,1 @@
+whslot latch-yard --scenario NAME [--fixture-dir PATH]. whslot score-skus --scenario NAME. whslot draft-wave --scenario NAME. whslot crew-bind --scenario NAME. whslot emit-atlas --scenario NAME [--output PATH].

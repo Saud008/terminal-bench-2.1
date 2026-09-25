@@ -1,0 +1,65 @@
+---
+description: LOCKED — Platform rubrics live in rubrics/<slug>.md or chat (never task zip)
+alwaysApply: true
+---
+
+# Terminus — Rubric storage (LOCKED)
+
+**Repo policy:** No `rubric.md` in `tasks/<slug>/` or submission zips. Platform rubrics are **upload-form only**.
+
+## Where rubrics go
+
+| Output | Path | When |
+|--------|------|------|
+| **File (required on submit)** | `rubrics/<slug>.md` | Phase H CREATE, revise ready, or user asks for rubric |
+| **Chat** | Same `Agent …, ±N` lines | Optional duplicate of the file — **same slug** as the file |
+
+## Slug = task name from **this chat** (LOCKED — no conflicts)
+
+**Filename must equal the task slug you are working on in the current message.**
+
+| Chat says | Rubric file | Wrong |
+|-----------|-------------|-------|
+| `tasks/vulkan-spirv-dead-strip-auditor/` | `rubrics/vulkan-spirv-dead-strip-auditor.md` | `rubrics/rubric.md`, `rubrics/task.md`, another slug |
+| `pending/my-new-task/` | `rubrics/my-new-task.md` | reusing an old task’s rubric file |
+
+**Rules:**
+
+1. Take slug from `tasks/<slug>/` or `pending/<slug>/` in the user message (or hook-detected slug from platform summary for **that** task only).
+2. Write **only** `rubrics/<that-exact-slug>.md` — one file per task; never overwrite another slug’s file.
+3. Header inside the file must repeat the **same** slug and `tasks/<slug>/`.
+4. If two tasks in one chat, **two** rubric files — never one combined file.
+
+`write_platform_rubric.py` **refuses** `--slug` when `tasks/<slug>/` and `pending/<slug>/` do not exist (unless `--force`).
+
+**Every rubric file must start with:**
+
+```markdown
+# Platform rubric — <slug>
+
+**Task folder:** tasks/<slug>/
+```
+
+So rubrics never mix between tasks.
+
+## Write rules
+
+- Use `python3 scripts/write_platform_rubric.py --slug <name> …` **or** hand-write `rubrics/<name>.md` with the header above.
+- Lines: `Agent …, ±N` only; scores ∈ {±1, ±2, ±3, ±5}; ≥3 negatives total.
+- **Positive cumulative score 10–40** per rubric block (non-milestone: one block; milestone: each `# Rubric N` block). Sum **+** lines only — negatives do not count toward the band.
+- Milestone: `# Rubric 1` headers on platform; file may note milestone in header comment; **≥1 negative per milestone block**.
+- **Forbidden:** `tasks/<slug>/rubric.md`; rubric inside zip; generic rubric without slug in filename.
+
+## Agent must
+
+1. On **CREATE Phase H** or **ready to submit**: write `rubrics/<slug>.md` **and** paste the same lines in chat (or file only if user prefers files).
+2. Run `python3 scripts/platform_rubric_gate.py --check --slug <slug>` (or rely on `write_platform_rubric.py` validation).
+3. On **CREATE Phase H** or **ready to submit**: write `submission-explanations/<slug>.md` (user edits voice) **and** paste three paragraphs in chat for platform form.
+4. Name the **task slug** in the rubric header every time.
+5. Never skip rubric because repo omits task-folder `rubric.md`.
+
+## Related
+
+- `shared/platform-rubric-gate.mdc` — **10–40 positive cumulative** + pack gate
+- `shared/repo-workflow.mdc` · `create/new-task-pipeline-A-H.mdc` Phase H
+- `scripts/write_platform_rubric.py` · `rubrics/README.md`

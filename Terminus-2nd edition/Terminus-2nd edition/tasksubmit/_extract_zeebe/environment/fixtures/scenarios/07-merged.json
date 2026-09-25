@@ -1,0 +1,48 @@
+{
+  "process_id": "merged-overlap",
+  "partition_id": 7,
+  "broker_clock_ms": 12000,
+  "process_clock_ms": 11850,
+  "job_timeout_ms": 2500,
+  "incidents": [
+    {
+      "incident_key": "inc-merge",
+      "element_id": "task-route",
+      "job_key": "job-route",
+      "resolved_at_ms": 180,
+      "marker_persisted_at_ms": 420
+    }
+  ],
+  "jobs": [
+    {
+      "job_key": "job-route",
+      "element_id": "task-route",
+      "type": "route-parcel",
+      "intent_at_ms": 300,
+      "activating_until_ms": 410
+    }
+  ],
+  "boundaries": [
+    {
+      "boundary_id": "bnd-sla",
+      "attached_element": "task-route",
+      "fire_at_ms": 400,
+      "interrupting": true
+    },
+    {
+      "boundary_id": "bnd-complete",
+      "attached_element": "task-route",
+      "fire_at_ms": 430,
+      "interrupting": false
+    }
+  ],
+  "variables": {
+    "inputs": {"weight": 5, "priority": 1},
+    "output_mapping": {"routed_weight": "weight", "route_priority": "priority"},
+    "incident_overlay": {"weight": 50, "priority": 9}
+  },
+  "replay_batches": [
+    {"batch_id": "m1", "job_keys": ["job-route"], "idempotent": true},
+    {"batch_id": "m1", "job_keys": ["job-route"], "idempotent": true}
+  ]
+}

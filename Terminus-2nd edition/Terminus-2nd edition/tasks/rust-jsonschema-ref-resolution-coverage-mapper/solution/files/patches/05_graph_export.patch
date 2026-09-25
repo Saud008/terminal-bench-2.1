@@ -1,0 +1,13 @@
+--- environment/crates/graph_export/src/lib.rs
++++ solution/oracle/golden/crates/graph_export/src/lib.rs
+@@ -33,6 +33,10 @@
+             ref_kind: e.status.clone(),
+         });
+     }
++    graph_edges.sort_by(|a, b| {
++        (a.from.as_str(), a.to.as_str(), a.ref_kind.as_str())
++            .cmp(&(b.from.as_str(), b.to.as_str(), b.ref_kind.as_str()))
++    });
+     let nodes: Vec<GraphNode> = node_set
+         .into_iter()
+         .map(|id| GraphNode {

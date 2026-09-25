@@ -1,0 +1,18 @@
+--- a/internal/stagewire/digest.go
++++ b/internal/stagewire/digest.go
+@@ -3,6 +3,7 @@
+ import (
+     "crypto/sha256"
+     "encoding/hex"
++    "sort"
+     "strings"
+ 
+     "github.com/terminus/degaudit/internal/model"
+@@ -13,6 +14,7 @@
+     for _, c := range courses {
+         codes = append(codes, c.CourseCode)
+     }
++    sort.Strings(codes)
+     parts := append(codes, meta.CatalogSeed)
+     payload := strings.Join(parts, "|")
+     sum := sha256.Sum256([]byte(payload))

@@ -1,0 +1,1 @@
+Timeout evaluation runs at explicit timeout_checks_ms timestamps. A decision task must not time out while visibility_deadline_ms is still in the future. If a heartbeat arrived within heartbeat_grace_ms of the check time, the task remains active even when start_to_close_timeout_ms elapsed. Heartbeat grace does not bypass insufficient progress; see /app/docs/heartbeat-contract.md.

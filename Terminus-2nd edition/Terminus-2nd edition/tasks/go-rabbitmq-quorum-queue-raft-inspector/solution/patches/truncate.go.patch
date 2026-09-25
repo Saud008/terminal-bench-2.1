@@ -1,0 +1,11 @@
+--- a/internal/bundleclip/truncate.go
++++ b/internal/bundleclip/truncate.go
+@@ -6,7 +6,7 @@
+     cutoff := snap.LastIncludedIndex
+     var out []model.LogEntry
+     for _, e := range entries {
+-        if e.Index >= cutoff {
++        if e.Index > cutoff {
+             out = append(out, e)
+         }
+     }

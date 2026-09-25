@@ -1,0 +1,175 @@
+---
+description: Snorkel Common Errors — anti-patterns + reviewer feedback categories (additive)
+alwaysApply: false
+---
+
+# Terminus — Common Errors reference (Snorkel)
+
+**Additive rule.** **Source of truth:** Snorkel platform docs — *Common Errors*. Use when creating, auditing, revising, or defending tasks. Each section names the **reviewer feedback category** that maps to it.
+
+**Related (do not duplicate):** `reviewer/reviewer-checklist.mdc`, `reviewer/ci-checks-reference.mdc`, `create/environment-no-ai-scaffolding.mdc`, `shared/runtime-verifier.mdc`, `shared/canonical-base-image-gate.mdc`, `shared/instruction-prose-style.mdc`.
+
+**Pinning vs environment:** Unpinned pip/npm/apt or missing `@sha256` on `FROM` → feedback category **`pinning`**. Container layout, mounts, tmux, test.sh network installs → **`environment`**.
+
+---
+
+## Instruction problems
+
+**Feedback categories:** `instruction_styling`, `expose_answers`
+
+| Anti-pattern | Fix |
+|--------------|-----|
+| Ambiguous: “make it better”, “fix issues”, “handle errors properly” | Specific metrics, paths, behaviors |
+| Relative paths: `config/settings.json` | Absolute: `/app/config/settings.json` |
+| Missing output spec: “save results” | Named file: `/output/results.json` + schema or doc link |
+| Unverifiable tools: “use vim” | Verifiable outcome: “change port to 3000 in `/app/config.txt`” |
+| Backticks / fenced CLI blocks in `instruction.md` | Prose + absolute paths (`shared/instruction-prose-style.mdc`) |
+| Step-by-step fix hints, golden answers in instruction | Contract in `/app/docs/` only |
+| Reviewer “instruction unclear” → paste full algorithm in instruction | Shorten instruction; fix **docs** or **tests**; cite doc path only |
+
+---
+
+## Test problems
+
+**Feedback categories:** `test_alignment`, `test_build`
+
+| Anti-pattern | Fix |
+|--------------|-----|
+| Brittle exact string match on whole file | Key content or structured assertion |
+| Grep source for `sorted(` etc. | Behavior via subprocess / API / output |
+| Missing test docstrings | Docstring per test — what requirement it checks |
+| Order-dependent tests sharing global state | Independent setup per test |
+| Hardcoded random output | Seeded random or property checks |
+| Requirements tested but not in instruction/docs | Align or remove |
+| `test.sh` runtime `pip`/`uvx`/`apt`/`npm` | Deps in `environment/Dockerfile` only |
+
+Harbor `test.sh` must end with `if [ $? -eq 0 ]` reward block — see `shared/runtime-verifier.mdc`.
+
+---
+
+## Solution problems
+
+**Feedback category:** `oracle`
+
+| Anti-pattern | Fix |
+|--------------|-----|
+| `echo` golden answer to output file | Patch `/app` source, rebuild, run real logic |
+| Non-deterministic `ls` without `sort` | Deterministic ordering |
+| No `set -e` / continues after failure | Fail fast; offline — no network in `solve.sh` (G-025) |
+| Copy-only fix without recompile on compiled stacks | Rebuild JAR/beam/binary after patch |
+
+---
+
+## Environment problems
+
+**Feedback category:** `environment` (distinct from **`pinning`**)
+
+### Missing agent runtime dependencies
+
+**Symptom:** `RuntimeError: Failed to start tmux session`, `verifier_did_not_run` on every trial.
+
+Every image must install **`tmux`** and **`asciinema`** (apt by name on Debian — no apt version pins per `shared/platform-preferences.mdc`).
+
+### Runtime network installs in `test.sh`
+
+With `allow_internet = false`, `tests/test.sh` must **not** use: `apt-get install`, `curl | sh`, `uvx`, `pip install`, `npm install`, `git clone`, `wget`. Local Docker with network hides this; production → `RewardNotFoundError`.
+
+Verifier pytest/ctrf in Dockerfile (e.g. `/opt/verifier-venv`).
+
+### AI-framework scaffolding filenames
+
+Remove from `environment/`: `CLAUDE.md`, `skills.md`, `AGENTS.md`, `.cursor/`, `.cursorrules`, generic `PROMPT.md`. See `create/environment-no-ai-scaffolding.mdc`.
+
+### Solution or tests copied into the image
+
+Harbor mounts `/oracle/` and `/tests/` at runtime. **Do not** `COPY solution/` or `COPY tests/` into the image; narrow `COPY` + `.dockerignore`.
+
+### Privileged mode and dangerous capabilities
+
+No `--privileged`, `SYS_ADMIN`, `NET_ADMIN`, `SYS_MODULE`, or `/var/run/docker.sock` mounts.
+
+### Reserved directory conflicts
+
+Do not create or `chown` Harbor paths in Dockerfile: `/tests`, `/oracle`, `/logs/verifier/`, `/logs/artifacts/`. Use `/app/output`, `/app/work`, etc.
+
+### Heredocs and opaque archives
+
+No `RUN cat > /app/foo.py <<'EOF'`. Store source as files; `COPY` normally. Extract archives in same layer and remove archive.
+
+### Oversized build context
+
+`environment/` ≤ **100 MiB** total; no file > **50 MiB**. Trim fixtures; `.dockerignore` for `node_modules`, `.git`, caches.
+
+### Unsanctioned or floating base images
+
+Final runtime `FROM` must be **digest-pinned** (`@sha256:…`) and **canonical or justified**. No `latest`. Builder stage may differ; **final stage** is CI-checked. See `shared/canonical-base-image-gate.mdc`.
+
+---
+
+## Cheating opportunities
+
+**Feedback categories:** `expose_answers`, `test_alignment`
+
+| Anti-pattern | Fix |
+|--------------|-----|
+| `COPY tests/` into image | Tests mounted at runtime only |
+| `git clone` without pinned commit | Pin commit hash |
+| Assert only final JSON agent could edit | Independent reference computation in pytest |
+| Ground truth / expected output in `environment/` | Verifier-only fixtures under `/opt/` |
+
+---
+
+## Difficulty issues
+
+**Feedback category:** `task_difficulty`
+
+| Too easy | Too hard / unfair |
+|----------|-------------------|
+| Single-step fix | Hidden requirements |
+| Tutorial topic | Unreliable environment |
+| Pattern matching on one file | Contradictory spec |
+| Worst model > 80% (Opus 4.8 / GPT-5.5) | Luck-dependent success |
+
+Benchmark models and thresholds: `shared/difficulty-benchmark-models.mdc`.
+
+---
+
+## Quick reference (audit scan)
+
+| Area | Bad | Good |
+|------|-----|------|
+| Instructions | Relative paths | `/app/...` absolute paths |
+| Instructions | “Better”, “properly” | Specific metrics |
+| Tests | String-only match | Content / reference checks |
+| Tests | No docstrings | Docstrings |
+| Tests | Source grep | Behavior / subprocess |
+| Solution | Echo answers | Derive via real code |
+| Solution | Random unseeded | Fixed seed or properties |
+| Environment | Missing tmux/asciinema | Pre-install in Dockerfile |
+| Environment | Runtime installs in `test.sh` | Deps in image |
+| Environment | CLAUDE.md, skills.md, `.cursor/` | Task-specific names only |
+| Environment | `solution/` or `tests/` in Dockerfile | Harbor runtime mounts |
+| Environment | privileged / docker socket | Standard sandbox |
+| Environment | `FROM python:latest` | Canonical ECR + `@sha256` |
+| Cheating | Tests in image | Mount at runtime |
+| Cheating | Mutable golden files | Verify computation |
+| Metadata | Non-empty `subcategories` | `subcategories = []` (`shared/task-toml-subcategories-gate.mdc`) |
+| Metadata | `category` = `debugging` or `software-engineering` | Allowed category — e.g. `data-processing` (`shared/task-toml-category-gate.mdc`) |
+| Metadata | `allow_internet = false` but solve needs network | `allow_internet = true` only if genuinely required; else bake deps + offline oracle (`shared/allow-internet-gate.mdc`) |
+
+---
+
+## When auditing or revising
+
+1. Walk sections in order; tag each finding with **feedback category** + severity (reviewer checklist).
+2. **Environment** + **pinning** blockers → fix before zip.
+3. **instruction_styling** / **expose_answers** → triage per `reviewer/REVIEWER-RULES.mdc` (no solution leaks in instruction).
+4. **task_difficulty** → harden behavior, not unfair hidden rules.
+
+## See also (platform docs)
+
+- Quality Guidelines
+- Reviewer Checklist — Environment
+- Instruction Prompt Styling (`instruction_styling`)
+- Writing Oracle Solution (`oracle`)
+- Writing Tests (`test_alignment`, `test_build`)

@@ -1,0 +1,32 @@
+pub fn tag_compatible(wheel_tag: &str, python: &str, platform: &str, arch: &str) -> bool {
+    let parts: Vec<&str> = wheel_tag.split('-').collect();
+    if parts.len() < 3 {
+        return false;
+    }
+    let py_tag = parts[0];
+    let abi = parts[1];
+    let plat = parts[parts.len() - 1];
+    let py_num = python.replace('.', "");
+    let target_py: u32 = if py_num.starts_with('3') {
+        format!("3{}", &py_num[1..]).parse().unwrap_or(0)
+    } else {
+        py_num.parse().unwrap_or(0)
+    };
+    let py_ok = if abi == "abi3" {
+        py_tag.starts_with("cp") && py_tag[2..].parse::<u32>().unwrap_or(u32::MAX) <= target_py
+    } else {
+        py_tag == format!("cp{py_num}")
+    };
+    let plat_ok = plat == format!("{platform}_{arch}") || plat == "any";
+    py_ok && plat_ok
+}
+
+pub fn best_wheel_tag(tags: &[String], python: &str, platform: &str, arch: &str) -> Option<String> {
+    let mut compat: Vec<String> = tags
+        .iter()
+        .filter(|t| tag_compatible(t, python, platform, arch))
+        .cloned()
+        .collect();
+    compat.sort();
+    compat.into_iter().next()
+}

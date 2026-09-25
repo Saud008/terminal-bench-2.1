@@ -1,0 +1,261 @@
+---
+description: Lifecycle phase map — use @WORKFLOW MAP or a specific @ tag instead when possible (LOCKED)
+alwaysApply: false
+---
+
+# Terminus — Task lifecycle
+
+**Prefer @ tags** — each tag maps to a **folder** under `.cursor/rules/`:
+
+| Tag | Folder |
+|-----|--------|
+| `@CREATE RULES` | `create/` |
+| `@IDEAS RULES` | `ideas/` |
+| `@AUDIT RULES` | `audit/` |
+| `@REVIEWER RULES` | `reviewer/` |
+| `@REVISE RULES` | `revise/` |
+| `@VERIFY RULES` | `verify/` |
+| `@ZIP RULES` | `zip/` |
+
+**Main hub:** `shared/WORKFLOW-MAP.mdc` + `shared/terminus-master-engine.mdc` (ENGINE_0; lazy-load ENGINE_1–7)
+
+On conflict, prefer the **stricter** rule.
+
+**Two phase systems (do not mix letters):**
+
+| System | When | Letters |
+|--------|------|---------|
+| **A→H pipeline** | **New** task under `tasks/` | A–H in `create/new-task-pipeline-A-H.mdc` |
+| **Lifecycle A–F** | Ideas, audit, **revise existing**, zip | A–F below |
+
+---
+
+## Rule load order (every phase)
+
+1. **`shared/spec.mdc`** — full spec, anti-hallucination, structure, tests, oracle
+2. **`shared/accepted-corpus.mdc`** — read **≥2** tasks from `tasks/_accepted-tasks/` and **copy each file type exactly** from closest stack reference before create/revise
+3. **`shared/WORKFLOW-MAP.mdc`** — main hub (rules + prompts index)
+4. Phase-specific folder + files below
+
+---
+
+## Phase A — Generate ideas
+
+**Trigger:** user asks for task ideas, brainstorm, "10 ideas", `aap gen karo`
+
+| Load | File |
+|------|------|
+| Required | `.cursor/rules/ideas/generate-ideas.mdc` |
+| Required | `.cursor/rules/shared/accepted-corpus.mdc` |
+| Required | `.cursor/rules/create/accepted-patterns.mdc` |
+| Required | `.cursor/rules/create/safe-languages.mdc` |
+| Reference | `.cursor/rules/shared/anti-trivial.mdc` |
+
+**Do:** inspect `tasks/` for near-duplicates; cite ≥2 `_accepted-tasks/` paths in reply. **Do not** copy NEEDS_REVISION WIP patterns.
+
+---
+
+## Phase B — Create / implement task
+
+**Trigger:** build new task or major new content under `tasks/<name>/`
+
+| Load | File |
+|------|------|
+| Required | `shared/WORKFLOW-MAP.mdc` |
+| Required | `.cursor/rules/shared/accepted-corpus.mdc` + ≥2 `_accepted-tasks/` reads |
+| Required | `.cursor/rules/shared/first-pass-blueprint.mdc` |
+| Required | `.cursor/rules/create/creation-rules.mdc` |
+| Required | `.cursor/rules/shared/anti-trivial.mdc` |
+| Required | `.cursor/rules/shared/dockerfile.mdc` |
+| Required | `.cursor/rules/shared/runtime-verifier.mdc` |
+| Required | `.cursor/rules/shared/platform-preferences.mdc` |
+| Required | `.cursor/rules/shared/repo-workflow.mdc` |
+| Required | `.cursor/rules/create/environment-no-ai-scaffolding.mdc` |
+| Reference | `.cursor/rules/create/safe-languages.mdc`, `zip/ZIP-RULES.mdc` |
+
+**Gate before claiming done:** `shared/first-pass-blueprint.mdc` §0 (A–E) + `shared/core.mdc` mandatory self-check. **Not ready** without real file inspection.
+
+---
+
+## Phase C — Post-creation audit (read-only)
+
+**Trigger:** "audit the task", pre-submit review, user prompt **§1** in `shared/WORKFLOW-MAP.mdc`
+
+| Load | File |
+|------|------|
+| Required | `shared/WORKFLOW-MAP.mdc` |
+| Required | `.cursor/rules/shared/task-lifecycle.mdc` §1 |
+| **Prompt (LOCKED)** | **`prompts/audit.md`** + `@REVIEWER RULES` + `reviewer/reviewer-checklist.mdc` |
+| Required | `.cursor/rules/shared/core.mdc` (self-check list) |
+| Required | `.cursor/rules/shared/accepted-corpus.mdc` |
+| Reference | `.cursor/rules/verify/pre-zip-audit.mdc` Step 0 (file reads) |
+| Reference | `.cursor/rules/shared/runtime-verifier.mdc`, `shared/dockerfile.mdc` |
+
+**Do:** list real files; map tests ↔ instruction ↔ docs; severity High/Medium/Low per issue. **Do not edit** unless user asks.
+
+**Skip rubric file checks** if repo omits `rubric.md` (`shared/repo-workflow.mdc`).
+
+---
+
+## Phase D — Platform rejection fix
+
+**Trigger:** platform label or summary — **TRIVIAL**, **oracle fail** / **Oracle solution failed**, **unsolvable** / unfair, **verifier did not run** — without full reviewer line comments. User prompt **§2a** in `shared/WORKFLOW-MAP.mdc`.
+
+| Load | File |
+|------|------|
+| **LOCKED first (oracle fail)** | `.cursor/rules/revise/oracle-fix-g025-g027.mdc` + **`oracleFix.md`** when label is **Oracle solution failed** or oracle reward **0** on platform |
+| Required | `.cursor/rules/shared/task-lifecycle.mdc` §2 |
+| Required | `.cursor/rules/shared/first-pass-blueprint.mdc` §0–§4 |
+| Required | `.cursor/rules/shared/anti-trivial.mdc` |
+| Required | `.cursor/rules/shared/accepted-corpus.mdc` |
+| Required | `.cursor/rules/shared/platform-preferences.mdc` |
+| Required | `.cursor/rules/shared/runtime-verifier.mdc` |
+| Required | `.cursor/rules/shared/dockerfile.mdc` |
+| **HARD + not solvable** | **`prompts/hard.md`** → quote summary → **Solvable ≠ Trivial** → one of `hard-case-1.md` / `hard-case-2.md` / `hard-case-3.md` |
+
+**Do:** inspect real files; **edit in place only** in `tasks/<name>/`. Fix behavior — not metadata-only. Re-run oracle + NOP when behavior/tests change.
+
+**HARD unsolvable sub-flow:** paste platform summary → quote Claude/GPT runs + 0%-forever tests + Analysis → per-test triage → pick case → **Solvable ≠ Trivial** (Case 1 = fairness only; probes before zip; Case 6 if ≥3/5 predicted) → report solvable yes/no + trivial risk + files changed.
+
+---
+
+## Phase D′ — Revision from reviewer feedback
+
+**Trigger:** pasted **reviewer line comments** or NEEDS_REVISION text with reviewer items. User prompt **§2b** in `shared/WORKFLOW-MAP.mdc`.
+
+| Load | File |
+|------|------|
+| **LOCKED first** | `.cursor/rules/reviewer/REVIEWER-RULES.mdc` |
+| **Prompt router** | **`prompts/reviewer.md`** — paste feedback; agent **auto-picks** RF1–RF6 |
+| Required | `.cursor/rules/shared/task-lifecycle.mdc` §3 |
+| Required | `.cursor/rules/shared/accepted-corpus.mdc` (match ACCEPTED structure, not WIP traps) |
+| Required | `.cursor/rules/shared/anti-trivial.mdc` |
+| Required | `.cursor/rules/create/creation-rules.mdc` (alignment only) |
+| Reference | `.cursor/rules/shared/first-pass-blueprint.mdc` §3 (triviality) |
+
+**Do:** triage each comment → accept / reject / partial / defer **before** edits. Fix only accepted/partial unless user says apply all verbatim. Preserve **≥3 interacting bugs** (target **5+** for new tasks). Re-run oracle + NOP when behavior/tests change.
+
+**RF routing (auto):** paste feedback → `prompts/reviewer.md` picks RF1–RF6; do not trivialize. RF6 if trivializing hints · RF1 metadata-only · RF3 agent eval OK · RF2 verify loop · RF5 difficulty recheck · RF4 default.
+
+---
+
+## Phase E — Final verify after fixes
+
+**Trigger:** after revision, user prompt **§3** in `shared/WORKFLOW-MAP.mdc`, "recheck from scratch"
+
+| Load | File |
+|------|------|
+| Required | `.cursor/rules/shared/task-lifecycle.mdc` §4–§5 |
+| Required | `.cursor/rules/shared/first-pass-blueprint.mdc` §0 + §6 |
+| Required | `.cursor/rules/verify/pre-zip-audit.mdc` (full) |
+| Required | `.cursor/rules/shared/core.mdc` |
+| Required | `shared/WORKFLOW-MAP.mdc` |
+
+**Run commands** (evidence required):
+
+```bash
+harbor run -a oracle -p ./tasks/<name> --debug --force-build
+harbor run -a nop -p ./tasks/<name> --debug --force-build
+```
+
+**Report:** Ready to submit **yes/no**; blockers; commands + results. If not run → **not verified yet**.
+
+---
+
+## Phase F — Pack upload zip
+
+**Trigger:** user asks to zip, upload, update tasksubmit
+
+| Load | File |
+|------|------|
+| **LOCKED** | `.cursor/rules/zip/ZIP-RULES.mdc` |
+| Required | `.cursor/rules/shared/repo-workflow.mdc` |
+| Gate | Phase E must pass (oracle **1**, NOP **0**) |
+
+**Zip:** `./scripts/pack_zip.sh <name>` → `tasksubmit/<name>.zip`.
+
+---
+
+## Copy-paste prompts (user → Cursor)
+
+### After create — audit (Phase C)
+
+```
+@prompts/audit.md
+@AUDIT RULES
+@REVIEWER RULES
+
+Audit tasks/<name> against Terminus rules.
+
+First inspect the real task directory and list actual files. Do not assume any file exists.
+Apply reviewer/reviewer-checklist.mdc in full. Do not modify files.
+```
+
+### Platform rejection (Phase D)
+
+```
+Fix tasks/<name> — platform rejection (TRIVIAL / oracle / unsolvable / verifier).
+Lifecycle Phase D + shared/task-lifecycle.mdc §2 + shared/first-pass-blueprint.mdc §0–§4.
+If Oracle solution failed: LOCKED revise/oracle-fix-g025-g027.mdc + oracleFix.md (G-025–G-027) first.
+If HARD + not solvable: prompts/hard.md → quote summary → Solvable ≠ Trivial → route to hard-case-1/2/3; probes 1/1b/7/8 before zip; Case 6 if either benchmark likely ≥3/5 after fairness fix.
+Edit in place only. Re-run oracle + NOP after edits.
+
+Platform rejection:
+[paste label or summary here]
+```
+
+### HARD unsolvable (Phase D — Case 1 / 2 / 3)
+
+```
+@prompts/hard.md
+Fix tasks/<name> — apply HARD case per platform summary.
+
+Load prompts/hard.md router + the chosen hard-case-N.md in full.
+Build per-test pass table before any edit. Edit in place only — do not merge.
+Re-run oracle + NOP after edits.
+
+Platform summary:
+<paste Difficulty, Status, Agent Performance, Unit Tests Results>
+```
+
+### Platform rejection (legacy one-liner)
+
+```
+Fix tasks/<name> — platform rejection (TRIVIAL / oracle / unsolvable / verifier).
+Lifecycle Phase D + shared/task-lifecycle.mdc §2 + shared/first-pass-blueprint.mdc §0–§4.
+If Oracle solution failed: LOCKED revise/oracle-fix-g025-g027.mdc + oracleFix.md (G-025–G-027) first.
+Edit in place only. Re-run oracle + NOP after edits.
+
+Platform rejection:
+[paste label or summary here]
+```
+
+### Reviewer revision (Phase D′) — auto-router
+
+```
+@prompts/reviewer.md
+Fix tasks/<name> per reviewer feedback below.
+Auto-pick RF1–RF6 (do not trivialize). Re-run oracle + NOP after edits.
+
+Reviewer feedback:
+[paste here]
+```
+
+### Final verify + zip (Phase E + F)
+
+```
+Pre-upload gate — tasks/<name>. shared/task-lifecycle.mdc Phase E then F.
+shared/first-pass-blueprint.mdc §0 A–E with evidence. Oracle + NOP required.
+Then update tasksubmit/<name>.zip. Do not say ready if any gate fails.
+```
+
+---
+
+## What NOT to do
+
+- Skip required splits (`shared/dockerfile.mdc`, `shared/runtime-verifier.mdc`, `zip/ZIP-RULES.mdc`, triage) for the current phase.
+- Skip `shared/WORKFLOW-MAP.mdc` or `shared/accepted-corpus.mdc` reads before create/revise.
+- Mix **A→H** letters with **lifecycle A–F** for the same task step.
+- Metadata-only fixes for NEEDS_REVISION (TRIVIAL / unsolvable / oracle / verifier failures).
+- Claim ready without oracle/NOP command output.
+- Flag missing local `rubric.md` in this repo (`shared/repo-workflow.mdc`).

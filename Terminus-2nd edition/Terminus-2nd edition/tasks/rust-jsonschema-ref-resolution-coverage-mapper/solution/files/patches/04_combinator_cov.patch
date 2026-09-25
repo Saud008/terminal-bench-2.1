@@ -1,0 +1,70 @@
+--- environment/crates/combinator_cov/src/lib.rs
++++ solution/oracle/golden/crates/combinator_cov/src/lib.rs
+@@ -23,7 +23,6 @@
+         }
+     }
+     if let Some(any) = object_get(node, "anyOf").and_then(|v| v.as_array()) {
+-        let mut any_hit = false;
+         for (i, branch) in any.iter().enumerate() {
+             let bp = if pointer.is_empty() {
+                 format!("/anyOf/{i}")
+@@ -31,19 +30,9 @@
+                 format!("{pointer}/anyOf/{i}")
+             };
+             if instance_matches(branch, instance) {
+-                any_hit = true;
++                cov.any_of.insert(bp.clone());
+             }
+             walk_combinators(branch, &bp, instance, cov);
+-        }
+-        if any_hit {
+-            for i in 0..any.len() {
+-                let bp = if pointer.is_empty() {
+-                    format!("/anyOf/{i}")
+-                } else {
+-                    format!("{pointer}/anyOf/{i}")
+-                };
+-                cov.any_of.insert(bp);
+-            }
+         }
+     }
+     if let Some(props) = object_get(node, "properties").and_then(|v| v.as_object()) {
+@@ -63,11 +52,35 @@
+ }
+ 
+ fn instance_matches(schema: &Value, instance: &Value) -> bool {
++    if let Some(c) = object_get(schema, "const") {
++        return c == instance;
++    }
++    if let Some(props) = object_get(schema, "properties").and_then(|v| v.as_object()) {
++        if let Some(inst_obj) = instance.as_object() {
++            for (key, subschema) in props {
++                if let Some(child) = inst_obj.get(key) {
++                    if let Some(const_v) = object_get(subschema, "const") {
++                        if const_v != child {
++                            return false;
++                        }
++                    } else if !instance_matches(subschema, child) {
++                        return false;
++                    }
++                }
++            }
++            if let Some(required) = object_get(schema, "required").and_then(|v| v.as_array()) {
++                for req in required {
++                    if let Some(name) = req.as_str() {
++                        if !inst_obj.contains_key(name) {
++                            return false;
++                        }
++                    }
++                }
++            }
++        }
++    }
+     if let Some(t) = object_get(schema, "type").and_then(|v| v.as_str()) {
+         return type_matches(t, instance);
+-    }
+-    if object_get(schema, "const").is_some() {
+-        return object_get(schema, "const") == Some(instance);
+     }
+     true
+ }

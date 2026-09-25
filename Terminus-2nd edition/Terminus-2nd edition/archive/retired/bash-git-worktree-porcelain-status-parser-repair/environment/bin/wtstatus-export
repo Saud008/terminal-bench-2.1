@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${WTSTATUS_APP_ROOT:-/app}"
+export WTSTATUS_APP_ROOT="${APP_ROOT}"
+LIB="${APP_ROOT}/lib"
+
+# shellcheck source=common.sh
+source "${LIB}/common.sh"
+# shellcheck source=parse_porcelain.sh
+source "${LIB}/parse_porcelain.sh"
+# shellcheck source=classify.sh
+source "${LIB}/classify.sh"
+# shellcheck source=export_json.sh
+source "${LIB}/export_json.sh"
+
+usage() {
+  echo "usage: wtstatus-export parse --porcelain PATH --config PATH --export PATH" >&2
+  exit 2
+}
+
+cmd_parse() {
+  local porcelain="" config="" export_path=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --porcelain) porcelain="$2"; shift 2 ;;
+      --config) config="$2"; shift 2 ;;
+      --export) export_path="$2"; shift 2 ;;
+      *) usage ;;
+    esac
+  done
+  [[ -z "${porcelain}" || -z "${config}" || -z "${export_path}" ]] && usage
+  [[ ! -f "${porcelain}" || ! -f "${config}" ]] && exit 2
+
+  local raw_json entries_json
+  raw_json="$(wt_parse_porcelain "${porcelain}")" || exit 1
+  entries_json="$(wt_classify_entries "${raw_json}" "${config}")" || exit 1
+  wt_write_export "${porcelain}" "${config}" "${export_path}" "${entries_json}"
+}
+
+main() {
+  [[ $# -lt 1 ]] && usage
+  case "$1" in
+    parse) shift; cmd_parse "$@" ;;
+    *) usage ;;
+  esac
+}
+
+main "$@"

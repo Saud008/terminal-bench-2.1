@@ -1,0 +1,43 @@
+--- environment/internal/ledger/publish.go
++++ environment/internal/ledger/publish.go
+@@ -30,6 +30,11 @@
+ 		return fmt.Errorf("eval_pass must be positive")
+ 	}
+ 
++	var existing int
++	if err := db.QueryRow(`SELECT COUNT(*) FROM ledger WHERE pass_num=?`, pass).Scan(&existing); err != nil {
++		return err
++	}
++
+ 	rows, err := db.Query(`SELECT holder_id, visa_id, remaining_stay_days FROM decisions ORDER BY holder_id, visa_id`)
+ 	if err != nil {
+ 		return err
+@@ -43,11 +48,6 @@
+ 		if err := rows.Scan(&holder, &visa, &rem); err != nil {
+ 			return err
+ 		}
+-		_, err := db.Exec(`INSERT INTO ledger(holder_id,visa_id,line_kind,amount_days,pass_num) VALUES(?,?,?,?,?)`,
+-			holder, visa, "validity", rem, pass)
+-		if err != nil {
+-			return err
+-		}
+ 		lines = append(lines, ledgerLine{
+ 			HolderID:          holder,
+ 			VisaID:            visa,
+@@ -57,6 +57,16 @@
+ 	}
+ 	if err := rows.Err(); err != nil {
+ 		return err
++	}
++
++	if existing == 0 {
++		for _, ln := range lines {
++			_, err := db.Exec(`INSERT INTO ledger(holder_id,visa_id,line_kind,amount_days,pass_num) VALUES(?,?,?,?,?)`,
++				ln.HolderID, ln.VisaID, "validity", ln.RemainingStayDays, pass)
++			if err != nil {
++				return err
++			}
++		}
+ 	}
+ 
+ 	sid, _ := store.GetMeta(db, "scenario_id")

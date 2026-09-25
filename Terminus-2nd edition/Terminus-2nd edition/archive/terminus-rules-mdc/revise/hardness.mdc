@@ -1,0 +1,108 @@
+---
+description: Difficulty guards G-028–G-032 — EASY/TRIVIAL prevention at create and revise (LOCKED)
+alwaysApply: false
+---
+
+# Terminus — Difficulty hardness guards (LOCKED)
+
+**Complements:** `revise/platform-hardness-guards.mdc` (G-025–G-027 oracle/zip) · `shared/anti-trivial.mdc` · `revise/trivial-hardening-probes.mdc` · `shared/platform-preferences.mdc` §7.
+
+**When:** CREATE or REVISE any non-milestone task; platform **EASY** / **TRIVIAL**; user says agents pass too easily; before **first** upload of Go/Rust/Bash CLI tasks.
+
+**Model calibration (LOCKED — Jun 2026):** Benchmark agents are **`terminus-gpt5-5`** and **`terminus-claude-opus-4-8`**. They pass **more** than legacy GPT-5.2 / Opus 4.6 on the **same** task. Design and revise as if **≥3/5 on either model** means **Case 6** — do not wait for platform EASY label or both 5/5.
+
+**Do not weaken G-028–G-035** unless the user explicitly overrides in the current message.
+
+---
+
+## Proven failure pattern (2026-06)
+
+| Symptom | Root cause | Fix class |
+|---------|------------|-----------|
+| GPT **5/5**, Claude **4–5/5**, all tests **10/10** | Single-path `BuildX()` — agents patch 7 files in one pass | **Case 6** ingest → staging → export |
+| GPT **≥3/5** or Claude **≥3/5** on fair task (new models) | Old thresholds too loose; decorative Case 5 still passes | **Case 6** — treat as TRIVIAL-equivalent |
+| Second EASY after Case 5 | Decorative fields + more pytest, same pipeline | **Case 6 only** (G-031) |
+| Fixing `wrap.go` / `merge/apply.go` passes bundled | Export uses **different** broken module | **Decoy split** (G-030) |
+| 35+ tests still EASY | Tests verify same bugs as bundled | **Probe 3/4** independent hidden trap |
+| `@prompts/hard.md` Case 1 closed spec gap; agents were 13/14 | Fairness fix only → both models **≥3/5** after resubmit | **`@prompts/trivial.md` Case 6** in same revision — do not ship trivial by accident |
+
+---
+
+## Registry (difficulty — upload blockers)
+
+| ID | Guard | Evidence |
+|----|--------|----------|
+| **G-028** | **Probes PASS** — `revise/trivial-hardening-probes.mdc` table in agent reply before zip; any FAIL → no upload | Repeated EASY after “hardened” zip |
+| **G-029** | Go/Rust **export CLI** tasks: **staging artifact** on disk (`/app/state/*-snapshot.json` or equivalent) + pytest asserts ingest contract; cited in `instruction.md` + `/app/docs/` | `smpte-timecode-wrap-ledger`, `oci-layer-tar-entry-sorter` pre-Case-6 EASY |
+| **G-030** | **Decoy module:** export/publish stage must **not** call the obvious fix target (`wrap.go`, `merge/apply.go`) while that file remains broken decoy | Agents fix merge only; hidden/export tests still fail until `export_stage.go` / `staging/publish.go` fixed |
+| **G-031** | **Any** EASY/TRIVIAL on slug **or** either model **≥3/5** → **Case 6 structural redesign** — Case 4/5 **forbidden** unless user explicitly overrides | Platform rejection + new-model inflation |
+| **G-032** | **Probe 1:** one-file oracle patch must leave **≥60%** tests failing (default); **≥50%** only if no agent runs yet | Single-file patch passes most tests |
+| **G-033** | **Chained poison:** ingest-only fix must fail **export + replay** hidden; export-only fix must fail **cross-run / idempotency** hidden | Agents fix one stage and stop |
+| **G-034** | **≥2 independent hidden traps** under `/opt/verifier-fixtures/` or `TB3_*` — different failure mode than bundled root cause | Hidden tests duplicate bundled bugs |
+| **G-035** | **First upload** Go/Rust/Bash export CLI without G-029+G-030+G-033 evidence → **block zip** (no “try platform first”) | First-submit EASY wave |
+
+---
+
+## CREATE-time (before first upload)
+
+New Go/Rust/Bash **CLI export** tasks **must** ship with:
+
+1. **≥2 pipeline stages** (ingest → staging → export, or ingest + export subcommands).
+2. **≥1 test** that asserts staging snapshot bytes/schema (independent reference).
+3. **≥1 decoy** source file that looks like the fix target but is **not** on the export hot path.
+4. **≥6 interacting bugs** across **≥5 modules** including **export-only** + **ingest-only** layers (CREATE target).
+5. **≥2 hidden traps** (G-034) with independent reference in pytest.
+6. Probe table **PASS** (probes 1, 1b, 7, 8 minimum) in Phase H / pre-zip message.
+
+**Do not** claim `difficulty = "hard"` on CREATE without G-028–G-030 + G-033–G-035 evidence in tree.
+
+---
+
+## REVISE-time (EASY / TRIVIAL)
+
+| Platform label | Router | First case |
+|----------------|--------|------------|
+| **EASY** | `prompts/easy.md` | **Case 6** if GPT ≥3/5, Claude ≥3/5, or diagnosis row 1–2 |
+| **TRIVIAL** | `prompts/trivial.md` | **Case 6** — skip Case 4/5 unless user overrides |
+| **No label yet** but CREATE Go/Rust/Bash CLI | `sp-hard-create-revise.md` | **Case 6 path A** before first zip |
+
+**Pre-upload local signal (no platform needed):** If you **predict** either benchmark would score **≥3/5** on current tree → **Case 6** before zip.
+
+**Forbidden revision moves:**
+
+- More pytest on same code path without staging/decoy
+- New ledger fields / hash columns only
+- Instruction hints that name bug files or fix order
+- Weakening hidden tests to lift pass rate
+
+---
+
+## Probe quick reference
+
+Run **`revise/trivial-hardening-probes.mdc`** in full. Minimum before zip:
+
+| Probe | PASS means |
+|-------|------------|
+| 1 Single-file patch | **≥60%** tests still fail (≥50% only pre-agent-runs) |
+| 2 Persistence omitted | Cross-run / replay tests fail |
+| 3 Hidden vs bundled | Hidden fails under partial fix |
+| 4 Almost-correct trap | Plausible wrong fix passes some bundled, fails hidden |
+| 5 Doc depth | ≥3 docs for hidden behavior; no fix recipe |
+| 6 Escalation | Structural change on **any** EASY/TRIVIAL (G-031) |
+| 7 Decoy module | Fixing decoy file alone; export tests still fail |
+| 8 Ingest-only patch | Fixing ingest/staging only; export/replay hidden still fail (G-033) |
+| 9 Dual decoy | Both obvious files fixed; export stage still broken |
+
+---
+
+## Related prompts
+
+| Phase | Entry |
+|-------|--------|
+| EASY label | `prompts/easy.md` |
+| TRIVIAL label | `prompts/trivial.md` |
+| Structural redesign | `prompts/trivial-case-6.md` |
+| CREATE hard | `prompts/sp-hard-create-revise.md` |
+| Reviewer + difficulty | `prompts/reviewer.md` § Difficulty escalation |
+
+Oracle/zip guards remain **G-025–G-027** in `platform-hardness-guards.mdc` — difficulty guards do not replace them.

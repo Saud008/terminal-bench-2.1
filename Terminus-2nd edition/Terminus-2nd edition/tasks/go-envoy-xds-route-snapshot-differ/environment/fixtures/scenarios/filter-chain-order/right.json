@@ -1,0 +1,52 @@
+{
+  "version": "snap-1",
+  "listeners": [
+    {
+      "name": "ingress",
+      "filter_chains": [
+        {
+          "filters": [
+            {
+              "name": "envoy.filters.http.cors",
+              "type": "http"
+            },
+            {
+              "name": "envoy.filters.network.http_connection_manager",
+              "type": "network"
+            },
+            {
+              "name": "envoy.filters.http.router",
+              "type": "http"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "domain": "*",
+      "routes": [
+        {
+          "match": {
+            "prefix": "/"
+          },
+          "cluster": "svc",
+          "precedence": 1
+        }
+      ]
+    }
+  ],
+  "clusters": [
+    {
+      "name": "svc",
+      "endpoints": [
+        {
+          "host": "10.2.0.1",
+          "weight": 100
+        }
+      ]
+    }
+  ],
+  "secrets": []
+}

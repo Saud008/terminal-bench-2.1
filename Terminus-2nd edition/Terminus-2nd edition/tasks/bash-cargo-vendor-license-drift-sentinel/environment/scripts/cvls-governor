@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${APP_ROOT:-/app}"
+
+usage() {
+  echo "usage: cvls-governor inventory --workspace <path>" >&2
+  echo "       cvls-governor attest --workspace <path>" >&2
+  echo "       cvls-governor publish --workspace <path> --json <path> --csv <path>" >&2
+  exit 2
+}
+
+cmd="${1:-}"
+shift || usage
+
+case "${cmd}" in
+  inventory|scan|ingest)
+    exec bash "${APP_ROOT}/lib/inventory_workspace.sh" "$@"
+    ;;
+  attest|classify|audit)
+    exec bash "${APP_ROOT}/lib/attest_findings.sh" "$@"
+    ;;
+  publish|write-reports|export)
+    exec bash "${APP_ROOT}/lib/publish_manifest.sh" "$@"
+    ;;
+  *)
+    usage
+    ;;
+esac

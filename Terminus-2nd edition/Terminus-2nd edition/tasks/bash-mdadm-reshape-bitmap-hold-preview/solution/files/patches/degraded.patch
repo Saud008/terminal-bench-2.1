@@ -1,0 +1,11 @@
+--- internal/raidops/policies/degraded_floor_policy.sh	2026-07-16 16:45:59.525075800 +0000
++++ internal/raidops/policies/degraded_floor_policy.sh	2026-07-16 14:44:16.989158600 +0000
+@@ -3,7 +3,7 @@
+ python3 - <<'PY'
+ import json, sys
+ from pathlib import Path
+-MIN_ACTIVE = {"raid1": 1, "raid5": 2, "raid6": 3, "raid10": 2}
++MIN_ACTIVE = {"raid1": 1, "raid5": 3, "raid6": 4, "raid10": 2}
+ inv = json.loads(Path("/app/state/inventory.json").read_text())
+ blocked = {}
+ for arr in inv.get("arrays", []):

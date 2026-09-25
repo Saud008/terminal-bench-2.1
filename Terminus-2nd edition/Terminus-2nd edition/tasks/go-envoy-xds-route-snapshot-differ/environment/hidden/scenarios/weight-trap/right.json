@@ -1,0 +1,56 @@
+{
+  "version": "snap-1",
+  "listeners": [
+    {
+      "name": "ingress",
+      "filter_chains": [
+        {
+          "filters": [
+            {
+              "name": "envoy.filters.http.router",
+              "type": "http"
+            },
+            {
+              "name": "envoy.filters.network.http_connection_manager",
+              "type": "network"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "domain": "*",
+      "routes": [
+        {
+          "match": {
+            "prefix": "/"
+          },
+          "cluster": "edge",
+          "precedence": 1
+        }
+      ]
+    }
+  ],
+  "clusters": [
+    {
+      "name": "edge",
+      "endpoints": [
+        {
+          "host": "10.1.0.1",
+          "weight": 2
+        },
+        {
+          "host": "10.1.0.2",
+          "weight": 2
+        },
+        {
+          "host": "10.1.0.3",
+          "weight": 2
+        }
+      ]
+    }
+  ],
+  "secrets": []
+}

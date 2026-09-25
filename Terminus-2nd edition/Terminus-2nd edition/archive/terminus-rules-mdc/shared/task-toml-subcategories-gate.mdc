@@ -1,0 +1,66 @@
+---
+description: task.toml subcategories — always empty array for this repo (additive)
+alwaysApply: false
+---
+
+# Terminus — `task.toml` subcategories (always empty)
+
+**Additive rule.** **Repo policy (LOCKED for Sanjana workflow):** always
+
+```toml
+subcategories = []
+```
+
+Do **not** populate Harbor subcategory tags in `task.toml` for tasks under `tasks/` or submission zips. Lane shapes in `create/accepted-patterns.mdc` describe **task design**, not metadata labels.
+
+## Required shape
+
+```toml
+[metadata]
+subcategories = []
+```
+
+- Field must exist under `[metadata]`.
+- Value must be an **empty array** — not omitted, not `null`, not a one-element list.
+
+## Harbor allow-list (reference only — do not use in this repo)
+
+Platform CI accepts only these strings **if** a task ever sets them elsewhere; **this repo does not:**
+
+- `api_integration`
+- `db_interaction`
+- `long_context`
+- `tool_specific`
+- `ui_building`
+
+**Invalid — CI fails:** `data-processing`, `build-and-dependency-management`, `security`, or any other string.
+
+If you see a non-empty `subcategories` in a WIP task, clear it to `[]` before zip.
+
+## Pre-submit check
+
+**Automatic:** `./scripts/pack_zip.sh <name>` runs `scripts/ensure_subcategories_empty.py --ensure` — no manual step.
+
+**Manual (debug only):**
+
+```bash
+python3 scripts/ensure_subcategories_empty.py --check --task-dir tasks/<name>
+grep -n 'subcategories' tasks/<name>/task.toml
+# must show: subcategories = []
+```
+
+**Bulk fix** (optional): `python3 scripts/ensure_subcategories_empty.py` — scans `tasks/`, `tasksss/`, `dusre-wale/`.
+
+## Audit severity
+
+| Issue | Severity |
+|-------|----------|
+| Missing `subcategories` field | **High** |
+| Non-empty `subcategories` | **High** — reset to `[]` |
+| Invalid string in array | **High** — CI fail (should not occur if empty) |
+
+## Related
+
+- `create/accepted-patterns.mdc` — same empty-array policy
+- `zip/ZIP-RULES.mdc` — zip metadata expectation
+- `shared/runtime-verifier.mdc` — Harbor allow-list for platform docs only

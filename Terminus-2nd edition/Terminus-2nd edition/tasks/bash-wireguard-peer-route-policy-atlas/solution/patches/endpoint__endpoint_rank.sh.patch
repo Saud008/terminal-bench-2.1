@@ -1,0 +1,13 @@
+--- a/internal/wgpa91/endpoint/endpoint_rank.sh
++++ b/internal/wgpa91/endpoint/endpoint_rank.sh
+@@ -4,9 +4,8 @@
+ pick_endpoint() {
+   local peer_id="$1"
+   local policy_json="$2"
+-  
+   echo "$policy_json" | jq -r --arg p "$peer_id" '
+     [.endpoint_precedence[] | select(.peer == $p)]
+-    | sort_by(-(.metric | tonumber))
++    | sort_by(.metric | tonumber)
+     | .[0].endpoint // empty'
+ }

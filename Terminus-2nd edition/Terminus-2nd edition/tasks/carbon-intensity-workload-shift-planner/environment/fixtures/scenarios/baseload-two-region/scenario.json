@@ -1,0 +1,50 @@
+{
+  "scenario": "baseload-two-region",
+  "slot_minutes": 60,
+  "window_count": 4,
+  "regions": {
+    "R-Alpha": {
+      "quota_per_window": 8,
+      "max_carryover": 4
+    },
+    "R-Beta": {
+      "quota_per_window": 6,
+      "max_carryover": 2
+    }
+  },
+  "intensity": {
+    "R-Alpha": [
+      420.0,
+      380.0,
+      350.0,
+      400.0
+    ],
+    "R-Beta": [
+      300.0,
+      280.0,
+      260.0,
+      290.0
+    ]
+  },
+  "jobs": [
+    {
+      "job_id": "WK-101",
+      "compute_units": 2,
+      "duration_slots": 1,
+      "deadline_slot": 3,
+      "allowed_regions": [
+        "R-Alpha",
+        "R-Beta"
+      ]
+    },
+    {
+      "job_id": "WK-102",
+      "compute_units": 3,
+      "duration_slots": 2,
+      "deadline_slot": 3,
+      "allowed_regions": [
+        "R-Beta"
+      ]
+    }
+  ]
+}

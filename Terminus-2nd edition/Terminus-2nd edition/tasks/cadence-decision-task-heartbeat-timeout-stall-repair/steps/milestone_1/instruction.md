@@ -1,0 +1,5 @@
+The cadence-replay CLI under /app/cmd/cadence-replay rebuilds decision-task state from scenario JSON and writes /app/output/workflow-replay-report.json, but heartbeat recording, timeout evaluation, and query gating no longer match the contracts in /app/docs/heartbeat-contract.md, /app/docs/timeout-wheel.md, and /app/docs/query-reset-gate.md.
+
+Repair /app/internal/heartbeat, /app/internal/timeout, and /app/internal/query so progress is recorded before visibility extends, stale lower progress_seq heartbeats do not extend visibility, timeout checks honor visibility deadlines and heartbeat grace while activities still report, and reset-workflow queries cannot bypass the heartbeat progress gate. Replay with cadence-replay replay using --scenario under /app/fixtures/scenarios/, --output /app/output/workflow-replay-report.json, and --state /app/state/cadence-task-state.json per /app/docs/cli.md and /app/docs/replay-report-schema.md.
+
+Rebuild with go build -mod=readonly -o /usr/local/bin/cadence-replay ./cmd/cadence-replay after Go edits and run /app/scripts/reset-state.sh before local checks. Do not edit /app/docs/, /app/fixtures/, or /app/config/.

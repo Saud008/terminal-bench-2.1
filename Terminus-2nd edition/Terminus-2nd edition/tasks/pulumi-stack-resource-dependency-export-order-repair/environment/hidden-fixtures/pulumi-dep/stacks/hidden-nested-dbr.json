@@ -1,0 +1,58 @@
+{
+  "stack": "hidden-nested",
+  "version": 3,
+  "deployment": {
+    "resources": [
+      {
+        "urn": "urn:pulumi:hidden::acme::pulumi:providers:aws::default",
+        "type": "pulumi:providers:aws",
+        "parent": "urn:pulumi:hidden::acme::pulumi:stack$acme/hidden"
+      },
+      {
+        "urn": "urn:pulumi:hidden::acme::custom:module:Net::core",
+        "type": "custom:module:Net",
+        "parent": "urn:pulumi:hidden::acme::pulumi:stack$acme/hidden",
+        "component": true
+      },
+      {
+        "urn": "urn:pulumi:hidden::acme::aws:ec2/vpc:Vpc::core/vpc",
+        "type": "aws:ec2/vpc:Vpc",
+        "parent": "urn:pulumi:hidden::acme::custom:module:Net::core",
+        "provider": "urn:pulumi:hidden::acme::pulumi:providers:aws::default"
+      },
+      {
+        "urn": "urn:pulumi:hidden::acme::aws:iam/role:Role::core/role",
+        "type": "aws:iam/role:Role",
+        "parent": "urn:pulumi:hidden::acme::custom:module:Net::core",
+        "provider": "urn:pulumi:hidden::acme::pulumi:providers:aws::default",
+        "dependencies": [
+          "urn:pulumi:hidden::acme::aws:ec2/vpc:Vpc::core/vpc"
+        ]
+      },
+      {
+        "urn": "urn:pulumi:hidden::acme::aws:s3/bucket:Bucket::data-old",
+        "type": "aws:s3/bucket:Bucket",
+        "parent": "urn:pulumi:hidden::acme::pulumi:stack$acme/hidden",
+        "provider": "urn:pulumi:hidden::acme::pulumi:providers:aws::default"
+      },
+      {
+        "urn": "urn:pulumi:hidden::acme::aws:s3/bucket:Bucket::data-new",
+        "type": "aws:s3/bucket:Bucket",
+        "parent": "urn:pulumi:hidden::acme::pulumi:stack$acme/hidden",
+        "provider": "urn:pulumi:hidden::acme::pulumi:providers:aws::default",
+        "deleteBeforeReplace": true,
+        "replaces": "urn:pulumi:hidden::acme::aws:s3/bucket:Bucket::data-old"
+      },
+      {
+        "urn": "urn:pulumi:hidden::acme::aws:s3/bucketObject:BucketObject::data-new/lock",
+        "type": "aws:s3/bucketObject:BucketObject",
+        "parent": "urn:pulumi:hidden::acme::pulumi:stack$acme/hidden",
+        "provider": "urn:pulumi:hidden::acme::pulumi:providers:aws::default",
+        "dependencies": [
+          "urn:pulumi:hidden::acme::aws:s3/bucket:Bucket::data-new",
+          "urn:pulumi:hidden::acme::aws:iam/role:Role::core/role"
+        ]
+      }
+    ]
+  }
+}

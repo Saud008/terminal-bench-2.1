@@ -1,0 +1,40 @@
+{
+  "scenario_id": "tb3-energize-ring",
+  "buses": [
+    {
+      "bus_id": "bus-r1"
+    },
+    {
+      "bus_id": "bus-r2"
+    },
+    {
+      "bus_id": "bus-r3"
+    }
+  ],
+  "energized_sources": [
+    "bus-r1"
+  ],
+  "breakers": [
+    {
+      "breaker_id": "brk-r12",
+      "from_bus": "bus-r1",
+      "to_bus": "bus-r2",
+      "initial_state": "closed"
+    },
+    {
+      "breaker_id": "brk-r23",
+      "from_bus": "bus-r2",
+      "to_bus": "bus-r3",
+      "initial_state": "open"
+    }
+  ],
+  "lockouts": [],
+  "procedure": [
+    {
+      "step_index": 1,
+      "action": "close",
+      "breaker_id": "brk-r23",
+      "requires_isolation": true
+    }
+  ]
+}

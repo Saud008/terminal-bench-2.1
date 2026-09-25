@@ -1,0 +1,21 @@
+--- a/internal/votercfg/config.go
++++ b/internal/votercfg/config.go
+@@ -7,8 +7,8 @@
+ )
+ 
+ type Set struct {
+-    Voters      []string
+-    EpochTerm   int64
++    Voters    []string
++    EpochTerm int64
+ }
+ 
+ func ApplyConfig(set *Set, entry model.LogEntry) {
+@@ -18,6 +18,7 @@
+     if entry.Term < set.EpochTerm {
+         return
+     }
++    set.EpochTerm = entry.Term
+     op, _ := entry.Payload["op"].(string)
+     node, _ := entry.Payload["node_id"].(string)
+     switch op {

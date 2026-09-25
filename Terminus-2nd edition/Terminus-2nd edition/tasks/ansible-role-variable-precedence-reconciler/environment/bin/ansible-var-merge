@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+ROOT="/app"
+# shellcheck source=lib/precedence.sh
+source "$ROOT/lib/precedence.sh"
+
+cmd_resolve() {
+  local playbook="" inventory="" host="" seed="" extra="" out="/app/output/resolve.json"
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --playbook) playbook="$2"; shift 2 ;;
+      --inventory) inventory="$2"; shift 2 ;;
+      --host) host="$2"; shift 2 ;;
+      --seed) seed="$2"; shift 2 ;;
+      --extra-vars) extra="$2"; shift 2 ;;
+      --out) out="$2"; shift 2 ;;
+      *) echo "unknown arg: $1" >&2; return 2 ;;
+    esac
+  done
+  [[ -n "$playbook" && -n "$inventory" && -n "$host" && -n "$seed" ]] || {
+    echo "usage: ansible-var-merge resolve --playbook PATH --inventory DIR --host HOST --seed SEED [--extra-vars FILE] [--out FILE]" >&2
+    return 2
+  }
+  mkdir -p "$(dirname "$out")"
+  resolve_stack "$playbook" "$inventory" "$host" "$seed" "$extra" >"$out"
+}
+
+main() {
+  [[ $# -ge 1 ]] || { echo "usage: ansible-var-merge resolve ..." >&2; exit 2; }
+  case "$1" in
+    resolve) shift; cmd_resolve "$@" ;;
+    *) echo "unknown command: $1" >&2; exit 2 ;;
+  esac
+}
+
+main "$@"

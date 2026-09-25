@@ -1,0 +1,27 @@
+def _apply_partial_stubs(
+    *,
+    digest_stub: str | None = None,
+    trace_stub: str | None = None,
+    preview_stub: str | None = None,
+) -> dict[str, str]:
+    """Swap stub sources; skip a stub when the swap breaks compile (agent refactored internals)."""
+    stubs = Path(__file__).parent / "stubs"
+    paths = _go_paths()
+    backups = {key: paths[key].read_text(encoding="utf-8") for key in paths}
+    mapping = {
+        "digest": digest_stub,
+        "trace": trace_stub,
+        "preview": preview_stub,
+    }
+    for key, stub_name in mapping.items():
+        if stub_name:
+            shutil.copy(stubs / stub_name, paths[key])
+    proc = run(["go", "build", "-mod=readonly", "-o", str(CLI), "./cmd/bundlectl"], check=False)
+    if proc.returncode != 0:
+        for key, stub_name in mapping.items():
+            if stub_name:
+                paths[key].write_text(backups[key], encoding="utf-8")
+        proc = run(["go", "build", "-mod=readonly", "-o", str(CLI), "./cmd/bundlectl"], check=False)
+        assert proc.returncode == 0, proc.stderr or proc.stdout
+        return backups
+    return backups

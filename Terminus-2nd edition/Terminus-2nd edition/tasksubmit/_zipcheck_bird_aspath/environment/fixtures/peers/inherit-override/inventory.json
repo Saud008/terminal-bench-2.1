@@ -1,0 +1,59 @@
+{
+  "scenario": "inherit-override",
+  "critical_prefixes": [],
+  "peer_groups": [
+    {
+      "group_id": "core",
+      "filters": [
+        {
+          "filter_id": "shared",
+          "priority": 100,
+          "match_mode": "origin",
+          "asn": 65100,
+          "action": "deny"
+        },
+        {
+          "filter_id": "other",
+          "priority": 10,
+          "match_mode": "origin",
+          "asn": 65111,
+          "action": "accept"
+        }
+      ]
+    }
+  ],
+  "peers": [
+    {
+      "peer_id": "peer-b",
+      "asn": 65020,
+      "group_id": "core",
+      "wave_rank": 2,
+      "med_ceiling": null,
+      "abort_on_critical_deny": false,
+      "community_rewrite": {},
+      "filters": [
+        {
+          "filter_id": "shared",
+          "priority": 100,
+          "match_mode": "origin",
+          "asn": 65100,
+          "action": "accept"
+        }
+      ]
+    }
+  ],
+  "rib": [
+    {
+      "prefix": "198.51.100.0/24",
+      "as_path": [
+        65002,
+        65100
+      ],
+      "communities": [
+        "65020:5"
+      ],
+      "med": 10,
+      "peer_id": "peer-b"
+    }
+  ]
+}

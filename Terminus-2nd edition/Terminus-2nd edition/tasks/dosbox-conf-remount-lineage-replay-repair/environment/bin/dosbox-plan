@@ -1,0 +1,182 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="/app"
+cmd="${1:-}"
+conf_dir=""
+profile="default"
+config_path="${ROOT}/config/plan.json"
+output_path="${ROOT}/output/plan.json"
+
+usage() {
+  echo "usage: dosbox-plan render --conf-dir <dir> [--profile name] [--config path] [--output path]" >&2
+  exit 2
+}
+
+if [[ "$cmd" != "render" ]]; then
+  usage
+fi
+shift
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --conf-dir)
+      conf_dir="$2"
+      shift 2
+      ;;
+    --profile)
+      profile="$2"
+      shift 2
+      ;;
+    --config)
+      config_path="$2"
+      shift 2
+      ;;
+    --output)
+      output_path="$2"
+      shift 2
+      ;;
+    *)
+      usage
+      ;;
+  esac
+done
+
+if [[ ! -f "${config_path}" ]]; then
+  echo "dosbox-plan: missing config: ${config_path}" >&2
+  exit 1
+fi
+
+eval "$(python3 - "${config_path}" <<'PY'
+import json, sys
+cfg = json.load(open(sys.argv[1], encoding="utf-8"))
+print(f"export PLAN_FAIL_INVALID={'1' if cfg.get('fail_on_invalid_drive', True) else '0'}")
+PY
+)"
+
+# shellcheck source=/app/lib/conf_io.sh
+source "${ROOT}/lib/conf_io.sh"
+# shellcheck source=/app/lib/conf_parse.sh
+source "${ROOT}/lib/conf_parse.sh"
+# shellcheck source=/app/lib/section_order.sh
+source "${ROOT}/lib/section_order.sh"
+# shellcheck source=/app/lib/remount.sh
+source "${ROOT}/lib/remount.sh"
+# shellcheck source=/app/lib/validate.sh
+source "${ROOT}/lib/validate.sh"
+
+plan_errors=()
+plan_warnings=()
+exit_code=0
+mount_count=0
+imgmount_count=0
+stack_depth=0
+
+write_output() {
+  mkdir -p "$(dirname "${output_path}")"
+  export PLAN_PROFILE="${profile}"
+  export PLAN_CONF_DIR="${conf_dir}"
+  export PLAN_LINEAGE_JSON="$(printf '%s\n' "${REMOUNT_LINEAGE[@]-}" | python3 -c 'import json,sys; print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))')"
+  export PLAN_REMAPS_JSON="$(printf '%s\n' "${REMOUNT_REMAPS[@]-}" | python3 -c '
+import json, sys
+rows = []
+for line in sys.stdin:
+    line = line.strip()
+    if not line:
+        continue
+    frm, to = line.split("|", 1)
+    rows.append({"from": frm, "to": to})
+print(json.dumps(rows))
+')"
+  export PLAN_WARNINGS_JSON="$(printf '%s\n' "${plan_warnings[@]-}" | python3 -c 'import json,sys; print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))')"
+  export PLAN_ERRORS_JSON="$(printf '%s\n' "${plan_errors[@]-}" | python3 -c 'import json,sys; print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))')"
+  export PLAN_MOUNT_COUNT="${mount_count}"
+  export PLAN_IMGMOUNT_COUNT="${imgmount_count}"
+  export PLAN_STACK_DEPTH="${stack_depth}"
+
+  python3 - "${output_path}" <<'PY'
+import json, os, sys
+
+lineage = []
+for item in json.loads(os.environ["PLAN_LINEAGE_JSON"]):
+    seq, op, drive, path, src = item.split("|", 4)
+    lineage.append({
+        "seq": int(seq),
+        "op": op,
+        "drive": drive,
+        "path": path,
+        "source_section": "autoexec",
+        "source_file": src,
+    })
+
+doc = {
+    "plan_version": 1,
+    "profile": os.environ["PLAN_PROFILE"],
+    "conf_dir": os.environ["PLAN_CONF_DIR"],
+    "lineage": lineage,
+    "remaps": json.loads(os.environ["PLAN_REMAPS_JSON"]),
+    "stats": {
+        "mount_count": int(os.environ["PLAN_MOUNT_COUNT"]),
+        "imgmount_count": int(os.environ["PLAN_IMGMOUNT_COUNT"]),
+        "stack_depth": int(os.environ["PLAN_STACK_DEPTH"]),
+    },
+    "warnings": json.loads(os.environ["PLAN_WARNINGS_JSON"]),
+    "errors": json.loads(os.environ["PLAN_ERRORS_JSON"]),
+}
+with open(sys.argv[1], "w", encoding="utf-8") as fh:
+    json.dump(doc, fh, indent=2, sort_keys=True)
+    fh.write("\n")
+PY
+}
+
+if [[ -z "${conf_dir}" || ! -d "${conf_dir}" ]]; then
+  plan_errors+=("missing conf dir: ${conf_dir}")
+  REMOUNT_LINEAGE=()
+  REMOUNT_REMAPS=()
+  write_output
+  exit 1
+fi
+
+if ! manifest_list_files "${conf_dir}" "${profile}"; then
+  plan_errors+=("${MANIFEST_ERROR}")
+  REMOUNT_LINEAGE=()
+  REMOUNT_REMAPS=()
+  write_output
+  exit 1
+fi
+
+ordered_file="$(mktemp)"
+trap 'rm -f "${ordered_file}"' EXIT
+section_collect_commands "${conf_dir}" "${ordered_file}" "${MANIFEST_FILES[@]}"
+
+REMOUNT_LINEAGE=()
+REMOUNT_REMAPS=()
+REMOUNT_WARNINGS=()
+REMOUNT_ERRORS=()
+REMOUNT_RC=0
+
+if ! remount_render_plan "${ordered_file}"; then
+  exit_code="${REMOUNT_RC:-2}"
+fi
+
+if ((${#REMOUNT_ERRORS[@]} > 0)); then
+  plan_errors+=("${REMOUNT_ERRORS[@]}")
+  if [[ "${PLAN_FAIL_INVALID}" == "1" ]]; then
+    exit_code="${REMOUNT_RC:-2}"
+  fi
+fi
+plan_warnings+=("${REMOUNT_WARNINGS[@]-}")
+
+for item in "${REMOUNT_LINEAGE[@]-}"; do
+  op="${item#*|}"
+  op="${op%%|*}"
+  if [[ "$op" == "mount" ]]; then
+    mount_count=$((mount_count + 1))
+  elif [[ "$op" == "imgmount" ]]; then
+    imgmount_count=$((imgmount_count + 1))
+  fi
+done
+stack_depth="${REMOUNT_STACK_DEPTH:-0}"
+
+write_output
+exit "${exit_code}"

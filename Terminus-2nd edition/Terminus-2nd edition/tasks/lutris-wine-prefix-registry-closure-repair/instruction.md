@@ -1,0 +1,5 @@
+The `lutris-resolve` CLI at `/app/bin/lutris-resolve` reads Lutris-style YAML game registries and writes a prefix closure JSON plan, but transitive `requires:` resolution, prefix canonicalization, DXVK semver pins, duplicate slug handling, and exit codes do not match `/app/docs/resolve-contract.md`.
+
+Repair the Bash libraries under `/app/lib/` so resolve output matches `/app/docs/resolve-output-schema.md` for every registry under `/app/fixtures/registry/`. Registry grammar, the resolve subcommand, runner inheritance, prefix canonicalization, semver pins, duplicate-slug merge rules, and exit-code mapping are defined in `/app/docs/resolve-contract.md` and `/app/docs/registry-format.md`.
+
+Successful resolution must exit `0` with a dependency-first closure, inherited runner, canonical prefix path, and recorded warnings or errors per the contract. Missing runners, absent required slugs, or failed DXVK pins must exit `1`. Unmergeable duplicate slugs or `requires:` cycles must exit `2`. Do not edit `/app/docs/`, `/app/fixtures/`, `/app/prefixes/`, `/app/config/resolve.json`, or files under `/tests/`.

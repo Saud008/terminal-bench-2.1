@@ -1,0 +1,19 @@
+user_visible_outputs = [
+  "/app/output/crash_index.sqlite",
+  "/app/output/crash_summary.json",
+]
+
+internal_harness_files = [
+  "/app/state/crash_staging.jsonl",
+  "/app/docs/staging_pipeline.md",
+]
+
+[structured_outputs.crash_summary]
+target = "/app/output/crash_summary.json"
+format = "json"
+instruction_checks = [
+  "groups",
+  "totals",
+  "build_id",
+  "symbols",
+]

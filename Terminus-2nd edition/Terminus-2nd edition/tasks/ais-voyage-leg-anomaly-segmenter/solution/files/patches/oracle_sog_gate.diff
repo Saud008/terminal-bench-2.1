@@ -1,0 +1,18 @@
+--- src/sog_gate/mod.rs
++++ src/sog_gate/mod.rs
+@@ -3,9 +3,12 @@
+ const EARTH_RADIUS_NM: f64 = 3440.065;
+ 
+ pub fn haversine_nm(a: &AisRow, b: &AisRow) -> f64 {
+-    let dlat = (b.lat - a.lat).abs();
+-    let dlon = (b.lon - a.lon).abs();
+-    (dlat + dlon) * 60.0
++    let lat1 = a.lat.to_radians();
++    let lat2 = b.lat.to_radians();
++    let dlat = (b.lat - a.lat).to_radians();
++    let dlon = (b.lon - a.lon).to_radians();
++    let h = (dlat / 2.0).sin().powi(2) + lat1.cos() * lat2.cos() * (dlon / 2.0).sin().powi(2);
++    2.0 * EARTH_RADIUS_NM * h.sqrt().asin()
+ }
+ 
+ pub fn suppress_impossible_speed(rows: Vec<AisRow>, policy: Policy) -> (Vec<AisRow>, u64) {

@@ -1,0 +1,98 @@
+---
+description: LOCKED — block EASY/TRIVIAL uploads; HARD target ≤20% worst model; no medium first uploads
+alwaysApply: true
+---
+
+# Terminus — No EASY upload lock (LOCKED)
+
+**User goal:** Platform par **EASY / TRIVIAL** tasks nahi chahiye. Probes PASS + oracle 1 **≠** agents fail.
+
+**Evidence (Jun 2026):** `vulkan-spirv-dead-strip-auditor` — Opus **5/5**, GPT **4/5**, probes PASS, 22/24 tests **≥9/10** → platform **EASY**.
+
+On conflict: **stricter** wins over “ready to upload” without agent smoke.
+
+---
+
+## Platform bands (unchanged)
+
+| Worst model pass rate | Label | Upload? |
+|----------------------|-------|---------|
+| **>80%** | Not accepted | **No** |
+| **>60% – 80%** | **EASY** | **No** |
+| **>20% – 60%** | MEDIUM | Only if `difficulty = "medium"` + user accepts MEDIUM |
+| **≤20%** | HARD (target) | **Yes** |
+
+**Claude-primary:** For `difficulty = "hard"`, **Opus ≤20%** (≤1/5) is the design target even when GPT is higher.
+
+---
+
+## What local gates cannot do
+
+Rules **cannot** change platform agent scores after upload. They **block zip** until the task is redesigned and **local smoke** (or recorded platform eval) shows **worst ≤20%**.
+
+---
+
+## Mandatory before first zip (automatic in `pack_zip.sh`)
+
+| Gate | Script | Blocks when |
+|------|--------|-------------|
+| **Agent calibration** | `preupload_agent_calibration.py --pack-gate` | No smoke record; worst **>20%** (hard) or **>60%** (medium); platform EASY context without `--post-harden` record |
+| **Trivial shape** | `preupload_trivial_shape_gate.py --pack-gate` | `<5` modules; `<18` tests (hard); `<2` hidden-trap tests; `<5` solution files; auto-probes not PASS |
+| **Difficulty design** | `preupload_difficulty_design_gate.py --pack-gate` | `difficulty ≠ "hard"`; platform EASY/TRIVIAL context; ≥75% per-tests ≥9/10 in pasted summary; recipe-like `instruction.md` + EASY |
+| Auto probes | `terminus_auto_probes.py` | Any probe FAIL |
+| F′ | `first_submit_pack_gate.py` | No PASS record |
+
+**Forbidden:** upload when platform summary shows **EASY/TRIVIAL** or either model **≥3/5** without Case 6 + post-harden smoke.
+
+---
+
+## After platform EASY / TRIVIAL paste (agent workflow)
+
+1. Save context (hook) → `jobs-local/trivial-easy-context-<slug>.json`
+2. **Case 6 only** — `prompts/trivial-fix-invoke.md` + trio + probes
+3. Local smoke (≥2 runs each when possible):
+
+```bash
+stb harbor run -m @anthropic/claude-opus-4-8 -p tasks/<slug>
+stb harbor run -m @openai/gpt-5.5 -p tasks/<slug>
+```
+
+4. Record **only if** worst ≤20%:
+
+```bash
+python3 scripts/preupload_agent_calibration.py --record --task-dir tasks/<slug> \
+  --opus 1/5 --gpt 2/5 --post-harden
+```
+
+5. `./scripts/create_finish_to_zip.sh <slug>` — zip blocked until steps 4–5 PASS
+
+---
+
+## Design fixes when agents still 4–5/5 (not decorative)
+
+| Symptom | Fix class |
+|---------|-----------|
+| Hidden tests **10/10** like bundled | **Independent** hidden traps — partial fix passes bundled, fails TB3 |
+| Instruction lists ingest→export pipeline | **Shorten** instruction; contracts in **≥3** `/app/docs/` |
+| One conceptual bug (e.g. phi labels) stops 1 run | Good — add **second** independent layer so 5/5 cannot happen |
+| `difficulty = "medium"` | Set **`hard`** + deepen interaction |
+| Probes PASS, agents 80–100% | **Poison-pill** + export-only + persistence — not more hash fields |
+
+---
+
+## Overrides (user message only)
+
+| Env | When |
+|-----|------|
+| `TERMINUS_AGENT_CALIBRATION_SKIP=1` | User explicitly overrides in **current** message |
+| `TERMINUS_DIFFICULTY_DESIGN_SKIP=1` | Same |
+
+**No skip** for platform EASY without user override.
+
+---
+
+## Related
+
+- `shared/trivial-first-upload-lock.mdc` · `shared/trivial-fix-invoke-mandatory-steps.mdc`
+- `shared/difficulty-benchmark-models.mdc` · `revise/hardness.mdc` G-028–G-035
+- `scripts/preupload_agent_calibration.py` · `scripts/preupload_difficulty_design_gate.py`

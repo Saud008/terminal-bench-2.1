@@ -1,0 +1,28 @@
+--- src/exportkit/capsule_emit.rs
++++ src/exportkit/capsule_emit.rs
+@@ -22,6 +22,10 @@
+     pub audits: Vec<AuditExport>,
+     pub witness_set_hash: String,
+     pub bundle_digest: String,
++}
++
++fn digest_field_order() -> &'static [&'static str] {
++    &["log_id", "newer_tree_size", "inclusion_ok", "consistency_ok", "witness_quorum_ok"]
+ }
+ 
+ fn seal_digest(audits: &[AuditExport]) -> String {
+@@ -64,12 +68,12 @@
+         .first()
+         .map(|a| a.witness_set_hash.clone())
+         .unwrap_or_default();
+-    let wrong_digest = seal_digest(&[]);
++    let digest = seal_digest(&audits);
+     let bundle = EvidenceBundle {
+         version: 1,
+         audits: audits.clone(),
+         witness_set_hash: witness_set_hash.clone(),
+-        bundle_digest: wrong_digest,
++        bundle_digest: digest,
+     };
+     let json = serde_json::to_string_pretty(&bundle).map_err(|e| e.to_string())?;
+     fs::write(out_path, format!("{json}\n")).map_err(|e| e.to_string())

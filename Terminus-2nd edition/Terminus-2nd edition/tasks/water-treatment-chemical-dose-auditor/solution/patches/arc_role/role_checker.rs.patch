@@ -1,0 +1,10 @@
+--- a/arc_role/role_checker.rs
++++ b/arc_role/role_checker.rs
+@@ -3,6 +3,6 @@ pub fn override_allowed(user: &str, role: &str, authorized_roles: &[String], den
+     if denylist.iter().any(|d| d == user) {
+         return false;
+     }
+-    authorized_roles.iter().any(|r| r == role)
++    let role_lower = role.to_ascii_lowercase();
++    authorized_roles.iter().any(|r| r.to_ascii_lowercase() == role_lower)
+ }

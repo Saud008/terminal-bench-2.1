@@ -1,0 +1,1 @@
+bundle.json contains scenario_id, wave_id, policies, skus, slots, workers arrays. Bundled scenario clean-replen is the default verifier bundle name under /app/fixtures/scenarios/. policies includes headroom_margin, min_keep_units, reorder_pct.

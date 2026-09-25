@@ -1,0 +1,26 @@
+--- internal/lischain/tier_sort.go
++++ internal/lischain/tier_sort.go
+@@ -6,12 +6,16 @@
+     "github.com/terminus/xsnapctl/internal/model"
+ )
+ 
+-// OrderFilters orders listener filters for canonical export.
+ func OrderFilters(filters []model.Filter) []model.Filter {
+-    out := make([]model.Filter, len(filters))
+-    copy(out, filters)
+-    sort.Slice(out, func(i, j int) bool {
+-        return out[i].Name < out[j].Name
+-    })
+-    return out
++    var network, http []model.Filter
++    for _, f := range filters {
++        if f.Type == "network" {
++            network = append(network, f)
++        } else {
++            http = append(http, f)
++        }
++    }
++    sort.Slice(network, func(i, j int) bool { return network[i].Name < network[j].Name })
++    sort.Slice(http, func(i, j int) bool { return http[i].Name < http[j].Name })
++    return append(network, http...)
+ }

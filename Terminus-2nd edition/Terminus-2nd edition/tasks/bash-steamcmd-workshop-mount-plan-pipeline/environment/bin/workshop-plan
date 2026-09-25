@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="/app"
+cmd="${1:-}"
+manifest_dir=""
+config_path="${ROOT}/config/plan.json"
+output_path="${ROOT}/output/plan.json"
+
+usage() {
+  echo "usage: workshop-plan plan --manifest-dir <dir> [--config path] [--output path]" >&2
+  exit 2
+}
+
+if [[ "$cmd" != "plan" ]]; then
+  usage
+fi
+shift
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --manifest-dir)
+      manifest_dir="$2"
+      shift 2
+      ;;
+    --config)
+      config_path="$2"
+      shift 2
+      ;;
+    --output)
+      output_path="$2"
+      shift 2
+      ;;
+    *)
+      usage
+      ;;
+  esac
+done
+
+if [[ -z "${manifest_dir}" || ! -d "${manifest_dir}" ]]; then
+  echo "workshop-plan: missing manifest dir: ${manifest_dir}" >&2
+  exit 1
+fi
+
+manifest_file="${manifest_dir}/manifest.vdf"
+if [[ ! -f "${manifest_file}" ]]; then
+  echo "workshop-plan: missing manifest.vdf under ${manifest_dir}" >&2
+  exit 1
+fi
+
+if [[ ! -f "${config_path}" ]]; then
+  echo "workshop-plan: missing config: ${config_path}" >&2
+  exit 1
+fi
+
+eval "$(python3 - "${config_path}" <<'PY'
+import json
+import sys
+
+cfg = json.load(open(sys.argv[1], encoding="utf-8"))
+print(f"export PLAN_FAIL_ON_MISSING={'1' if cfg.get('fail_on_missing', True) else '0'}")
+print(f"export PLAN_EMIT_ON_CYCLE={'1' if cfg.get('emit_on_cycle', False) else '0'}")
+print(f"export PLAN_INCLUDE_OPTIONAL={'1' if cfg.get('include_optional_edges', True) else '0'}")
+PY
+)"
+
+# shellcheck source=/app/ingest/manifest_ingest.sh
+source "${ROOT}/ingest/manifest_ingest.sh"
+# shellcheck source=/app/lib/deps.sh
+source "${ROOT}/lib/deps.sh"
+# shellcheck source=/app/lib/topo.sh
+source "${ROOT}/lib/topo.sh"
+# shellcheck source=/app/lib/export_plan.sh
+source "${ROOT}/lib/export_plan.sh"
+
+graph_file="$(mktemp)"
+trap 'rm -f "${graph_file}"' EXIT
+
+ingest_manifest_to_staging "${manifest_file}"
+
+staged_file="${ROOT}/state/parsed-manifest.tsv"
+if [[ ! -f "${staged_file}" ]]; then
+  echo "workshop-plan: missing staged manifest" >&2
+  exit 1
+fi
+
+DEPS_GRAPH_FILE="${graph_file}"
+deps_build_graph "${staged_file}"
+
+mod_count=0
+while IFS=$'\t' read -r kind _rest; do
+  [[ "$kind" == "MOD" ]] && mod_count=$((mod_count + 1))
+done < "${staged_file}"
+
+topo_sort_mount_order "${graph_file}" "${staged_file}" || true
+
+exit_code=0
+if [[ ${#DEPS_ERRORS[@]} -gt 0 && "${PLAN_FAIL_ON_MISSING}" == "1" ]]; then
+  exit_code=1
+fi
+if [[ ${#TOPO_CYCLES[@]} -gt 0 && "${PLAN_EMIT_ON_CYCLE}" != "1" ]]; then
+  TOPO_ORDER=()
+  exit_code=2
+fi
+
+if ! export_plan_emit \
+  "${output_path}" \
+  "${manifest_dir}" \
+  "${manifest_file}" \
+  "${config_path}" \
+  "${mod_count}" \
+  "${DEPS_EDGE_COUNT}" \
+  "${exit_code}"; then
+  exit 1
+fi
+
+exit "${exit_code}"

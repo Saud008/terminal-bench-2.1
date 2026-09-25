@@ -1,0 +1,1 @@
+Flow-weighted dose and turbidity uplift follow /app/docs/flow-weighted-dose-kernel.md. The kernel applies numerical reference math for minute dose closure: flow in liters per minute times concentration in milligrams per liter times uplift, summed across eligible minutes with unit consistency checks against the shift bundle schema.

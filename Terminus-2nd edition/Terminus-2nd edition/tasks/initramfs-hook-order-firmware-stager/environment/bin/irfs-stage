@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="/app"
+rootfs_path=""
+config_path="${ROOT}/config/stage.json"
+output_path="${ROOT}/output/initramfs.manifest"
+
+usage() {
+  echo "usage: irfs-stage --rootfs <dir> [--config path] [--output path]" >&2
+  exit 2
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --rootfs)
+      rootfs_path="$2"
+      shift 2
+      ;;
+    --config)
+      config_path="$2"
+      shift 2
+      ;;
+    --output)
+      output_path="$2"
+      shift 2
+      ;;
+    *)
+      usage
+      ;;
+  esac
+done
+
+if [[ -z "${rootfs_path}" || ! -d "${rootfs_path}" ]]; then
+  echo "irfs-stage: missing or unreadable rootfs directory: ${rootfs_path}" >&2
+  exit 1
+fi
+
+if [[ ! -f "${config_path}" ]]; then
+  echo "irfs-stage: missing config: ${config_path}" >&2
+  exit 1
+fi
+
+eval "$(python3 - "${config_path}" <<'PY'
+import json, sys
+cfg = json.load(open(sys.argv[1], encoding="utf-8"))
+print(f"export IRFS_KVER={cfg.get('kernel_version', '6.1.0')!r}")
+print(f"export IRFS_INCLUDE_HOOKS={'1' if cfg.get('include_hook_scripts', True) else '0'}")
+PY
+)"
+
+# shellcheck source=/app/lib/scan/irfs_scan.sh
+source "${ROOT}/lib/scan/irfs_scan.sh"
+# shellcheck source=/app/lib/hooks/irfs_hooks.sh
+source "${ROOT}/lib/hooks/irfs_hooks.sh"
+# shellcheck source=/app/lib/modalias/irfs_modalias.sh
+source "${ROOT}/lib/modalias/irfs_modalias.sh"
+# shellcheck source=/app/lib/firmware/irfs_firmware.sh
+source "${ROOT}/lib/firmware/irfs_firmware.sh"
+# shellcheck source=/app/lib/compress/irfs_compress.sh
+source "${ROOT}/lib/compress/irfs_compress.sh"
+# shellcheck source=/app/lib/ledger/irfs_ledger.sh
+source "${ROOT}/lib/ledger/irfs_ledger.sh"
+# shellcheck source=/app/lib/manifest/irfs_manifest.sh
+source "${ROOT}/lib/manifest/irfs_manifest.sh"
+
+irfs_ledger_reset
+
+mapfile -t hook_json < <(irfs_discover_hooks "${rootfs_path}")
+if [[ ${#hook_json[@]} -eq 0 ]]; then
+  : > "${output_path}"
+  exit 0
+fi
+
+if ! mapfile -t hook_order_json < <(printf '%s\n' "${hook_json[@]}" | irfs_topo_sort_hooks); then
+  echo "irfs-stage: hook cycle detected" >&2
+  exit 2
+fi
+
+declare -A HOOK_RANK=()
+declare -a HOOK_NAMES=()
+idx=0
+for row in "${hook_order_json[@]}"; do
+  idx=$((idx + 1))
+  name="$(printf '%s' "$row" | python3 -c 'import json,sys; print(json.load(sys.stdin)["name"])')"
+  path_rel="$(printf '%s' "$row" | python3 -c 'import json,sys; print(json.load(sys.stdin)["path"])')"
+  HOOK_RANK["${name}"]="${idx}"
+  HOOK_NAMES+=("${name}")
+  if [[ "${IRFS_INCLUDE_HOOKS}" == "1" ]]; then
+    irfs_ledger_append hook "${name}" "${path_rel}" "${idx}"
+  fi
+done
+
+owner_rank() {
+  local fallback="$1"
+  shift
+  local n
+  for n in "$@"; do
+    if [[ -n "${HOOK_RANK[$n]:-}" ]]; then
+      echo "${HOOK_RANK[$n]}"
+      return
+    fi
+  done
+  echo "${fallback}"
+}
+
+mod_rank="$(owner_rank 1 modules modprobe)"
+fw_rank="$(owner_rank "${mod_rank}" firmware modules)"
+
+mapfile -t modules < <(irfs_select_modules "${rootfs_path}" "${IRFS_KVER}")
+mapfile -t firmware_rows < <(irfs_select_firmware "${rootfs_path}" "${modules[@]}")
+
+declare -a MANIFEST_ROWS=()
+
+if [[ "${IRFS_INCLUDE_HOOKS}" == "1" ]]; then
+  for row in "${hook_order_json[@]}"; do
+    path_rel="$(printf '%s' "$row" | python3 -c 'import json,sys; print(json.load(sys.stdin)["path"])')"
+    name="$(printf '%s' "$row" | python3 -c 'import json,sys; print(json.load(sys.stdin)["name"])')"
+    src="${rootfs_path}/${path_rel}"
+    size="$(irfs_file_size "${src}")"
+    digest="$(irfs_file_digest "${src}")"
+    compress="$(irfs_compress_tag "${path_rel}" "${config_path}")"
+    rank="${HOOK_RANK[$name]}"
+    MANIFEST_ROWS+=("${path_rel}"$'\t'"${size}"$'\t'"${digest}"$'\t'"${compress}"$'\t'"hook"$'\t'"${rank}")
+  done
+fi
+
+for mod in "${modules[@]}"; do
+  while IFS= read -r ko; do
+    [[ -z "${ko}" ]] && continue
+    rel="${ko#${rootfs_path}/}"
+    size="$(irfs_file_size "${ko}")"
+    digest="$(irfs_file_digest "${ko}")"
+    compress="$(irfs_compress_tag "${rel}" "${config_path}")"
+    irfs_ledger_append module "${mod}" "${rel}" "${mod_rank}"
+    MANIFEST_ROWS+=("${rel}"$'\t'"${size}"$'\t'"${digest}"$'\t'"${compress}"$'\t'"module"$'\t'"${mod_rank}")
+  done < <(find "${rootfs_path}/lib/modules/${IRFS_KVER}" -name "${mod}.ko" -print 2>/dev/null | LC_ALL=C sort)
+done
+
+for fw_line in "${firmware_rows[@]}"; do
+  [[ -z "${fw_line}" ]] && continue
+  mod="${fw_line%%$'\t'*}"
+  rel="${fw_line#*$'\t'}"
+  src="${rootfs_path}/${rel}"
+  [[ -f "${src}" ]] || continue
+  size="$(irfs_file_size "${src}")"
+  digest="$(irfs_file_digest "${src}")"
+  compress="$(irfs_compress_tag "${rel}" "${config_path}")"
+  irfs_ledger_append firmware "${mod}" "${rel}" "${fw_rank}"
+  MANIFEST_ROWS+=("${rel}"$'\t'"${size}"$'\t'"${digest}"$'\t'"${compress}"$'\t'"firmware"$'\t'"${fw_rank}")
+done
+
+irfs_ledger_seal "${rootfs_path}" "${HOOK_NAMES[@]}"
+export IRFS_VERIFY_ROOTFS="${rootfs_path}"
+irfs_ledger_verify
+
+irfs_emit_manifest "${output_path}" "${MANIFEST_ROWS[@]}"
+exit 0

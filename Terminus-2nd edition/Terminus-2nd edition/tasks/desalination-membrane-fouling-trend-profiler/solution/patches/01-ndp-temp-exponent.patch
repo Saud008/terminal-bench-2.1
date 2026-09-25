@@ -1,0 +1,11 @@
+--- normalize.rs.orig
++++ normalize.rs
+@@ -10,7 +10,7 @@
+     salinity: f64,
+ ) -> f64 {
+     let dp = pressure - p_base;
+-    let temp_factor = (temperature / t_ref).powf(alpha);
++    let temp_factor = (t_ref / temperature).powf(alpha);
+     let flow_factor = (q_ref / flow).powf(beta);
+     let brine = 1.0 + salinity / 1000.0;
+     dp * temp_factor * flow_factor * brine

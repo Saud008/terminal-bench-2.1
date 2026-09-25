@@ -1,0 +1,12 @@
+Implement rsyncprev, a filter-rule preview capability on the working Bash baseline under /app. Fleet backup operators reconcile rsync filter rollout policies across host clusters before daemon-scheduled mirror jobs. They need topology drift preview between sender trees and receiver manifests so operational sync contracts can be validated before rollout. Build a three stage workflow where ingest snapshots source and receiver paths, compile materializes compiled filter rule chains, and export writes the transfer and delete-risk atlas. The engineering problem contract in /app/docs/engineering-problem-contract.md states why cascade precedence, receiver-only drift, and delete risk must be evaluated together.
+
+Install the CLI at /app/bin/rsyncprev with these subcommands:
+  rsyncprev ingest --tree <name> --run-id <id>
+  rsyncprev compile --run-id <id>
+  rsyncprev export --run-id <id> --output <path>
+
+Bundled fixture trees live under /app/fixtures/trees. Fleet rollout expectations before daemon mirror jobs appear in /app/docs/fleet-rollout-contract.md. Rule tokens and syntax are defined in /app/docs/filter-rule-language.md. First-match precedence and matched_rule_index requirements are defined in /app/docs/first-match-contract.md. Cascade precedence for ancestor and per-directory .rsync-filter files is defined in /app/docs/cascade-stack-contract.md. Directory prune behavior is defined in /app/docs/prune-traversal-contract.md. Delete mode semantics using receiver manifests and P or R rules are defined in /app/docs/delete-risk-contract.md. Output schema and deterministic precedence are defined in /app/docs/atlas-schema-contract.md. CLI argument contracts and error behavior are defined in /app/docs/cli-contract.md.
+
+The compile stage must write /app/state/filter-compiled.json with rule_cascade and per-path intermediate rows. The export stage must write /app/output/rsync_filter_preview_atlas.json or a caller path with path_verdicts entries containing transfer, delete_risk, cascade_depth, and matched_rule_index.
+
+Use tests/rsyncprev_cli_support.py subprocess helpers for CLI invocation and state reset. Independent reference logic is in tests/rsyncprev_contract_math.py and uses fnmatch for glob evaluation; it is not imported by production scripts. Run /app/scripts/reset-state.sh before cross-run checks. The digest_story_helper decoy module is not on ingest or export hot paths.

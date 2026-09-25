@@ -1,0 +1,11 @@
+--- a/internal/casaudit/reconcile_core.go
++++ b/internal/casaudit/reconcile_core.go
+@@ -226,7 +226,7 @@ func bumpGeneration() error {
+ 	if raw, err := os.ReadFile(genPath); err == nil {
+ 		_ = json.Unmarshal(raw, &gen)
+ 	}
+-	gen.ReconcileRevision = gen.ReconcileRevision
++	gen.ReconcileRevision = gen.ReconcileRevision + 1
+ 	data, err := json.MarshalIndent(gen, "", "  ")
+ 	if err != nil {
+ 		return err

@@ -1,0 +1,9 @@
+{
+  "path": "d:\\Terminus-2nd edition\\Terminus-2nd edition\\tasks\\opa-bundle-signature-digest-chain-verifier-repair\\environment\\docs\\preview-ledger-schema.md",
+  "tool": "Write",
+  "old_string": null,
+  "new_string": null,
+  "contents_len": 1271,
+  "contents": "# Import-preview ledger\n\nDuring `bundlectl verify`, import-preview runs before digest or scoped-signature math. The preview snapshot is persisted at `/app/state/preview-ledger.json`.\n\n## Schema\n\n```json\n{\n  \"bundle\": \"<absolute bundle directory>\",\n  \"order\": [\"data/data.json\", \"policies/allow.rego\"],\n  \"entries\": [\n    {\"raw\": \"./data/../data/data.json\", \"canonical\": \"data/data.json\"}\n  ]\n}\n```\n\n## Ordering rules\n\n- `entries` lists every manifest member except `MANIFEST.json` and `.signatures.json`, each with raw manifest path and POSIX-canonical preview path.\n- `order` holds the same canonical paths sorted by **UTF-8 lexicographic order**. Manifest declaration order must not appear in `order`.\n- Digest chain computation must iterate members in `order`, not manifest `members` array order.\n\n## Relationship to digest chain\n\nRolling SHA-256 chain roots (full bundle and scoped subsets) use canonical paths from the preview ledger ordering. Scoped signature checks filter members by scope prefix, then apply the same rolling digest over the filtered subset sorted lexicographically.\n\nThe legacy helper in `/app/internal/verify/manifest_chain.go` computes roots using manifest declaration order for diagnostics only. Contract acceptance never uses manifest order.\n",
+  "contents_omitted": false
+}

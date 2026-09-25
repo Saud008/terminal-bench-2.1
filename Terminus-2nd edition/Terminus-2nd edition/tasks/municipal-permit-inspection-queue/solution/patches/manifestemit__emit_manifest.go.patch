@@ -1,0 +1,37 @@
+--- a/internal/manifestemit/emit_manifest.go
++++ b/internal/manifestemit/emit_manifest.go
+@@ -17,12 +17,12 @@
+ 	if err := bundleload.BundleLoaded(scenario); err != nil {
+ 		return err
+ 	}
+-	pass, err := readPublishPass()
++	pass, err := readQueuePass()
+ 	if err != nil {
+ 		return err
+ 	}
+ 	if pass <= 0 {
+-		return fmt.Errorf("publish_pass must be positive")
++		return fmt.Errorf("queue_pass must be positive")
+ 	}
+ 	db, err := store.Open()
+ 	if err != nil {
+@@ -109,16 +109,16 @@
+ 	return v, nil
+ }
+ 
+-func readPublishPass() (int, error) {
++func readQueuePass() (int, error) {
+ 	raw, err := os.ReadFile("/app/state/queue-pass.json")
+ 	if err != nil {
+ 		return 0, err
+ 	}
+ 	var body struct {
+-		PublishPass int `json:"publish_pass"`
++		QueuePass int `json:"queue_pass"`
+ 	}
+ 	if err := json.Unmarshal(raw, &body); err != nil {
+ 		return 0, err
+ 	}
+-	return body.PublishPass, nil
++	return body.QueuePass, nil
+ }

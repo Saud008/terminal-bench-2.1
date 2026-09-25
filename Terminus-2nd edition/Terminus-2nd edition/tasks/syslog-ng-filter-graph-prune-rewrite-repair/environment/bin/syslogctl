@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ "${1:-}" != "replay" ]; then
+  echo "usage: syslogctl replay --config-dir PATH --messages PATH --seed SEED --export PATH [--reload full|partial]" >&2
+  exit 2
+fi
+shift
+
+CONFIG_DIR=""
+MESSAGES=""
+SEED=""
+EXPORT=""
+RELOAD="full"
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --config-dir) CONFIG_DIR="$2"; shift 2 ;;
+    --messages) MESSAGES="$2"; shift 2 ;;
+    --seed) SEED="$2"; shift 2 ;;
+    --export) EXPORT="$2"; shift 2 ;;
+    --reload) RELOAD="$2"; shift 2 ;;
+    *)
+      echo "unknown arg: $1" >&2
+      exit 2
+      ;;
+  esac
+done
+
+if [ -z "$CONFIG_DIR" ] || [ -z "$MESSAGES" ] || [ -z "$SEED" ] || [ -z "$EXPORT" ]; then
+  echo "missing required replay argument" >&2
+  exit 2
+fi
+
+bash /app/lib/replay.sh "$CONFIG_DIR" "$MESSAGES" "$SEED" "$EXPORT" "$RELOAD"

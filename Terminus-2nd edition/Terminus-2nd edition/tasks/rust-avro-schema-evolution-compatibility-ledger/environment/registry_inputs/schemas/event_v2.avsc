@@ -1,0 +1,36 @@
+{
+  "type": "record",
+  "name": "Envelope",
+  "namespace": "com.example.stream",
+  "aliases": [
+    "com.example.stream.Envelope"
+  ],
+  "fields": [
+    {
+      "name": "event_id",
+      "type": "string"
+    },
+    {
+      "name": "payload",
+      "type": {
+        "type": "record",
+        "name": "Payload",
+        "namespace": "com.example.stream",
+        "fields": [
+          {
+            "name": "value",
+            "type": "long"
+          },
+          {
+            "name": "tag",
+            "type": [
+              "null",
+              "string"
+            ],
+            "default": null
+          }
+        ]
+      }
+    }
+  ]
+}

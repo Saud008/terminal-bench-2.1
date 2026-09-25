@@ -1,0 +1,28 @@
+--- a/internal/runchain/run.go
++++ b/internal/runchain/run.go
+@@ -69,18 +69,14 @@
+ 	}
+ 	tail := bundleclip.FilterAfterSnapshot(entries, snap)
+ 	qs, mem, commitIdx := bundleclip.LoadBaseline(snap)
+-	res := ocfcore.Replay(cluster, tail, snap.LastIncludedIndex, ocfcore.ReplayBaseline{})
+-	for k, v := range qs {
+-		if _, ok := res.Staging.QueueStates[k]; !ok {
+-			res.Staging.QueueStates[k] = v
+-		}
+-	}
+-	if len(res.Staging.Membership) == 0 {
+-		res.Staging.Membership = mem
+-	}
+-	if res.Staging.CommitIndex < commitIdx {
+-		res.Staging.CommitIndex = commitIdx
++	base := ocfcore.ReplayBaseline{
++		Membership:  mem,
++		QueueStates: qs,
++		CommitIndex: commitIdx,
++		CurrentTerm: snap.LastIncludedTerm,
++		EpochTerm:   snap.LastIncludedTerm,
+ 	}
++	res := ocfcore.Replay(cluster, tail, snap.LastIncludedIndex, base)
+ 	return workpad.Write(workpad.DefaultPath, res.Staging)
+ }
+ 

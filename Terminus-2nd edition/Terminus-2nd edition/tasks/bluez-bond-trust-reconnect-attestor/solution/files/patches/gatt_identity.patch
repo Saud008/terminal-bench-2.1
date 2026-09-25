@@ -1,0 +1,30 @@
+--- lib/trustgate/gatt_identity.sh
++++ lib/trustgate/gatt_identity.sh
+@@ -8,18 +8,21 @@
+ }
+ 
+ _gatt_seen_key() {
+-  local _mac="$1" uuid="$2"
+-  printf '%s' "$uuid"
++  local mac="$1" uuid="$2"
++  printf '%s|%s' "$mac" "$uuid"
+ }
+ 
+ _gatt_already_seen() {
+-  local _key="$1"
+-  return 1
++  local key="$1"
++  [[ -n "$key" ]] || return 1
++  grep -Fxq "$key" "${GATT_SEEN}" 2>/dev/null
+ }
+ 
+ _gatt_mark_seen() {
+-  local _key="$1"
+-  return 0
++  local key="$1"
++  [[ -n "$key" ]] || return 0
++  mkdir -p "$(dirname "${GATT_SEEN}")"
++  echo "$key" >> "${GATT_SEEN}"
+ }
+ 
+ gatt_discover() {

@@ -1,0 +1,130 @@
+{
+  "task_slug": "go-coredump-buildid-symbolization-indexer",
+  "symbol_table": [
+    {"path": "internal/gnubuildid/buildid.go", "symbol": "parseNotes", "kind": "function"},
+    {"path": "internal/vmarange/locate.go", "symbol": "LocatePC", "kind": "function"},
+    {"path": "internal/vmarange/locate.go", "symbol": "FileRelativeOffset", "kind": "function"},
+    {"path": "internal/symcatalog/catalog.go", "symbol": "LookupBuildID", "kind": "function"},
+    {"path": "internal/splitpath/resolve.go", "symbol": "ResolveSymbol", "kind": "function"},
+    {"path": "internal/crashfold/group.go", "symbol": "GroupKey", "kind": "function"},
+    {"path": "internal/frozenstage/write.go", "symbol": "WriteStaging", "kind": "function"},
+    {"path": "internal/indexsql/export.go", "symbol": "aggregateGroups", "kind": "function"}
+  ],
+  "oracle_frontier": [
+    {
+      "path": "internal/gnubuildid/buildid.go",
+      "fix_symbols": ["parseNotes", "ReadBuildID"],
+      "co_resident_helpers": ["align4"],
+      "allowed_top_level_symbols": ["ReadBuildID", "parseNotes"]
+    },
+    {
+      "path": "internal/vmarange/locate.go",
+      "fix_symbols": ["LocatePC", "FileRelativeOffset"],
+      "co_resident_helpers": ["parseHex"],
+      "allowed_top_level_symbols": ["LocatePC", "FileRelativeOffset"]
+    },
+    {
+      "path": "internal/symcatalog/catalog.go",
+      "fix_symbols": ["LookupBuildID"],
+      "co_resident_helpers": ["LoadCatalog"],
+      "allowed_top_level_symbols": ["LookupBuildID", "LoadCatalog"]
+    },
+    {
+      "path": "internal/splitpath/resolve.go",
+      "fix_symbols": ["ResolveSymbol"],
+      "co_resident_helpers": ["lookupNearest"],
+      "allowed_top_level_symbols": ["ResolveSymbol", "lookupNearest"]
+    },
+    {
+      "path": "internal/crashfold/group.go",
+      "fix_symbols": ["GroupKey"],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": ["GroupKey"]
+    },
+    {
+      "path": "internal/frozenstage/write.go",
+      "fix_symbols": ["WriteStaging"],
+      "co_resident_helpers": ["ReadStaging"],
+      "allowed_top_level_symbols": ["WriteStaging", "ReadStaging"]
+    },
+    {
+      "path": "internal/indexsql/export.go",
+      "fix_symbols": ["aggregateGroups"],
+      "co_resident_helpers": ["buildSummary"],
+      "allowed_top_level_symbols": ["Export", "aggregateGroups"]
+    }
+  ],
+  "flipping_point_contract": {
+    "locations": [
+      {
+        "id": "cli-entry",
+        "path": "cmd/coreidx/main.go",
+        "controls_tests": [
+          "test_t1066c1_coreidx_binary_rebuilds",
+          "test_t1066c1_coreidx_ingest_export_produces_artifacts"
+        ]
+      },
+      {
+        "id": "elf-buildid",
+        "path": "internal/gnubuildid/buildid.go",
+        "controls_tests": [
+          "test_t1066c1_coreidx_summary_build_ids_uppercase",
+          "test_t1066c1_coreidx_staging_matches_independent_reference"
+        ]
+      },
+      {
+        "id": "mmap-range",
+        "path": "internal/vmarange/locate.go",
+        "controls_tests": [
+          "test_t1066c1_coreidx_half_open_boundary_resolves_crash",
+          "test_t1066c1_coreidx_libhelper_mmap_tiebreak_symbol"
+        ]
+      },
+      {
+        "id": "stripped-fallback",
+        "path": "internal/splitpath/resolve.go",
+        "controls_tests": [
+          "test_t1066c1_coreidx_stripped_fallback_resolves_worker",
+          "test_t1066c1_coreidx_tb3_hidden_group_key_reference"
+        ]
+      },
+      {
+        "id": "dedupe-group",
+        "path": "internal/crashfold/group.go",
+        "controls_tests": [
+          "test_t1066c1_coreidx_duplicate_alpha_crashes_one_group",
+          "test_t1066c1_coreidx_group_total_matches_row_count"
+        ]
+      },
+      {
+        "id": "staging-sort",
+        "path": "internal/frozenstage/write.go",
+        "controls_tests": [
+          "test_t1066c1_coreidx_staging_order_timestamp_crash_id",
+          "test_t1066c1_coreidx_staging_matches_independent_reference"
+        ]
+      },
+      {
+        "id": "sqlite-export",
+        "path": "internal/indexsql/export.go",
+        "controls_tests": [
+          "test_t1066c1_coreidx_sqlite_group_row_count",
+          "test_t1066c1_coreidx_sqlite_frame_row_count"
+        ]
+      },
+      {
+        "id": "catalog-lookup",
+        "path": "internal/symcatalog/catalog.go",
+        "controls_tests": [
+          "test_t1066c1_coreidx_summary_build_ids_uppercase",
+          "test_t1066c1_coreidx_stripped_fallback_resolves_worker"
+        ]
+      }
+    ],
+    "no_single_location_flips_majority": true,
+    "concentration_cap": 0.5
+  },
+  "decoy_manifest": [
+    {"path": "internal/decoy/latency.go", "kind": "module", "non_fix_purpose": "latency decoy not on ingest/export hot path"}
+  ]
+}

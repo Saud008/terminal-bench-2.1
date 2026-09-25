@@ -1,0 +1,111 @@
+---
+description: Prevent TRIVIAL tasks — difficulty design, tests, oracle, and submit gates (no task-name examples) (LOCKED)
+alwaysApply: false
+---
+
+# Terminus — Anti-trivial task design
+
+Platform **TRIVIAL** means **agent pass rate is too high** (worst model often >60%), not that `task.toml` says `easy`. **`difficulty = "medium"` or `"hard"` is target only** until new platform agent runs prove otherwise. Never claim confirmed difficulty without agent stats.
+
+## Do not ship “waste” tasks
+
+Reject or redesign before submit if any of these are true:
+
+- One obvious bug in one file fixes most tests (single-character condition, one swapped field, one wrong constant).
+- Oracle is a **recipe** (inline script that only mirrors instruction wording, copies golden trees, or writes final artifacts without running real logic in the environment).
+- Tests are mostly **format/grep** (read source for strings, CMake blocks, static HTML on disk only) without behavioral verification.
+- Instruction is a **test checklist** (every assertion copied into the prompt).
+- Unchanged **default starter** shape (generic API+DB repair, generic vault/crypto repair) with only names/paths changed.
+- Verifier accepts **self-consistent wrong logic** (service round-trips while independent reference math still fails).
+- **Single-path export** (`BuildLedger` / one function does ingest + math + persist) on Go/Rust CLI — fails **`revise/hardness.mdc` G-029–G-030** at CREATE.
+- **35+ pytest tests** but all exercise the **same** root bugs (platform EASY with 10/10 per-test).
+
+## CREATE-time structural gate (LOCKED — G-028–G-035)
+
+Before **first** upload of Go/Rust/Bash **CLI export** tasks:
+
+| Must have | Why |
+|-----------|-----|
+| Ingest → **staging file** under `/app/state/` + doc + test | Agents cannot one-shot export (G-029) |
+| **Export stage** separate from decoy `wrap.go` / `merge/apply.go` | Obvious fixes do not pass (G-030) |
+| **Chained poison** — ingest-only fix fails export hidden (G-033) | New models fix one stage |
+| **≥2 hidden traps** independent of bundled (G-034) | Hidden ≠ duplicate bundled |
+| Probe **1b, 7, 8** PASS | G-028, G-030, G-033 |
+| **≥6 bugs / ≥5 modules** | New-model pass inflation |
+
+If any missing → implement **`prompts/trivial-case-6.md` path A** before zip — **G-035 blocks first upload**.
+
+## Required difficulty design (accepted pattern)
+
+### Broken environment
+
+- **6+ interacting bugs** across **5+ modules** including **ingest-only** and **export-only** layers (CREATE target; minimum 4+ / 3+ on legacy revisions).
+- Bugs must **interact**: fixing only one layer still fails independent checks or cross-run state.
+- Prefer **wrong order** (validate after write), **wrong aggregation** (count vs sum), **wrong canonicalization** (hash/normalize/sort), **wrong scope** (transaction, counter, timezone), **wrong binding** (address, schema field), over “typo in one string”.
+- Distractor files allowed only if instruction says to ignore them; they must not be required to pass.
+
+### Instruction
+
+- 1–3 short paragraphs, user tone; **absolute paths**; outputs/schemas in **`/app/README.md`** or **`/app/docs/`**, not a long spec in `instruction.md`.
+- Every tested behavior must appear in instruction or referenced doc — no hidden test-only rules.
+
+### Tests (verifier)
+
+- **Behavior-only**: HTTP/CLI/DB/file bytes + **independent recomputation** of expected values (same formulas as contract, implemented separately in pytest).
+- **Per-run variation**: mutate payloads (unique keys, numeric offsets) so hardcoded JSON/CSV answers fail.
+- **Isolated state**: fresh DB/store per session or explicit cleanup; probes prove the running process uses that state.
+- **Anti-cheat minimum**:
+  - atomic rollback on invalid batch/input;
+  - idempotent replay does not duplicate rows or inflate totals;
+  - conflict/replay/reject counters match persisted stats;
+  - restart or second process does not break envelopes/report.
+- **No** source-grep-only tests unless the product contract is literally “source must contain X”.
+- Drop redundant tests that duplicate the same shallow check; keep ~20–30 **hard** behavioral tests, not 60+ easy ones.
+- `tests/test.sh`: no runtime installs; always write `0`/`1` to `/logs/verifier/reward.txt`.
+
+### Oracle
+
+- Deterministic, no network; **build/run real code paths** in the environment.
+- Must not be “print the answer file” unless the task is explicitly valid output generation through computation.
+- Should remain valid after verifier’s clean rebuild / isolated DB / mutated fixtures.
+
+### Metadata honesty
+
+- `codebase_size`: count **meaningful** agent-visible files; do not inflate with filler.
+- New submissions: **`medium` or `hard` only** in `task.toml` (repo policy); platform label follows agents later.
+
+## Pre-submit gate (mandatory)
+
+1. Harbor (or equivalent): **oracle = 1.0**, **NOP = 0.0** on current tree.
+2. Ask: “Can a strong model pass with **one file, one edit**?” — if yes, add traps or independent verification.
+3. Ask: “Does oracle read like a **tutorial**?” — if yes, rewrite oracle to real fixes.
+4. Run **`revise/trivial-hardening-probes.mdc`** — **Probe 1** must fail **≥60%** tests under single-file fix (≥50% only pre-agent-runs).
+5. Upload zip → **wait for new agent eval** before calling non-trivial; old 100% stats are stale after test/hardening changes.
+
+## Decorative hardening (LOCKED — do not ship)
+
+Reject or **escalate to Case 6** if hardening only:
+
+- Added report/hash/fingerprint fields with matching doc + tests
+- Expanded one doc file with the full new algorithm
+- Left bugs **sequential** (fix module A then B → all green)
+- Hidden tests fail for the **same** root cause as bundled tests
+
+**Fix:** poison-pill partial fixes, persistence cross-run traps, two-stage pipeline, or `prompts/trivial-case-6.md`.
+
+## When hardening a “TRIVIAL” revision
+
+- Replace grep/shallow tests with **reference verification** and cross-module traps.
+- Make crypto/report bugs **subtle** (correct-looking version byte but wrong field order, pepper, AAD, iterations, bind address, etc.).
+- Do **not** only relabel `difficulty` in `task.toml`.
+- Rebuild submit zip; do not claim ready without fresh oracle/NOP evidence.
+
+## Reviewer feedback must not trivialize (LOCKED)
+
+- **Triage before editing** — `reviewer/REVIEWER-RULES.mdc`.
+- Reject feedback that adds bug locations, fix recipes, golden outputs, or test checklists to `instruction.md`.
+- **Instruction-issue feedback:** align via **docs + tests** (paths, cited `/app/docs/`, fair contract) — **never** add solve hints to instruction; that inflates pass rate → **TRIVIAL**.
+- Accept feedback that improves CI reliability, doc/instruction alignment, anti-cheat, and metadata honesty without exposing answers.
+- After accepted revisions, re-ask: can one shallow edit still pass?
+
+On conflict with other Terminus rules, prefer the **stricter** rule.

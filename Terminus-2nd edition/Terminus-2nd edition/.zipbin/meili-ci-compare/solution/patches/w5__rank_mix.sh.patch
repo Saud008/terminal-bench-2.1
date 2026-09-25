@@ -1,0 +1,11 @@
+--- a/internal/mbx7/w5/rank_mix.sh
++++ b/internal/mbx7/w5/rank_mix.sh
+@@ -3,7 +3,7 @@
+ python3 -c '
+ import json, sys
+ rows = json.loads(sys.stdin.read())
+-rows.sort(key=lambda r: (float(r["affinity"]), int(r.get("capture_seq", 0))))
++rows.sort(key=lambda r: (-float(r["affinity"]), r["doc_id"]))
+ for i, r in enumerate(rows, 1):
+     r["admit_rank"] = i
+ json.dump(rows, sys.stdout)

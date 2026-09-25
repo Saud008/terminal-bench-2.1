@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ATLAS_APP_ROOT="${ATLAS_APP_ROOT:-/app}"
+export ATLAS_APP_ROOT
+export PYTHONPATH="${ATLAS_APP_ROOT}/lib:${PYTHONPATH:-}"
+
+exec python3 -m atlas.cli "$@"

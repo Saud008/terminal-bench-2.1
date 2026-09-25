@@ -1,0 +1,10 @@
+--- lib/rspamd/console_parse.sh	2026-07-06 18:40:04.449295800 +0000
++++ lib/rspamd/console_parse.sh	2026-07-06 18:40:04.820702200 +0000
+@@ -11,6 +11,7 @@
+     local hash_part epoch_part algo_part hash_val
+     hash_part="${line#hash=}"
+     hash_val="${hash_part%% *}"
++    hash_val="$(printf '%s' "${hash_val}" | tr '[:upper:]' '[:lower:]')"
+     epoch_part="${line#*epoch=}"
+     epoch_part="${epoch_part%% *}"
+     algo_part="${line#*algo=}"

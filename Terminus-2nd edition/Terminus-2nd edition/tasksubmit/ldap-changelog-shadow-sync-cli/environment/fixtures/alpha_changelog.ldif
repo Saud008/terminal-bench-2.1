@@ -1,0 +1,32 @@
+dn: cn=Alice,ou=People,dc=example,dc=com
+changetype: add
+changeNumber: 1
+uSNChanged: 100
+objectClass: person
+cn: Alice
+mail: alice@example.com
+description: original
+-
+dn: cn=Bob,ou=People,dc=example,dc=com
+changetype: add
+changeNumber: 2
+uSNChanged: 101
+objectClass: person
+cn: Bob
+mail: bob@example.com
+-
+dn: cn=Alice,ou=People,dc=example,dc=com
+changetype: modify
+changeNumber: 3
+uSNChanged: 102
+replace: mail
+mail: alice.new@example.com
+-
+dn: cn=Alice,ou=People,dc=example,dc=com
+changetype: modify
+changeNumber: 4
+uSNChanged: 103
+add: mail
+mail: should-not-exist@example.com
+delete: mail
+-

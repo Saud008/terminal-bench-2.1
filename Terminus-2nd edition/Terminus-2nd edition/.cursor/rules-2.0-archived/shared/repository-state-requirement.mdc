@@ -1,0 +1,122 @@
+---
+description: LOCKED — agent repo must be functional; goal is new capability not repair
+alwaysApply: true
+---
+
+# Terminus — Repository state requirement (LOCKED)
+
+**When:** Every CREATE, revise, ideas intake, and pack (`repository_state_gate.py` / `idea_similarity_gate.py`). CLI alias: `task_generation_gate.py` (same 7/7 policy).
+
+**Policy script:** `scripts/task_generation_policy.py` · **Parent gate:** `shared/task-generation-mandatory.mdc`
+
+---
+
+## REPOSITORY STATE REQUIREMENT
+
+The repository provided to the agent must be considered:
+
+| Property | Meaning |
+|----------|---------|
+| **Functional** | Baseline code runs; contracts are coherent; no seeded failure as the product story |
+| **Buildable** | Image builds; compiled stacks rebuild in `tests/test.sh` when applicable |
+| **Internally consistent** | Docs, schemas, and sample data agree; no contradiction that only “fixing bugs” resolves |
+| **Not intentionally broken** | No `BUG:` / `INTENTIONALLY BROKEN` in `environment/`; no repair-only oracle |
+
+---
+
+## Agent goal — NEVER
+
+The agent's goal must **NEVER** be:
+
+> Identify what is wrong and fix it.
+
+Also forbidden as **primary** objective:
+
+- Find the bug · make tests pass · repair broken code · patch source to restore behavior
+- Fix the service / API / parser that “is producing wrong output”
+- Debug seeded defects · correct existing functionality · restoration workflow
+
+Automated: **H1**, **H3**, **H5**, **H7** in `task_generation_policy.py`. **REGENERATE** verdict → `shared/forbidden-repair-objectives-gate.mdc`.
+
+---
+
+## Forbidden repair objectives (REGENERATE)
+
+If the task’s **primary objective** is fix/repair/debug/patch/restore/correct/make-tests-pass — or forbidden terminology appears in the **instruction opening**, slug, or idea text — the gate returns **`REGENERATE`**. Agent must **reject and regenerate** the task (new design), not patch in place.
+
+Full block list + terminology: **`shared/forbidden-repair-objectives-gate.mdc`**.
+
+---
+
+## Agent goal — MUST (pick at least one framing)
+
+The agent's goal **should** be one of:
+
+| Goal class | Examples |
+|------------|----------|
+| **New capability** | Add a new capability on the working baseline under /app |
+| **New subsystem** | Build a new subsystem (planner, correlator, exporter, governor) |
+| **New workflow** | Implement a new workflow (ingest → staging → export) |
+| **Analytical outputs** | Generate analytical outputs, reports, ledgers, atlases |
+| **Scientific computation** | Scientific computation, closure, traverse, correlation |
+| **Security analysis** | Security analysis engine, trust / compromise modeling |
+| **Reproducibility** | Reproducibility artifacts, attestations, sealed bundles |
+| **Build / dependency** | Build dependency-management functionality, supply-chain reasoning |
+| **Governance / compliance** | Governance or compliance reasoning over datasets |
+| **Complex datasets** | Generate reports from complex datasets; provenance / lineage analysis |
+
+Instruction opening must state **what to build or analyze**, not what is broken.
+
+Automated: **H4** — build/analyze/implement framing + allowed goal patterns.
+
+---
+
+## CREATE-time environment (mandatory)
+
+| Do | Do not |
+|----|--------|
+| Ship a **working** baseline under /app (builds in Dockerfile) | Seed `BUG:` / `INTENTIONALLY BROKEN` in source |
+| Oracle **implements** new behavior and rebuilds | Patch-only oracle copying `solution/files/` without new artifacts |
+| Cite output paths and contracts in `/app/docs/` | Frame entire task as “fix broken service” |
+| `test.sh` rebuilds agent code when stack compiles | Rely on stale broken binary in image as the task |
+
+---
+
+## Gate mapping
+
+| Repository state | Check ID |
+|------------------|----------|
+| Not intentionally broken | **H2** |
+| Not fix-existing / repair workflow | **H3**, **H7** |
+| New capability goal (not find-and-fix) | **H4**, **H5** |
+| Not debugging / SE category | **H1**, **H6** |
+
+**7/7 PASS required before zip** — see `task-generation-mandatory.mdc`.
+
+---
+
+## When FAIL → fix (LOCKED)
+
+**Full procedure:** **`shared/repository-state-fail-fix.mdc`** — triage table by H1–H7, mandatory re-verify, no zip until PASS.
+
+Quick signals:
+
+| Signal | Fix |
+|--------|-----|
+| Instruction opens with broken/repair | Rewrite: working baseline + **add/build/implement** new output |
+| Seeded bugs in environment | Remove; implement missing capability instead |
+| H4 fail | Add explicit new-capability sentence (table above) |
+| Patch-only oracle | Oracle runs real build path producing new artifacts |
+
+**Do not** weaken gates unless user explicitly overrides in the current message.
+
+---
+
+## Related
+
+- `shared/forbidden-repair-objectives-gate.mdc` — **REGENERATE** when repair is core objective
+- `shared/repository-state-fail-fix.mdc` — **LOCKED** when gate FAILs
+- `shared/task-generation-mandatory.mdc` — hard acceptance 7/7
+- `scripts/repository_state_gate.py` — automated pack + hook gate
+- `create/creation-rules.mdc` — instruction + environment
+- `create/environment-no-ai-scaffolding.mdc` — no hint leaks

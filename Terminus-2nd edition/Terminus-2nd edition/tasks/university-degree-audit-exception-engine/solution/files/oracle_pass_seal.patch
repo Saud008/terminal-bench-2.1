@@ -1,0 +1,11 @@
+--- a/internal/idemstamp/stamp.go
++++ b/internal/idemstamp/stamp.go
+@@ -6,6 +6,6 @@
+ )
+ 
+ func RunStamp(scenario, materialFingerprint string) string {
+-    sum := sha256.Sum256([]byte(materialFingerprint + scenario))
+-    return hex.EncodeToString(sum[:8])
++    sum := sha256.Sum256([]byte(materialFingerprint + "|" + scenario))
++    return hex.EncodeToString(sum[:])[:16]
+ }

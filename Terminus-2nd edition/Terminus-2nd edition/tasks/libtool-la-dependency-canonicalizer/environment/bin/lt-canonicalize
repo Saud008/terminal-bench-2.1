@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${APP_ROOT:-/app}"
+LIB="${APP_ROOT}/lib"
+export PATH="/usr/local/bin:${PATH}"
+
+# shellcheck source=/dev/null
+source "${LIB}/graph.sh"
+# shellcheck source=/dev/null
+source "${LIB}/ingest.sh"
+# shellcheck source=/dev/null
+source "${LIB}/cycle.sh"
+# shellcheck source=/dev/null
+source "${LIB}/topo.sh"
+# shellcheck source=/dev/null
+source "${LIB}/merge.sh"
+# shellcheck source=/dev/null
+source "${LIB}/rpath.sh"
+# shellcheck source=/dev/null
+source "${LIB}/stage.sh"
+# shellcheck source=/dev/null
+source "${LIB}/publish.sh"
+# shellcheck source=/dev/null
+source "${LIB}/linkorder.sh"
+# shellcheck source=/dev/null
+source "${LIB}/validate.sh"
+
+usage() {
+  cat >&2 <<'EOF'
+usage: lt-canonicalize <project-root> --out <manifest.json>
+       lt-canonicalize scan <project-root>
+       lt-canonicalize publish --out <manifest.json>
+EOF
+  exit 2
+}
+
+lt_scan_project() {
+  local project="$1"
+  if [ ! -d "${project}" ]; then
+    echo "lt-canonicalize: project directory not found: ${project}" >&2
+    return 2
+  fi
+  project="$(cd "${project}" && pwd)"
+
+  local work
+  work="$(mktemp -d)"
+  trap 'rm -rf "${work}"' RETURN
+
+  lt_ingest_la_tree "${project}" "${work}" || return $?
+  lt_break_cycles || return $?
+
+  printf '%s\n' "${LT_IDS[@]}" > "${work}/ids.txt"
+  : > "${work}/broken.txt"
+  local edge
+  for edge in "${LT_BROKEN[@]:-}"; do
+    [ -z "${edge}" ] && continue
+    printf '%s\n' "${edge}" >> "${work}/broken.txt"
+  done
+
+  local id la_path la_relpath
+  for id in "${LT_IDS[@]}"; do
+    [ -z "${id}" ] && continue
+    la_relpath=""
+    for la_path in "${LT_LA_PATHS[@]}"; do
+      if [ "$(basename "${la_path}" .la)" = "${id}" ]; then
+        la_relpath="${la_path#"${LT_ROOT}/"}"
+        break
+      fi
+    done
+    la_relpath="${la_relpath//\\//}"
+    printf '%s' "${la_relpath}" > "${work}/${id}.relpath"
+    lt_direct_deps "${id}" > "${work}/${id}.direct_deps" || true
+  done
+
+  lt_write_snapshot "${project}" "${work}"
+}
+
+lt_cmd_publish() {
+  local out="$1"
+  lt_publish_manifest "${out}"
+}
+
+[[ $# -ge 1 ]] || usage
+
+if [ "$1" = "publish" ]; then
+  shift
+  out=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --out)
+        out="$2"
+        shift 2
+        ;;
+      *)
+        usage
+        ;;
+    esac
+  done
+  [ -n "${out}" ] || usage
+  lt_cmd_publish "${out}"
+  exit $?
+fi
+
+if [ "$1" = "scan" ]; then
+  shift
+  [ $# -eq 1 ] || usage
+  lt_scan_project "$1"
+  exit $?
+fi
+
+project=""
+out=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --out)
+      out="$2"
+      shift 2
+      ;;
+    -*)
+      usage
+      ;;
+    *)
+      if [ -z "${project}" ]; then
+        project="$1"
+        shift
+      else
+        usage
+      fi
+      ;;
+  esac
+done
+
+[ -n "${project}" ] && [ -n "${out}" ] || usage
+lt_scan_project "${project}"
+lt_cmd_publish "${out}"

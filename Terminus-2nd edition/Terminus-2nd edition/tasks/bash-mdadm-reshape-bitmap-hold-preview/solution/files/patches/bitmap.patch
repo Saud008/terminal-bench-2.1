@@ -1,0 +1,11 @@
+--- internal/raidops/policies/bitmap_policy.sh	2026-07-16 16:45:59.515631600 +0000
++++ internal/raidops/policies/bitmap_policy.sh	2026-07-16 14:44:16.963267600 +0000
+@@ -8,7 +8,7 @@
+ for arr in inv.get("arrays", []):
+     bitmap = arr.get("bitmap")
+     clear_planned = bool(arr.get("bitmap_clear_planned"))
+-    if bitmap == "external" and not clear_planned:
++    if bitmap in ("internal", "external") and not clear_planned:
+         blocked[arr["name"]] = "blocked_bitmap"
+ json.dump(blocked, sys.stdout)
+ PY

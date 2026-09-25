@@ -1,0 +1,9 @@
+{
+  "path": "d:\\Terminus-2nd edition\\Terminus-2nd edition\\tasks\\opa-bundle-signature-digest-chain-verifier-repair\\tests\\stubs\\golden_preview_ledger.go",
+  "tool": "Write",
+  "old_string": null,
+  "new_string": null,
+  "contents_len": 1418,
+  "contents": "package bundle\n\nimport (\n\t\"encoding/json\"\n\t\"os\"\n\t\"path/filepath\"\n\t\"sort\"\n)\n\ntype PreviewEntry struct {\n\tRaw       string `json:\"raw\"`\n\tCanonical string `json:\"canonical\"`\n}\n\ntype PreviewLedger struct {\n\tBundle  string         `json:\"bundle\"`\n\tOrder   []string       `json:\"order\"`\n\tEntries []PreviewEntry `json:\"entries\"`\n}\n\nconst previewLedgerPath = \"/app/state/preview-ledger.json\"\n\nfunc WritePreviewLedger(bundleDir string, members []Member, _ []string) error {\n\tentries := make([]PreviewEntry, 0, len(members))\n\tcanonicals := make([]string, 0, len(members))\n\tfor _, m := range members {\n\t\tif m.Canonical == \"MANIFEST.json\" || m.Canonical == \".signatures.json\" {\n\t\t\tcontinue\n\t\t}\n\t\tentries = append(entries, PreviewEntry{Raw: m.Raw, Canonical: m.Canonical})\n\t\tcanonicals = append(canonicals, m.Canonical)\n\t}\n\tsort.Strings(canonicals)\n\tledger := PreviewLedger{\n\t\tBundle:  bundleDir,\n\t\tOrder:   canonicals,\n\t\tEntries: entries,\n\t}\n\tif err := os.MkdirAll(filepath.Dir(previewLedgerPath), 0o755); err != nil {\n\t\treturn err\n\t}\n\traw, err := json.MarshalIndent(ledger, \"\", \"  \")\n\tif err != nil {\n\t\treturn err\n\t}\n\treturn os.WriteFile(previewLedgerPath, raw, 0o644)\n}\n\nfunc LoadPreviewLedger() (*PreviewLedger, error) {\n\traw, err := os.ReadFile(previewLedgerPath)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tvar ledger PreviewLedger\n\tif err := json.Unmarshal(raw, &ledger); err != nil {\n\t\treturn nil, err\n\t}\n\treturn &ledger, nil\n}\n",
+  "contents_omitted": false
+}

@@ -1,0 +1,7 @@
+        def check() -> None:
+            assert merge(part1, state=STATE).returncode == 0
+            session_before_part2 = load_session_file(STATE)
+            assert merge(part2, state=STATE).returncode == 0
+            doc = json.loads(OUT.read_text())
+            ref, _ = reference_merge(part2, session_before_part2, use_session=True)
+            assert doc != ref

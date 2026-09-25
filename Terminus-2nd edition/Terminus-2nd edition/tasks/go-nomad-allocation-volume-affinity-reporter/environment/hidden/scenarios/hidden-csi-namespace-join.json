@@ -1,0 +1,37 @@
+{
+  "scenario_name": "hidden-csi-namespace-join",
+  "job_id": "vault",
+  "task_group": "server",
+  "focus_alloc_id": "alloc-vault",
+  "stale_cutoff_index": 0,
+  "csi_volumes": [
+    {
+      "volume_id": "vol-secrets",
+      "namespace": "infra",
+      "plugin_id": "csi-secrets-store"
+    }
+  ],
+  "allocations": [
+    {
+      "alloc_id": "alloc-vault",
+      "node_id": "node-secure",
+      "node_class": "secure",
+      "create_index": 700,
+      "modify_index": 701,
+      "client_status": "running",
+      "desired_status": "run",
+      "reschedule_attempts": 0,
+      "reschedule_failed": false,
+      "csi_mounts": [
+        {
+          "volume_id": "vol-secrets",
+          "mount_path": "/secrets",
+          "read_only": true
+        }
+      ],
+      "constraints": [],
+      "affinities": [],
+      "superseded_by": ""
+    }
+  ]
+}

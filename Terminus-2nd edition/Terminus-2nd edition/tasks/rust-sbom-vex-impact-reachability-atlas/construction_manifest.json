@@ -1,0 +1,102 @@
+{
+  "task_slug": "rust-sbom-vex-impact-reachability-atlas",
+  "symbol_table": [
+    {"path": "environment/src/idcanon/canon.rs", "symbol": "normalize_purl", "kind": "function"},
+    {"path": "environment/src/waiverq/rank.rs", "symbol": "pick_effective", "kind": "function"}
+  ],
+  "oracle_frontier": [
+    {
+      "path": "environment/src/idcanon/canon.rs",
+      "fix_symbols": ["normalize_purl"],
+      "co_resident_helpers": ["collapse_packages", "normalize_edge_endpoint"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "environment/src/waiverq/rank.rs",
+      "fix_symbols": ["pick_effective", "effective_status"],
+      "co_resident_helpers": ["status_rank"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "environment/src/waiverq/ttl.rs",
+      "fix_symbols": ["filter_active"],
+      "co_resident_helpers": ["is_active"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "environment/src/depcrawl/adjacency.rs",
+      "fix_symbols": ["reachable_packages"],
+      "co_resident_helpers": ["bfs_reachable", "reachable_from"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "environment/src/snapbuf/codec.rs",
+      "fix_symbols": ["staging_digest"],
+      "co_resident_helpers": ["bump_run_seq", "canonical_digest_input", "hash_bytes", "load_stage", "write_stage"],
+      "allowed_top_level_symbols": []
+    },
+    {
+      "path": "environment/src/rptgen/rollup.rs",
+      "fix_symbols": ["export_atlas", "build_impacts"],
+      "co_resident_helpers": ["export_digest_for", "group_vex", "should_emit", "vex_for", "waiver_for"],
+      "allowed_top_level_symbols": []
+    }
+  ],
+  "flipping_point_contract": {
+    "locations": [
+      {
+        "id": "purl-norm",
+        "path": "environment/src/idcanon/canon.rs",
+        "controls_tests": ["test_reachvex_purl_scheme_lowercase", "test_reachvex_staging_packages_sorted_norm_purl"]
+      },
+      {
+        "id": "waiver-rank",
+        "path": "environment/src/waiverq/rank.rs",
+        "controls_tests": ["test_reachvex_chain_vex_not_affected_beats_fixed", "test_reachvex_tlskit_not_affected_waiver_row"]
+      },
+      {
+        "id": "waiver-ttl",
+        "path": "environment/src/waiverq/ttl.rs",
+        "controls_tests": ["test_reachvex_tb3_expired_waiver_falls_back_affected"]
+      },
+      {
+        "id": "reach-graph",
+        "path": "environment/src/depcrawl/adjacency.rs",
+        "controls_tests": ["test_reachvex_chain_tokenhash_transitive_reach", "test_reachvex_tb3_dev_edge_trap_no_codecrown"]
+      },
+      {
+        "id": "stage-digest",
+        "path": "environment/src/snapbuf/codec.rs",
+        "controls_tests": ["test_reachvex_staging_digest_reference_parity", "test_reachvex_ingest_seq_stable_same_fingerprint"]
+      },
+      {
+        "id": "impact-emit",
+        "path": "environment/src/rptgen/rollup.rs",
+        "controls_tests": ["test_reachvex_impacts_sorted_binary_package_vuln", "test_reachvex_minimal_full_reference_parity"]
+      },
+      {
+        "id": "digest-contract",
+        "path": "environment/docs/package-normalization.md",
+        "controls_tests": ["test_reachvex_staging_digest_reference_parity", "test_reachvex_export_digest_reference_parity"]
+      },
+      {
+        "id": "digest-helper",
+        "path": "environment/scripts/digest_sha.py",
+        "controls_tests": ["test_reachvex_export_digest_reference_parity"]
+      }
+    ],
+    "controlled_tests": [
+      "test_reachvex_minimal_full_reference_parity",
+      "test_reachvex_chain_tokenhash_transitive_reach",
+      "test_reachvex_tb3_expired_waiver_falls_back_affected",
+      "test_reachvex_staging_digest_reference_parity"
+    ]
+  },
+  "decoy_manifest": [
+    {
+      "path": "environment/src/decoy/spdx_merge.rs",
+      "kind": "module",
+      "non_fix_purpose": "SPDX merge decoy not on capture or rollup hot path"
+    }
+  ]
+}

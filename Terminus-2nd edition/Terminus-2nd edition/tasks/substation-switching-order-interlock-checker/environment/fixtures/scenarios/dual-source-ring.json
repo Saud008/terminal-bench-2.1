@@ -1,0 +1,62 @@
+{
+  "scenario_id": "dual-source-ring",
+  "buses": [
+    {
+      "bus_id": "bus-n"
+    },
+    {
+      "bus_id": "bus-e"
+    },
+    {
+      "bus_id": "bus-s"
+    },
+    {
+      "bus_id": "bus-w"
+    }
+  ],
+  "energized_sources": [
+    "bus-n",
+    "bus-s"
+  ],
+  "breakers": [
+    {
+      "breaker_id": "brk-ne",
+      "from_bus": "bus-n",
+      "to_bus": "bus-e",
+      "initial_state": "closed"
+    },
+    {
+      "breaker_id": "brk-es",
+      "from_bus": "bus-e",
+      "to_bus": "bus-s",
+      "initial_state": "closed"
+    },
+    {
+      "breaker_id": "brk-sw",
+      "from_bus": "bus-s",
+      "to_bus": "bus-w",
+      "initial_state": "open"
+    },
+    {
+      "breaker_id": "brk-wn",
+      "from_bus": "bus-w",
+      "to_bus": "bus-n",
+      "initial_state": "open"
+    }
+  ],
+  "lockouts": [],
+  "procedure": [
+    {
+      "step_index": 1,
+      "action": "close",
+      "breaker_id": "brk-sw",
+      "requires_isolation": true
+    },
+    {
+      "step_index": 2,
+      "action": "close",
+      "breaker_id": "brk-wn",
+      "requires_isolation": false
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+--- a/internal/chronicle/timeline_seal.go
++++ b/internal/chronicle/timeline_seal.go
+@@ -7,7 +7,6 @@
+ 	"fmt"
+ 	"os"
+ 	"path/filepath"
+-	"sort"
+ 
+ 	"github.com/terminus/vcreplay/internal/receiptcollapse"
+ 	"github.com/terminus/vcreplay/internal/model"
+@@ -69,10 +68,7 @@
+ }
+ 
+ func buildRows(events []model.StagedEvent) []model.TimelineRow {
+-	sorted := append([]model.StagedEvent(nil), events...)
+-	sort.Slice(sorted, func(i, j int) bool {
+-		return sorted[i].TimestampMs < sorted[j].TimestampMs
+-	})
++	sorted := causalorder.CausalSort(events)
+ 
+ 	suppressed := suppressedReceipts(sorted)
+ 	effective := effectiveModeration(sorted)
+@@ -125,7 +121,7 @@
+ 			}
+ 			if receiptcollapse.SameDelivery(ri.RefEventID, rj.RefEventID, ri.Recipient, rj.Recipient) {
+ 				loser := receipts[j]
+-				if receipts[i].EventID < loser.EventID {
++				if receipts[i].EventID > loser.EventID {
+ 					loser = receipts[i]
+ 				}
+ 				out[loser.EventID] = true

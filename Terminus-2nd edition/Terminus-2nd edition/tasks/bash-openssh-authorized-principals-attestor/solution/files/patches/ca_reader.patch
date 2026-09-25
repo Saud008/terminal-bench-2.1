@@ -1,0 +1,11 @@
+--- lib/truststore/ca_reader.sh	2026-07-05 03:47:20.084135200 +0000
++++ solution/files/lib/truststore/ca_reader.sh	2026-07-05 03:47:20.484309400 +0000
+@@ -15,7 +15,7 @@
+       local allowed="*" ca_id key_type blob
+       if [[ "$line" =~ ^cert-authority ]]; then
+         if [[ "$line" =~ principals=\"([^\"]+)\" ]]; then
+-          allowed="$(echo "${BASH_REMATCH[1]}" | tr "," " ")"
++          allowed="${BASH_REMATCH[1]}"
+         fi
+         key_type="$(echo "$line" | awk '{for(i=1;i<=NF;i++) if($i ~ /^ssh-/) {print $i; exit}}')"
+         blob="$(echo "$line" | awk '{for(i=1;i<=NF;i++) if($i ~ /^ssh-/) {print $(i+1); exit}}')"

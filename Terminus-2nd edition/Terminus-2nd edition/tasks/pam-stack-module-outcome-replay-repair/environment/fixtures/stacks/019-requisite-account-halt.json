@@ -1,0 +1,11 @@
+{
+  "stack_id": "019-requisite-account-halt",
+  "service": "login",
+  "entries": [
+    {"phase": "auth", "control": "required", "module": "stubs/pam_permit.sh", "args": []},
+    {"phase": "account", "control": "required", "module": "stubs/pam_env.sh", "args": ["STEP=one"]},
+    {"phase": "account", "control": "requisite", "module": "stubs/pam_fail_account.sh", "args": []},
+    {"phase": "account", "control": "required", "module": "stubs/pam_env.sh", "args": ["STEP=three"]},
+    {"phase": "session", "control": "required", "module": "stubs/pam_permit.sh", "args": []}
+  ]
+}

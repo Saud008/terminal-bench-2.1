@@ -1,0 +1,30 @@
+--- environment/crates/logical_check/src/lib.rs	2026-07-05 06:57:10.318637500 +0000
++++ solution/oracle/golden/crates/logical_check/src/lib.rs	2026-07-05 06:57:11.191503600 +0000
+@@ -1,4 +1,4 @@
+-use avsc_json::type_label;
++use avsc_json::{type_label, AvroSchema};
+ use serde_json::Value;
+ 
+ #[derive(Debug, Clone, Default)]
+@@ -59,7 +59,9 @@
+ fn decimal_ok(writer: &Value, reader: &Value) -> bool {
+     let wp = decimal_precision(writer).unwrap_or(0);
+     let rp = decimal_precision(reader).unwrap_or(0);
+-    wp <= rp
++    let ws = decimal_scale(writer).unwrap_or(0);
++    let rs = decimal_scale(reader).unwrap_or(0);
++    wp <= rp && ws == rs
+ }
+ 
+ fn decimal_precision(v: &Value) -> Option<u32> {
+@@ -69,4 +71,9 @@
+     }
+ }
+ 
+-use avsc_json::AvroSchema;
++fn decimal_scale(v: &Value) -> Option<u32> {
++    match v {
++        Value::Object(map) => map.get("scale").and_then(|p| p.as_u64()).map(|x| x as u32),
++        _ => None,
++    }
++}

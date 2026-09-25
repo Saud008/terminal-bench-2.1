@@ -1,0 +1,25 @@
+pub const MAX_FORWARD_FILL: u32 = 3;
+
+pub fn forward_fill(values: &[Option<f64>]) -> Vec<f64> {
+    let mut out = Vec::with_capacity(values.len());
+    let mut last: Option<f64> = None;
+    let mut gap = 0u32;
+    for v in values {
+        match v {
+            Some(x) => {
+                last = Some(*x);
+                gap = 0;
+                out.push(*x);
+            }
+            None => {
+                gap += 1;
+                if gap <= MAX_FORWARD_FILL {
+                    out.push(last.unwrap_or(0.0));
+                } else {
+                    out.push(0.0);
+                }
+            }
+        }
+    }
+    out
+}

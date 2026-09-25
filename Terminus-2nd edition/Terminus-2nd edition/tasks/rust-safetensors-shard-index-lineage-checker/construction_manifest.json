@@ -1,0 +1,188 @@
+{
+  "task_slug": "rust-safetensors-shard-index-lineage-checker",
+  "symbol_table": [
+    {
+      "path": "environment/src/wx_span_gate.rs",
+      "symbol": "wx_guard_window",
+      "kind": "function"
+    },
+    {
+      "path": "environment/src/wx_width_table.rs",
+      "symbol": "wx_unit_bytes",
+      "kind": "function"
+    },
+    {
+      "path": "environment/src/wx_digest_seal.rs",
+      "symbol": "wx_seal_slice",
+      "kind": "function"
+    },
+    {
+      "path": "environment/src/wx_parent_bind.rs",
+      "symbol": "wx_anchor_fold",
+      "kind": "function"
+    },
+    {
+      "path": "environment/src/wx_roll_journal.rs",
+      "symbol": "wx_roll_journal",
+      "kind": "function"
+    },
+    {
+      "path": "environment/src/wx_finalize_report.rs",
+      "symbol": "wx_finalize_report",
+      "kind": "function"
+    }
+  ],
+  "oracle_frontier": [
+    {
+      "path": "environment/src/wx_span_gate.rs",
+      "fix_symbols": [
+        "wx_guard_window"
+      ],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": [
+        "wx_guard_window"
+      ]
+    },
+    {
+      "path": "environment/src/wx_width_table.rs",
+      "fix_symbols": [
+        "wx_unit_bytes"
+      ],
+      "co_resident_helpers": [
+        "wx_payload_units"
+      ],
+      "allowed_top_level_symbols": [
+        "wx_unit_bytes",
+        "wx_payload_units"
+      ]
+    },
+    {
+      "path": "environment/src/wx_digest_seal.rs",
+      "fix_symbols": [
+        "wx_seal_slice"
+      ],
+      "co_resident_helpers": [
+        "wx_seal_bytes",
+        "encode"
+      ],
+      "allowed_top_level_symbols": [
+        "wx_seal_slice",
+        "wx_seal_bytes",
+        "encode"
+      ]
+    },
+    {
+      "path": "environment/src/wx_parent_bind.rs",
+      "fix_symbols": [
+        "wx_anchor_fold"
+      ],
+      "co_resident_helpers": [],
+      "allowed_top_level_symbols": [
+        "wx_anchor_fold"
+      ]
+    },
+    {
+      "path": "environment/src/wx_roll_journal.rs",
+      "fix_symbols": [
+        "wx_roll_journal"
+      ],
+      "co_resident_helpers": [
+        "wx_read_journal",
+        "StagedRow"
+      ],
+      "allowed_top_level_symbols": [
+        "wx_roll_journal",
+        "wx_read_journal",
+        "StagedRow"
+      ]
+    },
+    {
+      "path": "environment/src/wx_finalize_report.rs",
+      "fix_symbols": [
+        "wx_finalize_report"
+      ],
+      "co_resident_helpers": [
+        "wx_diff_rows",
+        "Violation",
+        "Totals",
+        "LineageReport"
+      ],
+      "allowed_top_level_symbols": [
+        "wx_finalize_report",
+        "wx_diff_rows",
+        "Violation",
+        "Totals",
+        "LineageReport"
+      ]
+    }
+  ],
+  "decoy_manifest": [
+    {
+      "path": "environment/src/wx_decoy_metric.rs",
+      "kind": "module",
+      "non_fix_purpose": "metric wrapper not on scan or publish hot path"
+    }
+  ],
+  "flipping_point_contract": {
+    "locations": [
+      {
+        "id": "span-gate",
+        "path": "environment/src/wx_span_gate.rs",
+        "controls_tests": [
+          "test_hidden_offset_payload_boundary",
+          "test_hidden_manifest_dir_override"
+        ]
+      },
+      {
+        "id": "width-table",
+        "path": "environment/src/wx_width_table.rs",
+        "controls_tests": [
+          "test_bf16_tensor_element_size_validated",
+          "test_bundled_manifests_zero_violations"
+        ]
+      },
+      {
+        "id": "digest-seal",
+        "path": "environment/src/wx_digest_seal.rs",
+        "controls_tests": [
+          "test_hidden_fingerprint_payload_only",
+          "test_journal_matches_reference_rows"
+        ]
+      },
+      {
+        "id": "parent-bind",
+        "path": "environment/src/wx_parent_bind.rs",
+        "controls_tests": [
+          "test_hidden_mixed_case_lineage_hash",
+          "test_alpha_manifest_tensor_count"
+        ]
+      },
+      {
+        "id": "roll-journal",
+        "path": "environment/src/wx_roll_journal.rs",
+        "controls_tests": [
+          "test_journal_run_seq_globally_monotonic",
+          "test_journal_snapshot_on_disk_after_catalog_scan"
+        ]
+      },
+      {
+        "id": "atlas-emit",
+        "path": "environment/src/wx_finalize_report.rs",
+        "controls_tests": [
+          "test_violations_sorted_by_tensor_then_code",
+          "test_repeated_atlas_publish_deterministic"
+        ]
+      },
+      {
+        "id": "build-script",
+        "path": "environment/scripts/build_all.sh",
+        "controls_tests": [
+          "test_xr7_release_binary_rebuilds",
+          "test_catalog_atlas_pipeline_writes_outputs"
+        ]
+      }
+    ],
+    "no_single_location_flips_majority": true,
+    "concentration_cap": 0.5
+  }
+}

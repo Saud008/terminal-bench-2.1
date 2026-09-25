@@ -1,0 +1,23 @@
+--- src/ax_bind/mod.rs
+
++++ src/ax_bind/mod.rs
+
+@@ -45,7 +45,7 @@
+
+     if shape.len() != axes.dims.len() {
+
+         return false;
+
+     }
+
+-    for (dim_name, shape_len) in axes.dims.iter().zip(shape.iter().rev()) {
+
++    for (dim_name, shape_len) in axes.dims.iter().zip(shape.iter()) {
+
+         let Some(coord) = axes.coordinates.get(dim_name) else {
+
+             return false;
+
+         };
+
+

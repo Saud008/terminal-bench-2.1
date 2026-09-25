@@ -1,0 +1,44 @@
+--- lib/intake/pipeline.sh
++++ lib/intake/pipeline.sh
+@@ -19,22 +19,12 @@
+   printf '%s' "$payload" | python3 -c 'import json,sys; print(json.loads(sys.stdin.read())["op"])'
+ }
+ 
+-_dispatch_if_adapter() {
++_dispatch_in_trace_order() {
+   local line="$1"
+-  local op
+-  op="$(_event_op "$line")"
+-  if [[ "$op" == "adapter_power" ]]; then
+-    dispatch_event "$line"
++  if ! _payload_nonempty "$line"; then
++    return 0
+   fi
+-}
+-
+-_dispatch_if_not_adapter() {
+-  local line="$1"
+-  local op
+-  op="$(_event_op "$line")"
+-  if [[ "$op" != "adapter_power" ]]; then
+-    dispatch_event "$line"
+-  fi
++  dispatch_event "$line"
+ }
+ 
+ dispatch_event() {
+@@ -138,13 +128,7 @@
+ 
+   local line
+   while IFS= read -r line; do
+-    _payload_nonempty "$line" || continue
+-    _dispatch_if_adapter "$line"
+-  done < "$rows_file"
+-
+-  while IFS= read -r line; do
+-    _payload_nonempty "$line" || continue
+-    _dispatch_if_not_adapter "$line"
++    _dispatch_in_trace_order "$line"
+   done < "$rows_file"
+ 
+   write_midstate "$seed" "$trace" "$midstate"

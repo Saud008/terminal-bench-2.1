@@ -1,0 +1,20 @@
+    def test_eval_audit_records_binding_count(self) -> None:
+        """Eval must persist audit record with binding count matching reference trace."""
+        export = OUTPUT / "audit-check.json"
+        proc = eval_bundle("allow-basic", "3", export)
+        assert proc.returncode == 0, proc.stderr or proc.stdout
+        audit_path = EVAL_AUDIT
+        assert audit_path.is_file(), "/app/state/eval-audit.json missing"
+        audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        ref = reference_eval(BUNDLES / "allow-basic", "3", BUNDLES / "allow-basic" / "input/default.json")
+        assert audit["binding_count"] == len(ref["trace"]["bindings"])
+        assert audit["seed"] == "3"
+
+    def test_verify_rejects_path_escape(self) -> None:
+        """path-escape manifest member ../../etc/passwd must fail verify."""
+        proc = verify("path-escape")
+        assert proc.returncode != 0
+        out = json.loads(proc.stdout)
+        assert out["ok"] is False
+        reason = out.get("reason", "").lower()
+        assert any(token in reason for token in ("path", "escape", "canonical", "passwd"))

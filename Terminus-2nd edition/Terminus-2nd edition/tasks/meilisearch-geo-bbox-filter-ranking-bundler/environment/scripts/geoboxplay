@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+LIB=/app/internal/mbx7
+usage() { echo "usage: geoboxplay load-level|score-round|seal-atlas ..." >&2; exit 2; }
+cmd="${1:-}"; shift || true
+case "$cmd" in
+  load-level|bootstrap-level) exec bash "${LIB}/w0/wrap_stage.sh" "$@" ;;
+  score-round|tally-round) exec bash "${LIB}/w6/tally_stage.sh" "$@" ;;
+  seal-atlas|publish-atlas) exec bash "${LIB}/w7/emit_stage.sh" "$@" ;;
+  *) usage ;;
+esac

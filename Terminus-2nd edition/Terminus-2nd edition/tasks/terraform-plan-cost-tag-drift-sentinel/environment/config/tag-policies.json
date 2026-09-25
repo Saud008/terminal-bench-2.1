@@ -1,0 +1,61 @@
+{
+  "policy_version": 1,
+  "evaluated_on": "2026-06-29",
+  "tag_key_map": {
+    "cost_center": "CostCenter",
+    "environment": "Environment",
+    "owner": "Owner"
+  },
+  "provider_aliases": {
+    "aws.east": "aws",
+    "aws.west": "aws",
+    "azurerm.gov": "azurerm"
+  },
+  "module_defaults": [
+    {
+      "module_prefix": "module.network",
+      "tags": {
+        "CostCenter": "CC-NET-400",
+        "Environment": "shared"
+      }
+    },
+    {
+      "module_prefix": "module.data",
+      "tags": {
+        "CostCenter": "CC-DATA-410"
+      }
+    }
+  ],
+  "deny_rules": [
+    {
+      "id": "aws-require-cc",
+      "provider_scope": "aws",
+      "require_keys": ["cost_center"],
+      "on_actions": ["create", "update"]
+    },
+    {
+      "id": "azurerm-require-cc-env",
+      "provider_scope": "azurerm",
+      "require_keys": ["cost_center", "environment"],
+      "on_actions": ["create"]
+    }
+  ],
+  "waivers": [
+    {
+      "id": "bastion-break-glass",
+      "match": {
+        "resource": "aws_instance.bastion"
+      },
+      "keys": ["cost_center"],
+      "expires": "2099-12-31"
+    },
+    {
+      "id": "monitoring-env",
+      "match": {
+        "module_prefix": "module.monitoring"
+      },
+      "keys": ["environment"],
+      "expires": "2099-06-01"
+    }
+  ]
+}

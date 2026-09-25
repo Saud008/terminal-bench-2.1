@@ -1,0 +1,18 @@
+--- lib/rspamd/snapshot/publish.sh	2026-07-06 18:40:04.607682600 +0000
++++ lib/rspamd/snapshot/publish.sh	2026-07-06 18:40:05.005283900 +0000
+@@ -13,10 +13,12 @@
+ from pathlib import Path
+ 
+ manifest, salt, out_path = sys.argv[1:4]
+-corpus = Path(manifest).parent
+ mails = []
+-for name in sorted(corpus.glob("*.eml")):
+-    mails.append(name.stem)
++for line in Path(manifest).read_text(encoding="utf-8").splitlines()[1:]:
++    if not line.strip():
++        continue
++    mail_id, _eml = line.split("\t", 1)
++    mails.append(mail_id)
+ payload = json.dumps(mails, separators=(",", ":")).encode("utf-8")
+ digest = hashlib.sha256(payload).hexdigest()
+ doc = {

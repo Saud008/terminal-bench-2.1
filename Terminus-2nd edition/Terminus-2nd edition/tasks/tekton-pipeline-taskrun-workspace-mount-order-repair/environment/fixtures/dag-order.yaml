@@ -1,0 +1,48 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: dag-order-run
+spec:
+  pipelineSpec:
+    workspaces:
+      - name: shared-data
+        optional: false
+    tasks:
+      - name: publish
+        runAfter:
+          - compile
+        workspaces:
+          - name: out
+            workspace: shared-data
+        taskSpec:
+          workspaces:
+            - name: out
+              mountPath: /workspaces/out
+          steps:
+            - name: push
+      - name: fetch
+        workspaces:
+          - name: src
+            workspace: shared-data
+        taskSpec:
+          workspaces:
+            - name: src
+              mountPath: /workspaces/src
+          steps:
+            - name: clone
+      - name: compile
+        runAfter:
+          - fetch
+        workspaces:
+          - name: tree
+            workspace: shared-data
+        taskSpec:
+          workspaces:
+            - name: tree
+              mountPath: /workspaces/tree
+          steps:
+            - name: build
+  workspaces:
+    - name: shared-data
+      persistentVolumeClaim:
+        claimName: pipeline-data-pvc

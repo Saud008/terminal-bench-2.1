@@ -1,0 +1,39 @@
+{
+  "bundle_id": "minimal",
+  "fingerprint": "fp-minimal-v1",
+  "packages": [
+    {"purl": "pkg:cargo/webgate@1.2.0", "name": "webgate", "version": "1.2.0"},
+    {"purl": "PKG:CARGO/tlskit@0.9.1", "name": "tlskit", "version": "0.9.1"},
+    {"purl": "pkg:cargo/logfmt@2.0.0", "name": "logfmt", "version": "2.0.0"}
+  ],
+  "edges": [
+    {"from": "pkg:cargo/webgate@1.2.0", "to": "pkg:cargo/tlskit@0.9.1", "edge_kind": "runtime"},
+    {"from": "pkg:cargo/webgate@1.2.0", "to": "pkg:cargo/logfmt@2.0.0", "edge_kind": "runtime"}
+  ],
+  "binaries": [
+    {"name": "webgate", "root_purl": "pkg:cargo/webgate@1.2.0"}
+  ],
+  "vulnerabilities": [
+    {"vuln_id": "CVE-2024-1001", "summary": "tlskit buffer issue"},
+    {"vuln_id": "CVE-2024-2002", "summary": "logfmt parse issue"}
+  ],
+  "vex": [
+    {
+      "statement_id": "v-min-001",
+      "product_purl": "pkg:cargo/tlskit@0.9.1",
+      "vuln_id": "CVE-2024-1001",
+      "status": "not_affected",
+      "updated_at": "2026-01-10T12:00:00Z",
+      "expires_at": "2027-06-01T00:00:00Z",
+      "justification": "compiled without vulnerable feature"
+    },
+    {
+      "statement_id": "v-min-002",
+      "product_purl": "pkg:cargo/logfmt@2.0.0",
+      "vuln_id": "CVE-2024-2002",
+      "status": "affected",
+      "updated_at": "2026-01-05T00:00:00Z",
+      "justification": "needs patch"
+    }
+  ]
+}

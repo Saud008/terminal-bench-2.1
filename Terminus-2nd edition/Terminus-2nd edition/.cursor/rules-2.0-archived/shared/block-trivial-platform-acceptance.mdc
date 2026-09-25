@@ -1,0 +1,92 @@
+---
+description: LOCKED — stop platform TRIVIAL/EASY; block zip until Case 6 depth + agent smoke ≤20%
+alwaysApply: true
+---
+
+# Terminus — Block TRIVIAL platform acceptance (LOCKED)
+
+**User problem:** Tasks keep uploading, platform returns **TRIVIAL** or **EASY**, repeat revise rounds.
+
+**Root cause:** Oracle 1 + NOP 0 + shallow probes **do not** mean Opus 4.8 / GPT 5.5 will fail. Platform judges **agent pass rate**, not local CI.
+
+**This rule:** Block **zip** until shape + smoke predict **worst model ≤20%** (HARD band).
+
+On conflict: **stricter** wins. Do not upload to “see what platform says.”
+
+---
+
+## Why tasks keep coming back TRIVIAL
+
+| You thought was enough | Platform still EASY |
+|------------------------|---------------------|
+| Oracle 1, NOP 0 | Opus **5/5**, GPT **4/5** |
+| `difficulty = "hard"` in task.toml | Worst model **>60%** |
+| 15 pytest tests | One-file patch passes **80%+** |
+| Hidden tests same bug as bundled | Agents fix obvious file once |
+| Case 5: new hash field + 4 tests | Same pipeline, sequential bugs |
+| Probes manually marked PASS | Live auto-probes FAIL on pack |
+
+**Fix class:** **`prompts/trivial-case-6.md`** at CREATE or after EASY paste — not more fields on same bugs.
+
+---
+
+## Upload blocked until ALL pass (automatic in `pack_zip.sh`)
+
+| Gate | What it enforces |
+|------|------------------|
+| **Trivial shape** | `preupload_trivial_shape_gate.py` — ≥5 modules, ≥18 tests (hard), ≥2 hidden-trap tests, ≥5 solution files, auto-probes PASS |
+| **F′ first-submit** | `first_submit_pack_gate.py` — live probe re-check |
+| **Agent calibration** | `preupload_agent_calibration.py` — local smoke record; worst **≤20%**; `--post-harden` after platform EASY |
+| **Difficulty design** | `preupload_difficulty_design_gate.py` — no medium first upload; no ≥9/10 per-test surface from pasted summary |
+| **Anti-spam** | `terminus_anti_spam_check.py` — family / templated |
+
+**No zip** if any gate FAIL. Overrides (`TERMINUS_*_SKIP=1`) only when user **explicitly** says so in the current message.
+
+---
+
+## CREATE — design for HARD before writing zip
+
+1. Read **`prompts/sp-hard-create-revise.md`** + **`prompts/trivial-case-6.md`** (not Case 4/5).
+2. **Go/Rust/C++/Bash CLI export:** ingest → staging file → export stage; **decoy** off hot path; persistence cross-run.
+3. **≥5 bugs** across **≥5 modules**; oracle patches **≥5** files.
+4. **≥2** pytest functions that use `/opt/verifier-fixtures/` or `TB3_*` with **different** failure mode than bundled.
+5. **≥18** behavioral tests when `difficulty = "hard"`.
+6. Run **`python3 scripts/terminus_auto_probes.py --task-dir tasks/<name>`** — must exit 0.
+7. Local Opus + GPT smoke (≥2 runs each); record worst **≤20%**:
+   `python3 scripts/preupload_agent_calibration.py --record --task-dir tasks/<name> --opus 1/5 --gpt 2/5`
+8. **`./scripts/create_finish_to_zip.sh <name>`** only — not raw `pack_zip` without F′.
+
+---
+
+## REVISE — after platform TRIVIAL / EASY paste
+
+User pastes summary only → agent loads **trivial trio** (`trivial.md` → `trivial-case-6.md` → `sp-hard-create-revise.md`).
+
+1. **Structural** Case 6 redesign — staging, decoy, poison-pill, persistence.
+2. Re-run auto-probes + harbor oracle/NOP.
+3. Local agent smoke with **`--post-harden`** when context file exists.
+4. **`create_finish_to_zip.sh`** — shape gate S7 requires post-harden worst ≤20%.
+
+**Forbidden:** upload again without post-harden smoke after EASY/TRIVIAL summary.
+
+---
+
+## Agent reply before zip (mandatory line)
+
+```
+Trivial acceptance risk: LOW / MEDIUM / HIGH
+Shape gate: PASS/FAIL — <jobs-local/gates/trivial-shape-last.txt summary>
+Agent calibration: worst ≤20%? — <yes/no + path>
+```
+
+**HIGH** or any FAIL → **do not** say ready; **do not** `./scripts/pack_zip.sh`.
+
+---
+
+## Related (always on)
+
+- `shared/trivial-first-upload-lock.mdc`
+- `shared/no-easy-upload-lock.mdc`
+- `shared/trivial-fix-invoke-mandatory-steps.mdc`
+- `create/first-submit-acceptance-gate.mdc`
+- `revise/trivial-hardening-probes.mdc`

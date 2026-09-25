@@ -1,0 +1,130 @@
+---
+description: LOCKED — Platform submission explanations (Difficulty / Solution / Verification) per task slug
+alwaysApply: true
+---
+
+# Terminus — Submission explanations (LOCKED)
+
+**Platform policy (Jun 2026+):** Every upload needs three short paragraphs on the submit form. **Not** in the task zip — same pattern as platform rubrics.
+
+---
+
+## CRITICAL — Terminus quality notice (zero tolerance)
+
+The Terminus team flags **critical quality issues** when explanation fields:
+
+1. **Do not answer the prompt** — e.g. Difficulty asks *why the task is difficult*; writing about debugging symptoms, implementation trivia, or verification instead is **wrong** even if related.
+2. **Look LLM-generated** — copying, paraphrasing, or generating platform paste with AI is a **direct violation**. Snorkel expects **your own words**.
+
+**Effective rules (non-negotiable):**
+
+- **Read each platform label before writing.** Answer **exactly** what it asks.
+- **Difficulty Explanation** → why humans **and** agents struggle with **this** task (doc traps, interacting bugs, partial-fix failure modes). **Not** how you verified, not oracle steps, not pytest names.
+- **Solution Explanation** → your **high-level** fix approach and **key insight** (modules, contract, rebuild). **Not** a line-by-line recipe; **not** re-stating difficulty.
+- **Verification Explanation** → how **tests** prove correctness (reference impl, subprocess CLI, hidden fixtures, anti-cheat). **Not** why the task is hard; **not** the oracle patch list as the whole answer.
+
+**Agent drafts are scaffolds only.** `write_submission_explanations.py --draft` produces a starting file from the real task tree. **You must rewrite in your own voice** before pasting on the platform. Never paste agent text verbatim.
+
+**Human voice:** plain prose, no bullet lists, no template filler (“Furthermore”, “In conclusion”, “This task challenges”, “leverage”, “utilize”, “delve into”).
+
+**Human prose style (Indian English, LOCKED):** Write like you are briefing a teammate in your own words — direct, slightly informal, not a US tech blog.
+
+- Prefer **and**, **but**, **so**, **because** over semicolons, colons, or dash chains.
+- **Avoid** `;` `:` `—` `–` and hyphen stacks unless one is truly needed.
+- **Spell counts in words** (seven modules, ten scenarios) — skip digits in platform paste.
+- **Skip path dumps** (`/opt/...`, `foo.rs`, `tag-one-through-five`) — name the idea, not the file tree.
+- Short sentences are fine.Slight redundancy is fine.Stiff listy prose is not.
+- **Max two sentences** per Difficulty,Solution,and Verification field.
+- **No space after period or comma** in platform paste.
+
+Violations → probable LLM usage, irrelevant explanations, or prompt mismatch → **removal from project without further warning**.
+
+---
+
+## Length cap (LOCKED — habit for every task)
+
+Each platform field (**Difficulty**, **Solution**, **Verification**) must stay **short**:
+
+| Limit | Rule |
+|-------|------|
+| **Sentences** | **1–2** per section (hard max **2** — never 3+) |
+| **Lines** | **One paragraph**; **≤3 non-empty lines** of prose per section in the file |
+| **Words** | Aim **≤80 words** per section — cut filler before adding detail |
+| **Punctuation** | **No space after `.` or `,`** — tight human paste like `done.Next` or `a,b` |
+
+**Habit:** Draft with `--draft`, then **trim** to the max.Prefer one tight sentence over two long ones.
+
+**Do not** paste long agent drafts verbatim.
+
+---
+
+## Where files live
+
+| Output | Path | In zip? |
+|--------|------|--------|
+| **File (required before pack)** | `submission-explanations/<slug>.md` | **No** |
+| **Platform form** | Copy three sections from the file | Upload UI only |
+
+**Forbidden:** `tasks/<slug>/submission-explanations.md` inside the task tree if it would be zipped; do not add these fields to `instruction.md`.
+
+**Header (every file):**
+
+```markdown
+# Submission explanations — <slug>
+
+**Task folder:** tasks/<slug>/
+**Platform form only** — not in upload zip.
+```
+
+---
+
+## Per-section answer discipline
+
+| Section | Must include | Must NOT be |
+|---------|--------------|-------------|
+| **Difficulty** | Why **this** task is hard for humans/agents; specific interacting behaviors, doc vs code traps, partial fixes | Test inventory, oracle copy steps, CI/ruff, “tests verify”, debugging play-by-play unrelated to *difficulty* |
+| **Solution** | High-level repair strategy; which subsystems align; one or two contract insights | Difficulty essay, pytest file checklist, paste of solve.sh |
+| **Verification** | Reference vs SUT, CLI/subprocess, hidden suites, mutation/anti-cheat | Why agents fail, implementation walkthrough, rubric copy |
+
+**Good Difficulty opener (pattern):** “Agents struggle because …” / “This is hard because three layers must agree …”  
+**Bad Difficulty opener:** “Pytest rebuilds …” / “The oracle copies patches …” / “We fixed ruff …”
+
+Each section: **one paragraph**, **1–2 sentences** (max **2**), **≤3 prose lines**, task-specific facts from `tasks/<slug>/`.
+
+---
+
+## Agent workflow (CREATE Phase H + every ready-to-submit)
+
+1. Inspect `tasks/<slug>/` — instruction, `/app/docs/`, tests, solution, environment modules.
+2. Run `python3 scripts/write_submission_explanations.py --slug <slug> --draft`, then **rewrite every sentence** in your words from real task work.
+3. Run `python3 scripts/submission_explanations_gate.py --check --slug <slug>` — fix section-mismatch errors before pack.
+4. On Phase H / ready reply: paste all three paragraphs in chat **and** give file path.
+5. `pack_zip.sh` runs `--pack-gate --ensure` — auto-drafts when missing, then **blocks** if invalid (unless user overrides `TERMINUS_SUBMISSION_EXPLANATIONS_SKIP=1` in that message).
+6. `create_finish_to_zip.sh` runs the same ensure step before pack (step **4b**).
+
+**Do not** reuse paragraphs across slugs. **Do not** mention pytest file names as a fix checklist in Difficulty/Solution sections.
+
+---
+
+## Validation (automatic)
+
+`submission_explanations_gate.py` checks:
+
+- File exists at `submission-explanations/<slug>.md`
+- Slug header matches `tasks/<slug>/`
+- All three `##` sections present and non-empty
+- **1–2 sentences** per section (hard max **2**)
+- **≤3 non-empty prose lines** per section body
+- No fenced code blocks; no `instruction.md` / `test_outputs.py` path spam as the whole answer
+- **Section fit:** Difficulty must not lead with verification/oracle/CI language; Solution must not read like Difficulty; Verification must mention how tests prove behavior
+- Banned LLM/template phrases
+- **Prose style:** no semicolons; no colons; no em/en dashes; ≤2 hyphenated compounds; no digits; ≤1 slash per section; no space after period or comma
+
+---
+
+## Related
+
+- `shared/rubric-storage-lock.mdc` — rubric file pattern
+- `sanjana-standing-requirements.mdc` Phase H
+- `zip/ZIP-RULES.mdc` — pack gate list
+- `scripts/write_submission_explanations.py` · `scripts/submission_explanations_gate.py`

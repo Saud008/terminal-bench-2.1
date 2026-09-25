@@ -1,0 +1,60 @@
+---
+description: instruction.md prose style — no backticks or fenced CLI blocks (additive)
+alwaysApply: false
+---
+
+# Terminus — Instruction prose style (no backticks)
+
+**Additive rule.** Does not replace absolute-path or concision requirements in `create/creation-rules.mdc` and `reviewer/reviewer-checklist.mdc`. On conflict, prefer **stricter** (fair, concise, no solution hints).
+
+## Do not use backticks in `instruction.md`
+
+Agents read `instruction.md` as a user prompt. Write like `tasks/_accepted-tasks/modbus-map-merge/instruction.md` — plain prose with absolute paths, not markdown code formatting.
+
+| Avoid | Use instead |
+|-------|-------------|
+| Inline backticks: `recompute`, `export`, `denoise` | Plain words: recompute, export, denoise |
+| Fenced blocks for CLI examples | One short prose sentence listing subcommands and flags |
+| Backticks around paths: `` `/app/output/report.json` `` | Absolute paths without backticks: /app/output/report.json |
+| Backticks around env vars: `` `TB3_TRACKS_DIR` `` | Name in prose: TB3_TRACKS_DIR when set to an absolute directory |
+| Fenced `text` / `bash` / `json` sections | Contract detail in /app/docs/*.md linked from instruction |
+
+**Allowed:** normal punctuation and parentheses. **Not allowed:** any `` ` `` character in `instruction.md` unless the user explicitly overrides for that task.
+
+## Good pattern (prose + doc pointers)
+
+Opening: broken behavior, absolute paths to inputs and outputs, pointer to contract docs under /app/docs/.
+
+Middle: what must work after the fix (behaviors tests verify), not how to patch source.
+
+Close: idempotency, cache, or env overrides in one sentence; defer schemas to cited docs.
+
+**Example shape (not a template to copy verbatim):**
+
+The service under /app is producing wrong reports for replayed batches. Fix it so normalized output lands at /app/output/reconciliation-report.json per /app/docs/report-format.md. The denoise, export, and full denoise subcommands must match /app/docs/cli-surface.md. Re-running on unchanged inputs must yield byte-identical output.
+
+## What stays out of instruction.md
+
+- Step-by-step fix recipes or bug file names
+- Golden JSON/CSV samples
+- Long field-by-field schemas (belong in /app/docs/ referenced by path)
+- Task slug, canary strings, or “you are an expert programmer” framing
+
+## Milestone tasks
+
+Same rule per `steps/milestone_N/instruction.md` — prose only, no backticks, absolute paths.
+
+## Audit checklist
+
+| Check | Pass when |
+|-------|-----------|
+| No backticks | `rg '` instruction.md` returns no matches (or only user override) |
+| No fenced code | No ``` lines in instruction.md |
+| Absolute paths | Every file/dir mention starts with /app/ or other full path |
+| Alignment | Every tested behavior appears here or in a doc path named in instruction |
+
+## Related
+
+- `create/creation-rules.mdc` — instruction quality
+- `reviewer/reviewer-checklist.mdc` — concise, no hints (High)
+- `reviewer/llmaj-checks-reference.mdc` — `behavior_in_task_description`, `file_reference_mentioned`

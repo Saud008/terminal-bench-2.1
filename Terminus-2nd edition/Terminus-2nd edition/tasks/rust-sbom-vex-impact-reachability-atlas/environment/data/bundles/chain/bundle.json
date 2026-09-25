@@ -1,0 +1,56 @@
+{
+  "bundle_id": "chain",
+  "fingerprint": "fp-chain-v1",
+  "packages": [
+    {"purl": "pkg:cargo/edgeproxy@3.1.0", "name": "edgeproxy", "version": "3.1.0"},
+    {"purl": "pkg:cargo/authcore@1.0.0", "name": "authcore", "version": "1.0.0"},
+    {"purl": "pkg:cargo/tokenhash@0.4.2", "name": "tokenhash", "version": "0.4.2"},
+    {"purl": "pkg:cargo/metrics-lite@0.2.0", "name": "metrics-lite", "version": "0.2.0"}
+  ],
+  "edges": [
+    {"from": "pkg:cargo/edgeproxy@3.1.0", "to": "pkg:cargo/authcore@1.0.0", "edge_kind": "runtime"},
+    {"from": "pkg:cargo/authcore@1.0.0", "to": "pkg:cargo/tokenhash@0.4.2", "edge_kind": "runtime"},
+    {"from": "pkg:cargo/edgeproxy@3.1.0", "to": "pkg:cargo/metrics-lite@0.2.0", "edge_kind": "dev"},
+    {"from": "pkg:cargo/metrics-lite@0.2.0", "to": "pkg:cargo/tokenhash@0.4.2", "edge_kind": "runtime"}
+  ],
+  "binaries": [
+    {"name": "edgeproxy", "root_purl": "pkg:cargo/edgeproxy@3.1.0"}
+  ],
+  "vulnerabilities": [
+    {"vuln_id": "CVE-2024-3003", "summary": "tokenhash collision"},
+    {"vuln_id": "CVE-2024-1001", "summary": "auth token leak"}
+  ],
+  "vex": [
+    {
+      "statement_id": "v-chain-affected",
+      "product_purl": "pkg:cargo/tokenhash@0.4.2",
+      "vuln_id": "CVE-2024-3003",
+      "status": "affected",
+      "updated_at": "2026-01-01T00:00:00Z"
+    },
+    {
+      "statement_id": "v-chain-fixed",
+      "product_purl": "pkg:cargo/tokenhash@0.4.2",
+      "vuln_id": "CVE-2024-3003",
+      "status": "fixed",
+      "updated_at": "2026-02-01T00:00:00Z",
+      "expires_at": "2026-12-31T23:59:59Z"
+    },
+    {
+      "statement_id": "v-chain-na",
+      "product_purl": "pkg:cargo/tokenhash@0.4.2",
+      "vuln_id": "CVE-2024-3003",
+      "status": "not_affected",
+      "updated_at": "2026-03-01T00:00:00Z",
+      "expires_at": "2027-01-01T00:00:00Z",
+      "justification": "backported mitigation"
+    },
+    {
+      "statement_id": "v-chain-auth",
+      "product_purl": "pkg:cargo/authcore@1.0.0",
+      "vuln_id": "CVE-2024-1001",
+      "status": "under_investigation",
+      "updated_at": "2026-01-15T00:00:00Z"
+    }
+  ]
+}

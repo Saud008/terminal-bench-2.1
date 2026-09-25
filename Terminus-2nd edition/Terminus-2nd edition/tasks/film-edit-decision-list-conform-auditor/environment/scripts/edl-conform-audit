@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="${APP_ROOT:-/app}"
+
+usage() {
+  echo "usage: edl-conform-audit stage --bundle <manifest.json>" >&2
+  echo "       edl-conform-audit publish --bundle <bundle_id> --output <path>" >&2
+  exit 2
+}
+
+cmd="${1:-}"
+shift || usage
+
+case "${cmd}" in
+  stage)
+    exec bash "${APP_ROOT}/lib/conform_stage.sh" "$@"
+    ;;
+  publish|emit)
+    exec bash "${APP_ROOT}/lib/conform_publish.sh" "$@"
+    ;;
+  *)
+    usage
+    ;;
+esac

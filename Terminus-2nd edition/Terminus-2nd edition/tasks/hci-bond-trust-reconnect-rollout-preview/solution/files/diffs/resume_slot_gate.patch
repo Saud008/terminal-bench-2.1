@@ -1,0 +1,18 @@
+﻿--- lib/boltlane/gates/resume_slot_gate.sh
++++ lib/boltlane/gates/resume_slot_gate.sh
+@@ -1,5 +1,4 @@
+ #!/usr/bin/env bash
+-# Baseline resume-slot gate blocks on any non-empty resume_token, ignoring resume_cleared.
+ set -euo pipefail
+ python3 - <<'PY'
+ import json, sys
+@@ -11,7 +10,8 @@
+     for dev in adapter.get("devices", []):
+         key = f'{adapter_id}|{dev["mac"]}'
+         token = dev.get("resume_token") or ""
+-        if token:
++        cleared = bool(dev.get("resume_cleared"))
++        if token and not cleared:
+             blocked[key] = "ineligible_resume_armed"
+ json.dump(blocked, sys.stdout)
+ PY

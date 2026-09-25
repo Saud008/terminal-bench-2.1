@@ -1,0 +1,73 @@
+--- lib/rspamd/rotate.sh	2026-07-06 18:40:04.584137700 +0000
++++ lib/rspamd/rotate.sh	2026-07-06 18:40:04.983277600 +0000
+@@ -54,14 +54,12 @@
+     [[ -z "${mail_id}" ]] && continue
+     mail_count=$((mail_count + 1))
+     local eml_path="${corpus_dir%/}/${eml_file}"
+-    python3 - "${eml_path}" "${mail_id}" "${window_size}" \
+-      "${key_epoch}" "${checksum_algo_id}" "${tmp_dir}/bodies.tsv" <<'PY' >> "${tmp_dir}/bodies.tsv"
+-import hashlib
++    python3 - "${eml_path}" "${mail_id}" <<'PY' >> "${tmp_dir}/bodies.tsv"
+ import re
+ import sys
+ from pathlib import Path
+ 
+-eml_path, mail_id, window, ke, algo, _ = sys.argv[1:6]
++eml_path, mail_id = sys.argv[1:3]
+ raw = Path(eml_path).read_text(encoding="utf-8")
+ parts = raw.split("\n\n", 1)
+ body = parts[1] if len(parts) > 1 else raw
+@@ -87,22 +85,45 @@
+     done < "${tmp_dir}/shingles.tsv"
+   fi
+ 
+-    gawk -f "${LIB}/summary/rollup.awk" \
+-    -v out_path="${tmp_dir}/summary_counts.txt" \
+-    "${tmp_dir}/shingles.tsv"
+-
+-  local unique_shingles total_rows
+-  unique_shingles="$(sed -n '1p' "${tmp_dir}/summary_counts.txt")"
+-  total_rows="$(sed -n '2p' "${tmp_dir}/summary_counts.txt")"
++  if [[ "${dry_run}" == "true" ]]; then
++    read -r unique_shingles total_rows < <(python3 - "${key_epoch}" "${checksum_algo_id}" "${tmp_dir}/shingles.tsv" <<'PY'
++import hashlib
++import sys
++from pathlib import Path
++
++ke, algo, path = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3]
++hashes: set[str] = set()
++total = 0
++for line in Path(path).read_text(encoding="utf-8").splitlines():
++    if not line.strip():
++        continue
++    _mid, shingle = line.split("\t", 1)
++    total += 1
++    digest = hashlib.sha256(f"{ke}:{algo}:{shingle}".encode()).hexdigest()[:16]
++    hashes.add(digest)
++print(len(hashes), total)
++PY
++)
++  else
++    unique_shingles="$(rf_index_distinct_hashes)"
++    total_rows="$(rf_index_row_count)"
++  fi
+ 
+   local console_matched=0
+   if [[ "${dry_run}" != "true" ]]; then
+     if ! console_matched="$(rf_console_verify "${console_dump}" "${key_epoch}" "${checksum_algo_id}" "${RF_INDEX_DB}")"; then
++      rf_write_rollback "${key_epoch}" "${checksum_algo_id}" "console_mismatch"
+       echo "console verification failed" >&2
+       exit 1
+     fi
+   else
+-    console_matched="$(wc -l < "${console_dump}" | tr -d ' ')"
++    console_matched="$(python3 - "${console_dump}" <<'PY'
++import sys
++from pathlib import Path
++
++print(sum(1 for ln in Path(sys.argv[1]).read_text(encoding="utf-8").splitlines() if ln.strip()))
++PY
++)"
+   fi
+ 
+   python3 - "${key_epoch}" "${checksum_algo_id}" "${mail_count}" \

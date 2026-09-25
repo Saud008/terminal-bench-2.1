@@ -1,0 +1,13 @@
+Observatory metrology operators run the host-local platclosectl plate-closure ops desk at /app/bin/platclosectl. The desk admits offline TAN plate-solution scenario packs, binds spherical residuals into a staging matrix under WCS projection rules, and publishes a digest-bound closure certificate only from a committed bind pass. There is no live observatory network or remote plate archive. This is a system-administration host-local ops desk (hydrate → bind → seal); keep lab journal rows, bind_pass counters, residual-matrix staging, and certificate republication aligned. It is not a generic Go CLI rebuild, pytest harness, or software-engineering service-repair exercise.
+
+Ops contracts under /app/docs/ define enforceable invariants: cli-surface.md for verb order and flags; plate-scenario-load-contract.md for scenario fixture load layout; fits-card-lexicon.md for FITS header card normalization; tan-wcs-matrix-contract.md for WCS axis assignment; pixel-sky-projection-contract.md for TAN pixel-sky projection; epoch-proper-motion-nudge.md for epoch nudge polarity; spherical-residual-bind-policy.md for residual aggregation; quality-mask-gate.md for quality-mask admission; residual-matrix-schema.md for /app/work/residual-matrix staging fields; closure-certificate-fields.md for sealed export schema fields; plate-closure-ops-workflow.md for hydrate → bind → seal ordering; lab-events-journal-schema.md for hydrate journal layout; pytest-verifier-primitives.md for verifier reference math scope; fixture-bundle-catalog.md for bundled scenario inventory; plate-closure-ops-contract.md for baseline failure modes. The decoy DSS plate label renderer under internal/decoy/dsslabel is informational only and must never alter bind-residuals or seal-closure output.
+
+platclosectl must expose:
+
+hydrate-plates --scenario <id>
+bind-residuals --scenario <id>
+seal-closure --scenario <id> [--output <path>]
+
+hydrate-plates loads a scenario from the fixture root into /app/state/plate-closure.db. bind-residuals materializes /app/work/residual-matrix/<id>.jsonl and advances bind_pass in /app/state/bind-pass.json. seal-closure writes the closure certificate under /app/output/ (default <id>-closure-certificate.json) only when bind_pass is positive and must remain replay-stable across repeated invocations for the same bind pass.
+
+Bundled scenarios live under /app/fixtures/scenarios/. TB3_FIXTURE_DIR may point at an alternate scenario root such as /opt/verifier-fixtures/platclosectl/scenarios. TB3_MATCH_ARCSEC may override the per-scenario match radius. After policy-module edits under /app/internal/, leave /app/bin/platclosectl current (the verifier invokes /app/scripts/rebuild-platclosectl.sh). Do not edit /app/docs/, /app/fixtures/, or /tests/.

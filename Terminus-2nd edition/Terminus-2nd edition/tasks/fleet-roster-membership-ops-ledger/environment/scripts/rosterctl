@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+APP_ROOT="${ROSTER_APP_ROOT:-/app}"
+export ROSTER_APP_ROOT
+export PYTHONPATH="${APP_ROOT}/lib:${PYTHONPATH:-}"
+exec python3 -m roster.cli "$@"

@@ -1,0 +1,16 @@
+# Submission explanations — crafting-recipe-catalyst-cycle-resolver-repair
+
+**Task folder:** tasks/crafting-recipe-catalyst-cycle-resolver-repair/
+**Platform form only** — not in upload zip.
+
+## Difficulty Explanation
+
+This task is medium difficulty because the crafter CLI must keep recipe preview, atomic apply, substitute resolution, stackable output placement, catalyst handling, cycle detection, and SQLite export aligned across six /app/docs contracts at once. Agents often fix substitute mapping in craft-core but leave inventory-db preview writing catalyst deductions back to the database, so forge_spark vanishes after a read-only preview. Cycle detection that only walks input-to-producer edges misses catalyst chains in cycle-trap.json and returns exit 0 instead of 3. Stack placement without stack_max checks accepts smelt batches that overflow an almost-full iron_ingot stack, and apply paths that save slots after each input deduction break rollback when output placement later fails. Consumed versus non-consumed catalyst rules split across preview and apply: alchemy_vial must stay put through preview but deduct on successful brew_elixir apply. Seed-mutated recipe overlays exercise substitute resolution when inventory holds scrap_iron instead of iron_ore, so one-file patches on crafter.rs alone still fail the matrix runs.
+
+## Solution Explanation
+
+The oracle replaces substitute.rs, stack.rs, cycle.rs, and crafter.rs in craft-core plus dao.rs in inventory-db with corrected golden sources, then rebuilds craft-cli with cargo build --release and installs /usr/local/bin/crafter. Substitute resolution maps base ingredient ids to effective ids before multiplying by batch_qty and aggregating requirements. Cycle detection adds directed edges for both input items and catalyst items whose output is produced by another recipe, then runs DFS to populate RecipeGraphReport with cyclic true and exit 3 for cycle-trap.json. Stack planning rejects merges when existing_qty plus output_qty would exceed stack_max before counting new slots. Preview stays read-only on SQLite; apply deducts inputs and consumed catalyst only inside a single transactional path that rolls back to the pre-apply snapshot on any rejection. Export reads last_craft from meta and writes sorted slot snapshots per export-schema.md after a committed craft.
+
+## Verification Explanation
+
+Thirteen pytest functions rebuild the Rust workspace once per session via /app/scripts/rebuild.sh, reset inventory state between cases, and drive /usr/local/bin/crafter through subprocess on every run. An independent reference_crafter module resolves substitutes, plans outputs with overflow checks, simulates atomic apply with rollback, and detects catalyst-inclusive cycles so answers cannot be hard-coded. Bundled base.json, catalyst-chain.json, and cycle-trap.json fixtures stay immutable via SHA-256 guards on docs, config, and recipe files. Tests cover non-consumed catalyst preservation through preview, consumed catalyst deduction only on apply, stack overflow rejection without inventory mutation, failed apply rollback, validate-graph exit 3 on cycle-trap, export last_craft and slots after smelt_iron, and reference agreement on preview inputs across four seed-mutated substitute overlays.

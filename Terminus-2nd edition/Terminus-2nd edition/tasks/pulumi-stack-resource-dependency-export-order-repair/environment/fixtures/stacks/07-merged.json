@@ -1,0 +1,57 @@
+{
+  "stack": "prod",
+  "version": 3,
+  "deployment": {
+    "resources": [
+      {
+        "urn": "urn:pulumi:prod::acme::pulumi:providers:aws::default",
+        "type": "pulumi:providers:aws",
+        "parent": "urn:pulumi:prod::acme::pulumi:stack$acme/prod"
+      },
+      {
+        "urn": "urn:pulumi:prod::acme::custom:module:Network::core",
+        "type": "custom:module:Network",
+        "parent": "urn:pulumi:prod::acme::pulumi:stack$acme/prod",
+        "component": true
+      },
+      {
+        "urn": "urn:pulumi:prod::acme::aws:ec2/vpc:Vpc::core/vpc",
+        "type": "aws:ec2/vpc:Vpc",
+        "parent": "urn:pulumi:prod::acme::custom:module:Network::core",
+        "provider": "urn:pulumi:prod::acme::pulumi:providers:aws::default"
+      },
+      {
+        "urn": "urn:pulumi:prod::acme::aws:iam/role:Role::core/role",
+        "type": "aws:iam/role:Role",
+        "parent": "urn:pulumi:prod::acme::custom:module:Network::core",
+        "provider": "urn:pulumi:prod::acme::pulumi:providers:aws::default",
+        "dependencies": [
+          "urn:pulumi:prod::acme::aws:ec2/vpc:Vpc::core/vpc"
+        ]
+      },
+      {
+        "urn": "urn:pulumi:prod::acme::aws:s3/bucket:Bucket::core/bucket-old",
+        "type": "aws:s3/bucket:Bucket",
+        "parent": "urn:pulumi:prod::acme::pulumi:stack$acme/prod",
+        "provider": "urn:pulumi:prod::acme::pulumi:providers:aws::default"
+      },
+      {
+        "urn": "urn:pulumi:prod::acme::aws:s3/bucket:Bucket::core/bucket-new",
+        "type": "aws:s3/bucket:Bucket",
+        "parent": "urn:pulumi:prod::acme::pulumi:stack$acme/prod",
+        "provider": "urn:pulumi:prod::acme::pulumi:providers:aws::default",
+        "deleteBeforeReplace": true,
+        "replaces": "urn:pulumi:prod::acme::aws:s3/bucket:Bucket::core/bucket-old"
+      },
+      {
+        "urn": "urn:pulumi:prod::acme::aws:s3/bucketObject:BucketObject::core/bucket-new/lock",
+        "type": "aws:s3/bucketObject:BucketObject",
+        "parent": "urn:pulumi:prod::acme::pulumi:stack$acme/prod",
+        "provider": "urn:pulumi:prod::acme::pulumi:providers:aws::default",
+        "dependencies": [
+          "urn:pulumi:prod::acme::aws:s3/bucket:Bucket::core/bucket-new"
+        ]
+      }
+    ]
+  }
+}

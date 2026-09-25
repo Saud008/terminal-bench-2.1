@@ -1,0 +1,18 @@
+user_visible_outputs = [
+  "/app/output/deny-ledger.json",
+]
+
+internal_harness_files = [
+  "/app/state/chainhead.json",
+  "/app/docs/jkt-thumbprint-policy.md",
+]
+
+[structured_outputs.deny_ledger]
+target = "/app/output/deny-ledger.json"
+format = "json"
+instruction_checks = [
+  "verdict",
+  "deny_totals",
+  "chain_head",
+  "seal_digest",
+]

@@ -1,0 +1,107 @@
+---
+description: LOCKED — when repository-state / task-generation gate FAILs — fix in place
+alwaysApply: true
+---
+
+# Terminus — Repository state FAIL → fix (LOCKED)
+
+**Trigger:** Any of:
+
+- `pack_zip.sh` blocks on task-generation / repository-state gate
+- `jobs-local/repository-state-gate-last.json` → `"verdict": "FAIL"`
+- `jobs-local/task-generation-gate-last.json` → `"verdict": "FAIL"`
+- Ideas intake: `idea_similarity_gate.py` blocks on hard acceptance
+
+**Agents must:** read violations → **REGENERATE** if `regenerate_required: true` in gate JSON (forbidden repair objective) — **do not** patch the same slug in place. Otherwise fix **`tasks/<name>/` in place** → re-run gate until **7/7 PASS**. **No zip** until PASS. **No** `TERMINUS_TASK_GENERATION_SKIP` unless user explicitly overrides in the current message.
+
+**REGENERATE:** **`shared/forbidden-repair-objectives-gate.mdc`** — new slug, new scenario, functional baseline + new capability.
+
+**Load with fixes:** `shared/repository-state-requirement.mdc` · `shared/task-generation-mandatory.mdc` · `shared/forbidden-repair-objectives-gate.mdc` · `scripts/task_generation_policy.py`
+
+---
+
+## Step 1 — Triage (mandatory table in reply)
+
+Read `jobs-local/repository-state-gate-last.json` (or `task-generation-gate-last.json`). Map first failing check:
+
+| Failed check | Meaning | Fix class |
+|--------------|---------|-----------|
+| **REGENERATE** (`regenerate_required: true`) | Forbidden repair/debug **primary objective** or terminology in opening | **Regenerate** — new slug + scenario per `forbidden-repair-objectives-gate.mdc` |
+| **H1** | Debugging / SE objective | **Regenerate** if repair-shaped; else reframe |
+| **H2** | Repo not functional / buildable / consistent | Remove `BUG:` / `INTENTIONALLY BROKEN`; add `test.sh` rebuild; remove “broken repository” framing |
+| **H3** | Fixing existing functionality | New capability on **working** baseline; oracle builds new artifacts — not patch-only copy |
+| **H4** | No new-capability goal | Open instruction with **add/build/implement** + one allowed goal (subsystem, workflow, analysis, planner, …) |
+| **H5** | Find-bug / make-tests-pass shape | Remove “identify what is wrong”, “find the bug”, “make tests pass” |
+| **H6** | Blocked category | Set `category` to an allowlisted value (`data-administration` / `machine-learning` / `games`) |
+| **H7** | Repair / restoration workflow | Rename slug; remove restoration/correction/after-repair language; real build oracle |
+
+---
+
+## Step 2 — Fix by type (edit task — not metadata-only)
+
+### H2 / H4 — Repository state + new goal (most common)
+
+1. **Instruction** — first paragraph: working baseline under /app + **what to build or analyze** (see goal table in `repository-state-requirement.mdc`).
+2. **Environment** — remove seeded defects; ship code that **builds** in Dockerfile.
+3. **`tests/test.sh`** — rebuild (`cargo build` / `go build` / `rebuild-*`) before pytest when stack compiles.
+4. **`solution/solve.sh`** — implement new behavior + rebuild; no copy-only patch from `solution/files/` without compile.
+
+### H1 / H3 / H5 / H7 — Repair-shaped task
+
+**Do not** weaken tests. **Redesign:**
+
+- Scenario = add export stage, planner, attestation ledger, governance report — on **functional** /app
+- Oracle = construct new outputs through real CLI/build paths
+- Slug = no `repair-`, `fix-`, `debug-`, `restore-`
+
+### H6 — Category
+
+```toml
+category = "data-administration"  # or machine-learning / games
+```
+
+Never `debugging`, `software-engineering`, `data-processing`, `security`, `system-administration`, `build-and-dependency-management`, `scientific-computing`, `cloud-devops`, or any value outside the allowlist.
+
+---
+
+## Step 3 — Re-verify (mandatory before zip)
+
+```bash
+python3 scripts/repository_state_gate.py --pack-gate --task-dir tasks/<name>
+# must print: Repository-state: PASS — hard acceptance 7/7
+./scripts/pack_zip.sh <name>
+```
+
+Ideas (before CREATE):
+
+```bash
+python3 scripts/idea_similarity_gate.py --language <lang> --domain "<domain>" \
+  --title "<title>" --summary "<build/analyze new capability …>"
+```
+
+Report in reply:
+
+```
+Repository-state: PASS — 7/7 — <slug>
+Fix applied: H4 → rewrote instruction opening as build new workflow on working /app
+```
+
+---
+
+## Forbidden on FAIL
+
+| Do not | Do instead |
+|--------|------------|
+| `TERMINUS_TASK_GENERATION_SKIP=1` without user message | Fix per table above |
+| Relabel `difficulty` only | Reframe instruction + environment + oracle |
+| Weaken gate checks | Structural redesign per `repository-state-requirement.mdc` |
+| Tell user “upload anyway” | Re-run gate until PASS |
+
+---
+
+## Related
+
+- `shared/forbidden-repair-objectives-gate.mdc` — **REGENERATE** when repair is primary objective
+- `shared/repository-state-requirement.mdc` — full requirement
+- `shared/task-generation-mandatory.mdc` — 7/7 checklist
+- `scripts/repository_state_gate.py` — automated gate + report

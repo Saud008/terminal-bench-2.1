@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+APP_ROOT="${SNAPRET_APP_ROOT:-/app}"
+export SNAPRET_APP_ROOT
+export PYTHONPATH="${APP_ROOT}/lib:${PYTHONPATH:-}"
+exec python3 -m snapret.cli "$@"

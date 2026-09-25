@@ -1,0 +1,12 @@
+def assert_eval_matches_reference(
+    bundle: str, seed: str, export: Path, *, expect_allow: bool | None = None
+) -> None:
+    proc = eval_bundle(bundle, seed, export)
+    assert proc.returncode == 0, proc.stderr or proc.stdout
+    got = json.loads(proc.stdout)
+    ref = reference_eval(BUNDLES / bundle, seed, BUNDLES / bundle / "input/default.json")
+    if expect_allow is not None:
+        assert got["allow"] is expect_allow
+    assert got["allow"] == ref["allow"]
+    assert_trace_matches(got, ref)
+    assert json.loads(export.read_text(encoding="utf-8")) == got

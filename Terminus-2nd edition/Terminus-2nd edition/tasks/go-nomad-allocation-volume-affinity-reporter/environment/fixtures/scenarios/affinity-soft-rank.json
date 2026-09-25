@@ -1,0 +1,97 @@
+{
+  "scenario_name": "affinity-soft-rank",
+  "job_id": "ml-train",
+  "task_group": "trainer",
+  "focus_alloc_id": "alloc-high",
+  "stale_cutoff_index": 0,
+  "csi_volumes": [],
+  "allocations": [
+    {
+      "alloc_id": "alloc-high",
+      "node_id": "node-1",
+      "node_class": "gpu",
+      "create_index": 600,
+      "modify_index": 601,
+      "client_status": "running",
+      "desired_status": "run",
+      "reschedule_attempts": 0,
+      "reschedule_failed": false,
+      "csi_mounts": [],
+      "constraints": [
+        {
+          "attribute": "${node.class}",
+          "operator": "=",
+          "value": "gpu",
+          "hard": true
+        }
+      ],
+      "affinities": [
+        {
+          "attribute": "${node.pool}",
+          "operator": "!=",
+          "value": "batch",
+          "weight": 90
+        }
+      ],
+      "superseded_by": ""
+    },
+    {
+      "alloc_id": "alloc-mid",
+      "node_id": "node-2",
+      "node_class": "gpu",
+      "create_index": 602,
+      "modify_index": 603,
+      "client_status": "running",
+      "desired_status": "run",
+      "reschedule_attempts": 0,
+      "reschedule_failed": false,
+      "csi_mounts": [],
+      "constraints": [
+        {
+          "attribute": "${node.class}",
+          "operator": "=",
+          "value": "gpu",
+          "hard": true
+        }
+      ],
+      "affinities": [
+        {
+          "attribute": "${node.pool}",
+          "operator": "!=",
+          "value": "batch",
+          "weight": 60
+        }
+      ],
+      "superseded_by": ""
+    },
+    {
+      "alloc_id": "alloc-low",
+      "node_id": "node-3",
+      "node_class": "gpu",
+      "create_index": 604,
+      "modify_index": 605,
+      "client_status": "running",
+      "desired_status": "run",
+      "reschedule_attempts": 0,
+      "reschedule_failed": false,
+      "csi_mounts": [],
+      "constraints": [
+        {
+          "attribute": "${node.class}",
+          "operator": "=",
+          "value": "gpu",
+          "hard": true
+        }
+      ],
+      "affinities": [
+        {
+          "attribute": "${node.pool}",
+          "operator": "!=",
+          "value": "batch",
+          "weight": 20
+        }
+      ],
+      "superseded_by": ""
+    }
+  ]
+}

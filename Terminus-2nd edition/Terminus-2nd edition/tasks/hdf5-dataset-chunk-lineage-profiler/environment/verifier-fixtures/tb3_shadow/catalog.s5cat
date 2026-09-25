@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "root": "/",
+  "datasets": [
+    {
+      "path": "/grid/field",
+      "dims": [
+        4,
+        4
+      ],
+      "chunk_dims": [
+        2,
+        2
+      ],
+      "filters": [
+        "gzip",
+        "shuffle"
+      ],
+      "fill_value": 0.0,
+      "mask_rel": "masks/field.mask",
+      "attrs": {
+        "scale": 2.0,
+        "units": "Pa"
+      },
+      "parent_chain": [
+        {
+          "path": "/grid",
+          "attrs": {
+            "scale": 10.0,
+            "units": "hPa",
+            "frame": "ECMWF"
+          }
+        },
+        {
+          "path": "/grid/field",
+          "attrs": {
+            "units": "kPa"
+          }
+        }
+      ]
+    }
+  ]
+}

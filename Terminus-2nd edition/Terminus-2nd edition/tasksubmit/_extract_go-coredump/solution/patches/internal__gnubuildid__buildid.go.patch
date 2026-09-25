@@ -1,0 +1,13 @@
+--- internal/gnubuildid/buildid.go
++++ internal/gnubuildid/buildid.go
+@@ -35,8 +35,8 @@
+ func parseNotes(data []byte) (string, bool) {
+     off := 0
+     for off+12 <= len(data) {
+-        namesz := binary.BigEndian.Uint32(data[off : off+4])
+-        descsz := binary.BigEndian.Uint32(data[off+4 : off+8])
++        namesz := binary.LittleEndian.Uint32(data[off : off+4])
++        descsz := binary.LittleEndian.Uint32(data[off+4 : off+8])
+         noteType := binary.LittleEndian.Uint32(data[off+8 : off+12])
+         off += 12
+         nameEnd := off + int(namesz)

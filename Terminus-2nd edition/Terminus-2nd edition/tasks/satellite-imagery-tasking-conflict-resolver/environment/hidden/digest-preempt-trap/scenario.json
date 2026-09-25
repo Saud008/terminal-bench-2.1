@@ -1,0 +1,60 @@
+{
+  "scenario_id": "digest-preempt-trap",
+  "constellation_id": "LEO-H1",
+  "sensor_profile": {
+    "sensor_id": "MSI-H1",
+    "default_mode": "spotlight"
+  },
+  "pass_windows": [
+    {
+      "pass_id": "P1",
+      "orbit_id": "O901",
+      "start_sec": 800,
+      "end_sec": 900,
+      "cells": [
+        "C-H1"
+      ]
+    }
+  ],
+  "imaging_requests": [
+    {
+      "request_id": "R-low",
+      "cell_id": "C-H1",
+      "mode": "spotlight",
+      "priority_tier": 1,
+      "contract_id": "K-low",
+      "imaging_duration_sec": 35
+    },
+    {
+      "request_id": "R-high",
+      "cell_id": "C-H1",
+      "mode": "spotlight",
+      "priority_tier": 3,
+      "contract_id": "K-high",
+      "imaging_duration_sec": 35
+    }
+  ],
+  "sensor_modes": {
+    "spotlight": {
+      "cold_setup_sec": 16,
+      "warm_setup_sec": 9
+    }
+  },
+  "cloud_forecasts": [
+    {
+      "pass_id": "P1",
+      "cell_id": "C-H1",
+      "risk_score": 0.11
+    }
+  ],
+  "priority_contracts": [
+    {
+      "contract_id": "K-low",
+      "preempt_rank": 15
+    },
+    {
+      "contract_id": "K-high",
+      "preempt_rank": 95
+    }
+  ]
+}

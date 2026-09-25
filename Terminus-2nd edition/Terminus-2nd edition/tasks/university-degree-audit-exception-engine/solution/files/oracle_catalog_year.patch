@@ -1,0 +1,19 @@
+--- a/internal/cataloggate/year.go
++++ b/internal/cataloggate/year.go
+@@ -2,15 +2,8 @@
+ 
+ import "github.com/terminus/degaudit/internal/model"
+ 
+-// EffectiveCatalogYear selects the catalog year governing course eligibility.
+ func EffectiveCatalogYear(meta model.ScenarioMeta, courses []model.Course) int {
+-    maxYear := meta.CatalogYear
+-    for _, c := range courses {
+-        if c.CatalogYear > maxYear {
+-            maxYear = c.CatalogYear
+-        }
+-    }
+-    return maxYear
++    return meta.CatalogYear
+ }
+ 
+ func CourseAllowed(course model.Course, catalogYear int) bool {

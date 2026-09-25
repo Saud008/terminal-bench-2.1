@@ -1,0 +1,1 @@
+Sticky partition maps carry a monotonic generation and effective at_ms. Workers polling at poll time must use the partition from the greatest generation whose at_ms is less than or equal to poll time. Polling an older partition after the map advances marks decision_task_lost with reason sticky partition stale.

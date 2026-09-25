@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+APP_ROOT="/app"
+LIB="${APP_ROOT}/internal/pamcore"
+
+usage() {
+  echo "usage: pamtrace load|compile|emit ..." >&2
+  exit 2
+}
+
+cmd="${1:-}"
+shift || true
+case "$cmd" in
+  load)
+    exec bash "${LIB}/load/load_bundle.sh" "$@"
+    ;;
+  compile)
+    exec bash "${LIB}/compile/compile_ledger.sh" "$@"
+    ;;
+  emit)
+    exec bash "${LIB}/emit/emit_trace.sh" "$@"
+    ;;
+  *)
+    usage
+    ;;
+esac

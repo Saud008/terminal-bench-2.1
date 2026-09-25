@@ -1,0 +1,17 @@
+--- a/internal/replenledger/task_upsert.go
++++ b/internal/replenledger/task_upsert.go
+@@ -12,12 +12,8 @@
+ }
+ 
+ func UpsertTask(db *sql.DB, row TaskRow) error {
+-	_, err := db.Exec(`INSERT INTO wave_tasks(task_key,sku_id,slot_id,units,start_minute,end_minute) VALUES(?,?,?,?,?,?)`,
++	_, err := db.Exec(`INSERT INTO wave_tasks(task_key,sku_id,slot_id,units,start_minute,end_minute) VALUES(?,?,?,?,?,?)
++		ON CONFLICT(task_key) DO UPDATE SET units=excluded.units,start_minute=excluded.start_minute,end_minute=excluded.end_minute`,
+ 		row.TaskKey, row.SKUID, row.SlotID, row.Units, row.StartMinute, row.EndMinute)
+ 	return err
+ }
+-
+-func BindWorker(db *sql.DB, taskKey, workerID string) error {
+-	_, err := db.Exec(`UPDATE wave_tasks SET worker_id=? WHERE task_key=?`, workerID, taskKey)
+-	return err
+-}

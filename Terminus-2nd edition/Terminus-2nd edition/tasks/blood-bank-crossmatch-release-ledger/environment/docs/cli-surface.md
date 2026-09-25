@@ -1,0 +1,1 @@
+bbreleasectl exposes import-panels, score-compatibility, and seal-releases. import-panels reads /app/fixtures/scenarios/SCENARIO.json unless --fixture-dir overrides. score-compatibility requires prior import-panels for the same scenario id. seal-releases requires screening_pass positive in /app/state/screening-pass.json.

@@ -1,0 +1,25 @@
+--- environment/crates/reader_default/src/lib.rs	2026-07-05 06:57:10.283773500 +0000
++++ solution/oracle/golden/crates/reader_default/src/lib.rs	2026-07-05 06:57:11.061669800 +0000
+@@ -18,7 +18,10 @@
+ pub fn promotion_ok(writer_type: &Value, reader_type: &Value) -> bool {
+     let wt = type_label(writer_type);
+     let rt = type_label(reader_type);
+-    wt == rt
++    if wt == rt {
++        return true;
++    }
++    matches!((wt.as_str(), rt.as_str()), ("int", "long") | ("float", "double"))
+ }
+ 
+ fn record_fields(raw: &Value) -> std::collections::BTreeMap<String, Value> {
+@@ -29,8 +32,8 @@
+         }
+         if let Some(fields) = map.get("fields").and_then(|f| f.as_array()) {
+             for f in fields {
+-                if let (Some(name), Some(typ)) = (f.get("name"), f.get("type")) {
+-                    out.insert(name.as_str().unwrap_or("").to_string(), typ.clone());
++                if let Some(name) = f.get("name") {
++                    out.insert(name.as_str().unwrap_or("").to_string(), f.clone());
+                 }
+             }
+         }

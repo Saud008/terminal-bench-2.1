@@ -1,0 +1,23 @@
+﻿--- lib/boltlane/gates/pairing_drift_gate.sh
++++ lib/boltlane/gates/pairing_drift_gate.sh
+@@ -1,8 +1,19 @@
+ #!/usr/bin/env bash
+-# Baseline pairing gate never inspects addr_type mismatch or pairing_confirmed.
+ set -euo pipefail
+ python3 - <<'PY'
+ import json, sys
++from pathlib import Path
++inv = json.loads(Path("/app/state/inventory.json").read_text())
+ blocked = {}
++for adapter in inv.get("adapters", []):
++    adapter_id = adapter["adapter_id"]
++    for dev in adapter.get("devices", []):
++        key = f'{adapter_id}|{dev["mac"]}'
++        trusted = bool(dev.get("trusted"))
++        addr_type = dev.get("addr_type")
++        bonded_addr_type = dev.get("bonded_addr_type")
++        pairing_confirmed = bool(dev.get("pairing_confirmed"))
++        if trusted and addr_type != bonded_addr_type and not pairing_confirmed:
++            blocked[key] = "ineligible_pairing_required"
+ json.dump(blocked, sys.stdout)
+ PY

@@ -1,0 +1,9 @@
+{
+  "stack_id": "020-include-auth-module-order",
+  "service": "login",
+  "entries": [
+    {"include": "fragments/auth-sufficient-first.json"},
+    {"include": "fragments/auth-required-second.json"},
+    {"phase": "account", "control": "required", "module": "stubs/pam_env.sh", "args": ["ROLE=ordered"]}
+  ]
+}

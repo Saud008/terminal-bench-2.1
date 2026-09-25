@@ -1,0 +1,27 @@
+package counter
+
+import "github.com/chronostack/metricrollup/internal/model"
+
+func ComputeRate(samples []model.Sample, windowSec float64) (float64, float64) {
+	if len(samples) == 0 {
+		return 0, 0
+	}
+	baseline := samples[0].Value
+	prev := samples[0].Value
+	for _, sample := range samples[1:] {
+		if sample.Value < prev {
+			baseline = sample.Value
+		}
+		prev = sample.Value
+	}
+	last := samples[len(samples)-1].Value
+	delta := last - baseline
+	if delta < 0 {
+		delta = 0
+	}
+	rate := 0.0
+	if windowSec > 0 {
+		rate = delta / windowSec
+	}
+	return last, rate
+}

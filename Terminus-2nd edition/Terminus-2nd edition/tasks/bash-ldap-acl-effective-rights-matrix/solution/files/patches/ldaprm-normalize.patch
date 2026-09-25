@@ -1,0 +1,11 @@
+--- internal/dirauth/dn/normalize.sh
++++ internal/dirauth/dn/normalize.sh
+@@ -11,7 +11,7 @@
+     if [[ "$part" == *"="* ]]; then
+       attr="${part%%=*}"
+       val="${part#*=}"
+-      attr="$(echo "$attr" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
++      attr="$(echo "$attr" | tr '[:upper:]' '[:lower:]' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+       val="$(echo "$val" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+       part="${attr}=${val}"
+     fi

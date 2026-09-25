@@ -1,0 +1,85 @@
+---
+description: LOCKED — TRIVIAL/EASY difficulty hardening uses trivial.md + trivial-case-6 + sp-hard-create-revise
+alwaysApply: false
+---
+
+# Terminus — TRIVIAL / EASY difficulty prompt trio (LOCKED)
+
+**Additive rule.** When platform or local eval says the task is **too easy** (TRIVIAL, EASY, worst model **>60%**, either Opus 4.8 or GPT-5.5 **≥3/5**), agents **must** load this **three-file sequence** before editing `tasks/<name>/`.
+
+Do **not** skip to `trivial-harden.md`, Case 4 alone, or metadata-only fixes.
+
+## Mandatory prompt sequence (read in order — do not skip)
+
+0. **`prompts/trivial-fix-invoke.md`** — invoke contract + §3 fix prompt **before edits**
+1. **`prompts/trivial.md`** — parse summary; **Step B** → **Case 6** for TRIVIAL/EASY
+2. **`prompts/trivial-case-6.md`** — structural hardening (default)
+3. **`prompts/sp-hard-create-revise.md`** — create/revise quality bar, subsystem traps, decorative-hardening guard, zip gate
+
+**Also:** `shared/trivial-fix-invoke-mandatory-steps.mdc` — **14-step order** (LOCKED).
+
+Do **not** skip to `trivial-harden.md`, Case 4 alone, or metadata-only fixes.
+
+## When trio applies
+
+| Signal | Trio? |
+|--------|-------|
+| Platform **TRIVIAL** or **EASY** | **Yes** |
+| **Requires at least MEDIUM** | **Yes** |
+| `terminus-claude-opus-4-8` or `terminus-gpt5-5` **≥3/5** | **Yes** → Case 6 |
+| Worst model **>60%** (Easy band) | **Yes** |
+| Per-test **≥6/10** on most tests | **Yes** → Case 6 |
+| Case 5 applied, still **5/5** | **Yes** — Case 6 + probes |
+| **Unsolvable** / one test 0% forever (fairness) | **No** → `prompts/hard.md` Case 1 |
+| **Oracle failed** only | **No** → `oracleFix.md` |
+| **Verifier did not run** only | **No** → `shared/runtime-verifier.mdc` |
+
+Benchmark models: `shared/difficulty-benchmark-models.mdc`.
+
+## Mandatory rules with trio
+
+| Load | Why |
+|------|-----|
+| **@REVISE RULES** | Edit in place; no merge |
+| `shared/unacceptable-task-classes.mdc` | **Never upload** templated/copy/duplicate/family/lane/sibling/fabricated/synthetic |
+| `revise/trivial-hardening-probes.mdc` | Probes 1–9 **before zip** |
+| `prompts/trivial-repo-wide.md` | §1–§14 contract |
+| `revise/hardness.mdc` | G-029–G-031 ingest/staging/export |
+| `shared/anti-trivial.mdc` | Independent reference, no grep-only |
+
+## Agent workflow (no user case pick)
+
+1. Quote **2–3 summary facts** (difficulty, Opus/GPT scores, weakest tests).
+2. **`Read`** `prompts/trivial-fix-invoke.md` + trio + `shared/trivial-fix-invoke-mandatory-steps.mdc`.
+3. Write **invoke §3 fix prompt** in reply — **before** any `tasks/<slug>/` edit.
+4. State **Case 6** (TRIVIAL/EASY → never Case 4/5 only).
+5. List real task files; **Case 6** structural hardening — not instruction leaks.
+6. Run **probes** + **agent calibration** + **`create_finish_to_zip.sh`** per mandatory steps.
+7. Oracle **1.0**, NOP **0.0**; probe table in reply before zip.
+
+## Target after hardening
+
+| Metric | Aim |
+|--------|-----|
+| Worst model (Opus 4.8 / GPT-5.5) | **≤20%** or ~1/5 |
+| Oracle | **100%** |
+| NOP | **0%** |
+| Fairness | Solvable — no 0/5 forever on one unfair test |
+
+Claude **0/N** with oracle **1** and fair docs = valid **HARD** — do not weaken (`sp-hard-create-revise.md`).
+
+## Copy-paste
+
+```text
+@prompts/trivial-fix-invoke.md
+shared/trivial-fix-invoke-mandatory-steps.mdc
+@prompts/trivial.md
+@prompts/trivial-case-6.md
+@prompts/sp-hard-create-revise.md
+@REVISE RULES
+
+Harden tasks/<name>/ — platform TRIVIAL/EASY. 14 steps — no skips.
+[paste summary]
+```
+
+Index: `shared/additive-rules-lock-index.mdc`.

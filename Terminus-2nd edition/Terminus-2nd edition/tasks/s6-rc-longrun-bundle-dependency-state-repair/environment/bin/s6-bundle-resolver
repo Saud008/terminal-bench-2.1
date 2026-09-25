@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source /app/lib/common.sh
+source /app/lib/ingest.sh
+source /app/lib/dag.sh
+source /app/lib/ready.sh
+source /app/lib/apply.sh
+source /app/lib/export.sh
+
+usage() {
+  echo "usage: s6-bundle-resolver <ingest|validate|plan|ready|apply|export> [options]" >&2
+  exit 1
+}
+
+TREE=""
+BUNDLE=""
+OUT=""
+STATE_DIR="/app/state/rc"
+BUNDLE_ID=""
+
+cmd="${1:-}"
+shift || usage
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --tree) TREE="$2"; shift 2 ;;
+    --bundle) BUNDLE="$2"; shift 2 ;;
+    --out) OUT="$2"; shift 2 ;;
+    --state-dir) STATE_DIR="$2"; shift 2 ;;
+    --bundle-id) BUNDLE_ID="$2"; shift 2 ;;
+    *) usage ;;
+  esac
+done
+
+[[ -n "${TREE}" ]] || usage
+
+case "${cmd}" in
+  ingest)
+    [[ -n "${OUT}" ]] || usage
+    run_ingest "${TREE}" "${OUT}"
+    ;;
+  validate)
+    [[ -n "${BUNDLE}" ]] || usage
+    run_validate "${TREE}" "${BUNDLE}"
+    ;;
+  plan)
+    [[ -n "${BUNDLE}" && -n "${OUT}" ]] || usage
+    run_plan "${TREE}" "${BUNDLE}" "${OUT}"
+    ;;
+  ready)
+    [[ -n "${BUNDLE}" && -n "${OUT}" ]] || usage
+    run_ready "${TREE}" "${BUNDLE}" "${STATE_DIR}" "${OUT}"
+    ;;
+  apply)
+    [[ -n "${BUNDLE}" && -n "${BUNDLE_ID}" ]] || usage
+    run_apply "${TREE}" "${BUNDLE}" "${BUNDLE_ID}" "${STATE_DIR}"
+    ;;
+  export)
+    [[ -n "${BUNDLE}" && -n "${OUT}" ]] || usage
+    run_export "${TREE}" "${BUNDLE}" "${OUT}"
+    ;;
+  *)
+    usage ;;
+esac

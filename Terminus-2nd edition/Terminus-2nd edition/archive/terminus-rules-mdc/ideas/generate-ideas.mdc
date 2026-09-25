@@ -1,0 +1,21 @@
+---
+description: @IDEAS RULES — generate ideas workflow (ASK FIRST) (LOCKED)
+alwaysApply: false
+---
+
+# Terminus — Generate task ideas (ASK FIRST)
+
+**Primary prompt:** `prompts/newidea.md` · **Policy:** `ideas/IDEAS-ASK-FIRST.mdc`
+
+When the user says **gen ideas** / **brainstorm**:
+
+1. **Ask** — language, domain, user's idea (do not generate)
+2. **Scan** — `tasks/`, `pending/`, `_accepted-tasks/`, `tasksubmit/`
+3. **Similarity** — PASS/WARN/FAIL; no build on FAIL
+4. **Build** — only if user explicitly requests + PASS
+
+**Before build:** read ≥2 folders from `tasks/_accepted-tasks/` for **structure only**.
+
+**No copies · no family duplicates · no merging.** Lane saturation: 3+ same family in `tasks/` → block.
+
+Anti-spam: hook + `pack_zip.sh` — user does not run scripts manually.

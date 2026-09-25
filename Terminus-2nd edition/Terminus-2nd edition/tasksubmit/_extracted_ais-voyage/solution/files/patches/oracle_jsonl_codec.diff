@@ -1,0 +1,26 @@
+--- src/jsonl_codec/mod.rs
++++ src/jsonl_codec/mod.rs
+@@ -1,5 +1,7 @@
+ use crate::voyage_err::SegmentError;
+ use crate::maritime_types::AisRow;
++use time::format_description::well_known::Rfc3339;
++use time::OffsetDateTime;
+ 
+ pub fn parse_jsonl(raw: &str) -> Result<Vec<AisRow>, SegmentError> {
+     let mut rows = Vec::new();
+@@ -58,13 +60,6 @@
+ }
+ 
+ pub fn parse_ts_epoch(ts: &str) -> Result<i64, SegmentError> {
+-    let day = ts.split('T').next().unwrap_or(ts);
+-    let parts: Vec<_> = day.split('-').collect();
+-    if parts.len() != 3 {
+-        return Err(SegmentError::Parse("bad ts".into()));
+-    }
+-    let y: i64 = parts[0].parse().map_err(|_| SegmentError::Parse("bad year".into()))?;
+-    let m: i64 = parts[1].parse().map_err(|_| SegmentError::Parse("bad month".into()))?;
+-    let d: i64 = parts[2].parse().map_err(|_| SegmentError::Parse("bad day".into()))?;
+-    Ok(y * 10_000 + m * 100 + d)
++    let dt = OffsetDateTime::parse(ts, &Rfc3339).map_err(|e| SegmentError::Parse(e.to_string()))?;
++    Ok((dt - OffsetDateTime::UNIX_EPOCH).whole_seconds())
+ }

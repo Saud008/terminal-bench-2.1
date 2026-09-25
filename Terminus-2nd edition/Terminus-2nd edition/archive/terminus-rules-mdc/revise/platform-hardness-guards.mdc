@@ -1,0 +1,43 @@
+---
+description: Platform hardness guard registry — G-025–G-027 oracle/zip blockers (oracleFix.md) (LOCKED)
+alwaysApply: false
+---
+
+# Terminus — Platform hardness guards (registry)
+
+One-line guards for platform **Oracle solution failed** and pre-submit zip checks. Full procedures: **`oracleFix.md`** and **`revise/oracle-fix-g025-g027.mdc`** (LOCKED).
+
+Verify script (when present): `scripts/terminus_verify_submit.py`
+
+---
+
+## Proven registry
+
+| ID | Guard | Evidence (2026-06) |
+|----|--------|---------------------|
+| **G-025** | Oracle `solve.sh`: **no** `sbt`/`mix deps.get`/network; JVM **prebuilt JAR**; Elixir **`MIX_OFFLINE=1` + `mix compile --force`**; Go **`go build -mod=vendor`**; Go CGO **`PATH` + `CGO_ENABLED=1` in `solve.sh`/`build.sh`** | `scala-vault-rotation-secrets-audit-repair` (Maven); `elixir-rollout-admission-coordinator-repair` (Hex); `ev-charger-loadshed-session-auditor` (`go: command not found`) |
+| **G-026** | Non-milestone zip **must** include `tests/test_outputs.py` | `romance-emotion-escalation-audit-cli` (pytest file not found → oracle 0) |
+| **G-027** | No backslashes in zip entries; pack from inside `tasks/<name>/` | `elixir-rollout-admission-coordinator-repair` (`environment\Dockerfile` → CodeBuild dir missing) |
+| **G-028** | **Probes PASS** — `trivial-hardening-probes.mdc` table before zip; any FAIL → no upload | Repeated EASY after “hardened” tasks |
+| **G-029** | Go/Rust export CLI: **staging artifact** + ingest contract test + doc path in instruction | `smpte-timecode-wrap-ledger`, `oci-layer-tar-entry-sorter` pre-Case-6 |
+| **G-030** | Export stage **decoy** — must not use obvious fix module (`wrap.go`, `merge/apply.go`) on hot path | One-file merge/wrap fix passes bundled |
+| **G-031** | **Any** EASY/TRIVIAL or either model **≥3/5** → **Case 6 only** | New-model inflation |
+| **G-032** | Probe 1: one-file patch leaves **≥60%** tests failing | Single-file patch |
+| **G-033** | Ingest-only fix must fail export/replay hidden | Chained poison |
+| **G-034** | **≥2** independent hidden traps | Hidden = bundled duplicate |
+| **G-035** | First-upload Go/Rust/Bash CLI without staging+decoy+chain → **no zip** | First-submit EASY |
+
+**Full difficulty guards:** `revise/hardness.mdc` · **EASY router:** `prompts/easy.md`
+
+**Do not weaken G-025–G-035** unless the user explicitly overrides in the current message.
+
+---
+
+## When to load this file
+
+- Platform label **Oracle solution failed** or oracle reward **0** with no agent runs
+- Pre-submit zip audit after `revise/oracle-fix-g025-g027.mdc` checklist
+- User pastes `oracleFix.md` revision prompt or reviewer feedback citing G-025–G-027
+- Platform **EASY** / **TRIVIAL** or agents **≥3/5** on either model → **`revise/hardness.mdc`** (G-028–G-035)
+
+**Do not weaken G-025–G-027** unless the user explicitly overrides in the current message.

@@ -1,0 +1,52 @@
+--- environment/internal/visa/overlap.go
++++ environment/internal/visa/overlap.go
+@@ -12,7 +12,6 @@
+ 	return time.Parse(dateLayout, s)
+ }
+ 
+-// VisaActiveAt checks visa validity on the reference date only.
+ func VisaActiveAt(reference, validFrom, validTo, passportIssue, passportExpiry string) (bool, error) {
+ 	ok, err := passport.PassportValidAt(reference, passportIssue, passportExpiry)
+ 	if err != nil || !ok {
+@@ -30,16 +29,35 @@
+ 	if err != nil {
+ 		return false, err
+ 	}
+-	if ref.Before(from) {
+-		return false, nil
+-	}
+-	if ref.After(to) {
++	if ref.Before(from) || ref.After(to) {
+ 		return false, nil
+ 	}
+ 	return true, nil
+ }
+ 
+-// VisaContainedInPassport verifies visa span fits passport span.
+ func VisaContainedInPassport(reference, validFrom, validTo, passportIssue, passportExpiry string) (bool, error) {
+-	return VisaActiveAt(reference, validFrom, validTo, passportIssue, passportExpiry)
++	ok, err := VisaActiveAt(reference, validFrom, validTo, passportIssue, passportExpiry)
++	if err != nil || !ok {
++		return ok, err
++	}
++	iss, err := parseDay(passportIssue)
++	if err != nil {
++		return false, err
++	}
++	exp, err := parseDay(passportExpiry)
++	if err != nil {
++		return false, err
++	}
++	from, err := parseDay(validFrom)
++	if err != nil {
++		return false, err
++	}
++	to, err := parseDay(validTo)
++	if err != nil {
++		return false, err
++	}
++	if from.Before(iss) || to.After(exp) {
++		return false, nil
++	}
++	return true, nil
+ }

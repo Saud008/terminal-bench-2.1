@@ -1,0 +1,10 @@
+--- lib/revocation/krl_reader.sh	2026-07-05 03:47:19.926791200 +0000
++++ solution/files/lib/revocation/krl_reader.sh	2026-07-05 03:47:20.374877800 +0000
+@@ -9,6 +9,6 @@
+   while IFS= read -r line || [[ -n "$line" ]]; do
+     [[ "$line" =~ ^# ]] && continue
+     [[ "$line" =~ ^fingerprint ]] || continue
+-    echo "$line" | awk '{print $2}'
++    echo "$line" | awk '{print tolower($2)}'
+   done < "$krl"
+ }

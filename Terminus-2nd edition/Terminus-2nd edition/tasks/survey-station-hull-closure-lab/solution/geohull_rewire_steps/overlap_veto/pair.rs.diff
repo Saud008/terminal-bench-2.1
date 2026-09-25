@@ -1,0 +1,14 @@
+--- a/overlap_veto/pair.rs
++++ b/overlap_veto/pair.rs
+@@ -14,10 +14,9 @@
+         for j in (i + 1)..stations.len() {
+             let a = &stations[i];
+             let b = &stations[j];
+-            if open_overlap(a, b) {
++            if positive_area(a) && positive_area(b) && open_overlap(a, b) {
+                 return Some((a.station_id.clone(), b.station_id.clone()));
+             }
+-            let _ = positive_area;
+         }
+     }
+     None

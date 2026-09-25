@@ -1,0 +1,11 @@
+--- a/internal/substgate/expiry.go
++++ b/internal/substgate/expiry.go
+@@ -5,7 +5,7 @@
+ func ActiveSubstitutions(auditTerm string, subs []model.Substitution) map[string]string {
+     out := map[string]string{}
+     for _, s := range subs {
+-        if auditTerm < s.ExpiresAfterTerm {
++        if auditTerm <= s.ExpiresAfterTerm {
+             out[s.ReplacesReqID] = s.SubReqID
+         }
+     }
