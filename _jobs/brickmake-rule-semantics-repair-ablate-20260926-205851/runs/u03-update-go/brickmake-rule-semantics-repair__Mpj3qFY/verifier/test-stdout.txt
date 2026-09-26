@@ -1,0 +1,94 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 10 items
+
+../tests/test_outputs.py ...F.....F                                      [100%]
+
+=================================== FAILURES ===================================
+_____________________ test_timestamps_reread_after_recipe ______________________
+
+brickmake = '/tmp/brickmake-verify'
+
+    def test_timestamps_reread_after_recipe(brickmake):
+        """After a recipe runs the target's time is read again, so a recipe that leaves its
+        target unchanged does not make dependents out of date; -n treats remade targets as new."""
+>       replay(brickmake, "restat")
+
+/tests/test_outputs.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/brickmake-verify', group = 'restat'
+
+    def replay(binary, group):
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], [binary])
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: restat/unchanged_output_does_not_relink result #0
+E           expected: {'stdout': 'check version.h\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'check version.h\nlink app\n', 'stderr': '', 'code': 0}
+E         restat/recipe_that_leaves_its_target_alone result #0
+E           expected: {'stdout': 'stamp recipe ran\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'stamp recipe ran\nout [stamp]\n', 'stderr': '', 'code': 0}
+E       assert not ["restat/unchanged_output_does_not_relink result #0\n  expected: {'stdout': 'check version.h\\n', 'stderr': '', 'code'...n\\n', 'stderr': '', 'code': 0}\n  actual:   {'stdout': 'stamp recipe ran\\nout [stamp]\\n', 'stderr': '', 'code': 0}"]
+
+/tests/test_outputs.py:47: AssertionError
+_____________________________ test_project_builds ______________________________
+
+brickmake = '/tmp/brickmake-verify'
+
+    def test_project_builds(brickmake):
+        """Multi-step incremental builds of small projects produce the same commands,
+        messages and files as GNU make across edits and rebuilds."""
+>       replay(brickmake, "project")
+
+/tests/test_outputs.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/brickmake-verify', group = 'project'
+
+    def replay(binary, group):
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], [binary])
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: project/generated_parser_and_version_header result #2
+E           expected: {'stdout': 'stamp version\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'stamp version\ncc main.c\nyacc parse.y -> parse.c\ncc parse.c\nlink calc <- [main.o parse.o]\nrm parse.c\n', 'stderr': '', 'code': 0}
+E         project/generated_parser_and_version_header result #3
+E           expected: {'stdout': 'stamp version\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'stamp version\ncc main.c\nyacc parse.y -> parse.c\ncc parse.c\nlink calc <- [main.o parse.o]\nrm parse.c\n', 'stderr': '', 'code': 0}
+E       assert not ["project/generated_parser_and_version_header result #2\n  expected: {'stdout': 'stamp version\\n', 'stderr': '', 'cod...n.c\\nyacc parse.y -> parse.c\\ncc parse.c\\nlink calc <- [main.o parse.o]\\nrm parse.c\\n', 'stderr': '', 'code': 0}"]
+
+/tests/test_outputs.py:47: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_shortest_stem_selection
+PASSED ../tests/test_outputs.py::test_directory_relative_prerequisites
+PASSED ../tests/test_outputs.py::test_mentioned_prerequisite_ought_to_exist
+PASSED ../tests/test_outputs.py::test_per_goal_messages
+PASSED ../tests/test_outputs.py::test_pattern_specific_variable_order
+PASSED ../tests/test_outputs.py::test_target_variable_inheritance
+PASSED ../tests/test_outputs.py::test_append_semantics
+PASSED ../tests/test_outputs.py::test_prerequisite_merge_order
+FAILED ../tests/test_outputs.py::test_timestamps_reread_after_recipe - Assert...
+FAILED ../tests/test_outputs.py::test_project_builds - AssertionError: projec...
+========================= 2 failed, 8 passed in 0.55s ==========================

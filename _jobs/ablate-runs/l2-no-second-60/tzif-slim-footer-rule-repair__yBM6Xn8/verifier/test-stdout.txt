@@ -1,0 +1,99 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 11 items
+
+../tests/test_outputs.py ........FFF                                     [100%]
+
+=================================== FAILURES ===================================
+______________ test_leap_second_files_read_through_their_records _______________
+
+shiftclock = '/tmp/shiftclock-verify'
+
+    def test_leap_second_files_read_through_their_records(shiftclock):
+        """In files with leap-second records, Unix-second instants count leap seconds: utc/local are corrected readings and
+        an inserted leap second reads as second 60 (real right/ zones, a version-1-only file, a negative leap second)."""
+        bad = []
+        for zone, rows in EXPECTED["leap_at"].items():
+            lines = run(shiftclock, ["at", "--zone", str(ZONES / zone), "--", *[str(r[0]) for r in rows]])
+            assert len(lines) == len(rows), f"{zone}: {len(lines)} output lines for {len(rows)} instants"
+            for (t, *fields), line in zip(rows, lines):
+                got, want = json.loads(line), leap_wanted(*fields)
+                if got != want:
+                    bad.append(f"{zone} at {t}: got {got}, want {want}")
+>       assert not bad, f"{len(bad)} wrong answers; first ones:\n" + "\n".join(bad[:8])
+E       AssertionError: 190 wrong answers; first ones:
+E         right/America/New_York at 78796800: got {'utc': '1972-06-30T23:59:59Z', 'local': '1972-06-30T19:59:59', 'offset': -14400, 'abbr': 'EDT', 'isdst': True}, want {'utc': '1972-06-30T23:59:60Z', 'local': '1972-06-30T19:59:60', 'offset': -14400, 'abbr': 'EDT', 'isdst': True}
+E         right/America/New_York at 94694401: got {'utc': '1972-12-31T23:59:59Z', 'local': '1972-12-31T18:59:59', 'offset': -18000, 'abbr': 'EST', 'isdst': False}, want {'utc': '1972-12-31T23:59:60Z', 'local': '1972-12-31T18:59:60', 'offset': -18000, 'abbr': 'EST', 'isdst': False}
+E         right/America/New_York at 126230402: got {'utc': '1973-12-31T23:59:59Z', 'local': '1973-12-31T18:59:59', 'offset': -18000, 'abbr': 'EST', 'isdst': False}, want {'utc': '1973-12-31T23:59:60Z', 'local': '1973-12-31T18:59:60', 'offset': -18000, 'abbr': 'EST', 'isdst': False}
+E         right/America/New_York at 157766403: got {'utc': '1974-12-31T23:59:59Z', 'local': '1974-12-31T18:59:59', 'offset': -18000, 'abbr': 'EST', 'isdst': False}, want {'utc': '1974-12-31T23:59:60Z', 'local': '1974-12-31T18:59:60', 'offset': -18000, 'abbr': 'EST', 'isdst': False}
+E         right/America/New_York at 189302404: got {'utc': '1975-12-31T23:59:59Z', 'local': '1975-12-31T18:59:59', 'offset': -18000, 'abbr': 'EST', 'isdst': False}, want {'utc': '1975-12-31T23:59:60Z', 'local': '1975-12-31T18:59:60', 'offset': -18000, 'abbr': 'EST', 'isdst': False}
+E         right/America/New_York at 220924805: got {'utc': '1976-12-31T23:59:59Z', 'local': '1976-12-31T18:59:59', 'offset': -18000, 'abbr': 'EST', 'isdst': False}, want {'utc': '1976-12-31T23:59:60Z', 'local': '1976-12-31T18:59:60', 'offset': -18000, 'abbr': 'EST', 'isdst': False}
+E         right/America/New_York at 252460806: got {'utc': '1977-12-31T23:59:59Z', 'local': '1977-12-31T18:59:59', 'offset': -18000, 'abbr': 'EST', 'isdst': False}, want {'utc': '1977-12-31T23:59:60Z', 'local': '1977-12-31T18:59:60', 'offset': -18000, 'abbr': 'EST', 'isdst': False}
+E         right/America/New_York at 283996807: got {'utc': '1978-12-31T23:59:59Z', 'local': '1978-12-31T18:59:59', 'offset': -18000, 'abbr': 'EST', 'isdst': False}, want {'utc': '1978-12-31T23:59:60Z', 'local': '1978-12-31T18:59:60', 'offset': -18000, 'abbr': 'EST', 'isdst': False}
+E       assert not ["right/America/New_York at 78796800: got {'utc': '1972-06-30T23:59:59Z', 'local': '1972-06-30T19:59:59', 'offset': -1...{'utc': '1976-12-31T23:59:60Z', 'local': '1976-12-31T18:59:60', 'offset': -18000, 'abbr': 'EST', 'isdst': False}", ...]
+
+/tests/test_outputs.py:153: AssertionError
+______________________ test_leap_second_rfc3339_instants _______________________
+
+shiftclock = '/tmp/shiftclock-verify'
+
+    def test_leap_second_rfc3339_instants(shiftclock):
+        """RFC 3339 instants in leap-second files are UTC readings mapped through the records, including second 60."""
+        bad = []
+        for zone in dict.fromkeys(case[0] for case in EXPECTED["leap_iso"]):
+            cases = [case[1:] for case in EXPECTED["leap_iso"] if case[0] == zone]
+            lines = run(shiftclock, ["at", "--zone", str(ZONES / zone), *[iso for iso, *_ in cases]])
+            assert len(lines) == len(cases), f"{zone}: {len(lines)} output lines for {len(cases)} instants"
+            for (iso, *fields), line in zip(cases, lines):
+                got, want = json.loads(line), leap_wanted(*fields)
+                if got != want:
+                    bad.append(f"{zone} at {iso}: got {got}, want {want}")
+>       assert not bad, f"{len(bad)} wrong answers; first ones:\n" + "\n".join(bad[:8])
+E       AssertionError: 12 wrong answers; first ones:
+E         right/America/New_York at 1972-06-30T23:59:60Z: got {'utc': '1972-06-30T23:59:59Z', 'local': '1972-06-30T19:59:59', 'offset': -14400, 'abbr': 'EDT', 'isdst': True}, want {'utc': '1972-06-30T23:59:60Z', 'local': '1972-06-30T19:59:60', 'offset': -14400, 'abbr': 'EDT', 'isdst': True}
+E         right/America/New_York at 1979-12-31T23:59:60Z: got {'utc': '1979-12-31T23:59:59Z', 'local': '1979-12-31T18:59:59', 'offset': -18000, 'abbr': 'EST', 'isdst': False}, want {'utc': '1979-12-31T23:59:60Z', 'local': '1979-12-31T18:59:60', 'offset': -18000, 'abbr': 'EST', 'isdst': False}
+E         right/America/New_York at 2016-12-31T23:59:60Z: got {'utc': '2016-12-31T23:59:59Z', 'local': '2016-12-31T18:59:59', 'offset': -18000, 'abbr': 'EST', 'isdst': False}, want {'utc': '2016-12-31T23:59:60Z', 'local': '2016-12-31T18:59:60', 'offset': -18000, 'abbr': 'EST', 'isdst': False}
+E         Leap/Negative at 1972-06-30T23:59:60Z: got {'utc': '1972-06-30T23:59:59Z', 'local': '1972-06-30T20:29:59', 'offset': -12600, 'abbr': '-0330', 'isdst': False}, want {'utc': '1972-06-30T23:59:60Z', 'local': '1972-06-30T20:29:60', 'offset': -12600, 'abbr': '-0330', 'isdst': False}
+E         Leap/Negative at 1979-12-31T23:59:60Z: got {'utc': '1979-12-31T23:59:59Z', 'local': '1979-12-31T20:29:59', 'offset': -12600, 'abbr': '-0330', 'isdst': False}, want {'utc': '1979-12-31T23:59:60Z', 'local': '1979-12-31T20:29:60', 'offset': -12600, 'abbr': '-0330', 'isdst': False}
+E         Leap/Negative at 2028-12-31T23:59:60Z: got {'utc': '2028-12-31T23:59:59Z', 'local': '2028-12-31T21:29:59', 'offset': -9000, 'abbr': '-0230', 'isdst': True}, want {'utc': '2028-12-31T23:59:60Z', 'local': '2028-12-31T21:29:60', 'offset': -9000, 'abbr': '-0230', 'isdst': True}
+E         Leap/NewYear at 1972-06-30T23:59:60Z: got {'utc': '1972-06-30T23:59:59Z', 'local': '1972-07-01T00:59:59', 'offset': 3600, 'abbr': '+01', 'isdst': False}, want {'utc': '1972-06-30T23:59:60Z', 'local': '1972-07-01T00:59:60', 'offset': 3600, 'abbr': '+01', 'isdst': False}
+E         Leap/NewYear at 1979-12-31T23:59:60Z: got {'utc': '1979-12-31T23:59:59Z', 'local': '1980-01-01T00:59:59', 'offset': 3600, 'abbr': '+01', 'isdst': False}, want {'utc': '1979-12-31T23:59:60Z', 'local': '1980-01-01T00:59:60', 'offset': 3600, 'abbr': '+01', 'isdst': False}
+E       assert not ["right/America/New_York at 1972-06-30T23:59:60Z: got {'utc': '1972-06-30T23:59:59Z', 'local': '1972-06-30T19:59:59', ...{'utc': '2028-12-31T23:59:60Z', 'local': '2028-12-31T21:29:60', 'offset': -9000, 'abbr': '-0230', 'isdst': True}", ...]
+
+/tests/test_outputs.py:167: AssertionError
+_________________ test_leap_second_transitions_and_year_bounds _________________
+
+shiftclock = '/tmp/shiftclock-verify'
+
+    def test_leap_second_transitions_and_year_bounds(shiftclock):
+        """transitions in leap-second files reports UTC readings and bounds the years by UTC reading, not raw seconds."""
+        bad = []
+        for zone, first, last, items in EXPECTED["leap_transitions"]:
+            lines = run(shiftclock, ["transitions", "--zone", str(ZONES / zone), "--from", str(first), "--to", str(last)])
+            got = [json.loads(line) for line in lines]
+            want = [{"at": at, "offset": off, "abbr": abbr, "isdst": dst} for at, off, abbr, dst in items]
+            if got != want:
+                bad.append(f"{zone} {first}-{last}:\n  got  {got}\n  want {want}")
+>       assert not bad, "\n".join(bad)
+E       AssertionError: Leap/NewYear 2016-2016:
+E           got  [{'at': '2016-06-01T00:00:00Z', 'offset': 7200, 'abbr': '+02', 'isdst': False}, {'at': '2016-12-31T23:59:44Z', 'offset': 10800, 'abbr': '+03', 'isdst': False}, {'at': '2016-12-31T23:59:59Z', 'offset': 7200, 'abbr': '+02', 'isdst': False}]
+E           want [{'at': '2016-06-01T00:00:00Z', 'offset': 7200, 'abbr': '+02', 'isdst': False}, {'at': '2016-12-31T23:59:44Z', 'offset': 10800, 'abbr': '+03', 'isdst': False}, {'at': '2016-12-31T23:59:60Z', 'offset': 7200, 'abbr': '+02', 'isdst': False}]
+E       assert not ["Leap/NewYear 2016-2016:\n  got  [{'at': '2016-06-01T00:00:00Z', 'offset': 7200, 'abbr': '+02', 'isdst': False}, {'at...10800, 'abbr': '+03', 'isdst': False}, {'at': '2016-12-31T23:59:60Z', 'offset': 7200, 'abbr': '+02', 'isdst': False}]"]
+
+/tests/test_outputs.py:179: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_us_rules_after_table_end
+PASSED ../tests/test_outputs.py::test_last_weekday_of_month_rules
+PASSED ../tests/test_outputs.py::test_daylight_time_spanning_new_year
+PASSED ../tests/test_outputs.py::test_signed_and_extended_rule_hours
+PASSED ../tests/test_outputs.py::test_julian_and_zero_based_day_rules
+PASSED ../tests/test_outputs.py::test_transitions_listing
+PASSED ../tests/test_outputs.py::test_zone_names_resolve_under_zoneinfo_dir
+PASSED ../tests/test_outputs.py::test_output_lines_use_documented_key_order
+FAILED ../tests/test_outputs.py::test_leap_second_files_read_through_their_records
+FAILED ../tests/test_outputs.py::test_leap_second_rfc3339_instants - Assertio...
+FAILED ../tests/test_outputs.py::test_leap_second_transitions_and_year_bounds
+========================= 3 failed, 8 passed in 0.30s ==========================

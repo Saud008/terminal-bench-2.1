@@ -439,14 +439,9 @@ def scrub(outer: Path, r: Report) -> None:
             r.err("74/85", f"{where}: {m.group(0).decode(errors='replace')} — only in-container paths like /home/agent are allowed")
 
 
-def main(argv: list[str]) -> int:
-    if len(argv) != 1:
-        print(__doc__)
-        return 2
-    outer = resolve_outer(argv[0])
+def run_all(outer: Path) -> tuple[Report, list[int]]:
     inner = outer / outer.name
     r = Report()
-    print(f"== tb21_ship_check: {outer.name} ==")
     check_structure(outer, inner, r)
     expected, parametrized = collected_test_count(inner / "tests") if (inner / "tests").is_dir() else (0, False)
     ev_stamps = check_evidence(outer, inner, expected, parametrized, r)
@@ -457,6 +452,16 @@ def main(argv: list[str]) -> int:
         r.err("61/67", f"graded file {newest_name} is newer than evidence/trajectories — regenerate everything (check 82)")
     check_difficulty(inner, rewards, r)
     scrub(outer, r)
+    return r, rewards
+
+
+def main(argv: list[str]) -> int:
+    if len(argv) != 1:
+        print(__doc__)
+        return 2
+    outer = resolve_outer(argv[0])
+    print(f"== tb21_ship_check: {outer.name} ==")
+    r, _ = run_all(outer)
     for line in r.errors + r.warns:
         print(line)
     print(f"-- {len(r.errors)} error(s), {len(r.warns)} warning(s)")

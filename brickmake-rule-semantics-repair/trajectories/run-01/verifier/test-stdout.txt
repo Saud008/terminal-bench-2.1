@@ -1,0 +1,55 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 10 items
+
+../tests/test_outputs.py ..F.......                                      [100%]
+
+=================================== FAILURES ===================================
+__________________ test_mentioned_prerequisite_ought_to_exist __________________
+
+brickmake = '/tmp/brickmake-verify'
+
+    def test_mentioned_prerequisite_ought_to_exist(brickmake):
+        """A prerequisite that is mentioned anywhere in the makefile counts as one that
+        ought to exist during the first implicit-rule pass, even without a rule of its own."""
+>       replay(brickmake, "mention")
+
+/tests/test_outputs.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/brickmake-verify', group = 'mention'
+
+    def replay(binary, group):
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], [binary])
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: mention/prerequisite_mentioned_elsewhere_ought_to_exist result #1
+E           expected: {'stdout': '', 'stderr': "brickmake: *** No rule to make target 'parser.h', needed by 'parser.o'.  Stop.\n", 'code': 2}
+E           actual:   {'stdout': 'compile parser.c alone\n', 'stderr': '', 'code': 0}
+E       assert not ['mention/prerequisite_mentioned_elsewhere_ought_to_exist result #1\n  expected: {\'stdout\': \'\', \'stderr\': "brick...o\'.  Stop.\\n", \'code\': 2}\n  actual:   {\'stdout\': \'compile parser.c alone\\n\', \'stderr\': \'\', \'code\': 0}']
+
+/tests/test_outputs.py:47: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_shortest_stem_selection
+PASSED ../tests/test_outputs.py::test_directory_relative_prerequisites
+PASSED ../tests/test_outputs.py::test_timestamps_reread_after_recipe
+PASSED ../tests/test_outputs.py::test_per_goal_messages
+PASSED ../tests/test_outputs.py::test_pattern_specific_variable_order
+PASSED ../tests/test_outputs.py::test_target_variable_inheritance
+PASSED ../tests/test_outputs.py::test_append_semantics
+PASSED ../tests/test_outputs.py::test_prerequisite_merge_order
+PASSED ../tests/test_outputs.py::test_project_builds
+FAILED ../tests/test_outputs.py::test_mentioned_prerequisite_ought_to_exist
+========================= 1 failed, 9 passed in 0.45s ==========================

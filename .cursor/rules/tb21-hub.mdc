@@ -22,7 +22,7 @@ Terminus 2.0 is over. All new tasking follows **Caudal Terminal Bench 2.1** plus
 | Peer-review style QC (1–5 rubric) | `tb21-qc-review.mdc` |
 | Final gate before `READY_TO_SHIP/` (checks 0–85) | `tb21-ship-checklist.mdc` |
 
-Tooling (`tb21/`): `new_task.py` (scaffold), `tb21_check.py` (task static gate), `tb21_ship_check.py` (evidence/trajectories/delivery gate), `pack_delivery.py` (final scrub + zip), `skeleton/`.
+Tooling (`tb21/`): `new_task.py` (scaffold), `tb21_check.py` (task static gate), `tb21_ship_check.py` (evidence/trajectories/delivery gate), `run_baselines.py` (oracle ×3 cold amd64 + NOP ×2 → evidence; `--ablate` per-fix ablation), `master_check.py` (all checks 0–85 + sign-off ledger), `pack_delivery.py` (requires master_check green, then zip), `skeleton/`.
 
 ## Pool overrides (Master Ship Checklist wins over the public guide)
 
@@ -67,11 +67,11 @@ Bundle sha (SUMMARY line 1) = run inside `<slug>/<slug>/`:
 2. `py -3 tb21/new_task.py <kebab-slug>` → creates `<slug>/<slug>/` from the skeleton + `<slug>/rubric.txt` + empty evidence dirs.
 3. Build environment (20+ real files), instruction, solution, tests, rubric.
 4. `py -3 tb21/tb21_check.py <slug>` → 0 errors.
-5. WSL: oracle ×3 (`DOCKER_DEFAULT_PLATFORM=linux/amd64`, cold build), NOP ×2, `harbor tasks check … -m openai/gpt-5.6`; ablate each planted defect; independently re-derive graded math. Copy baseline results into `oracle-nop-evidence/`.
-6. Evidence: `stb keys refresh` → `bash run_k.sh <slug>/<slug> 2` → `stb keys refresh` → `bash run_k.sh <slug>/<slug> 3`. Build `trajectories/` (SUMMARY.txt + run-01..05 + per-run `rubric_score.txt`), scrub config.json paths.
+5. `py -3 tb21/run_baselines.py <slug> --all` → oracle ×3 (`linux/amd64`, first run cold `--force-build`) + NOP ×2, replaces `oracle-nop-evidence/` only if every oracle test passes and every NOP test fails, then ablates each file `solve.sh` writes (records `_reports/<slug>/baselines.json`, `ablation.json`). Also `harbor tasks check … -m openai/gpt-5.6`; independently re-derive graded math.
+6. Evidence (kit: `DELIVERY_PREP_KIT_v1/DELIVERY_PREP_KIT_v1/`): `bash run_k.sh <slug>/<slug> 2` → `bash run_k.sh <slug>/<slug> 3` (never `stb keys refresh` by hand — run_k verifies and refreshes itself). Build `trajectories/` (SUMMARY.txt + run-01..05 + per-run `rubric_score.txt`), scrub config.json paths.
 7. Set `difficulty` + time estimates from the measured rate. Any edit to graded files afterwards → regenerate evidence + trajectories atomically (check 82).
-8. `py -3 tb21/tb21_ship_check.py <slug>` → 0 errors; walk all manual checks of the Master Ship Checklist with evidence.
-9. `py -3 tb21/pack_delivery.py <slug>` → reruns both gates, refuses on any error, writes `READY_TO_SHIP/<slug>.zip` (no junk, `.sh` = 755) and verifies its entries.
+8. `py -3 tb21/master_check.py <slug>` → runs both gates plus the assisted analyses and prints every check 0–85 as PASS / FAIL / REVIEW / MANUAL / STALE / SIGNED. Fix every FAIL; for each REVIEW/MANUAL read `_reports/<slug>/MASTER_REPORT.md` (appendices: path map, solution delta, constants, rubric→test map, per-run failures, ablation) and answer it in `_reports/<slug>/signoff.toml` (`status = "pass"|"n/a"`, evidence with file:line / `quote` / command). Sign-offs bind to a fingerprint of the files they depend on; an edit makes them STALE → re-verify, then `--restamp N,M`. Repeat until it prints READY.
+9. `py -3 tb21/pack_delivery.py <slug>` → refuses unless master_check is READY, writes `READY_TO_SHIP/<slug>.zip` (no junk, `.sh` = 755) and verifies its entries.
 - Windows: save every file as UTF-8 **without BOM** and with **LF** endings (PowerShell 5 `Set-Content -Encoding utf8` adds a BOM); `tb21_check.py` blocks both.
 
 ## Standing behavior

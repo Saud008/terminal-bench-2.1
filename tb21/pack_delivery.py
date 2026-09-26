@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Final gate + zip for a TB 2.1 delivery (Master Ship Checklist 84, 85).
 
-Runs tb21_check.py and tb21_ship_check.py on <slug>/; refuses to pack if either
-reports an error. Writes READY_TO_SHIP/<slug>.zip containing exactly
+Runs master_check.py on <slug>/ (which includes tb21_check.py and
+tb21_ship_check.py); refuses to pack unless every check 0-85 is PASS or
+SIGNED against the current files. Writes READY_TO_SHIP/<slug>.zip containing exactly
 <slug>/{<slug>/, rubric.txt, oracle-nop-evidence/, trajectories/} with no junk,
 .sh files marked executable, then re-verifies the zip entries.
 
@@ -37,11 +38,10 @@ def main() -> int:
         outer = outer.parent
     slug = outer.name
 
-    for script in ("tb21_check.py", "tb21_ship_check.py"):
-        proc = subprocess.run([sys.executable, str(HERE / script), str(outer)])
-        if proc.returncode != 0:
-            print(f"\n{script} reported errors — not packing.")
-            return 1
+    proc = subprocess.run([sys.executable, str(HERE / "master_check.py"), str(outer)])
+    if proc.returncode != 0:
+        print("\nmaster_check.py is not green — not packing.")
+        return 1
 
     out_dir = Path(args.out).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -65,7 +65,7 @@ def main() -> int:
     if bad or tops != expected:
         print(f"zip verification failed: bad={bad[:5]} top-level={sorted(tops)}")
         return 1
-    print(f"\npacked {zip_path} ({len(names)} files) — run the manual checklist items before handing off.")
+    print(f"\npacked {zip_path} ({len(names)} files).")
     return 0
 
 

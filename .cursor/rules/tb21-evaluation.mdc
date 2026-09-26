@@ -34,11 +34,12 @@ NOP failures must be real assertion mismatches, not import/infra crashes. Oracle
 ## Difficulty evidence (only this counts)
 
 ```bash
-stb keys refresh                 # before EVERY invocation (keys expire ~10 min)
-bash run_k.sh /path/to/<task> 2
-stb keys refresh
-bash run_k.sh /path/to/<task> 3  # always — pool requires k=5 (2 + 3) for delivery
+KIT="DELIVERY_PREP_KIT_v1/DELIVERY_PREP_KIT_v1"   # run_k.sh, patch_stb_harbor.py, check_trajectory.py, delivery_prep.py
+bash $KIT/run_k.sh /path/to/<task> 2
+bash $KIT/run_k.sh /path/to/<task> 3  # always — pool requires k=5 (2 + 3) for delivery
 ```
+
+**Never run `stb keys refresh` by hand** — `run_k.sh` runs `stb keys verify` and refreshes once only if that fails; each refresh mints a new capped slice of the shared budget and discards what was left on the old key. Setup: `stb` ≥ 2.4.15 (2.4.17 bundles Harbor 0.23.0; patch `r3` supports 0.22/0.23); after any stb install/upgrade re-run `python3 $KIT/patch_stb_harbor.py` then `--check` (all PASS). `--check-agent` needs the workspace `scripts/` package and is not required by `run_k.sh`. Docker Desktop → Resources → WSL integration must be ON for Ubuntu (a Windows `docker.exe` on the WSL PATH cannot bind-mount Linux paths). Standalone Harbor ≥ 0.22 requires `[task] name = "org/<slug>"`.
 
 Locked by `run_k.sh` (never override, never call the runtime by hand): `@openai/gpt-5.6`, `xhigh`, 100 MB observation cap, message store, `agent/api-calls.jsonl`, `agent/recording.cast`, console log + sha-bound `SOURCE.txt`. Output: `$OUT` (default `./runs`)/`<slug>-<label>-<stamp>/`.
 
@@ -77,7 +78,8 @@ Last line: `SUMMARY <job>: x/k solved; fidelity PASS`. `fidelity FAIL` → renam
 - Scrub everything (incl. trajectories): no `/Users/`, `/private/tmp/`, `/home/<name>` (except in-container like `/home/agent`), no word-boundary case-sensitive `stb`.
 - Mtimes: every evidence dir/ctrf newer than every graded file. Any graded edit → regenerate oracle/NOP + k=5 + SUMMARY + all rubric_score.txt + difficulty/time estimates + sha + scrub, together (check 82).
 - No `SOURCE.txt` inside the delivery zip.
-- `py -3 tb21/tb21_ship_check.py <slug>` automates the mechanical checks; reading trajectories for failure causes (70), rubric_score evidence (72/73) and reward-hacking behavior (81) stays manual.
+- `py -3 tb21/run_baselines.py <slug> [--ablate|--all]` runs the oracle/NOP baselines (and per-fix ablation) through harbor and refreshes `oracle-nop-evidence/` only on a clean result.
+- `py -3 tb21/master_check.py <slug>` automates the mechanical checks and flags rubric_score quotes missing from the run's own files (72/73), unnamed failing tests (70) and agent commands touching grading paths (81); confirming the verdicts stays a signed-off manual step.
 
 ## Troubleshooting
 

@@ -40,6 +40,8 @@ def main() -> int:
         return 1
 
     shutil.copytree(SKELETON / "task", outer / slug)
+    toml = outer / slug / "task.toml"
+    toml.write_bytes(toml.read_bytes().replace(b"<<SLUG>>", slug.encode()))
     shutil.copy2(SKELETON / "rubric.txt", outer / "rubric.txt")
     for run in EVIDENCE_RUNS:
         (outer / "oracle-nop-evidence" / run).mkdir(parents=True)

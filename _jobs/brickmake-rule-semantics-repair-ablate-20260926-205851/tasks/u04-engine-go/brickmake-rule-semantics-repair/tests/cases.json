@@ -1,0 +1,1248 @@
+{
+ "stem/shortest_stem_wins_across_directories": {
+  "group": "stem",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "%.o: %.c\n\t@echo \"generic $@ from $< (stem $*)\"\nlib/%.o: lib/%.c\n\t@echo \"lib $@ from $< (stem $*)\"\nsrc/%.o: src/gen/%.c\n\t@echo \"gen $@ from $< (stem $*)\"\nall: lib/a.o src/b.o c.o lib/deep/d.o\n"
+   ],
+   [
+    "touch",
+    "old",
+    "lib/a.c",
+    "src/b.c",
+    "src/gen/b.c",
+    "c.c",
+    "lib/deep/d.c"
+   ],
+   [
+    "run"
+   ],
+   [
+    "run",
+    "src/b.o",
+    "lib/a.o"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "lib lib/a.o from lib/a.c (stem a)\ngen src/b.o from src/gen/b.c (stem b)\ngeneric c.o from c.c (stem c)\nlib lib/deep/d.o from lib/deep/d.c (stem deep/d)\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "gen src/b.o from src/gen/b.c (stem b)\nlib lib/a.o from lib/a.c (stem a)\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "stem/prefix_pattern_beats_plain_suffix": {
+  "group": "stem",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "%.o: %.c\n\t@echo \"plain $@\"\nl%.o: l%.c\n\t@echo \"lpfx $@ stem=$*\"\ntest_%: %_test.c\n\t@echo \"test binary $@ from $< stem=$*\"\n"
+   ],
+   [
+    "touch",
+    "old",
+    "lib/lx.c",
+    "lx.c",
+    "pkg/io_test.c",
+    "pkg/io.c"
+   ],
+   [
+    "run",
+    "lib/lx.o",
+    "lx.o",
+    "pkg/test_io"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "lpfx lib/lx.o stem=lib/x\nlpfx lx.o stem=x\ntest binary pkg/test_io from pkg/io_test.c stem=pkg/io\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "stem/applicable_rule_after_inapplicable_shorter_stem": {
+  "group": "stem",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "gen/%.o: gen/%.proto\n\t@echo \"protoc $@ from $<\"\n%.o: %.c\n\t@echo \"cc $@ from $<\"\n%.o: %.s\n\t@echo \"as $@ from $<\"\nb.o: b.c\nb.c:\n\t@echo \"generate $@\"\n"
+   ],
+   [
+    "touch",
+    "old",
+    "gen/api.c",
+    "x.s",
+    "b.s"
+   ],
+   [
+    "run",
+    "gen/api.o",
+    "x.o",
+    "b.o"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "cc gen/api.o from gen/api.c\nas x.o from x.s\ngenerate b.c\ncc b.o from b.c\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "stem/equal_stems_keep_makefile_order_and_redefinition_moves_last": {
+  "group": "stem",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "%.o: %.c\n\t@echo \"first $@\"\n%.o: %.cc\n\t@echo \"c++ $@\"\n%.o: %.c\n\t@echo \"redefined $@\"\n"
+   ],
+   [
+    "touch",
+    "old",
+    "k.c",
+    "k.cc"
+   ],
+   [
+    "run",
+    "k.o"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "c++ k.o\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "dirs/shared_prerequisite_is_not_moved_into_the_directory": {
+  "group": "dirs",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "%.o: %.c config.h\n\t@echo \"$@: $^ (dir $(*D), file $(*F))\"\nall: net/sock.o main.o\n"
+   ],
+   [
+    "touch",
+    "old",
+    "net/sock.c",
+    "main.c",
+    "config.h"
+   ],
+   [
+    "run"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "net/sock.o: net/sock.c config.h (dir net, file sock)\nmain.o: main.c config.h (dir ., file main)\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "dirs/directory_prefix_goes_before_the_pattern_prefix": {
+  "group": "dirs",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "e%t: c%r\n\t@echo \"@=[$@] <=[$<] *=[$*]\"\n%.pb.go: proto/%.proto tools.lock\n\t@echo \"gen $@ from [$^]\"\n"
+   ],
+   [
+    "touch",
+    "old",
+    "src/car",
+    "tools.lock",
+    "api/proto/v1.proto"
+   ],
+   [
+    "run",
+    "src/eat",
+    "api/v1.pb.go"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "@=[src/eat] <=[src/car] *=[src/a]\ngen api/v1.pb.go from [api/proto/v1.proto tools.lock]\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "dirs/static_pattern_rules_match_the_whole_name": {
+  "group": "dirs",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "OBJS := obj/x.o obj/y.o\nall: $(OBJS)\n$(OBJS): obj/%.o: src/%.c | obj\n\t@echo \"$@ <- $< [$^] [$|] *=$*\"\nobj:\n\t@echo \"mkdir obj\"\n"
+   ],
+   [
+    "touch",
+    "old",
+    "src/x.c",
+    "src/y.c"
+   ],
+   [
+    "run"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "mkdir obj\nobj/x.o <- src/x.c [src/x.c] [obj] *=x\nobj/y.o <- src/y.c [src/y.c] [obj] *=y\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "mention/prerequisite_mentioned_elsewhere_ought_to_exist": {
+  "group": "mention",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "%.o: %.c %.h\n\t@echo \"compile $< with $(word 2,$^)\"\n%.o: %.c\n\t@echo \"compile $< alone\"\ndocs: parser.h\n\t@echo docs\n"
+   ],
+   [
+    "touch",
+    "old",
+    "parser.c",
+    "lexer.c"
+   ],
+   [
+    "run",
+    "lexer.o"
+   ],
+   [
+    "run",
+    "parser.o"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "compile lexer.c alone\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "",
+    "stderr": "brickmake: *** No rule to make target 'parser.h', needed by 'parser.o'.  Stop.\n",
+    "code": 2
+   }
+  ]
+ },
+ "mention/mentioned_header_with_rule_is_generated": {
+  "group": "mention",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "%.o: %.c %.h\n\t@echo \"compile $< with $(word 2,$^)\"\n%.o: %.c\n\t@echo \"compile $< alone\"\nall: parser.o lexer.o\nparser.h: parser.y\n\t@echo \"bison $< -> $@\"\n"
+   ],
+   [
+    "touch",
+    "old",
+    "parser.c",
+    "lexer.c",
+    "parser.y"
+   ],
+   [
+    "run"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "bison parser.y -> parser.h\ncompile parser.c with parser.h\ncompile lexer.c alone\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "mention/order_only_mention_counts_too": {
+  "group": "mention",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "out/%.txt: %.md | out/.dir\n\t@echo \"render $< -> $@ after [$|]\"\nindex: | out/.dir\nout/.dir:\n\t@echo \"mkdir out\"\n"
+   ],
+   [
+    "touch",
+    "old",
+    "guide.md"
+   ],
+   [
+    "run",
+    "out/guide.txt"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "mkdir out\nrender guide.md -> out/guide.txt after [out/.dir]\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "restat/unchanged_output_does_not_relink": {
+  "group": "restat",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "app: version.h main.c\n\t@echo \"link app\"; touch app\nversion.h: version.txt\n\t@echo \"check version.h\"; cmp -s version.txt version.h || cp version.txt version.h\n"
+   ],
+   [
+    "write",
+    "version.txt",
+    "1.0\n"
+   ],
+   [
+    "write",
+    "version.h",
+    "1.0\n"
+   ],
+   [
+    "touch",
+    "old",
+    "version.h",
+    "main.c",
+    "app"
+   ],
+   [
+    "touch",
+    "mid",
+    "version.txt"
+   ],
+   [
+    "run",
+    "app"
+   ],
+   [
+    "write",
+    "version.txt",
+    "1.1\n"
+   ],
+   [
+    "touch",
+    "mid",
+    "version.txt"
+   ],
+   [
+    "run",
+    "app"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "check version.h\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "check version.h\nlink app\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "restat/recipe_that_leaves_its_target_alone": {
+  "group": "restat",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "out: stamp\n\t@echo \"out [$?]\"\nstamp: in\n\t@echo \"stamp recipe ran\"\n"
+   ],
+   [
+    "touch",
+    "old",
+    "out",
+    "stamp"
+   ],
+   [
+    "touch",
+    "mid",
+    "in"
+   ],
+   [
+    "run"
+   ],
+   [
+    "run",
+    "-n"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "stamp recipe ran\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "echo \"stamp recipe ran\"\necho \"out [stamp]\"\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "restat/no_recipe_target_keeps_its_time": {
+  "group": "restat",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "out: hdr.h\n\t@echo out; touch out\nhdr.h: gen.h\n"
+   ],
+   [
+    "touch",
+    "old",
+    "out",
+    "hdr.h"
+   ],
+   [
+    "touch",
+    "mid",
+    "gen.h"
+   ],
+   [
+    "run"
+   ],
+   [
+    "run",
+    "hdr.h"
+   ],
+   [
+    "rm",
+    "hdr.h"
+   ],
+   [
+    "run"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "brickmake: 'out' is up to date.\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "brickmake: Nothing to be done for 'hdr.h'.\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "out\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "restat/dry_run_treats_remade_as_new": {
+  "group": "restat",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "all: out\n\t@echo all\nout: in\n\t+@touch out\n\t@echo out-body\nc: b\n\ttouch c\nb: a\n\ttouch b\n"
+   ],
+   [
+    "touch",
+    "old",
+    "out",
+    "b",
+    "c"
+   ],
+   [
+    "touch",
+    "mid",
+    "in",
+    "a"
+   ],
+   [
+    "run",
+    "-n",
+    "all"
+   ],
+   [
+    "run",
+    "-n",
+    "c",
+    "b"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "touch out\necho out-body\necho all\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "touch b\ntouch c\nbrickmake: 'b' is up to date.\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "goals/each_goal_reports_its_own_state": {
+  "group": "goals",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    ".PHONY: p\na: b\n\t@echo a; touch a\nb:\n\t@echo b; touch b\np:\nq: ;\nquiet:\n\t@:\n"
+   ],
+   [
+    "run",
+    "a",
+    "b",
+    "p",
+    "q"
+   ],
+   [
+    "run",
+    "a",
+    "b"
+   ],
+   [
+    "run",
+    "quiet",
+    "quiet"
+   ],
+   [
+    "run",
+    "-n",
+    "a",
+    "q"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "b\na\nbrickmake: 'b' is up to date.\nbrickmake: Nothing to be done for 'p'.\nbrickmake: 'q' is up to date.\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "brickmake: 'a' is up to date.\nbrickmake: 'b' is up to date.\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "brickmake: 'quiet' is up to date.\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "brickmake: 'a' is up to date.\nbrickmake: 'q' is up to date.\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "goals/goal_remade_through_a_prerequisite": {
+  "group": "goals",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "all: x\nx:\n\ttouch x\n.PHONY: force\nforce:\n"
+   ],
+   [
+    "run"
+   ],
+   [
+    "run"
+   ],
+   [
+    "run",
+    "x",
+    "all",
+    "force"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "touch x\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "brickmake: Nothing to be done for 'all'.\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "brickmake: 'x' is up to date.\nbrickmake: Nothing to be done for 'all'.\nbrickmake: Nothing to be done for 'force'.\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "goals/keep_going_reports_per_goal": {
+  "group": "goals",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "all: x y\n\t@echo all\nx: bad\n\t@echo x\nbad:\n\t@false\ny:\n\t@echo y\nz:\n\t@echo z; touch z\n"
+   ],
+   [
+    "touch",
+    "old",
+    "z"
+   ],
+   [
+    "run",
+    "-k"
+   ],
+   [
+    "run",
+    "-k",
+    "z",
+    "all",
+    "nope",
+    "y"
+   ],
+   [
+    "run",
+    "z",
+    "all"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "y\n",
+    "stderr": "brickmake: *** [Makefile:6: bad] Error 1\nbrickmake: Target 'all' not remade because of errors.\n",
+    "code": 2
+   },
+   {
+    "stdout": "brickmake: 'z' is up to date.\ny\nbrickmake: 'y' is up to date.\n",
+    "stderr": "brickmake: *** [Makefile:6: bad] Error 1\nbrickmake: Target 'all' not remade because of errors.\nbrickmake: *** No rule to make target 'nope'.\n",
+    "code": 2
+   },
+   {
+    "stdout": "brickmake: 'z' is up to date.\n",
+    "stderr": "brickmake: *** [Makefile:6: bad] Error 1\n",
+    "code": 2
+   }
+  ]
+ },
+ "goals/default_goal_and_first_rule": {
+  "group": "goals",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    ".PHONY: first\n%.o: %.c\n\t@echo cc $@\nfirst: second\n\t@echo first\nsecond:\n\t@echo second\n.DEFAULT_GOAL := second\n"
+   ],
+   [
+    "run"
+   ],
+   [
+    "run",
+    "first"
+   ],
+   [
+    "run",
+    "first",
+    "second"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "second\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "second\nfirst\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "second\nfirst\nbrickmake: 'second' is up to date.\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "patvars/more_specific_pattern_applies_last": {
+  "group": "patvars",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "CFLAGS = -O2\nbuild/net/%.o: CFLAGS += -DNET\nbuild/%.o: CFLAGS += -fPIC\n%.o: CFLAGS += -g\nbuild/%.o: %.c\n\t@echo \"cc $(CFLAGS) $<\"\nall: build/net/sock.o build/main.o\n"
+   ],
+   [
+    "touch",
+    "old",
+    "net/sock.c",
+    "main.c"
+   ],
+   [
+    "run"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "cc -O2 -g -fPIC -DNET net/sock.c\ncc -O2 -g -fPIC main.c\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "patvars/equal_length_patterns_later_wins": {
+  "group": "patvars",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "lib/%.o: OPT = lib\n%.o: OPT = generic\nx%: V = xpat\n%y: V = ypat\nall: lib/a.o b.o xay\nlib/a.o b.o xay:\n\t@echo \"$@ OPT=[$(OPT)] V=[$(V)]\"\n"
+   ],
+   [
+    "run"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "lib/a.o OPT=[lib] V=[]\nb.o OPT=[generic] V=[]\nxay OPT=[] V=[ypat]\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "patvars/pattern_variables_match_whole_names": {
+  "group": "patvars",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "a%.o: W = aw\n%.o: V = any\nall: lib/ab.o ab.o\nlib/ab.o ab.o:\n\t@echo \"$@ V=[$(V)] W=[$(W)]\"\n"
+   ],
+   [
+    "run"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "lib/ab.o V=[any] W=[]\nab.o V=[any] W=[aw]\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "patvars/command_line_overrides_everything": {
+  "group": "patvars",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "V = file\nV += more\nt: V = tgt\nt: V += tgt2\n%.x: V = pat\nt u w.x:\n\t@echo \"$@ V=[$(V)]\"\n"
+   ],
+   [
+    "run",
+    "t",
+    "u",
+    "w.x"
+   ],
+   [
+    "run",
+    "t",
+    "u",
+    "w.x",
+    "V=cmd"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "t V=[tgt tgt2]\nu V=[file more]\nw.x V=[pat]\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "t V=[cmd]\nu V=[cmd]\nw.x V=[cmd]\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "inherit/own_pattern_variables_beat_the_parent": {
+  "group": "inherit",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "V = g\nparent: V = p\n%.o: V = pat\nparent: c.o d.x\n\t@echo \"parent V=[$(V)]\"\nc.o d.x:\n\t@echo \"$@ V=[$(V)]\"\n"
+   ],
+   [
+    "run",
+    "parent"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "c.o V=[pat]\nd.x V=[p]\nparent V=[p]\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "inherit/append_chain_runs_global_parent_pattern_own": {
+  "group": "inherit",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "V = g\nparent: V += p\n%.o: V += pat\nc.o: V += own\nparent: c.o\n\t@echo \"parent V=[$(V)]\"\nc.o:\n\t@echo \"$@ V=[$(V)]\"\n"
+   ],
+   [
+    "run",
+    "parent"
+   ],
+   [
+    "run",
+    "c.o"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "c.o V=[g p pat own]\nparent V=[g p]\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "c.o V=[g pat own]\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "inherit/debug_build_flags_reach_objects": {
+  "group": "inherit",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "OPT = -O0\ndebug: OPT = -Og\ndebug: app\napp: main.o util.o\n\t@echo \"link OPT=[$(OPT)]\"\n%.o: OPT += -fpic\nutil.o: OPT := -Os\n%.o:\n\t@echo \"$@ OPT=[$(OPT)]\"\n"
+   ],
+   [
+    "run",
+    "debug"
+   ],
+   [
+    "run",
+    "app"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "main.o OPT=[-Og -fpic]\nutil.o OPT=[-Os]\nlink OPT=[-Og]\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "main.o OPT=[-O0 -fpic]\nutil.o OPT=[-Os]\nlink OPT=[-O0]\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "inherit/first_parent_to_reach_a_prerequisite_wins": {
+  "group": "inherit",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "V = g\nall: x y\nx: V = xv\nx: shared\n\t@echo \"x V=[$(V)]\"\ny: shared\n\t@echo \"y V=[$(V)]\"\nshared:\n\t@echo \"shared V=[$(V)]\"\n"
+   ],
+   [
+    "run",
+    "all"
+   ],
+   [
+    "run",
+    "y",
+    "x"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "shared V=[xv]\nx V=[xv]\ny V=[g]\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "shared V=[g]\ny V=[g]\nx V=[xv]\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "append/simple_variables_expand_appended_text_now": {
+  "group": "append",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "BASE := -Wall\nBASE += $(EXTRA)\nEXTRA = -Werror\nLATE = a\nLATE += $(EXTRA)\nEMPTY :=\nS := s\nS += $(EMPTY)\nR = r\nR += $(EMPTY)\nall:\n\t@echo \"[$(BASE)] [$(flavor BASE)] [$(LATE)] [$(flavor LATE)] [$(S)] [$(R)]\"\n"
+   ],
+   [
+    "run"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "[-Wall] [simple] [a -Werror] [recursive] [s] [r ]\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "append/simple_append_keeps_value_when_referenced_variable_changes": {
+  "group": "append",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "DIRS := src\nDIRS += $(MORE)\nMORE = lib\nSRCS := $(addsuffix /*.c,$(DIRS))\nMORE = tools\nall:\n\t@echo \"[$(DIRS)] [$(SRCS)]\"\n"
+   ],
+   [
+    "run"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "[src] [src/*.c]\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "append/target_append_extends_the_targets_own_value": {
+  "group": "append",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "CFLAGS = -O2\ntest: CFLAGS = -O0 -g\ntest: CFLAGS += -DTEST\nbench: CFLAGS += -DBENCH\nbench: CFLAGS += -pg\nG := g\nt: G += $(L)\nL = late\ntest bench t:\n\t@echo \"$@ CFLAGS=[$(CFLAGS)] G=[$(G)]\"\n"
+   ],
+   [
+    "run",
+    "test",
+    "bench",
+    "t"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "test CFLAGS=[-O0 -g -DTEST] G=[g]\nbench CFLAGS=[-O2 -DBENCH -pg] G=[g]\nt CFLAGS=[-O2] G=[g late]\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "append/target_append_with_empty_text": {
+  "group": "append",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "T := t\nt: T += $(EMPTY)\nt: U += $(EMPTY)\nP = p\nt: P +=\nt:\n\t@echo \"T=[$(T)] U=[$(U)] P=[$(P)]\"\n"
+   ],
+   [
+    "run",
+    "t"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "T=[t ] U=[] P=[p ]\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "merge/recipe_rule_prerequisites_come_first": {
+  "group": "merge",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "x: p1\nx: p2 p3\n\t@echo \"x <=[$<] ^=[$^] +=[$+]\"\nx: p4 p2\np1 p2 p3 p4:\n\t@echo \"make $@\"\n"
+   ],
+   [
+    "run",
+    "x"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "make p2\nmake p3\nmake p1\nmake p4\nx <=[p2] ^=[p2 p3 p1 p4] +=[p2 p3 p1 p4 p2]\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "merge/header_rule_before_static_pattern_rule": {
+  "group": "merge",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "OBJS := a.o b.o\nall: $(OBJS)\na.o: common.h\n$(OBJS): %.o: %.c\n\t@echo \"cc -c $< -o $@ [$^]\"; touch $@\nb.o: common.h | gen\ngen:\n\t@echo \"mkdir gen\"\n"
+   ],
+   [
+    "touch",
+    "old",
+    "a.c",
+    "b.c",
+    "common.h"
+   ],
+   [
+    "run"
+   ],
+   [
+    "touch",
+    "mid",
+    "common.h"
+   ],
+   [
+    "run"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "cc -c a.c -o a.o [a.c common.h]\nmkdir gen\ncc -c b.c -o b.o [b.c common.h]\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "mkdir gen\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "merge/order_only_and_newer_lists_follow_the_recipe_rule": {
+  "group": "merge",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "app: lib.a | out\napp: main.o util.o\n\t@echo \"link $@ <=[$<] ^=[$^] ?=[$?] |=[$|]\"; touch $@\napp: extra.o\nout:\n\t@echo \"mkdir out\"\n"
+   ],
+   [
+    "touch",
+    "old",
+    "app",
+    "main.o",
+    "extra.o"
+   ],
+   [
+    "touch",
+    "mid",
+    "lib.a",
+    "util.o"
+   ],
+   [
+    "run",
+    "app"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "mkdir out\nlink app <=[main.o] ^=[main.o util.o lib.a extra.o] ?=[util.o lib.a] |=[out]\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "project/incremental_builds": {
+  "group": "project",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "OUT = build\nSRCS := $(sort $(wildcard src/*.c lib/*/*.c))\nOBJS := $(patsubst %.c,$(OUT)/%.o,$(SRCS))\n\n.PHONY: all release clean\nall: $(OUT)/app\n\nrelease: CFLAGS = -O3 -DNDEBUG\nrelease: all\n\nCFLAGS = -O1\n$(OUT)/app: $(OBJS) | $(OUT)\n\t@echo \"link $@ <- [$^] |[$|] ?[$?]\"\n\t@touch $@\n\n$(OUT)/%.o: %.c include/common.h | $(OUT)\n\t@echo \"cc $(CFLAGS) $(EXTRA) -c $< -o $@\"\n\t@mkdir -p $(@D) && touch $@\n\n$(OUT)/lib/net/%.o: EXTRA += -DNET\n$(OUT)/lib/%.o: EXTRA += -fPIC\n\n$(OUT)/lib/%.o: lib/%.c lib/lib.h include/common.h | $(OUT)\n\t@echo \"cc-lib $(CFLAGS) $(EXTRA) -c $< -o $@\"\n\t@mkdir -p $(@D) && touch $@\n\n$(OUT):\n\t@echo \"mkdir $@\"; mkdir -p $@\n\nclean:\n\t@echo rm -rf $(OUT)\n"
+   ],
+   [
+    "touch",
+    "old",
+    "src/main.c",
+    "src/util.c",
+    "lib/net/sock.c",
+    "lib/fmt/print.c",
+    "include/common.h",
+    "lib/lib.h"
+   ],
+   [
+    "run"
+   ],
+   [
+    "run"
+   ],
+   [
+    "touch",
+    "old",
+    "build/app",
+    "build/src/main.o",
+    "build/src/util.o",
+    "build/lib/net/sock.o",
+    "build/lib/fmt/print.o"
+   ],
+   [
+    "touch",
+    "mid",
+    "lib/lib.h"
+   ],
+   [
+    "run",
+    "release"
+   ],
+   [
+    "run",
+    "clean",
+    "all"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "mkdir build\ncc-lib -O1 -fPIC -c lib/fmt/print.c -o build/lib/fmt/print.o\ncc-lib -O1 -fPIC -DNET -c lib/net/sock.c -o build/lib/net/sock.o\ncc -O1  -c src/main.c -o build/src/main.o\ncc -O1  -c src/util.c -o build/src/util.o\nlink build/app <- [build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o] |[build] ?[build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o]\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "brickmake: Nothing to be done for 'all'.\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "cc-lib -O3 -DNDEBUG -fPIC -c lib/fmt/print.c -o build/lib/fmt/print.o\ncc-lib -O3 -DNDEBUG -fPIC -DNET -c lib/net/sock.c -o build/lib/net/sock.o\nlink build/app <- [build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o] |[build] ?[build/lib/fmt/print.o build/lib/net/sock.o]\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "rm -rf build\nbrickmake: Nothing to be done for 'all'.\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ },
+ "project/generated_parser_and_version_header": {
+  "group": "project",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    ".SECONDEXPANSION:\nPROGS := calc\ncalc_OBJS := main.o parse.o\ncalc: $$($$@_OBJS)\n\t@echo \"link $@ <- [$^]\"; touch $@\n%.o: %.c version.h\n\t@echo \"cc $<\"; touch $@\n%.c: %.y\n\t@echo \"yacc $< -> $@\"; touch $@\nversion.h: VERSION\n\t@echo \"stamp version\"; cmp -s VERSION version.h || cp VERSION version.h\n"
+   ],
+   [
+    "write",
+    "VERSION",
+    "7\n"
+   ],
+   [
+    "write",
+    "version.h",
+    "7\n"
+   ],
+   [
+    "touch",
+    "old",
+    "main.c",
+    "parse.y",
+    "version.h"
+   ],
+   [
+    "touch",
+    "mid",
+    "VERSION"
+   ],
+   [
+    "run",
+    "calc"
+   ],
+   [
+    "ls"
+   ],
+   [
+    "run",
+    "calc"
+   ],
+   [
+    "touch",
+    "old",
+    "calc",
+    "main.o",
+    "parse.o"
+   ],
+   [
+    "touch",
+    "new",
+    "VERSION"
+   ],
+   [
+    "run",
+    "calc"
+   ],
+   [
+    "ls"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "stamp version\ncc main.c\nyacc parse.y -> parse.c\ncc parse.c\nlink calc <- [main.o parse.o]\nrm parse.c\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "files": [
+     "Makefile",
+     "VERSION",
+     "calc",
+     "main.c",
+     "main.o",
+     "parse.o",
+     "parse.y",
+     "version.h"
+    ]
+   },
+   {
+    "stdout": "stamp version\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "stamp version\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "files": [
+     "Makefile",
+     "VERSION",
+     "calc",
+     "main.c",
+     "main.o",
+     "parse.o",
+     "parse.y",
+     "version.h"
+    ]
+   }
+  ]
+ }
+}

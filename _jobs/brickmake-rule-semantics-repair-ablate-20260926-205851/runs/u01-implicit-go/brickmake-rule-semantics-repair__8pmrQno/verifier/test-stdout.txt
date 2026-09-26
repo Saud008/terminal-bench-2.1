@@ -1,0 +1,127 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 10 items
+
+../tests/test_outputs.py FFF.......                                      [100%]
+
+=================================== FAILURES ===================================
+_________________________ test_shortest_stem_selection _________________________
+
+brickmake = '/tmp/brickmake-verify'
+
+    def test_shortest_stem_selection(brickmake):
+        """Among matching pattern rules the one with the shortest stem wins, where the
+        stem of a directory-relative match includes the directory; ties keep makefile order."""
+>       replay(brickmake, "stem")
+
+/tests/test_outputs.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/brickmake-verify', group = 'stem'
+
+    def replay(binary, group):
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], [binary])
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: stem/shortest_stem_wins_across_directories result #0
+E           expected: {'stdout': 'lib lib/a.o from lib/a.c (stem a)\ngen src/b.o from src/gen/b.c (stem b)\ngeneric c.o from c.c (stem c)\nlib lib/deep/d.o from lib/deep/d.c (stem deep/d)\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'generic lib/a.o from lib/a.c (stem lib/a)\ngeneric src/b.o from src/b.c (stem src/b)\ngeneric c.o from c.c (stem c)\ngeneric lib/deep/d.o from lib/deep/d.c (stem lib/deep/d)\n', 'stderr': '', 'code': 0}
+E         stem/shortest_stem_wins_across_directories result #1
+E           expected: {'stdout': 'gen src/b.o from src/gen/b.c (stem b)\nlib lib/a.o from lib/a.c (stem a)\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'generic src/b.o from src/b.c (stem src/b)\ngeneric lib/a.o from lib/a.c (stem lib/a)\n', 'stderr': '', 'code': 0}
+E       assert not ["stem/shortest_stem_wins_across_directories result #0\n  expected: {'stdout': 'lib lib/a.o from lib/a.c (stem a)\\nge... 'generic src/b.o from src/b.c (stem src/b)\\ngeneric lib/a.o from lib/a.c (stem lib/a)\\n', 'stderr': '', 'code': 0}"]
+
+/tests/test_outputs.py:47: AssertionError
+____________________ test_directory_relative_prerequisites _____________________
+
+brickmake = '/tmp/brickmake-verify'
+
+    def test_directory_relative_prerequisites(brickmake):
+        """For a slash-less target pattern matched against a name with a directory, the
+        directory is prepended only to prerequisites that contain '%'."""
+>       replay(brickmake, "dirs")
+
+/tests/test_outputs.py:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/brickmake-verify', group = 'dirs'
+
+    def replay(binary, group):
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], [binary])
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: dirs/shared_prerequisite_is_not_moved_into_the_directory result #0
+E           expected: {'stdout': 'net/sock.o: net/sock.c config.h (dir net, file sock)\nmain.o: main.c config.h (dir ., file main)\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': '', 'stderr': "brickmake: *** No rule to make target 'net/sock.o', needed by 'all'.  Stop.\n", 'code': 2}
+E         dirs/directory_prefix_goes_before_the_pattern_prefix result #0
+E           expected: {'stdout': '@=[src/eat] <=[src/car] *=[src/a]\ngen api/v1.pb.go from [api/proto/v1.proto tools.lock]\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': '@=[src/eat] <=[src/car] *=[src/a]\n', 'stderr': "brickmake: *** No rule to make target 'api/v1.pb.go'.  Stop.\n", 'code': 2}
+E       assert not ['dirs/shared_prerequisite_is_not_moved_into_the_directory result #0\n  expected: {\'stdout\': \'net/sock.o: net/sock....rc/car] *=[src/a]\\n\', \'stderr\': "brickmake: *** No rule to make target \'api/v1.pb.go\'.  Stop.\\n", \'code\': 2}']
+
+/tests/test_outputs.py:47: AssertionError
+__________________ test_mentioned_prerequisite_ought_to_exist __________________
+
+brickmake = '/tmp/brickmake-verify'
+
+    def test_mentioned_prerequisite_ought_to_exist(brickmake):
+        """A prerequisite that is mentioned anywhere in the makefile counts as one that
+        ought to exist during the first implicit-rule pass, even without a rule of its own."""
+>       replay(brickmake, "mention")
+
+/tests/test_outputs.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/brickmake-verify', group = 'mention'
+
+    def replay(binary, group):
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], [binary])
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: mention/prerequisite_mentioned_elsewhere_ought_to_exist result #1
+E           expected: {'stdout': '', 'stderr': "brickmake: *** No rule to make target 'parser.h', needed by 'parser.o'.  Stop.\n", 'code': 2}
+E           actual:   {'stdout': 'compile parser.c alone\n', 'stderr': '', 'code': 0}
+E       assert not ['mention/prerequisite_mentioned_elsewhere_ought_to_exist result #1\n  expected: {\'stdout\': \'\', \'stderr\': "brick...o\'.  Stop.\\n", \'code\': 2}\n  actual:   {\'stdout\': \'compile parser.c alone\\n\', \'stderr\': \'\', \'code\': 0}']
+
+/tests/test_outputs.py:47: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_timestamps_reread_after_recipe
+PASSED ../tests/test_outputs.py::test_per_goal_messages
+PASSED ../tests/test_outputs.py::test_pattern_specific_variable_order
+PASSED ../tests/test_outputs.py::test_target_variable_inheritance
+PASSED ../tests/test_outputs.py::test_append_semantics
+PASSED ../tests/test_outputs.py::test_prerequisite_merge_order
+PASSED ../tests/test_outputs.py::test_project_builds
+FAILED ../tests/test_outputs.py::test_shortest_stem_selection - AssertionErro...
+FAILED ../tests/test_outputs.py::test_directory_relative_prerequisites - Asse...
+FAILED ../tests/test_outputs.py::test_mentioned_prerequisite_ought_to_exist
+========================= 3 failed, 7 passed in 0.43s ==========================

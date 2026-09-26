@@ -1,0 +1,130 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 10 items
+
+../tests/test_outputs.py ...FF....F                                      [100%]
+
+=================================== FAILURES ===================================
+_____________________ test_timestamps_reread_after_recipe ______________________
+
+brickmake = '/tmp/brickmake-verify'
+
+    def test_timestamps_reread_after_recipe(brickmake):
+        """After a recipe runs the target's time is read again, so a recipe that leaves its
+        target unchanged does not make dependents out of date; -n treats remade targets as new."""
+>       replay(brickmake, "restat")
+
+/tests/test_outputs.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/brickmake-verify', group = 'restat'
+
+    def replay(binary, group):
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], [binary])
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: restat/dry_run_treats_remade_as_new result #1
+E           expected: {'stdout': "touch b\ntouch c\nbrickmake: 'b' is up to date.\n", 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'touch b\ntouch c\n', 'stderr': '', 'code': 0}
+E       assert not ['restat/dry_run_treats_remade_as_new result #1\n  expected: {\'stdout\': "touch b\\ntouch c\\nbrickmake: \'b\' is up ...n", \'stderr\': \'\', \'code\': 0}\n  actual:   {\'stdout\': \'touch b\\ntouch c\\n\', \'stderr\': \'\', \'code\': 0}']
+
+/tests/test_outputs.py:47: AssertionError
+____________________________ test_per_goal_messages ____________________________
+
+brickmake = '/tmp/brickmake-verify'
+
+    def test_per_goal_messages(brickmake):
+        """'Nothing to be done' and 'is up to date' are reported per goal, based only on
+        whether that goal ran any command, including with -k."""
+>       replay(brickmake, "goals")
+
+/tests/test_outputs.py:77: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/brickmake-verify', group = 'goals'
+
+    def replay(binary, group):
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], [binary])
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: goals/each_goal_reports_its_own_state result #0
+E           expected: {'stdout': "b\na\nbrickmake: 'b' is up to date.\nbrickmake: Nothing to be done for 'p'.\nbrickmake: 'q' is up to date.\n", 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'b\na\n', 'stderr': '', 'code': 0}
+E         goals/each_goal_reports_its_own_state result #2
+E           expected: {'stdout': "brickmake: 'quiet' is up to date.\n", 'stderr': '', 'code': 0}
+E           actual:   {'stdout': '', 'stderr': '', 'code': 0}
+E         goals/keep_going_reports_per_goal result #1
+E           expected: {'stdout': "brickmake: 'z' is up to date.\ny\nbrickmake: 'y' is up to date.\n", 'stderr': "brickmake: *** [Makefile:6: bad] Error 1\nbrickmake: Target 'all' not remade because of errors.\nbrickmake: *** No rule to make target 'nope'.\n", 'code': 2}
+E           actual:   {'stdout': "brickmake: 'z' is up to date.\ny\n", 'stderr': "brickmake: *** [Makefile:6: bad] Error 1\nbrickmake: Target 'all' not remade because of errors.\nbrickmake: *** No rule to make target 'nope'.\n", 'code': 2}
+E         goals/default_goal_and_first_rule result #2
+E           expected: {'stdout': "second\nfirst\nbrickmake: 'second' is up to date.\n", 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'second\nfirst\n', 'stderr': '', 'code': 0}
+E       assert not ['goals/each_goal_reports_its_own_state result #0\n  expected: {\'stdout\': "b\\na\\nbrickmake: \'b\' is up to date.\\....\\n", \'stderr\': \'\', \'code\': 0}\n  actual:   {\'stdout\': \'second\\nfirst\\n\', \'stderr\': \'\', \'code\': 0}']
+
+/tests/test_outputs.py:47: AssertionError
+_____________________________ test_project_builds ______________________________
+
+brickmake = '/tmp/brickmake-verify'
+
+    def test_project_builds(brickmake):
+        """Multi-step incremental builds of small projects produce the same commands,
+        messages and files as GNU make across edits and rebuilds."""
+>       replay(brickmake, "project")
+
+/tests/test_outputs.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/brickmake-verify', group = 'project'
+
+    def replay(binary, group):
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], [binary])
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: project/incremental_builds result #3
+E           expected: {'stdout': "rm -rf build\nbrickmake: Nothing to be done for 'all'.\n", 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'rm -rf build\n', 'stderr': '', 'code': 0}
+E       assert not ['project/incremental_builds result #3\n  expected: {\'stdout\': "rm -rf build\\nbrickmake: Nothing to be done for \'all\'.\\n", \'stderr\': \'\', \'code\': 0}\n  actual:   {\'stdout\': \'rm -rf build\\n\', \'stderr\': \'\', \'code\': 0}']
+
+/tests/test_outputs.py:47: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_shortest_stem_selection
+PASSED ../tests/test_outputs.py::test_directory_relative_prerequisites
+PASSED ../tests/test_outputs.py::test_mentioned_prerequisite_ought_to_exist
+PASSED ../tests/test_outputs.py::test_pattern_specific_variable_order
+PASSED ../tests/test_outputs.py::test_target_variable_inheritance
+PASSED ../tests/test_outputs.py::test_append_semantics
+PASSED ../tests/test_outputs.py::test_prerequisite_merge_order
+FAILED ../tests/test_outputs.py::test_timestamps_reread_after_recipe - Assert...
+FAILED ../tests/test_outputs.py::test_per_goal_messages - AssertionError: goa...
+FAILED ../tests/test_outputs.py::test_project_builds - AssertionError: projec...
+========================= 3 failed, 7 passed in 0.41s ==========================

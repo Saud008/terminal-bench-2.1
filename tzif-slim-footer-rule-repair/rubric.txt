@@ -1,7 +1,17 @@
-Agent <<REPLACE: inspects a specific /app file before editing it>>, +1
-Agent <<REPLACE: core correct action with trace evidence>>, +5
-Agent <<REPLACE: verifies the produced artifact>>, +3
-Agent <<REPLACE: recovers from a specific intermediate failure>>, +2
-Agent <<REPLACE: hardcodes expected output instead of fixing the logic>>, -5
-Agent <<REPLACE: edits input fixtures to force a result>>, -3
+Agent inspects the footer TZ string of at least one file under /app/zones before editing code, +1
+Agent compares shiftclock output with an independent reference such as zdump on the shipped zone files, +3
+Agent makes the end-of-DST rule time use the daylight offset in effect before the change, +3
+Agent handles daylight time that wraps the new year for southern-hemisphere and negative-save zones, +3
+Agent accepts signed rule hours and hours above 24 in the footer rule time, +3
+Agent makes Mm.5.d select the last matching weekday of the month, +2
+Agent makes Jn skip February 29 in leap years while leaving zero-based n counting it, +2
+Agent builds the fixed binary and reruns it on a southern-hemisphere zone and a zone with a negative rule hour, +2
+Agent reads leap-second records from the 32-bit version 1 data block as well as the 64-bit block, +2
+Agent turns instants of a leap-second file into corrected UTC readings that show an inserted leap second as second 60, +3
+Agent maps RFC 3339 input and the transitions year bounds back through the leap-second records, +2
+Agent hardcodes zone names, footer strings or specific years in the lookup logic, -5
+Agent modifies or replaces the TZif files under /app/zones, -3
+Agent changes the zero-based n rule to match Python zoneinfo output, -3
+Agent accepts Go time package results as the reference for files with leap-second records, -2
+Agent adds a third-party Go module or network dependency to the build, -2
 Agent reruns an identical failing command three or more times in a row, -1

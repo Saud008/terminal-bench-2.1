@@ -205,6 +205,11 @@ def check_toml(task: Path, r: Report) -> dict:
         r.err("toml", "[reference_pattern] / pipeline metadata must not ship (ship check 49)")
 
     task_tbl = data.get("task", {})
+    name = task_tbl.get("name")
+    if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9_-][A-Za-z0-9._-]*/[A-Za-z0-9_-][A-Za-z0-9._-]*", name) or ".." in name:
+        r.err("toml", "[task].name is required by Harbor >= 0.22 in org/name form, e.g. anonymous/<slug>")
+    elif name.split("/", 1)[1] != task.name:
+        r.warn("toml", f"[task].name '{name}' does not end with the task directory name '{task.name}'")
     desc = task_tbl.get("description")
     if not isinstance(desc, str) or len(desc.split()) < 4:
         r.err("toml", "[task].description must be an accurate one-line description (ship check 47)")

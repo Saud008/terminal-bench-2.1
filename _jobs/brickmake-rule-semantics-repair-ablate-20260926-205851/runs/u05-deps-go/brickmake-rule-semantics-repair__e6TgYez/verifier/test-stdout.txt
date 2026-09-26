@@ -1,0 +1,61 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 10 items
+
+../tests/test_outputs.py ........F.                                      [100%]
+
+=================================== FAILURES ===================================
+________________________ test_prerequisite_merge_order _________________________
+
+brickmake = '/tmp/brickmake-verify'
+
+    def test_prerequisite_merge_order(brickmake):
+        """A target's prerequisites from several rules are combined with the rule that has
+        the recipe first, then the other rules in makefile order ($<, $^, $?, $| and build order)."""
+>       replay(brickmake, "merge")
+
+/tests/test_outputs.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/brickmake-verify', group = 'merge'
+
+    def replay(binary, group):
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], [binary])
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: merge/recipe_rule_prerequisites_come_first result #0
+E           expected: {'stdout': 'make p2\nmake p3\nmake p1\nmake p4\nx <=[p2] ^=[p2 p3 p1 p4] +=[p2 p3 p1 p4 p2]\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'make p1\nmake p2\nmake p3\nmake p4\nx <=[p1] ^=[p1 p2 p3 p4] +=[p1 p2 p3 p4 p2]\n', 'stderr': '', 'code': 0}
+E         merge/header_rule_before_static_pattern_rule result #0
+E           expected: {'stdout': 'cc -c a.c -o a.o [a.c common.h]\nmkdir gen\ncc -c b.c -o b.o [b.c common.h]\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'cc -c common.h -o a.o [common.h a.c]\nmkdir gen\ncc -c b.c -o b.o [b.c common.h]\n', 'stderr': '', 'code': 0}
+E         merge/order_only_and_newer_lists_follow_the_recipe_rule result #0
+E           expected: {'stdout': 'mkdir out\nlink app <=[main.o] ^=[main.o util.o lib.a extra.o] ?=[util.o lib.a] |=[out]\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'mkdir out\nlink app <=[lib.a] ^=[lib.a main.o util.o extra.o] ?=[lib.a util.o] |=[out]\n', 'stderr': '', 'code': 0}
+E       assert not ["merge/recipe_rule_prerequisites_come_first result #0\n  expected: {'stdout': 'make p2\\nmake p3\\nmake p1\\nmake p4\...mkdir out\\nlink app <=[lib.a] ^=[lib.a main.o util.o extra.o] ?=[lib.a util.o] |=[out]\\n', 'stderr': '', 'code': 0}"]
+
+/tests/test_outputs.py:47: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_shortest_stem_selection
+PASSED ../tests/test_outputs.py::test_directory_relative_prerequisites
+PASSED ../tests/test_outputs.py::test_mentioned_prerequisite_ought_to_exist
+PASSED ../tests/test_outputs.py::test_timestamps_reread_after_recipe
+PASSED ../tests/test_outputs.py::test_per_goal_messages
+PASSED ../tests/test_outputs.py::test_pattern_specific_variable_order
+PASSED ../tests/test_outputs.py::test_target_variable_inheritance
+PASSED ../tests/test_outputs.py::test_append_semantics
+PASSED ../tests/test_outputs.py::test_project_builds
+FAILED ../tests/test_outputs.py::test_prerequisite_merge_order - AssertionErr...
+========================= 1 failed, 9 passed in 0.41s ==========================

@@ -1,0 +1,16 @@
+Agent reads the relevant sections of /app/docs (rules.md, variables.md, updating.md) before changing engine or expand code, +2
+Agent reproduces at least one reported symptom with a scratch makefile before editing, +2
+Agent fixes pattern-rule selection so the stem length includes the directory part of a directory-relative match, +3
+Agent limits the directory prefix of a directory-relative match to prerequisites that contain '%', +2
+Agent treats a prerequisite that is mentioned anywhere in the makefile as one that ought to exist in the first implicit-rule pass, +2
+Agent orders pattern-specific variables by pattern length and places the file's own pattern set before the inherited parent context, +3
+Agent makes '+=' on a simply expanded variable expand the added text at once and keeps a target's own '+=' as an in-set append, +3
+Agent re-reads a target's time after its recipe runs instead of marking it as newest, +2
+Agent reports "up to date" / "Nothing to be done" per goal based only on commands run for that goal, +2
+Agent combines a target's prerequisites from several rules with the recipe rule's list first, then the other rules in makefile order, +2
+Agent rebuilds brickmake and compares its output against GNU make or the documented examples after the fixes, +3
+Agent makes brickmake shell out to or embed GNU make instead of fixing its own logic, -5
+Agent special-cases the file names or flags quoted in the instruction or docs examples, -5
+Agent edits /app/docs to match the existing behavior instead of fixing the code, -3
+Agent changes the command-line interface documented in /app/docs/cli.md, -3
+Agent reruns an identical failing command three or more times in a row, -1

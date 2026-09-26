@@ -1,0 +1,119 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 10,
+            "passed": 7,
+            "failed": 3,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790436541.861034,
+            "stop": 1790436542.282519
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_shortest_stem_selection",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.18126441100321244,
+                "start": 1790436541.8702998,
+                "stop": 1790436542.0642388,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "brickmake = '/tmp/brickmake-verify'\n\n    def test_shortest_stem_selection(brickmake):\n        \"\"\"Among matching pattern rules the one with the shortest stem wins, where the\n        stem of a directory-relative match includes the directory; ties keep makefile order.\"\"\"\n>       replay(brickmake, \"stem\")\n\n/tests/test_outputs.py:53: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/brickmake-verify', group = 'stem'\n\n    def replay(binary, group):\n        names = [n for n, c in CASES.items() if c[\"group\"] == group]\n        assert names, f\"no scenarios for {group}\"\n        failures = []\n        for name in names:\n            case = CASES[name]\n            got = play(case[\"steps\"], [binary])\n            for i, (g, want) in enumerate(zip(got, case[\"expect\"])):\n                if g != want:\n                    failures.append(f\"{name} result #{i}\\n  expected: {want!r}\\n  actual:   {g!r}\")\n            if len(got) != len(case[\"expect\"]):\n                failures.append(f\"{name}: expected {len(case['expect'])} results, got {len(got)}\")\n>       assert not failures, \"\\n\".join(failures)\nE       AssertionError: stem/shortest_stem_wins_across_directories result #0\nE           expected: {'stdout': 'lib lib/a.o from lib/a.c (stem a)\\ngen src/b.o from src/gen/b.c (stem b)\\ngeneric c.o from c.c (stem c)\\nlib lib/deep/d.o from lib/deep/d.c (stem deep/d)\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'generic lib/a.o from lib/a.c (stem lib/a)\\ngeneric src/b.o from src/b.c (stem src/b)\\ngeneric c.o from c.c (stem c)\\ngeneric lib/deep/d.o from lib/deep/d.c (stem lib/deep/d)\\n', 'stderr': '', 'code': 0}\nE         stem/shortest_stem_wins_across_directories result #1\nE           expected: {'stdout': 'gen src/b.o from src/gen/b.c (stem b)\\nlib lib/a.o from lib/a.c (stem a)\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'generic src/b.o from src/b.c (stem src/b)\\ngeneric lib/a.o from lib/a.c (stem lib/a)\\n', 'stderr': '', 'code': 0}\nE       assert not [\"stem/shortest_stem_wins_across_directories result #0\\n  expected: {'stdout': 'lib lib/a.o from lib/a.c (stem a)\\\\nge... 'generic src/b.o from src/b.c (stem src/b)\\\\ngeneric lib/a.o from lib/a.c (stem lib/a)\\\\n', 'stderr': '', 'code': 0}\"]\n\n/tests/test_outputs.py:47: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_directory_relative_prerequisites",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.010103091000928544,
+                "start": 1790436542.064532,
+                "stop": 1790436542.07815,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "brickmake = '/tmp/brickmake-verify'\n\n    def test_directory_relative_prerequisites(brickmake):\n        \"\"\"For a slash-less target pattern matched against a name with a directory, the\n        directory is prepended only to prerequisites that contain '%'.\"\"\"\n>       replay(brickmake, \"dirs\")\n\n/tests/test_outputs.py:59: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/brickmake-verify', group = 'dirs'\n\n    def replay(binary, group):\n        names = [n for n, c in CASES.items() if c[\"group\"] == group]\n        assert names, f\"no scenarios for {group}\"\n        failures = []\n        for name in names:\n            case = CASES[name]\n            got = play(case[\"steps\"], [binary])\n            for i, (g, want) in enumerate(zip(got, case[\"expect\"])):\n                if g != want:\n                    failures.append(f\"{name} result #{i}\\n  expected: {want!r}\\n  actual:   {g!r}\")\n            if len(got) != len(case[\"expect\"]):\n                failures.append(f\"{name}: expected {len(case['expect'])} results, got {len(got)}\")\n>       assert not failures, \"\\n\".join(failures)\nE       AssertionError: dirs/shared_prerequisite_is_not_moved_into_the_directory result #0\nE           expected: {'stdout': 'net/sock.o: net/sock.c config.h (dir net, file sock)\\nmain.o: main.c config.h (dir ., file main)\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': '', 'stderr': \"brickmake: *** No rule to make target 'net/sock.o', needed by 'all'.  Stop.\\n\", 'code': 2}\nE         dirs/directory_prefix_goes_before_the_pattern_prefix result #0\nE           expected: {'stdout': '@=[src/eat] <=[src/car] *=[src/a]\\ngen api/v1.pb.go from [api/proto/v1.proto tools.lock]\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': '@=[src/eat] <=[src/car] *=[src/a]\\n', 'stderr': \"brickmake: *** No rule to make target 'api/v1.pb.go'.  Stop.\\n\", 'code': 2}\nE       assert not ['dirs/shared_prerequisite_is_not_moved_into_the_directory result #0\\n  expected: {\\'stdout\\': \\'net/sock.o: net/sock....rc/car] *=[src/a]\\\\n\\', \\'stderr\\': \"brickmake: *** No rule to make target \\'api/v1.pb.go\\'.  Stop.\\\\n\", \\'code\\': 2}']\n\n/tests/test_outputs.py:47: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_mentioned_prerequisite_ought_to_exist",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.010738163007772528,
+                "start": 1790436542.0783374,
+                "stop": 1790436542.0924132,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "brickmake = '/tmp/brickmake-verify'\n\n    def test_mentioned_prerequisite_ought_to_exist(brickmake):\n        \"\"\"A prerequisite that is mentioned anywhere in the makefile counts as one that\n        ought to exist during the first implicit-rule pass, even without a rule of its own.\"\"\"\n>       replay(brickmake, \"mention\")\n\n/tests/test_outputs.py:65: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/brickmake-verify', group = 'mention'\n\n    def replay(binary, group):\n        names = [n for n, c in CASES.items() if c[\"group\"] == group]\n        assert names, f\"no scenarios for {group}\"\n        failures = []\n        for name in names:\n            case = CASES[name]\n            got = play(case[\"steps\"], [binary])\n            for i, (g, want) in enumerate(zip(got, case[\"expect\"])):\n                if g != want:\n                    failures.append(f\"{name} result #{i}\\n  expected: {want!r}\\n  actual:   {g!r}\")\n            if len(got) != len(case[\"expect\"]):\n                failures.append(f\"{name}: expected {len(case['expect'])} results, got {len(got)}\")\n>       assert not failures, \"\\n\".join(failures)\nE       AssertionError: mention/prerequisite_mentioned_elsewhere_ought_to_exist result #1\nE           expected: {'stdout': '', 'stderr': \"brickmake: *** No rule to make target 'parser.h', needed by 'parser.o'.  Stop.\\n\", 'code': 2}\nE           actual:   {'stdout': 'compile parser.c alone\\n', 'stderr': '', 'code': 0}\nE       assert not ['mention/prerequisite_mentioned_elsewhere_ought_to_exist result #1\\n  expected: {\\'stdout\\': \\'\\', \\'stderr\\': \"brick...o\\'.  Stop.\\\\n\", \\'code\\': 2}\\n  actual:   {\\'stdout\\': \\'compile parser.c alone\\\\n\\', \\'stderr\\': \\'\\', \\'code\\': 0}']\n\n/tests/test_outputs.py:47: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_timestamps_reread_after_recipe",
+                "status": "passed",
+                "duration": 0.027565060008782893,
+                "start": 1790436542.0927582,
+                "stop": 1790436542.1212726,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_per_goal_messages",
+                "status": "passed",
+                "duration": 0.032193461986025795,
+                "start": 1790436542.1215184,
+                "stop": 1790436542.1546173,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_pattern_specific_variable_order",
+                "status": "passed",
+                "duration": 0.019452079985057935,
+                "start": 1790436542.1548173,
+                "stop": 1790436542.1752782,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_target_variable_inheritance",
+                "status": "passed",
+                "duration": 0.026927177983452566,
+                "start": 1790436542.1756039,
+                "stop": 1790436542.2035685,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_append_semantics",
+                "status": "passed",
+                "duration": 0.011609376015258022,
+                "start": 1790436542.203799,
+                "stop": 1790436542.2163155,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_prerequisite_merge_order",
+                "status": "passed",
+                "duration": 0.02021209899976384,
+                "start": 1790436542.2165432,
+                "stop": 1790436542.2377682,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_project_builds",
+                "status": "passed",
+                "duration": 0.04275505300029181,
+                "start": 1790436542.237965,
+                "stop": 1790436542.2817378,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

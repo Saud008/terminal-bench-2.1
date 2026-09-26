@@ -1,0 +1,37 @@
+== GNU make: GNU Make 4.3
+== check 27: regenerate expected outputs with GNU make and diff against tests/cases.json
+shipped cases=35 missing_in_fresh=[] mismatched=[]
+CHECK27 PASS
+== build oracle tree by running solve.sh on a copy of the shipped app
+== oracle
+append     ok
+dirs       ok
+goals      ok
+inherit    ok
+mention    ok
+merge      ok
+patvars    ok
+project    ok
+restat     ok
+stem       ok
+== ablate internal/engine/implicit.go (shipped buggy copy, other fixes kept)
+dirs       FAIL shared_prerequisite_is_not_moved_into_the_directory,directory_prefix_goes_before_the_pattern_prefix
+mention    FAIL prerequisite_mentioned_elsewhere_ought_to_exist
+stem       FAIL shortest_stem_wins_across_directories
+== ablate internal/engine/scope.go (shipped buggy copy, other fixes kept)
+inherit    FAIL own_pattern_variables_beat_the_parent,append_chain_runs_global_parent_pattern_own,debug_build_flags_reach_objects
+patvars    FAIL more_specific_pattern_applies_last,equal_length_patterns_later_wins
+project    FAIL incremental_builds
+== ablate internal/engine/update.go (shipped buggy copy, other fixes kept)
+project    FAIL generated_parser_and_version_header
+restat     FAIL unchanged_output_does_not_relink,recipe_that_leaves_its_target_alone
+== ablate internal/engine/engine.go (shipped buggy copy, other fixes kept)
+goals      FAIL each_goal_reports_its_own_state,keep_going_reports_per_goal,default_goal_and_first_rule
+project    FAIL incremental_builds
+restat     FAIL dry_run_treats_remade_as_new
+== ablate internal/engine/deps.go (shipped buggy copy, other fixes kept)
+merge      FAIL recipe_rule_prerequisites_come_first,header_rule_before_static_pattern_rule,order_only_and_newer_lists_follow_the_recipe_rule
+== ablate internal/expand/define.go (shipped buggy copy, other fixes kept)
+append     FAIL simple_variables_expand_appended_text_now,simple_append_keeps_value_when_referenced_variable_changes,target_append_extends_the_targets_own_value
+patvars    FAIL more_specific_pattern_applies_last,command_line_overrides_everything
+project    FAIL incremental_builds

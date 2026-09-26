@@ -1,0 +1,113 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 10,
+            "passed": 9,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790436632.590431,
+            "stop": 1790436632.9970424
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_shortest_stem_selection",
+                "status": "passed",
+                "duration": 0.1603338650020305,
+                "start": 1790436632.6,
+                "stop": 1790436632.7615206,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_directory_relative_prerequisites",
+                "status": "passed",
+                "duration": 0.010328477001166902,
+                "start": 1790436632.7617595,
+                "stop": 1790436632.7734132,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_mentioned_prerequisite_ought_to_exist",
+                "status": "passed",
+                "duration": 0.010739039003965445,
+                "start": 1790436632.7736306,
+                "stop": 1790436632.7853355,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_timestamps_reread_after_recipe",
+                "status": "passed",
+                "duration": 0.04631621700536925,
+                "start": 1790436632.7861032,
+                "stop": 1790436632.8335235,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_per_goal_messages",
+                "status": "passed",
+                "duration": 0.03310909098945558,
+                "start": 1790436632.83379,
+                "stop": 1790436632.8681533,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_pattern_specific_variable_order",
+                "status": "passed",
+                "duration": 0.01858942500257399,
+                "start": 1790436632.868383,
+                "stop": 1790436632.8881059,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_target_variable_inheritance",
+                "status": "passed",
+                "duration": 0.023771233012666926,
+                "start": 1790436632.888355,
+                "stop": 1790436632.9131901,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_append_semantics",
+                "status": "passed",
+                "duration": 0.011457710003014654,
+                "start": 1790436632.9134152,
+                "stop": 1790436632.926086,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_prerequisite_merge_order",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.016686723989550956,
+                "start": 1790436632.9262993,
+                "stop": 1790436632.9557967,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "brickmake = '/tmp/brickmake-verify'\n\n    def test_prerequisite_merge_order(brickmake):\n        \"\"\"A target's prerequisites from several rules are combined with the rule that has\n        the recipe first, then the other rules in makefile order ($<, $^, $?, $| and build order).\"\"\"\n>       replay(brickmake, \"merge\")\n\n/tests/test_outputs.py:101: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/brickmake-verify', group = 'merge'\n\n    def replay(binary, group):\n        names = [n for n, c in CASES.items() if c[\"group\"] == group]\n        assert names, f\"no scenarios for {group}\"\n        failures = []\n        for name in names:\n            case = CASES[name]\n            got = play(case[\"steps\"], [binary])\n            for i, (g, want) in enumerate(zip(got, case[\"expect\"])):\n                if g != want:\n                    failures.append(f\"{name} result #{i}\\n  expected: {want!r}\\n  actual:   {g!r}\")\n            if len(got) != len(case[\"expect\"]):\n                failures.append(f\"{name}: expected {len(case['expect'])} results, got {len(got)}\")\n>       assert not failures, \"\\n\".join(failures)\nE       AssertionError: merge/recipe_rule_prerequisites_come_first result #0\nE           expected: {'stdout': 'make p2\\nmake p3\\nmake p1\\nmake p4\\nx <=[p2] ^=[p2 p3 p1 p4] +=[p2 p3 p1 p4 p2]\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'make p1\\nmake p2\\nmake p3\\nmake p4\\nx <=[p1] ^=[p1 p2 p3 p4] +=[p1 p2 p3 p4 p2]\\n', 'stderr': '', 'code': 0}\nE         merge/header_rule_before_static_pattern_rule result #0\nE           expected: {'stdout': 'cc -c a.c -o a.o [a.c common.h]\\nmkdir gen\\ncc -c b.c -o b.o [b.c common.h]\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'cc -c common.h -o a.o [common.h a.c]\\nmkdir gen\\ncc -c b.c -o b.o [b.c common.h]\\n', 'stderr': '', 'code': 0}\nE         merge/order_only_and_newer_lists_follow_the_recipe_rule result #0\nE           expected: {'stdout': 'mkdir out\\nlink app <=[main.o] ^=[main.o util.o lib.a extra.o] ?=[util.o lib.a] |=[out]\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'mkdir out\\nlink app <=[lib.a] ^=[lib.a main.o util.o extra.o] ?=[lib.a util.o] |=[out]\\n', 'stderr': '', 'code': 0}\nE       assert not [\"merge/recipe_rule_prerequisites_come_first result #0\\n  expected: {'stdout': 'make p2\\\\nmake p3\\\\nmake p1\\\\nmake p4\\...mkdir out\\\\nlink app <=[lib.a] ^=[lib.a main.o util.o extra.o] ?=[lib.a util.o] |=[out]\\\\n', 'stderr': '', 'code': 0}\"]\n\n/tests/test_outputs.py:47: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_project_builds",
+                "status": "passed",
+                "duration": 0.039083294992451556,
+                "start": 1790436632.9560423,
+                "stop": 1790436632.9962132,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

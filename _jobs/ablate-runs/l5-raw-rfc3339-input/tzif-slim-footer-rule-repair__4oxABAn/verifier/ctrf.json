@@ -1,0 +1,122 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 11,
+            "passed": 10,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790354183.7047646,
+            "stop": 1790354183.9597569
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_us_rules_after_table_end",
+                "status": "passed",
+                "duration": 0.15004947999841534,
+                "start": 1790354183.7197015,
+                "stop": 1790354183.870672,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_last_weekday_of_month_rules",
+                "status": "passed",
+                "duration": 0.004411116991832387,
+                "start": 1790354183.8708959,
+                "stop": 1790354183.876107,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_daylight_time_spanning_new_year",
+                "status": "passed",
+                "duration": 0.005710728008125443,
+                "start": 1790354183.876313,
+                "stop": 1790354183.8831391,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_signed_and_extended_rule_hours",
+                "status": "passed",
+                "duration": 0.00920031699934043,
+                "start": 1790354183.883455,
+                "stop": 1790354183.8938656,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_julian_and_zero_based_day_rules",
+                "status": "passed",
+                "duration": 0.006268750999879558,
+                "start": 1790354183.8940923,
+                "stop": 1790354183.901172,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_transitions_listing",
+                "status": "passed",
+                "duration": 0.01099303499358939,
+                "start": 1790354183.9013736,
+                "stop": 1790354183.9131176,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_zone_names_resolve_under_zoneinfo_dir",
+                "status": "passed",
+                "duration": 0.003322285003378056,
+                "start": 1790354183.9133267,
+                "stop": 1790354183.917762,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_output_lines_use_documented_key_order",
+                "status": "passed",
+                "duration": 0.0031693939890828915,
+                "start": 1790354183.9180038,
+                "stop": 1790354183.9219568,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_leap_second_files_read_through_their_records",
+                "status": "passed",
+                "duration": 0.01283104900358012,
+                "start": 1790354183.922141,
+                "stop": 1790354183.9358327,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_leap_second_rfc3339_instants",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.0021443760124384426,
+                "start": 1790354183.9360332,
+                "stop": 1790354183.949692,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "shiftclock = '/tmp/shiftclock-verify'\n\n    def test_leap_second_rfc3339_instants(shiftclock):\n        \"\"\"RFC 3339 instants in leap-second files are UTC readings mapped through the records, including second 60.\"\"\"\n        bad = []\n        for zone in dict.fromkeys(case[0] for case in EXPECTED[\"leap_iso\"]):\n            cases = [case[1:] for case in EXPECTED[\"leap_iso\"] if case[0] == zone]\n>           lines = run(shiftclock, [\"at\", \"--zone\", str(ZONES / zone), *[iso for iso, *_ in cases]])\n                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n/tests/test_outputs.py:161: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/shiftclock-verify'\nargs = ['at', '--zone', '/tests/zones/right/America/New_York', '1972-06-30T23:59:60Z', '1972-07-01T00:00:00Z', '1979-12-31T23:59:60Z', ...]\nenv = None\n\n    def run(binary, args, env=None):\n        result = subprocess.run(\n            [binary, *args],\n            capture_output=True,\n            text=True,\n            timeout=120,\n            env=dict(os.environ, **(env or {})),\n        )\n>       assert result.returncode == 0, f\"shiftclock {' '.join(args[:3])} exited {result.returncode}: {result.stderr}\"\nE       AssertionError: shiftclock at --zone /tests/zones/right/America/New_York exited 1: shiftclock: instant \"1979-12-31T23:59:60Z\": not a leap second in this zone file\nE         \nE       assert 1 == 0\nE        +  where 1 = CompletedProcess(args=['/tmp/shiftclock-verify', 'at', '--zone', '/tests/zones/right/America/New_York', '1972-06-30T23...], returncode=1, stdout='', stderr='shiftclock: instant \"1979-12-31T23:59:60Z\": not a leap second in this zone file\\n').returncode\n\n/tests/test_outputs.py:41: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_leap_second_transitions_and_year_bounds",
+                "status": "passed",
+                "duration": 0.00829019099182915,
+                "start": 1790354183.9498703,
+                "stop": 1790354183.959086,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

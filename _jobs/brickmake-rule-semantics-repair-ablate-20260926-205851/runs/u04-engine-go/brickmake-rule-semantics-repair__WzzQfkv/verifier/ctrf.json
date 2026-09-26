@@ -1,0 +1,119 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 10,
+            "passed": 7,
+            "failed": 3,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790436610.770042,
+            "stop": 1790436611.174471
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_shortest_stem_selection",
+                "status": "passed",
+                "duration": 0.18609031599771697,
+                "start": 1790436610.7784555,
+                "stop": 1790436610.9656699,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_directory_relative_prerequisites",
+                "status": "passed",
+                "duration": 0.010161734986468218,
+                "start": 1790436610.9659061,
+                "stop": 1790436610.9771516,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_mentioned_prerequisite_ought_to_exist",
+                "status": "passed",
+                "duration": 0.010596788008115254,
+                "start": 1790436610.9773717,
+                "stop": 1790436610.9879267,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_timestamps_reread_after_recipe",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.022727204996044748,
+                "start": 1790436610.9883838,
+                "stop": 1790436611.0215373,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "brickmake = '/tmp/brickmake-verify'\n\n    def test_timestamps_reread_after_recipe(brickmake):\n        \"\"\"After a recipe runs the target's time is read again, so a recipe that leaves its\n        target unchanged does not make dependents out of date; -n treats remade targets as new.\"\"\"\n>       replay(brickmake, \"restat\")\n\n/tests/test_outputs.py:71: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/brickmake-verify', group = 'restat'\n\n    def replay(binary, group):\n        names = [n for n, c in CASES.items() if c[\"group\"] == group]\n        assert names, f\"no scenarios for {group}\"\n        failures = []\n        for name in names:\n            case = CASES[name]\n            got = play(case[\"steps\"], [binary])\n            for i, (g, want) in enumerate(zip(got, case[\"expect\"])):\n                if g != want:\n                    failures.append(f\"{name} result #{i}\\n  expected: {want!r}\\n  actual:   {g!r}\")\n            if len(got) != len(case[\"expect\"]):\n                failures.append(f\"{name}: expected {len(case['expect'])} results, got {len(got)}\")\n>       assert not failures, \"\\n\".join(failures)\nE       AssertionError: restat/dry_run_treats_remade_as_new result #1\nE           expected: {'stdout': \"touch b\\ntouch c\\nbrickmake: 'b' is up to date.\\n\", 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'touch b\\ntouch c\\n', 'stderr': '', 'code': 0}\nE       assert not ['restat/dry_run_treats_remade_as_new result #1\\n  expected: {\\'stdout\\': \"touch b\\\\ntouch c\\\\nbrickmake: \\'b\\' is up ...n\", \\'stderr\\': \\'\\', \\'code\\': 0}\\n  actual:   {\\'stdout\\': \\'touch b\\\\ntouch c\\\\n\\', \\'stderr\\': \\'\\', \\'code\\': 0}']\n\n/tests/test_outputs.py:47: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_per_goal_messages",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.03234036201320123,
+                "start": 1790436611.0218644,
+                "stop": 1790436611.0573816,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "brickmake = '/tmp/brickmake-verify'\n\n    def test_per_goal_messages(brickmake):\n        \"\"\"'Nothing to be done' and 'is up to date' are reported per goal, based only on\n        whether that goal ran any command, including with -k.\"\"\"\n>       replay(brickmake, \"goals\")\n\n/tests/test_outputs.py:77: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/brickmake-verify', group = 'goals'\n\n    def replay(binary, group):\n        names = [n for n, c in CASES.items() if c[\"group\"] == group]\n        assert names, f\"no scenarios for {group}\"\n        failures = []\n        for name in names:\n            case = CASES[name]\n            got = play(case[\"steps\"], [binary])\n            for i, (g, want) in enumerate(zip(got, case[\"expect\"])):\n                if g != want:\n                    failures.append(f\"{name} result #{i}\\n  expected: {want!r}\\n  actual:   {g!r}\")\n            if len(got) != len(case[\"expect\"]):\n                failures.append(f\"{name}: expected {len(case['expect'])} results, got {len(got)}\")\n>       assert not failures, \"\\n\".join(failures)\nE       AssertionError: goals/each_goal_reports_its_own_state result #0\nE           expected: {'stdout': \"b\\na\\nbrickmake: 'b' is up to date.\\nbrickmake: Nothing to be done for 'p'.\\nbrickmake: 'q' is up to date.\\n\", 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'b\\na\\n', 'stderr': '', 'code': 0}\nE         goals/each_goal_reports_its_own_state result #2\nE           expected: {'stdout': \"brickmake: 'quiet' is up to date.\\n\", 'stderr': '', 'code': 0}\nE           actual:   {'stdout': '', 'stderr': '', 'code': 0}\nE         goals/keep_going_reports_per_goal result #1\nE           expected: {'stdout': \"brickmake: 'z' is up to date.\\ny\\nbrickmake: 'y' is up to date.\\n\", 'stderr': \"brickmake: *** [Makefile:6: bad] Error 1\\nbrickmake: Target 'all' not remade because of errors.\\nbrickmake: *** No rule to make target 'nope'.\\n\", 'code': 2}\nE           actual:   {'stdout': \"brickmake: 'z' is up to date.\\ny\\n\", 'stderr': \"brickmake: *** [Makefile:6: bad] Error 1\\nbrickmake: Target 'all' not remade because of errors.\\nbrickmake: *** No rule to make target 'nope'.\\n\", 'code': 2}\nE         goals/default_goal_and_first_rule result #2\nE           expected: {'stdout': \"second\\nfirst\\nbrickmake: 'second' is up to date.\\n\", 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'second\\nfirst\\n', 'stderr': '', 'code': 0}\nE       assert not ['goals/each_goal_reports_its_own_state result #0\\n  expected: {\\'stdout\\': \"b\\\\na\\\\nbrickmake: \\'b\\' is up to date.\\\\....\\\\n\", \\'stderr\\': \\'\\', \\'code\\': 0}\\n  actual:   {\\'stdout\\': \\'second\\\\nfirst\\\\n\\', \\'stderr\\': \\'\\', \\'code\\': 0}']\n\n/tests/test_outputs.py:47: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_pattern_specific_variable_order",
+                "status": "passed",
+                "duration": 0.01671044401882682,
+                "start": 1790436611.057585,
+                "stop": 1790436611.075167,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_target_variable_inheritance",
+                "status": "passed",
+                "duration": 0.02131902100518346,
+                "start": 1790436611.0754926,
+                "stop": 1790436611.0977576,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_append_semantics",
+                "status": "passed",
+                "duration": 0.011999766997178085,
+                "start": 1790436611.0979898,
+                "stop": 1790436611.1108537,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_prerequisite_merge_order",
+                "status": "passed",
+                "duration": 0.014648402997408994,
+                "start": 1790436611.1110528,
+                "stop": 1790436611.1265383,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_project_builds",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.04314376100955997,
+                "start": 1790436611.126753,
+                "stop": 1790436611.173673,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "brickmake = '/tmp/brickmake-verify'\n\n    def test_project_builds(brickmake):\n        \"\"\"Multi-step incremental builds of small projects produce the same commands,\n        messages and files as GNU make across edits and rebuilds.\"\"\"\n>       replay(brickmake, \"project\")\n\n/tests/test_outputs.py:107: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/brickmake-verify', group = 'project'\n\n    def replay(binary, group):\n        names = [n for n, c in CASES.items() if c[\"group\"] == group]\n        assert names, f\"no scenarios for {group}\"\n        failures = []\n        for name in names:\n            case = CASES[name]\n            got = play(case[\"steps\"], [binary])\n            for i, (g, want) in enumerate(zip(got, case[\"expect\"])):\n                if g != want:\n                    failures.append(f\"{name} result #{i}\\n  expected: {want!r}\\n  actual:   {g!r}\")\n            if len(got) != len(case[\"expect\"]):\n                failures.append(f\"{name}: expected {len(case['expect'])} results, got {len(got)}\")\n>       assert not failures, \"\\n\".join(failures)\nE       AssertionError: project/incremental_builds result #3\nE           expected: {'stdout': \"rm -rf build\\nbrickmake: Nothing to be done for 'all'.\\n\", 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'rm -rf build\\n', 'stderr': '', 'code': 0}\nE       assert not ['project/incremental_builds result #3\\n  expected: {\\'stdout\\': \"rm -rf build\\\\nbrickmake: Nothing to be done for \\'all\\'.\\\\n\", \\'stderr\\': \\'\\', \\'code\\': 0}\\n  actual:   {\\'stdout\\': \\'rm -rf build\\\\n\\', \\'stderr\\': \\'\\', \\'code\\': 0}']\n\n/tests/test_outputs.py:47: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            }
+        ]
+    }
+}

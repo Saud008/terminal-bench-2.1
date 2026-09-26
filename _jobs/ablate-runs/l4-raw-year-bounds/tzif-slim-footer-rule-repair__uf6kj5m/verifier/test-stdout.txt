@@ -1,0 +1,46 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 11 items
+
+../tests/test_outputs.py ..........F                                     [100%]
+
+=================================== FAILURES ===================================
+_________________ test_leap_second_transitions_and_year_bounds _________________
+
+shiftclock = '/tmp/shiftclock-verify'
+
+    def test_leap_second_transitions_and_year_bounds(shiftclock):
+        """transitions in leap-second files reports UTC readings and bounds the years by UTC reading, not raw seconds."""
+        bad = []
+        for zone, first, last, items in EXPECTED["leap_transitions"]:
+            lines = run(shiftclock, ["transitions", "--zone", str(ZONES / zone), "--from", str(first), "--to", str(last)])
+            got = [json.loads(line) for line in lines]
+            want = [{"at": at, "offset": off, "abbr": abbr, "isdst": dst} for at, off, abbr, dst in items]
+            if got != want:
+                bad.append(f"{zone} {first}-{last}:\n  got  {got}\n  want {want}")
+>       assert not bad, "\n".join(bad)
+E       AssertionError: Leap/NewYear 2016-2016:
+E           got  [{'at': '2016-06-01T00:00:00Z', 'offset': 7200, 'abbr': '+02', 'isdst': False}]
+E           want [{'at': '2016-06-01T00:00:00Z', 'offset': 7200, 'abbr': '+02', 'isdst': False}, {'at': '2016-12-31T23:59:44Z', 'offset': 10800, 'abbr': '+03', 'isdst': False}, {'at': '2016-12-31T23:59:60Z', 'offset': 7200, 'abbr': '+02', 'isdst': False}]
+E         Leap/NewYear 2017-2017:
+E           got  [{'at': '2016-12-31T23:59:44Z', 'offset': 10800, 'abbr': '+03', 'isdst': False}, {'at': '2016-12-31T23:59:60Z', 'offset': 7200, 'abbr': '+02', 'isdst': False}, {'at': '2017-01-01T00:00:30Z', 'offset': 7200, 'abbr': '+02', 'isdst': True}, {'at': '2017-07-01T00:00:00Z', 'offset': 7200, 'abbr': '+02', 'isdst': False}]
+E           want [{'at': '2017-01-01T00:00:30Z', 'offset': 7200, 'abbr': '+02', 'isdst': True}, {'at': '2017-07-01T00:00:00Z', 'offset': 7200, 'abbr': '+02', 'isdst': False}]
+E       assert not ["Leap/NewYear 2016-2016:\n  got  [{'at': '2016-06-01T00:00:00Z', 'offset': 7200, 'abbr': '+02', 'isdst': False}]\n  w...: 7200, 'abbr': '+02', 'isdst': True}, {'at': '2017-07-01T00:00:00Z', 'offset': 7200, 'abbr': '+02', 'isdst': False}]"]
+
+/tests/test_outputs.py:179: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_us_rules_after_table_end
+PASSED ../tests/test_outputs.py::test_last_weekday_of_month_rules
+PASSED ../tests/test_outputs.py::test_daylight_time_spanning_new_year
+PASSED ../tests/test_outputs.py::test_signed_and_extended_rule_hours
+PASSED ../tests/test_outputs.py::test_julian_and_zero_based_day_rules
+PASSED ../tests/test_outputs.py::test_transitions_listing
+PASSED ../tests/test_outputs.py::test_zone_names_resolve_under_zoneinfo_dir
+PASSED ../tests/test_outputs.py::test_output_lines_use_documented_key_order
+PASSED ../tests/test_outputs.py::test_leap_second_files_read_through_their_records
+PASSED ../tests/test_outputs.py::test_leap_second_rfc3339_instants
+FAILED ../tests/test_outputs.py::test_leap_second_transitions_and_year_bounds
+========================= 1 failed, 10 passed in 0.29s =========================

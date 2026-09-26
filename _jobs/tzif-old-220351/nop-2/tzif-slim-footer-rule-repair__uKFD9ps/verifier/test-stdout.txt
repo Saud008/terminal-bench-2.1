@@ -1,0 +1,249 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 8 items
+
+../tests/test_outputs.py FFFFFFFF                                        [100%]
+
+=================================== FAILURES ===================================
+________________________ test_us_rules_after_table_end _________________________
+
+shiftclock = '/tmp/shiftclock-verify'
+
+    def test_us_rules_after_table_end(shiftclock):
+        """Zones whose tables stop in 2007/2012 follow their M3.2.0/M11.1.0 footers, including both changes each year."""
+>       assert_zones(shiftclock, ["America/Chicago", "America/Havana"])
+
+/tests/test_outputs.py:74: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/shiftclock-verify', zones = ['America/Chicago', 'America/Havana']
+
+    def assert_zones(binary, zones):
+        bad = [msg for zone in zones for msg in wrong_answers(binary, zone)]
+>       assert not bad, f"{len(bad)} wrong answers; first ones:\n" + "\n".join(bad[:8])
+E       AssertionError: 10 wrong answers; first ones:
+E         America/Chicago at 2007-11-04T07:00:00Z: got {'utc': '2007-11-04T07:00:00Z', 'local': '2007-11-04T02:00:00', 'offset': -18000, 'abbr': 'CDT', 'isdst': True}, want {'utc': '2007-11-04T07:00:00Z', 'local': '2007-11-04T01:00:00', 'offset': -21600, 'abbr': 'CST', 'isdst': False}
+E         America/Chicago at 2007-11-04T07:30:00Z: got {'utc': '2007-11-04T07:30:00Z', 'local': '2007-11-04T02:30:00', 'offset': -18000, 'abbr': 'CDT', 'isdst': True}, want {'utc': '2007-11-04T07:30:00Z', 'local': '2007-11-04T01:30:00', 'offset': -21600, 'abbr': 'CST', 'isdst': False}
+E         America/Chicago at 2040-11-04T07:00:00Z: got {'utc': '2040-11-04T07:00:00Z', 'local': '2040-11-04T02:00:00', 'offset': -18000, 'abbr': 'CDT', 'isdst': True}, want {'utc': '2040-11-04T07:00:00Z', 'local': '2040-11-04T01:00:00', 'offset': -21600, 'abbr': 'CST', 'isdst': False}
+E         America/Chicago at 2040-11-04T07:30:00Z: got {'utc': '2040-11-04T07:30:00Z', 'local': '2040-11-04T02:30:00', 'offset': -18000, 'abbr': 'CDT', 'isdst': True}, want {'utc': '2040-11-04T07:30:00Z', 'local': '2040-11-04T01:30:00', 'offset': -21600, 'abbr': 'CST', 'isdst': False}
+E         America/Chicago at 2100-11-07T07:00:00Z: got {'utc': '2100-11-07T07:00:00Z', 'local': '2100-11-07T02:00:00', 'offset': -18000, 'abbr': 'CDT', 'isdst': True}, want {'utc': '2100-11-07T07:00:00Z', 'local': '2100-11-07T01:00:00', 'offset': -21600, 'abbr': 'CST', 'isdst': False}
+E         America/Chicago at 2100-11-07T07:30:00Z: got {'utc': '2100-11-07T07:30:00Z', 'local': '2100-11-07T02:30:00', 'offset': -18000, 'abbr': 'CDT', 'isdst': True}, want {'utc': '2100-11-07T07:30:00Z', 'local': '2100-11-07T01:30:00', 'offset': -21600, 'abbr': 'CST', 'isdst': False}
+E         America/Havana at 2033-11-06T05:00:00Z: got {'utc': '2033-11-06T05:00:00Z', 'local': '2033-11-06T01:00:00', 'offset': -14400, 'abbr': 'CDT', 'isdst': True}, want {'utc': '2033-11-06T05:00:00Z', 'local': '2033-11-06T00:00:00', 'offset': -18000, 'abbr': 'CST', 'isdst': False}
+E         America/Havana at 2033-11-06T05:30:00Z: got {'utc': '2033-11-06T05:30:00Z', 'local': '2033-11-06T01:30:00', 'offset': -14400, 'abbr': 'CDT', 'isdst': True}, want {'utc': '2033-11-06T05:30:00Z', 'local': '2033-11-06T00:30:00', 'offset': -18000, 'abbr': 'CST', 'isdst': False}
+E       assert not ["America/Chicago at 2007-11-04T07:00:00Z: got {'utc': '2007-11-04T07:00:00Z', 'local': '2007-11-04T02:00:00', 'offset...{'utc': '2100-11-07T07:30:00Z', 'local': '2100-11-07T01:30:00', 'offset': -21600, 'abbr': 'CST', 'isdst': False}", ...]
+
+/tests/test_outputs.py:69: AssertionError
+_______________________ test_last_weekday_of_month_rules _______________________
+
+shiftclock = '/tmp/shiftclock-verify'
+
+    def test_last_weekday_of_month_rules(shiftclock):
+        """Mm.5.d selects the last such weekday of the month, including February in leap and common years."""
+>       assert_zones(shiftclock, ["Europe/Lisbon", "LastWeek/February", "LastWeek/Leapday"])
+
+/tests/test_outputs.py:79: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/shiftclock-verify'
+zones = ['Europe/Lisbon', 'LastWeek/February', 'LastWeek/Leapday']
+
+    def assert_zones(binary, zones):
+        bad = [msg for zone in zones for msg in wrong_answers(binary, zone)]
+>       assert not bad, f"{len(bad)} wrong answers; first ones:\n" + "\n".join(bad[:8])
+E       AssertionError: 30 wrong answers; first ones:
+E         Europe/Lisbon at 2044-03-27T01:00:00Z: got {'utc': '2044-03-27T01:00:00Z', 'local': '2044-03-27T01:00:00', 'offset': 0, 'abbr': 'WET', 'isdst': False}, want {'utc': '2044-03-27T01:00:00Z', 'local': '2044-03-27T02:00:00', 'offset': 3600, 'abbr': 'WEST', 'isdst': True}
+E         Europe/Lisbon at 2044-03-27T01:30:00Z: got {'utc': '2044-03-27T01:30:00Z', 'local': '2044-03-27T01:30:00', 'offset': 0, 'abbr': 'WET', 'isdst': False}, want {'utc': '2044-03-27T01:30:00Z', 'local': '2044-03-27T02:30:00', 'offset': 3600, 'abbr': 'WEST', 'isdst': True}
+E         Europe/Lisbon at 2044-10-30T01:00:00Z: got {'utc': '2044-10-30T01:00:00Z', 'local': '2044-10-30T02:00:00', 'offset': 3600, 'abbr': 'WEST', 'isdst': True}, want {'utc': '2044-10-30T01:00:00Z', 'local': '2044-10-30T01:00:00', 'offset': 0, 'abbr': 'WET', 'isdst': False}
+E         Europe/Lisbon at 2044-10-30T01:30:00Z: got {'utc': '2044-10-30T01:30:00Z', 'local': '2044-10-30T02:30:00', 'offset': 3600, 'abbr': 'WEST', 'isdst': True}, want {'utc': '2044-10-30T01:30:00Z', 'local': '2044-10-30T01:30:00', 'offset': 0, 'abbr': 'WET', 'isdst': False}
+E         Europe/Lisbon at 2096-03-25T01:00:00Z: got {'utc': '2096-03-25T01:00:00Z', 'local': '2096-03-25T01:00:00', 'offset': 0, 'abbr': 'WET', 'isdst': False}, want {'utc': '2096-03-25T01:00:00Z', 'local': '2096-03-25T02:00:00', 'offset': 3600, 'abbr': 'WEST', 'isdst': True}
+E         Europe/Lisbon at 2096-03-25T01:30:00Z: got {'utc': '2096-03-25T01:30:00Z', 'local': '2096-03-25T01:30:00', 'offset': 0, 'abbr': 'WET', 'isdst': False}, want {'utc': '2096-03-25T01:30:00Z', 'local': '2096-03-25T02:30:00', 'offset': 3600, 'abbr': 'WEST', 'isdst': True}
+E         Europe/Lisbon at 2096-10-28T01:00:00Z: got {'utc': '2096-10-28T01:00:00Z', 'local': '2096-10-28T02:00:00', 'offset': 3600, 'abbr': 'WEST', 'isdst': True}, want {'utc': '2096-10-28T01:00:00Z', 'local': '2096-10-28T01:00:00', 'offset': 0, 'abbr': 'WET', 'isdst': False}
+E         Europe/Lisbon at 2096-10-28T01:30:00Z: got {'utc': '2096-10-28T01:30:00Z', 'local': '2096-10-28T02:30:00', 'offset': 3600, 'abbr': 'WEST', 'isdst': True}, want {'utc': '2096-10-28T01:30:00Z', 'local': '2096-10-28T01:30:00', 'offset': 0, 'abbr': 'WET', 'isdst': False}
+E       assert not ["Europe/Lisbon at 2044-03-27T01:00:00Z: got {'utc': '2044-03-27T01:00:00Z', 'local': '2044-03-27T01:00:00', 'offset':...t {'utc': '2096-03-25T01:30:00Z', 'local': '2096-03-25T02:30:00', 'offset': 3600, 'abbr': 'WEST', 'isdst': True}", ...]
+
+/tests/test_outputs.py:69: AssertionError
+_____________________ test_daylight_time_spanning_new_year _____________________
+
+shiftclock = '/tmp/shiftclock-verify'
+
+    def test_daylight_time_spanning_new_year(shiftclock):
+        """Southern-hemisphere, negative-save and two-hour-save footers resolve correctly on both sides of each change."""
+>       assert_zones(shiftclock, ["Pacific/Easter", "Australia/Lord_Howe", "Negative/Winter", "Antarctica/Troll"])
+
+/tests/test_outputs.py:84: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/shiftclock-verify'
+zones = ['Pacific/Easter', 'Australia/Lord_Howe', 'Negative/Winter', 'Antarctica/Troll']
+
+    def assert_zones(binary, zones):
+        bad = [msg for zone in zones for msg in wrong_answers(binary, zone)]
+>       assert not bad, f"{len(bad)} wrong answers; first ones:\n" + "\n".join(bad[:8])
+E       AssertionError: 36 wrong answers; first ones:
+E         Pacific/Easter at 2031-01-15T12:00:00Z: got {'utc': '2031-01-15T12:00:00Z', 'local': '2031-01-15T06:00:00', 'offset': -21600, 'abbr': '-06', 'isdst': False}, want {'utc': '2031-01-15T12:00:00Z', 'local': '2031-01-15T07:00:00', 'offset': -18000, 'abbr': '-05', 'isdst': True}
+E         Pacific/Easter at 2031-04-06T02:59:59Z: got {'utc': '2031-04-06T02:59:59Z', 'local': '2031-04-05T20:59:59', 'offset': -21600, 'abbr': '-06', 'isdst': False}, want {'utc': '2031-04-06T02:59:59Z', 'local': '2031-04-05T21:59:59', 'offset': -18000, 'abbr': '-05', 'isdst': True}
+E         Pacific/Easter at 2031-09-07T04:00:00Z: got {'utc': '2031-09-07T04:00:00Z', 'local': '2031-09-06T22:00:00', 'offset': -21600, 'abbr': '-06', 'isdst': False}, want {'utc': '2031-09-07T04:00:00Z', 'local': '2031-09-06T23:00:00', 'offset': -18000, 'abbr': '-05', 'isdst': True}
+E         Pacific/Easter at 2031-09-07T04:30:00Z: got {'utc': '2031-09-07T04:30:00Z', 'local': '2031-09-06T22:30:00', 'offset': -21600, 'abbr': '-06', 'isdst': False}, want {'utc': '2031-09-07T04:30:00Z', 'local': '2031-09-06T23:30:00', 'offset': -18000, 'abbr': '-05', 'isdst': True}
+E         Pacific/Easter at 2031-10-15T12:00:00Z: got {'utc': '2031-10-15T12:00:00Z', 'local': '2031-10-15T06:00:00', 'offset': -21600, 'abbr': '-06', 'isdst': False}, want {'utc': '2031-10-15T12:00:00Z', 'local': '2031-10-15T07:00:00', 'offset': -18000, 'abbr': '-05', 'isdst': True}
+E         Pacific/Easter at 2064-01-15T12:00:00Z: got {'utc': '2064-01-15T12:00:00Z', 'local': '2064-01-15T06:00:00', 'offset': -21600, 'abbr': '-06', 'isdst': False}, want {'utc': '2064-01-15T12:00:00Z', 'local': '2064-01-15T07:00:00', 'offset': -18000, 'abbr': '-05', 'isdst': True}
+E         Pacific/Easter at 2064-04-06T02:59:59Z: got {'utc': '2064-04-06T02:59:59Z', 'local': '2064-04-05T20:59:59', 'offset': -21600, 'abbr': '-06', 'isdst': False}, want {'utc': '2064-04-06T02:59:59Z', 'local': '2064-04-05T21:59:59', 'offset': -18000, 'abbr': '-05', 'isdst': True}
+E         Pacific/Easter at 2064-09-07T04:00:00Z: got {'utc': '2064-09-07T04:00:00Z', 'local': '2064-09-06T22:00:00', 'offset': -21600, 'abbr': '-06', 'isdst': False}, want {'utc': '2064-09-07T04:00:00Z', 'local': '2064-09-06T23:00:00', 'offset': -18000, 'abbr': '-05', 'isdst': True}
+E       assert not ["Pacific/Easter at 2031-01-15T12:00:00Z: got {'utc': '2031-01-15T12:00:00Z', 'local': '2031-01-15T06:00:00', 'offset'... {'utc': '2064-01-15T12:00:00Z', 'local': '2064-01-15T07:00:00', 'offset': -18000, 'abbr': '-05', 'isdst': True}", ...]
+
+/tests/test_outputs.py:69: AssertionError
+_____________________ test_signed_and_extended_rule_hours ______________________
+
+shiftclock = '/tmp/shiftclock-verify'
+
+    def test_signed_and_extended_rule_hours(shiftclock):
+        """RFC 8536 rule times: negative hours, hours past 24 and up to 167, with minutes, in real and synthetic zones."""
+>       assert_zones(
+            shiftclock,
+            ["America/Scoresbysund", "Asia/Jerusalem", "Asia/Gaza", "Extended/Minus", "Extended/Week", "Extended/Southern"],
+        )
+
+/tests/test_outputs.py:89: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/shiftclock-verify'
+zones = ['America/Scoresbysund', 'Asia/Jerusalem', 'Asia/Gaza', 'Extended/Minus', 'Extended/Week', 'Extended/Southern']
+
+    def assert_zones(binary, zones):
+        bad = [msg for zone in zones for msg in wrong_answers(binary, zone)]
+>       assert not bad, f"{len(bad)} wrong answers; first ones:\n" + "\n".join(bad[:8])
+E       AssertionError: 42 wrong answers; first ones:
+E         America/Scoresbysund at 2030-03-31T01:00:00Z: got {'utc': '2030-03-31T01:00:00Z', 'local': '2030-03-30T23:00:00', 'offset': -7200, 'abbr': '-02', 'isdst': False}, want {'utc': '2030-03-31T01:00:00Z', 'local': '2030-03-31T00:00:00', 'offset': -3600, 'abbr': '-01', 'isdst': True}
+E         America/Scoresbysund at 2030-03-31T01:30:00Z: got {'utc': '2030-03-31T01:30:00Z', 'local': '2030-03-30T23:30:00', 'offset': -7200, 'abbr': '-02', 'isdst': False}, want {'utc': '2030-03-31T01:30:00Z', 'local': '2030-03-31T00:30:00', 'offset': -3600, 'abbr': '-01', 'isdst': True}
+E         America/Scoresbysund at 2030-10-27T01:00:00Z: got {'utc': '2030-10-27T01:00:00Z', 'local': '2030-10-27T00:00:00', 'offset': -3600, 'abbr': '-01', 'isdst': True}, want {'utc': '2030-10-27T01:00:00Z', 'local': '2030-10-26T23:00:00', 'offset': -7200, 'abbr': '-02', 'isdst': False}
+E         America/Scoresbysund at 2030-10-27T01:30:00Z: got {'utc': '2030-10-27T01:30:00Z', 'local': '2030-10-27T00:30:00', 'offset': -3600, 'abbr': '-01', 'isdst': True}, want {'utc': '2030-10-27T01:30:00Z', 'local': '2030-10-26T23:30:00', 'offset': -7200, 'abbr': '-02', 'isdst': False}
+E         America/Scoresbysund at 2061-03-27T01:00:00Z: got {'utc': '2061-03-27T01:00:00Z', 'local': '2061-03-26T23:00:00', 'offset': -7200, 'abbr': '-02', 'isdst': False}, want {'utc': '2061-03-27T01:00:00Z', 'local': '2061-03-27T00:00:00', 'offset': -3600, 'abbr': '-01', 'isdst': True}
+E         America/Scoresbysund at 2061-03-27T01:30:00Z: got {'utc': '2061-03-27T01:30:00Z', 'local': '2061-03-26T23:30:00', 'offset': -7200, 'abbr': '-02', 'isdst': False}, want {'utc': '2061-03-27T01:30:00Z', 'local': '2061-03-27T00:30:00', 'offset': -3600, 'abbr': '-01', 'isdst': True}
+E         America/Scoresbysund at 2061-10-30T01:00:00Z: got {'utc': '2061-10-30T01:00:00Z', 'local': '2061-10-30T00:00:00', 'offset': -3600, 'abbr': '-01', 'isdst': True}, want {'utc': '2061-10-30T01:00:00Z', 'local': '2061-10-29T23:00:00', 'offset': -7200, 'abbr': '-02', 'isdst': False}
+E         America/Scoresbysund at 2061-10-30T01:30:00Z: got {'utc': '2061-10-30T01:30:00Z', 'local': '2061-10-30T00:30:00', 'offset': -3600, 'abbr': '-01', 'isdst': True}, want {'utc': '2061-10-30T01:30:00Z', 'local': '2061-10-29T23:30:00', 'offset': -7200, 'abbr': '-02', 'isdst': False}
+E       assert not ["America/Scoresbysund at 2030-03-31T01:00:00Z: got {'utc': '2030-03-31T01:00:00Z', 'local': '2030-03-30T23:00:00', 'o...t {'utc': '2061-03-27T01:30:00Z', 'local': '2061-03-27T00:30:00', 'offset': -3600, 'abbr': '-01', 'isdst': True}", ...]
+
+/tests/test_outputs.py:69: AssertionError
+_____________________ test_julian_and_zero_based_day_rules _____________________
+
+shiftclock = '/tmp/shiftclock-verify'
+
+    def test_julian_and_zero_based_day_rules(shiftclock):
+        """Jn ignores February 29 while zero-based n counts it, in both leap and common years."""
+>       assert_zones(shiftclock, ["Julian/Harbor", "ZeroBased/Harbor", "Julian/Austral", "ZeroBased/Austral"])
+
+/tests/test_outputs.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/shiftclock-verify'
+zones = ['Julian/Harbor', 'ZeroBased/Harbor', 'Julian/Austral', 'ZeroBased/Austral']
+
+    def assert_zones(binary, zones):
+        bad = [msg for zone in zones for msg in wrong_answers(binary, zone)]
+>       assert not bad, f"{len(bad)} wrong answers; first ones:\n" + "\n".join(bad[:8])
+E       AssertionError: 30 wrong answers; first ones:
+E         Julian/Harbor at 2031-10-27T04:00:00Z: got {'utc': '2031-10-27T04:00:00Z', 'local': '2031-10-27T02:00:00', 'offset': -7200, 'abbr': '-02', 'isdst': True}, want {'utc': '2031-10-27T04:00:00Z', 'local': '2031-10-27T01:00:00', 'offset': -10800, 'abbr': '-03', 'isdst': False}
+E         Julian/Harbor at 2031-10-27T04:30:00Z: got {'utc': '2031-10-27T04:30:00Z', 'local': '2031-10-27T02:30:00', 'offset': -7200, 'abbr': '-02', 'isdst': True}, want {'utc': '2031-10-27T04:30:00Z', 'local': '2031-10-27T01:30:00', 'offset': -10800, 'abbr': '-03', 'isdst': False}
+E         Julian/Harbor at 2032-03-01T04:59:59Z: got {'utc': '2032-03-01T04:59:59Z', 'local': '2032-03-01T02:59:59', 'offset': -7200, 'abbr': '-02', 'isdst': True}, want {'utc': '2032-03-01T04:59:59Z', 'local': '2032-03-01T01:59:59', 'offset': -10800, 'abbr': '-03', 'isdst': False}
+E         Julian/Harbor at 2032-10-27T03:59:59Z: got {'utc': '2032-10-27T03:59:59Z', 'local': '2032-10-27T00:59:59', 'offset': -10800, 'abbr': '-03', 'isdst': False}, want {'utc': '2032-10-27T03:59:59Z', 'local': '2032-10-27T01:59:59', 'offset': -7200, 'abbr': '-02', 'isdst': True}
+E         Julian/Harbor at 2100-10-27T04:00:00Z: got {'utc': '2100-10-27T04:00:00Z', 'local': '2100-10-27T02:00:00', 'offset': -7200, 'abbr': '-02', 'isdst': True}, want {'utc': '2100-10-27T04:00:00Z', 'local': '2100-10-27T01:00:00', 'offset': -10800, 'abbr': '-03', 'isdst': False}
+E         Julian/Harbor at 2100-10-27T04:30:00Z: got {'utc': '2100-10-27T04:30:00Z', 'local': '2100-10-27T02:30:00', 'offset': -7200, 'abbr': '-02', 'isdst': True}, want {'utc': '2100-10-27T04:30:00Z', 'local': '2100-10-27T01:30:00', 'offset': -10800, 'abbr': '-03', 'isdst': False}
+E         ZeroBased/Harbor at 2031-10-27T04:00:00Z: got {'utc': '2031-10-27T04:00:00Z', 'local': '2031-10-27T02:00:00', 'offset': -7200, 'abbr': '-02', 'isdst': True}, want {'utc': '2031-10-27T04:00:00Z', 'local': '2031-10-27T01:00:00', 'offset': -10800, 'abbr': '-03', 'isdst': False}
+E         ZeroBased/Harbor at 2031-10-27T04:30:00Z: got {'utc': '2031-10-27T04:30:00Z', 'local': '2031-10-27T02:30:00', 'offset': -7200, 'abbr': '-02', 'isdst': True}, want {'utc': '2031-10-27T04:30:00Z', 'local': '2031-10-27T01:30:00', 'offset': -10800, 'abbr': '-03', 'isdst': False}
+E       assert not ["Julian/Harbor at 2031-10-27T04:00:00Z: got {'utc': '2031-10-27T04:00:00Z', 'local': '2031-10-27T02:00:00', 'offset':...{'utc': '2100-10-27T04:30:00Z', 'local': '2100-10-27T01:30:00', 'offset': -10800, 'abbr': '-03', 'isdst': False}", ...]
+
+/tests/test_outputs.py:69: AssertionError
+___________________________ test_transitions_listing ___________________________
+
+shiftclock = '/tmp/shiftclock-verify'
+
+    def test_transitions_listing(shiftclock):
+        """transitions lists every change in the UTC year range, in order, across table/footer boundaries."""
+        bad = []
+        for zone, first, last, items in EXPECTED["transitions"]:
+            lines = run(shiftclock, ["transitions", "--zone", str(ZONES / zone), "--from", str(first), "--to", str(last)])
+            got = [json.loads(line) for line in lines]
+            want = [{"at": at, "offset": off, "abbr": abbr, "isdst": dst} for at, off, abbr, dst in items]
+            if got != want:
+                bad.append(f"{zone} {first}-{last}:\n  got  {got}\n  want {want}")
+>       assert not bad, "\n".join(bad)
+E       AssertionError: America/Chicago 2006-2008:
+E           got  [{'at': '2006-04-02T08:00:00Z', 'offset': -18000, 'abbr': 'CDT', 'isdst': True}, {'at': '2006-10-29T07:00:00Z', 'offset': -21600, 'abbr': 'CST', 'isdst': False}, {'at': '2007-03-11T08:00:00Z', 'offset': -18000, 'abbr': 'CDT', 'isdst': True}, {'at': '2007-11-04T08:00:00Z', 'offset': -21600, 'abbr': 'CST', 'isdst': False}, {'at': '2008-03-09T08:00:00Z', 'offset': -18000, 'abbr': 'CDT', 'isdst': True}, {'at': '2008-11-02T08:00:00Z', 'offset': -21600, 'abbr': 'CST', 'isdst': False}]
+E           want [{'at': '2006-04-02T08:00:00Z', 'offset': -18000, 'abbr': 'CDT', 'isdst': True}, {'at': '2006-10-29T07:00:00Z', 'offset': -21600, 'abbr': 'CST', 'isdst': False}, {'at': '2007-03-11T08:00:00Z', 'offset': -18000, 'abbr': 'CDT', 'isdst': True}, {'at': '2007-11-04T07:00:00Z', 'offset': -21600, 'abbr': 'CST', 'isdst': False}, {'at': '2008-03-09T08:00:00Z', 'offset': -18000, 'abbr': 'CDT', 'isdst': True}, {'at': '2008-11-02T07:00:00Z', 'offset': -21600, 'abbr': 'CST', 'isdst': False}]
+E         Antarctica/Troll 2040-2042:
+E           got  [{'at': '2040-04-01T01:00:00Z', 'offset': 7200, 'abbr': '+02', 'isdst': True}, {'at': '2040-11-04T03:00:00Z', 'offset': 0, 'abbr': '+00', 'isdst': False}, {'at': '2041-03-31T01:00:00Z', 'offset': 7200, 'abbr': '+02', 'isdst': True}, {'at': '2041-11-03T03:00:00Z', 'offset': 0, 'abbr': '+00', 'isdst': False}, {'at': '2042-03-30T01:00:00Z', 'offset': 7200, 'abbr': '+02', 'isdst': True}, {'at': '2042-11-02T03:00:00Z', 'offset': 0, 'abbr': '+00', 'isdst': False}]
+E           want [{'at': '2040-03-25T01:00:00Z', 'offset': 7200, 'abbr': '+02', 'isdst': True}, {'at': '2040-10-28T01:00:00Z', 'offset': 0, 'abbr': '+00', 'isdst': False}, {'at': '2041-03-31T01:00:00Z', 'offset': 7200, 'abbr': '+02', 'isdst': True}, {'at': '2041-10-27T01:00:00Z', 'offset': 0, 'abbr': '+00', 'isdst': False}, {'at': '2042-03-30T01:00:00Z', 'offset': 7200, 'abbr': '+02', 'isdst': True}, {'at': '2042-10-26T01:00:00Z', 'offset': 0, 'abbr': '+00', 'isdst': False}]
+E         Australia/Lord_Howe 2050-2051:
+E           got  [{'at': '2050-10-01T15:30:00Z', 'offset': 39600, 'abbr': '+11', 'isdst': True}, {'at': '2051-09-30T15:30:00Z', 'offset': 39600, 'abbr': '+11', 'isdst': True}]
+E           want [{'at': '2050-04-02T15:00:00Z', 'offset': 37800, 'abbr': '+1030', 'isdst': False}, {'at': '2050-10-01T15:30:00Z', 'offset': 39600, 'abbr': '+11', 'isdst': True}, {'at': '2051-04-01T15:00:00Z', 'offset': 37800, 'abbr': '+1030', 'isdst': False}, {'at': '2051-09-30T15:30:00Z', 'offset': 39600, 'abbr': '+11', 'isdst': True}]
+E         Asia/Gaza 2085-2088:
+E           got  [{'at': '2085-03-24T00:00:00Z', 'offset': 10800, 'abbr': 'EEST', 'isdst': True}, {'at': '2085-04-20T23:00:00Z', 'offset': 7200, 'abbr': 'EET', 'isdst': False}, {'at': '2085-06-09T00:00:00Z', 'offset': 10800, 'abbr': 'EEST', 'isdst': True}, {'at': '2085-10-26T23:00:00Z', 'offset': 7200, 'abbr': 'EET', 'isdst': False}, {'at': '2086-03-30T00:00:00Z', 'offset': 10800, 'abbr': 'EEST', 'isdst': True}, {'at': '2086-04-12T23:00:00Z', 'offset': 7200, 'abbr': 'EET', 'isdst': False}, {'at': '2086-05-25T00:00:00Z', 'offset': 10800, 'abbr': 'EEST', 'isdst': True}, {'at': '2086-10-25T23:00:00Z', 'offset': 7200, 'abbr': 'EET', 'isdst': False}, {'at': '2087-03-27T00:00:00Z', 'offset': 10800, 'abbr': 'EEST', 'isdst': True}, {'at': '2087-10-23T00:00:00Z', 'offset': 7200, 'abbr': 'EET', 'isdst': False}, {'at': '2088-03-25T00:00:00Z', 'offset': 10800, 'abbr': 'EEST', 'isdst': True}, {'at': '2088-10-28T00:00:00Z', 'offset': 7200, 'abbr': 'EET', 'isdst': False}]
+E           want [{'at': '2085-03-24T00:00:00Z', 'offset': 10800, 'abbr': 'EEST', 'isdst': True}, {'at': '2085-04-20T23:00:00Z', 'offset': 7200, 'abbr': 'EET', 'isdst': False}, {'at': '2085-06-09T00:00:00Z', 'offset': 10800, 'abbr': 'EEST', 'isdst': True}, {'at': '2085-10-26T23:00:00Z', 'offset': 7200, 'abbr': 'EET', 'isdst': False}, {'at': '2086-03-30T00:00:00Z', 'offset': 10800, 'abbr': 'EEST', 'isdst': True}, {'at': '2086-04-12T23:00:00Z', 'offset': 7200, 'abbr': 'EET', 'isdst': False}, {'at': '2086-05-25T00:00:00Z', 'offset': 10800, 'abbr': 'EEST', 'isdst': True}, {'at': '2086-10-25T23:00:00Z', 'offset': 7200, 'abbr': 'EET', 'isdst': False}, {'at': '2087-03-29T00:00:00Z', 'offset': 10800, 'abbr': 'EEST', 'isdst': True}, {'at': '2087-10-24T23:00:00Z', 'offset': 7200, 'abbr': 'EET', 'isdst': False}, {'at': '2088-03-27T00:00:00Z', 'offset': 10800, 'abbr': 'EEST', 'isdst': True}, {'at': '2088-10-29T23:00:00Z', 'offset': 7200, 'abbr': 'EET', 'isdst': False}]
+E         Pacific/Easter 2099-2100:
+E           got  [{'at': '2099-09-06T04:00:00Z', 'offset': -18000, 'abbr': '-05', 'isdst': True}, {'at': '2100-09-05T04:00:00Z', 'offset': -18000, 'abbr': '-05', 'isdst': True}]
+E           want [{'at': '2099-04-05T03:00:00Z', 'offset': -21600, 'abbr': '-06', 'isdst': False}, {'at': '2099-09-06T04:00:00Z', 'offset': -18000, 'abbr': '-05', 'isdst': True}, {'at': '2100-04-04T03:00:00Z', 'offset': -21600, 'abbr': '-06', 'isdst': False}, {'at': '2100-09-05T04:00:00Z', 'offset': -18000, 'abbr': '-05', 'isdst': True}]
+E         Julian/Harbor 2031-2032:
+E           got  [{'at': '2031-03-01T05:00:00Z', 'offset': -7200, 'abbr': '-02', 'isdst': True}, {'at': '2031-10-27T05:00:00Z', 'offset': -10800, 'abbr': '-03', 'isdst': False}, {'at': '2032-02-29T05:00:00Z', 'offset': -7200, 'abbr': '-02', 'isdst': True}, {'at': '2032-10-26T05:00:00Z', 'offset': -10800, 'abbr': '-03', 'isdst': False}]
+E           want [{'at': '2031-03-01T05:00:00Z', 'offset': -7200, 'abbr': '-02', 'isdst': True}, {'at': '2031-10-27T04:00:00Z', 'offset': -10800, 'abbr': '-03', 'isdst': False}, {'at': '2032-03-01T05:00:00Z', 'offset': -7200, 'abbr': '-02', 'isdst': True}, {'at': '2032-10-27T04:00:00Z', 'offset': -10800, 'abbr': '-03', 'isdst': False}]
+E         Negative/Winter 2044-2045:
+E           got  [{'at': '2044-10-30T01:00:00Z', 'offset': 7200, 'abbr': '+02', 'isdst': True}, {'at': '2045-10-29T01:00:00Z', 'offset': 7200, 'abbr': '+02', 'isdst': True}]
+E           want [{'at': '2044-03-27T01:00:00Z', 'offset': 10800, 'abbr': '+03', 'isdst': False}, {'at': '2044-10-30T01:00:00Z', 'offset': 7200, 'abbr': '+02', 'isdst': True}, {'at': '2045-03-26T01:00:00Z', 'offset': 10800, 'abbr': '+03', 'isdst': False}, {'at': '2045-10-29T01:00:00Z', 'offset': 7200, 'abbr': '+02', 'isdst': True}]
+E         Extended/Southern 2060-2061:
+E           got  [{'at': '2060-10-02T11:30:00Z', 'offset': -30600, 'abbr': '-0830', 'isdst': True}, {'at': '2061-10-01T11:30:00Z', 'offset': -30600, 'abbr': '-0830', 'isdst': True}]
+E           want [{'at': '2060-04-04T06:30:00Z', 'offset': -34200, 'abbr': '-0930', 'isdst': False}, {'at': '2060-09-26T11:30:00Z', 'offset': -30600, 'abbr': '-0830', 'isdst': True}, {'at': '2061-04-03T06:30:00Z', 'offset': -34200, 'abbr': '-0930', 'isdst': False}, {'at': '2061-09-25T11:30:00Z', 'offset': -30600, 'abbr': '-0830', 'isdst': True}]
+E       assert not ["America/Chicago 2006-2008:\n  got  [{'at': '2006-04-02T08:00:00Z', 'offset': -18000, 'abbr': 'CDT', 'isdst': True}, ... 'abbr': '-02', 'isdst': True}, {'at': '2032-10-27T04:00:00Z', 'offset': -10800, 'abbr': '-03', 'isdst': False}]", ...]
+
+/tests/test_outputs.py:109: AssertionError
+__________________ test_zone_names_resolve_under_zoneinfo_dir __________________
+
+shiftclock = '/tmp/shiftclock-verify'
+
+    def test_zone_names_resolve_under_zoneinfo_dir(shiftclock):
+        """A bare zone name is looked up under SHIFTCLOCK_ZONEINFO and RFC 3339 instants are accepted."""
+        env = {"SHIFTCLOCK_ZONEINFO": str(ZONES)}
+        bad = []
+        for zone in ["America/Santiago", "Europe/Dublin"]:
+            bad += wrong_answers(shiftclock, zone, zone_arg=zone, env=env, iso=True)
+>       assert not bad, f"{len(bad)} wrong answers; first ones:\n" + "\n".join(bad[:8])
+E       AssertionError: 18 wrong answers; first ones:
+E         America/Santiago at 2041-01-15T12:00:00Z: got {'utc': '2041-01-15T12:00:00Z', 'local': '2041-01-15T08:00:00', 'offset': -14400, 'abbr': '-04', 'isdst': False}, want {'utc': '2041-01-15T12:00:00Z', 'local': '2041-01-15T09:00:00', 'offset': -10800, 'abbr': '-03', 'isdst': True}
+E         America/Santiago at 2041-04-07T02:59:59Z: got {'utc': '2041-04-07T02:59:59Z', 'local': '2041-04-06T22:59:59', 'offset': -14400, 'abbr': '-04', 'isdst': False}, want {'utc': '2041-04-07T02:59:59Z', 'local': '2041-04-06T23:59:59', 'offset': -10800, 'abbr': '-03', 'isdst': True}
+E         America/Santiago at 2041-09-08T04:00:00Z: got {'utc': '2041-09-08T04:00:00Z', 'local': '2041-09-08T00:00:00', 'offset': -14400, 'abbr': '-04', 'isdst': False}, want {'utc': '2041-09-08T04:00:00Z', 'local': '2041-09-08T01:00:00', 'offset': -10800, 'abbr': '-03', 'isdst': True}
+E         America/Santiago at 2041-09-08T04:30:00Z: got {'utc': '2041-09-08T04:30:00Z', 'local': '2041-09-08T00:30:00', 'offset': -14400, 'abbr': '-04', 'isdst': False}, want {'utc': '2041-09-08T04:30:00Z', 'local': '2041-09-08T01:30:00', 'offset': -10800, 'abbr': '-03', 'isdst': True}
+E         America/Santiago at 2041-10-15T12:00:00Z: got {'utc': '2041-10-15T12:00:00Z', 'local': '2041-10-15T08:00:00', 'offset': -14400, 'abbr': '-04', 'isdst': False}, want {'utc': '2041-10-15T12:00:00Z', 'local': '2041-10-15T09:00:00', 'offset': -10800, 'abbr': '-03', 'isdst': True}
+E         America/Santiago at 2092-01-15T12:00:00Z: got {'utc': '2092-01-15T12:00:00Z', 'local': '2092-01-15T08:00:00', 'offset': -14400, 'abbr': '-04', 'isdst': False}, want {'utc': '2092-01-15T12:00:00Z', 'local': '2092-01-15T09:00:00', 'offset': -10800, 'abbr': '-03', 'isdst': True}
+E         America/Santiago at 2092-04-06T02:59:59Z: got {'utc': '2092-04-06T02:59:59Z', 'local': '2092-04-05T22:59:59', 'offset': -14400, 'abbr': '-04', 'isdst': False}, want {'utc': '2092-04-06T02:59:59Z', 'local': '2092-04-05T23:59:59', 'offset': -10800, 'abbr': '-03', 'isdst': True}
+E         America/Santiago at 2092-09-07T04:00:00Z: got {'utc': '2092-09-07T04:00:00Z', 'local': '2092-09-07T00:00:00', 'offset': -14400, 'abbr': '-04', 'isdst': False}, want {'utc': '2092-09-07T04:00:00Z', 'local': '2092-09-07T01:00:00', 'offset': -10800, 'abbr': '-03', 'isdst': True}
+E       assert not ["America/Santiago at 2041-01-15T12:00:00Z: got {'utc': '2041-01-15T12:00:00Z', 'local': '2041-01-15T08:00:00', 'offse... {'utc': '2092-01-15T12:00:00Z', 'local': '2092-01-15T09:00:00', 'offset': -10800, 'abbr': '-03', 'isdst': True}", ...]
+
+/tests/test_outputs.py:118: AssertionError
+__________________ test_output_lines_use_documented_key_order __________________
+
+shiftclock = '/tmp/shiftclock-verify'
+
+    def test_output_lines_use_documented_key_order(shiftclock):
+        """Each at/transitions line is compact JSON with keys in the documented order and correct values."""
+        zone = "Australia/Lord_Howe"
+        row = next(r for r in EXPECTED["at"][zone] if r[0] > 2208988800 and r[4])
+        t, local, offset, abbr, isdst = row
+        line = run(shiftclock, ["at", "--zone", str(ZONES / zone), str(t)])
+>       assert line == [
+            f'{{"utc":"{utc(t)}","local":"{local}","offset":{offset},"abbr":"{abbr}","isdst":{json.dumps(isdst)}}}'
+        ]
+E       assert ['{"utc":"208...sdst":false}'] == ['{"utc":"208...isdst":true}']
+E         
+E         At index 0 diff: '{"utc":"2088-01-15T12:00:00Z","local":"2088-01-15T22:30:00","offset":37800,"abbr":"+1030","isdst":false}' != '{"utc":"2088-01-15T12:00:00Z","local":"2088-01-15T23:00:00","offset":39600,"abbr":"+11","isdst":true}'
+E         Use -v to get more diff
+
+/tests/test_outputs.py:127: AssertionError
+=========================== short test summary info ============================
+FAILED ../tests/test_outputs.py::test_us_rules_after_table_end - AssertionErr...
+FAILED ../tests/test_outputs.py::test_last_weekday_of_month_rules - Assertion...
+FAILED ../tests/test_outputs.py::test_daylight_time_spanning_new_year - Asser...
+FAILED ../tests/test_outputs.py::test_signed_and_extended_rule_hours - Assert...
+FAILED ../tests/test_outputs.py::test_julian_and_zero_based_day_rules - Asser...
+FAILED ../tests/test_outputs.py::test_transitions_listing - AssertionError: A...
+FAILED ../tests/test_outputs.py::test_zone_names_resolve_under_zoneinfo_dir
+FAILED ../tests/test_outputs.py::test_output_lines_use_documented_key_order
+============================== 8 failed in 0.22s ===============================

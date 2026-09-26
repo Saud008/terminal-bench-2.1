@@ -1,0 +1,113 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 10,
+            "passed": 9,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790434100.518702,
+            "stop": 1790434100.964637
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_shortest_stem_selection",
+                "status": "passed",
+                "duration": 0.200099378998857,
+                "start": 1790434100.5302331,
+                "stop": 1790434100.7306435,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_directory_relative_prerequisites",
+                "status": "passed",
+                "duration": 0.011498983018100262,
+                "start": 1790434100.7308626,
+                "stop": 1790434100.7425716,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_mentioned_prerequisite_ought_to_exist",
+                "status": "passed",
+                "duration": 0.016071221019956283,
+                "start": 1790434100.742767,
+                "stop": 1790434100.7591376,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_timestamps_reread_after_recipe",
+                "status": "passed",
+                "duration": 0.02992953000648413,
+                "start": 1790434100.7594366,
+                "stop": 1790434100.7896588,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_per_goal_messages",
+                "status": "passed",
+                "duration": 0.03650549199664965,
+                "start": 1790434100.79008,
+                "stop": 1790434100.8268516,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_pattern_specific_variable_order",
+                "status": "passed",
+                "duration": 0.018585582001833245,
+                "start": 1790434100.8270369,
+                "stop": 1790434100.8458169,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_target_variable_inheritance",
+                "status": "passed",
+                "duration": 0.028982787000131793,
+                "start": 1790434100.8460183,
+                "stop": 1790434100.8752177,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_append_semantics",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.012970398005563766,
+                "start": 1790434100.8754497,
+                "stop": 1790434100.8973253,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "brickmake = '/tmp/brickmake-verify'\n\n    def test_append_semantics(brickmake):\n        \"\"\"'+=' on a simply expanded variable expands the added text immediately and keeps\n        it simple; a target-specific '+=' after its own definition extends that value.\"\"\"\n>       replay(brickmake, \"append\")\n\n/tests/test_outputs.py:95: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/brickmake-verify', group = 'append'\n\n    def replay(binary, group):\n        names = [n for n, c in CASES.items() if c[\"group\"] == group]\n        assert names, f\"no scenarios for {group}\"\n        failures = []\n        for name in names:\n            case = CASES[name]\n            got = play(case[\"steps\"], [binary])\n            for i, (g, want) in enumerate(zip(got, case[\"expect\"])):\n                if g != want:\n                    failures.append(f\"{name} result #{i}\\n  expected: {want!r}\\n  actual:   {g!r}\")\n            if len(got) != len(case[\"expect\"]):\n                failures.append(f\"{name}: expected {len(case['expect'])} results, got {len(got)}\")\n>       assert not failures, \"\\n\".join(failures)\nE       AssertionError: append/simple_variables_expand_appended_text_now result #0\nE           expected: {'stdout': '[-Wall] [simple] [a -Werror] [recursive] [s] [r ]\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': '[-Wall -Werror] [recursive] [a -Werror] [recursive] [s ] [r ]\\n', 'stderr': '', 'code': 0}\nE         append/simple_append_keeps_value_when_referenced_variable_changes result #0\nE           expected: {'stdout': '[src] [src/*.c]\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': '[src tools] [src/*.c lib/*.c]\\n', 'stderr': '', 'code': 0}\nE       assert not [\"append/simple_variables_expand_appended_text_now result #0\\n  expected: {'stdout': '[-Wall] [simple] [a -Werror] [re...c]\\\\n', 'stderr': '', 'code': 0}\\n  actual:   {'stdout': '[src tools] [src/*.c lib/*.c]\\\\n', 'stderr': '', 'code': 0}\"]\n\n/tests/test_outputs.py:47: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_prerequisite_merge_order",
+                "status": "passed",
+                "duration": 0.01867445799871348,
+                "start": 1790434100.8975224,
+                "stop": 1790434100.9163995,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_project_builds",
+                "status": "passed",
+                "duration": 0.04767395100498106,
+                "start": 1790434100.9165998,
+                "stop": 1790434100.9644623,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

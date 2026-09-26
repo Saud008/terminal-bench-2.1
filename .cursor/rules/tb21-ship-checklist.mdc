@@ -7,7 +7,7 @@ alwaysApply: false
 
 This checklist comes from the pool and **overrides the public Caudal guide** wherever they conflict (see `tb21-hub.mdc` → "Pool overrides").
 
-Automation: `py -3 tb21/tb21_check.py <slug>` covers the mechanical parts of A–F; `py -3 tb21/tb21_ship_check.py <slug>` covers G/H/I (structure, SUMMARY, sha, mtimes, ctrf test-by-test, duplication, xhigh, exception_info, reward-hack grep, PII/stb scrub). Everything else (reading, ablation, independent re-derivation, trajectory reading) is manual and must still be done with evidence.
+Automation: `py -3 tb21/master_check.py <slug>` walks every check 0–85 (it runs `tb21_check.py` + `tb21_ship_check.py` and adds: instruction path/constant/exactness/how-sentence scans, comment-echo and lore-doc scans, archive owner/host-path scan, solve.sh delta + no-op + orphan detection, guard/fail-closed/name/expected-source test scans, tolerance cross-map, rubric→test map, rubric_score arithmetic, citation-quote verification against each run's own files, agent-command reward-hack scan, raw model-name check). `py -3 tb21/run_baselines.py <slug> --all` automates 30/31 and the oracle/NOP evidence. Checks that need judgment (reading, re-derivation, difficulty source) stay MANUAL until answered with evidence in `_reports/<slug>/signoff.toml`; `pack_delivery.py` refuses until every check is PASS or SIGNED for the current files.
 
 Known cross-reference typos in the source text: check 8 → "see check 39" (not 47); check 59 → "see check 32"; check 69 → "same duplication check as 68" (not 72).
 

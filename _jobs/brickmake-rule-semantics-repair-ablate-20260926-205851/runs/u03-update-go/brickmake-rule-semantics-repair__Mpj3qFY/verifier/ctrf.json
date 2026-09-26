@@ -1,0 +1,116 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 10,
+            "passed": 8,
+            "failed": 2,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790436587.9399917,
+            "stop": 1790436588.4838371
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_shortest_stem_selection",
+                "status": "passed",
+                "duration": 0.25635251999483444,
+                "start": 1790436587.9511728,
+                "stop": 1790436588.2087595,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_directory_relative_prerequisites",
+                "status": "passed",
+                "duration": 0.01996843500819523,
+                "start": 1790436588.208999,
+                "stop": 1790436588.230319,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_mentioned_prerequisite_ought_to_exist",
+                "status": "passed",
+                "duration": 0.013933016001828946,
+                "start": 1790436588.2306101,
+                "stop": 1790436588.2455282,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_timestamps_reread_after_recipe",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.031065404022228904,
+                "start": 1790436588.2457457,
+                "stop": 1790436588.2892776,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "brickmake = '/tmp/brickmake-verify'\n\n    def test_timestamps_reread_after_recipe(brickmake):\n        \"\"\"After a recipe runs the target's time is read again, so a recipe that leaves its\n        target unchanged does not make dependents out of date; -n treats remade targets as new.\"\"\"\n>       replay(brickmake, \"restat\")\n\n/tests/test_outputs.py:71: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/brickmake-verify', group = 'restat'\n\n    def replay(binary, group):\n        names = [n for n, c in CASES.items() if c[\"group\"] == group]\n        assert names, f\"no scenarios for {group}\"\n        failures = []\n        for name in names:\n            case = CASES[name]\n            got = play(case[\"steps\"], [binary])\n            for i, (g, want) in enumerate(zip(got, case[\"expect\"])):\n                if g != want:\n                    failures.append(f\"{name} result #{i}\\n  expected: {want!r}\\n  actual:   {g!r}\")\n            if len(got) != len(case[\"expect\"]):\n                failures.append(f\"{name}: expected {len(case['expect'])} results, got {len(got)}\")\n>       assert not failures, \"\\n\".join(failures)\nE       AssertionError: restat/unchanged_output_does_not_relink result #0\nE           expected: {'stdout': 'check version.h\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'check version.h\\nlink app\\n', 'stderr': '', 'code': 0}\nE         restat/recipe_that_leaves_its_target_alone result #0\nE           expected: {'stdout': 'stamp recipe ran\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'stamp recipe ran\\nout [stamp]\\n', 'stderr': '', 'code': 0}\nE       assert not [\"restat/unchanged_output_does_not_relink result #0\\n  expected: {'stdout': 'check version.h\\\\n', 'stderr': '', 'code'...n\\\\n', 'stderr': '', 'code': 0}\\n  actual:   {'stdout': 'stamp recipe ran\\\\nout [stamp]\\\\n', 'stderr': '', 'code': 0}\"]\n\n/tests/test_outputs.py:47: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_per_goal_messages",
+                "status": "passed",
+                "duration": 0.03972686700581107,
+                "start": 1790436588.2895026,
+                "stop": 1790436588.330317,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_pattern_specific_variable_order",
+                "status": "passed",
+                "duration": 0.02275392501906026,
+                "start": 1790436588.3305283,
+                "stop": 1790436588.354398,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_target_variable_inheritance",
+                "status": "passed",
+                "duration": 0.028074500005459413,
+                "start": 1790436588.3546598,
+                "stop": 1790436588.3840008,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_append_semantics",
+                "status": "passed",
+                "duration": 0.013924907019827515,
+                "start": 1790436588.384321,
+                "stop": 1790436588.3992085,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_prerequisite_merge_order",
+                "status": "passed",
+                "duration": 0.018670502002350986,
+                "start": 1790436588.3994105,
+                "stop": 1790436588.4189901,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_project_builds",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.05930777500907425,
+                "start": 1790436588.4191966,
+                "stop": 1790436588.482992,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "brickmake = '/tmp/brickmake-verify'\n\n    def test_project_builds(brickmake):\n        \"\"\"Multi-step incremental builds of small projects produce the same commands,\n        messages and files as GNU make across edits and rebuilds.\"\"\"\n>       replay(brickmake, \"project\")\n\n/tests/test_outputs.py:107: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/brickmake-verify', group = 'project'\n\n    def replay(binary, group):\n        names = [n for n, c in CASES.items() if c[\"group\"] == group]\n        assert names, f\"no scenarios for {group}\"\n        failures = []\n        for name in names:\n            case = CASES[name]\n            got = play(case[\"steps\"], [binary])\n            for i, (g, want) in enumerate(zip(got, case[\"expect\"])):\n                if g != want:\n                    failures.append(f\"{name} result #{i}\\n  expected: {want!r}\\n  actual:   {g!r}\")\n            if len(got) != len(case[\"expect\"]):\n                failures.append(f\"{name}: expected {len(case['expect'])} results, got {len(got)}\")\n>       assert not failures, \"\\n\".join(failures)\nE       AssertionError: project/generated_parser_and_version_header result #2\nE           expected: {'stdout': 'stamp version\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'stamp version\\ncc main.c\\nyacc parse.y -> parse.c\\ncc parse.c\\nlink calc <- [main.o parse.o]\\nrm parse.c\\n', 'stderr': '', 'code': 0}\nE         project/generated_parser_and_version_header result #3\nE           expected: {'stdout': 'stamp version\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'stamp version\\ncc main.c\\nyacc parse.y -> parse.c\\ncc parse.c\\nlink calc <- [main.o parse.o]\\nrm parse.c\\n', 'stderr': '', 'code': 0}\nE       assert not [\"project/generated_parser_and_version_header result #2\\n  expected: {'stdout': 'stamp version\\\\n', 'stderr': '', 'cod...n.c\\\\nyacc parse.y -> parse.c\\\\ncc parse.c\\\\nlink calc <- [main.o parse.o]\\\\nrm parse.c\\\\n', 'stderr': '', 'code': 0}\"]\n\n/tests/test_outputs.py:47: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            }
+        ]
+    }
+}
