@@ -1,0 +1,196 @@
+diff -ru a/src/directives.c b/src/directives.c
+--- a/src/directives.c	2026-09-26 20:43:17.152941536 +0000
++++ b/src/directives.c	2026-09-26 20:43:17.158750546 +0000
+@@ -14,7 +14,7 @@
+ 
+     if (name[0] == '/')
+         return xstrdup(name);
+-    slash = strchr(including, '/');
++    slash = strrchr(including, '/');
+     if (!slash)
+         return xstrdup(name);
+     dirlen = (size_t)(slash - including) + 1;
+@@ -34,8 +34,6 @@
+     if (name_parse(ll->v[1].text, &ctx->origin, &origin, &err))
+         fail_at(pos, "%s: %s", ll->v[1].text, err);
+     ctx->origin = origin;
+-    ctx->owner = origin;
+-    ctx->have_owner = 1;
+ }
+ 
+ static void do_ttl(parse_ctx_t *ctx, const srcpos_t *pos, const lline_t *ll)
+@@ -53,6 +51,7 @@
+     dname_t saved_origin = ctx->origin;
+     dname_t saved_owner = ctx->owner;
+     int saved_have_owner = ctx->have_owner;
++    ttl_ctx_t saved_ttl = ctx->ttl;
+     char *file;
+ 
+     if (ll->n < 2 || ll->n > 3)
+@@ -77,6 +76,7 @@
+     ctx->origin = saved_origin;
+     ctx->owner = saved_owner;
+     ctx->have_owner = saved_have_owner;
++    ctx->ttl = saved_ttl;
+ }
+ 
+ void parse_directive(parse_ctx_t *ctx, const char *path, const lline_t *ll)
+diff -ru a/src/lexer.c b/src/lexer.c
+--- a/src/lexer.c	2026-09-26 20:43:17.115261206 +0000
++++ b/src/lexer.c	2026-09-26 20:43:17.122647146 +0000
+@@ -113,6 +113,15 @@
+                     intok = 1;
+                 continue;
+             }
++            if (inq) {
++                if (c == '"') {
++                    push(ll, &cur, 1);
++                    inq = 0;
++                } else {
++                    buf_put8(&cur, (unsigned char)c);
++                }
++                continue;
++            }
+             if (c == '(' || c == ')') {
+                 if (intok)
+                     push(ll, &cur, 0);
+@@ -123,15 +132,6 @@
+                     fail_at(&pos, "unbalanced parentheses");
+                 continue;
+             }
+-            if (inq) {
+-                if (c == '"') {
+-                    push(ll, &cur, 1);
+-                    inq = 0;
+-                } else {
+-                    buf_put8(&cur, (unsigned char)c);
+-                }
+-                continue;
+-            }
+             if (c == ';')
+                 break;
+             if (c == ' ' || c == '\t') {
+diff -ru a/src/name.c b/src/name.c
+--- a/src/name.c	2026-09-26 20:43:17.128735289 +0000
++++ b/src/name.c	2026-09-26 20:43:17.136669982 +0000
+@@ -9,10 +9,16 @@
+     return c >= '0' && c <= '9';
+ }
+ 
+-static unsigned fold(char c)
++static void name_lower(dname_t *n)
+ {
+-    unsigned char u = (unsigned char)c;
+-    return (u >= 'A' && u <= 'Z') ? u - 'A' + 'a' : u;
++    int i = 0;
++    while (n->wire[i]) {
++        int len = n->wire[i];
++        for (int j = i + 1; j <= i + len; j++)
++            if (n->wire[j] >= 'A' && n->wire[j] <= 'Z')
++                n->wire[j] = (unsigned char)(n->wire[j] - 'A' + 'a');
++        i += len + 1;
++    }
+ }
+ 
+ int name_parse(const char *text, const dname_t *origin, dname_t *out, const char **err)
+@@ -34,7 +40,6 @@
+     while (*p) {
+         int lenpos = wl++;
+         int lablen = 0;
+-        const char *start = p;
+ 
+         while (*p && *p != '.') {
+             unsigned c;
+@@ -51,14 +56,18 @@
+                     }
+                     p += 4;
+                 } else if (p[1]) {
+-                    c = fold(p[1]);
++                    c = (unsigned char)p[1];
+                     p += 2;
+                 } else {
+                     *err = "bad escape in name";
+                     return -1;
+                 }
+             } else {
+-                c = fold(*p++);
++                c = (unsigned char)*p++;
++            }
++            if (lablen == LABEL_MAX) {
++                *err = "label too long";
++                return -1;
+             }
+             if (wl >= NAME_MAXWIRE - 1) {
+                 *err = "name too long";
+@@ -71,10 +80,6 @@
+             *err = "empty label";
+             return -1;
+         }
+-        if (p - start > LABEL_MAX) {
+-            *err = "label too long";
+-            return -1;
+-        }
+         w[lenpos] = (unsigned char)lablen;
+         if (*p == '.') {
+             p++;
+@@ -96,6 +101,7 @@
+ 
+     memcpy(out->wire, w, (size_t)wl);
+     out->len = wl;
++    name_lower(out);
+     return 0;
+ }
+ 
+diff -ru a/src/ttl.c b/src/ttl.c
+--- a/src/ttl.c	2026-09-26 20:43:17.142315783 +0000
++++ b/src/ttl.c	2026-09-26 20:43:17.148060982 +0000
+@@ -64,13 +64,13 @@
+ 
+ int ttl_ctx_default(const ttl_ctx_t *c, uint32_t *out)
+ {
+-    if (c->has_last) {
+-        *out = c->last;
+-        return 1;
+-    }
+     if (c->has_dollar) {
+         *out = c->dollar;
+         return 1;
+     }
++    if (c->has_last) {
++        *out = c->last;
++        return 1;
++    }
+     return 0;
+ }
+diff -ru a/src/zone.c b/src/zone.c
+--- a/src/zone.c	2026-09-26 20:43:17.163802398 +0000
++++ b/src/zone.c	2026-09-26 20:43:17.167880093 +0000
+@@ -56,7 +56,7 @@
+ static int rr_cmp(const void *pa, const void *pb)
+ {
+     const rr_t *a = pa, *b = pb;
+-    int r = strcmp(a->owner_text, b->owner_text);
++    int r = name_cmp_canonical(&a->owner, &b->owner);
+     if (r)
+         return r;
+     if (a->type != b->type)
+@@ -85,15 +85,14 @@
+     z->n = out;
+ 
+     for (size_t i = 0; i < z->n;) {
+-        size_t j = i;
+-        uint32_t ttl = z->v[i].ttl;
++        size_t j = i, first = i;
+         while (j < z->n && same_rrset(&z->v[i], &z->v[j])) {
+-            if (z->v[j].ttl < ttl)
+-                ttl = z->v[j].ttl;
++            if (z->v[j].seq < z->v[first].seq)
++                first = j;
+             j++;
+         }
+         for (size_t k = i; k < j; k++)
+-            z->v[k].ttl = ttl;
++            z->v[k].ttl = z->v[first].ttl;
+         i = j;
+     }
+ }

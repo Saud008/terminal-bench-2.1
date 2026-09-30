@@ -1,0 +1,278 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 6 items
+
+../tests/test_outputs.py FFFFFF                                          [100%]
+
+=================================== FAILURES ===================================
+_________________________ test_cli_builds_and_rebuilds _________________________
+
+    def test_cli_builds_and_rebuilds():
+        """/app/cmd/brickmake compiles with the standard library only, runs a default-goal
+        build whose recipes create the objects on disk, and rebuilds only what was removed."""
+>       replay("smoke")
+
+/tests/test_outputs.py:41: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tests/test_outputs.py:29: in replay
+    got = play(case["steps"], binary)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+steps = [['write', 'Makefile', "OBJS = out/main.o out/util/str.o\nall: $(OBJS)\n\t@echo linked $(words $^) objects\nout/util/%...}\n'], ['write', 'src/util/str.c', 'int s;\n'], ['touch', 'old', 'src/main.c', 'src/util/str.c'], ['run'], ['ls'], ...]
+binary = '/tmp/sandbox/bin/brickmake'
+
+    def play(steps, binary):
+        """Apply write/touch/rm steps, run the binary for each run step and record
+        stdout, stderr and exit status; ls records the files left on disk."""
+        work = tempfile.mkdtemp(prefix="bm-")
+        results = []
+        try:
+            for step in steps:
+                kind = step[0]
+                if kind == "write":
+                    path = os.path.join(work, step[1])
+                    os.makedirs(os.path.dirname(path), exist_ok=True)
+                    with open(path, "w", encoding="utf-8") as fh:
+                        fh.write(step[2])
+                elif kind == "touch":
+                    when = STAMPS[step[1]]
+                    for rel in step[2:]:
+                        path = os.path.join(work, rel)
+                        os.makedirs(os.path.dirname(path), exist_ok=True)
+                        open(path, "a", encoding="utf-8").close()
+                        os.utime(path, (when, when))
+                elif kind == "rm":
+                    for rel in step[1:]:
+                        path = os.path.join(work, rel)
+>                       assert os.path.exists(path), f"{rel} should have been built before this step removes it"
+E                       AssertionError: out/main.o should have been built before this step removes it
+
+/tests/harness.py:127: AssertionError
+_________________________ test_shortest_stem_selection _________________________
+
+    def test_shortest_stem_selection():
+        """Among matching pattern rules the one with the shortest stem wins, where the
+        stem of a directory-relative match includes the directory; ties keep makefile order."""
+>       replay("stem")
+
+/tests/test_outputs.py:47: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+group = 'stem'
+
+    def replay(group):
+        binary = brickmake()
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], binary)
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: stem/shortest_stem_wins_across_directories result #0
+E           expected: {'stdout': 'lib lib/a.o from lib/a.c (stem a)\ngen src/b.o from src/gen/b.c (stem b)\ngeneric c.o from c.c (stem c)\nlib lib/deep/d.o from lib/deep/d.c (stem deep/d)\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "lib lib/a.o from lib/a.c (stem a)"\necho "gen src/b.o from src/gen/b.c (stem b)"\necho "generic c.o from c.c (stem c)"\necho "lib lib/deep/d.o from lib/deep/d.c (stem deep/d)"\n', 'stderr': '', 'code': 0}
+E         stem/shortest_stem_wins_across_directories result #1
+E           expected: {'stdout': 'gen src/b.o from src/gen/b.c (stem b)\nlib lib/a.o from lib/a.c (stem a)\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "gen src/b.o from src/gen/b.c (stem b)"\necho "lib lib/a.o from lib/a.c (stem a)"\n', 'stderr': '', 'code': 0}
+E         stem/prefix_pattern_beats_plain_suffix result #0
+E           expected: {'stdout': 'lpfx lib/lx.o stem=lib/x\nlpfx lx.o stem=x\ntest binary pkg/test_io from pkg/io_test.c stem=pkg/io\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "lpfx lib/lx.o stem=lib/x"\necho "lpfx lx.o stem=x"\necho "test binary pkg/test_io from pkg/io_test.c stem=pkg/io"\n', 'stderr': '', 'code': 0}
+E         stem/applicable_rule_after_inapplicable_shorter_stem result #0
+E           expected: {'stdout': 'cc gen/api.o from gen/api.c\nas x.o from x.s\ngenerate b.c\ncc b.o from b.c\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "cc gen/api.o from gen/api.c"\necho "as x.o from x.s"\necho "generate b.c"\necho "cc b.o from b.c"\n', 'stderr': '', 'code': 0}
+E         stem/equal_stems_keep_makefile_order_and_redefinition_moves_last result #0
+E           expected: {'stdout': 'c++ k.o\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "c++ k.o"\n', 'stderr': '', 'code': 0}
+E       assert not ['stem/shortest_stem_wins_across_directories result #0\n  expected: {\'stdout\': \'lib lib/a.o from lib/a.c (stem a)\\...\\n\', \'stderr\': \'\', \'code\': 0}\n  actual:   {\'stdout\': \'echo "c++ k.o"\\n\', \'stderr\': \'\', \'code\': 0}']
+
+/tests/test_outputs.py:35: AssertionError
+____________________ test_directory_relative_prerequisites _____________________
+
+    def test_directory_relative_prerequisites():
+        """For a slash-less target pattern matched against a name with a directory, the
+        directory is prepended only to prerequisites that contain '%'."""
+>       replay("dirs")
+
+/tests/test_outputs.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+group = 'dirs'
+
+    def replay(group):
+        binary = brickmake()
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], binary)
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: dirs/shared_prerequisite_is_not_moved_into_the_directory result #0
+E           expected: {'stdout': 'net/sock.o: net/sock.c config.h (dir net, file sock)\nmain.o: main.c config.h (dir ., file main)\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "net/sock.o: net/sock.c config.h (dir net, file sock)"\necho "main.o: main.c config.h (dir ., file main)"\n', 'stderr': '', 'code': 0}
+E         dirs/directory_prefix_goes_before_the_pattern_prefix result #0
+E           expected: {'stdout': '@=[src/eat] <=[src/car] *=[src/a]\ngen api/v1.pb.go from [api/proto/v1.proto tools.lock]\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "@=[src/eat] <=[src/car] *=[src/a]"\necho "gen api/v1.pb.go from [api/proto/v1.proto tools.lock]"\n', 'stderr': '', 'code': 0}
+E         dirs/static_pattern_rules_match_the_whole_name result #0
+E           expected: {'stdout': 'mkdir obj\nobj/x.o <- src/x.c [src/x.c] [obj] *=x\nobj/y.o <- src/y.c [src/y.c] [obj] *=y\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "mkdir obj"\necho "obj/x.o <- src/x.c [src/x.c] [obj] *=x"\necho "obj/y.o <- src/y.c [src/y.c] [obj] *=y"\n', 'stderr': '', 'code': 0}
+E       assert not ['dirs/shared_prerequisite_is_not_moved_into_the_directory result #0\n  expected: {\'stdout\': \'net/sock.o: net/sock.... <- src/x.c [src/x.c] [obj] *=x"\\necho "obj/y.o <- src/y.c [src/y.c] [obj] *=y"\\n\', \'stderr\': \'\', \'code\': 0}']
+
+/tests/test_outputs.py:35: AssertionError
+__________________ test_mentioned_prerequisite_ought_to_exist __________________
+
+    def test_mentioned_prerequisite_ought_to_exist():
+        """A prerequisite that is mentioned anywhere in the makefile counts as one that
+        ought to exist during the first implicit-rule pass, even without a rule of its own."""
+>       replay("mention")
+
+/tests/test_outputs.py:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+group = 'mention'
+
+    def replay(group):
+        binary = brickmake()
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], binary)
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: mention/prerequisite_mentioned_elsewhere_ought_to_exist result #0
+E           expected: {'stdout': 'compile lexer.c alone\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "compile lexer.c alone"\n', 'stderr': '', 'code': 0}
+E         mention/mentioned_header_with_rule_is_generated result #0
+E           expected: {'stdout': 'bison parser.y -> parser.h\ncompile parser.c with parser.h\ncompile lexer.c alone\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "bison parser.y -> parser.h"\necho "compile parser.c with parser.h"\necho "compile lexer.c alone"\n', 'stderr': '', 'code': 0}
+E         mention/order_only_mention_counts_too result #0
+E           expected: {'stdout': 'mkdir out\nrender guide.md -> out/guide.txt after [out/.dir]\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "mkdir out"\necho "render guide.md -> out/guide.txt after [out/.dir]"\n', 'stderr': '', 'code': 0}
+E       assert not ['mention/prerequisite_mentioned_elsewhere_ought_to_exist result #0\n  expected: {\'stdout\': \'compile lexer.c alone\...': \'echo "mkdir out"\\necho "render guide.md -> out/guide.txt after [out/.dir]"\\n\', \'stderr\': \'\', \'code\': 0}']
+
+/tests/test_outputs.py:35: AssertionError
+_____________________ test_pattern_specific_variable_order _____________________
+
+    def test_pattern_specific_variable_order():
+        """Pattern-specific variables from all matching patterns apply from the shortest
+        pattern to the longest, equal lengths in definition order; command-line values win."""
+>       replay("patvars")
+
+/tests/test_outputs.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+group = 'patvars'
+
+    def replay(group):
+        binary = brickmake()
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], binary)
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: patvars/more_specific_pattern_applies_last result #0
+E           expected: {'stdout': 'cc -O2 -g -fPIC -DNET net/sock.c\ncc -O2 -g -fPIC main.c\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "cc -O2 -g -fPIC -DNET net/sock.c"\necho "cc -O2 -g -fPIC main.c"\n', 'stderr': '', 'code': 0}
+E         patvars/equal_length_patterns_later_wins result #0
+E           expected: {'stdout': 'lib/a.o OPT=[lib] V=[]\nb.o OPT=[generic] V=[]\nxay OPT=[] V=[ypat]\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "lib/a.o OPT=[lib] V=[]"\necho "b.o OPT=[generic] V=[]"\necho "xay OPT=[] V=[ypat]"\n', 'stderr': '', 'code': 0}
+E         patvars/pattern_variables_match_whole_names result #0
+E           expected: {'stdout': 'lib/ab.o V=[any] W=[]\nab.o V=[any] W=[aw]\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "lib/ab.o V=[any] W=[]"\necho "ab.o V=[any] W=[aw]"\n', 'stderr': '', 'code': 0}
+E         patvars/command_line_overrides_everything result #0
+E           expected: {'stdout': 't V=[tgt tgt2]\nu V=[file more]\nw.x V=[pat]\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "t V=[tgt tgt2]"\necho "u V=[file more]"\necho "w.x V=[pat]"\n', 'stderr': '', 'code': 0}
+E         patvars/command_line_overrides_everything result #1
+E           expected: {'stdout': 't V=[cmd]\nu V=[cmd]\nw.x V=[cmd]\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "t V=[cmd]"\necho "u V=[cmd]"\necho "w.x V=[cmd]"\n', 'stderr': '', 'code': 0}
+E       assert not ['patvars/more_specific_pattern_applies_last result #0\n  expected: {\'stdout\': \'cc -O2 -g -fPIC -DNET net/sock.c\\n...ctual:   {\'stdout\': \'echo "t V=[cmd]"\\necho "u V=[cmd]"\\necho "w.x V=[cmd]"\\n\', \'stderr\': \'\', \'code\': 0}']
+
+/tests/test_outputs.py:35: AssertionError
+_____________________________ test_project_builds ______________________________
+
+    def test_project_builds():
+        """Multi-step incremental builds of small projects produce the same commands,
+        messages and files left on disk as GNU make across edits and rebuilds."""
+>       replay("project")
+
+/tests/test_outputs.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+group = 'project'
+
+    def replay(group):
+        binary = brickmake()
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], binary)
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: project/incremental_builds result #0
+E           expected: {'stdout': 'mkdir build\ncc-lib -O1 -fPIC -c lib/fmt/print.c -o build/lib/fmt/print.o\ncc-lib -O1 -fPIC -DNET -c lib/net/sock.c -o build/lib/net/sock.o\ncc -O1  -c src/main.c -o build/src/main.o\ncc -O1  -c src/util.c -o build/src/util.o\nlink build/app <- [build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o] |[build] ?[build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o]\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "mkdir build"; mkdir -p build\necho "cc-lib -O1 -fPIC -c lib/fmt/print.c -o build/lib/fmt/print.o"\nmkdir -p build/lib/fmt && touch build/lib/fmt/print.o\necho "cc-lib -O1 -fPIC -DNET -c lib/net/sock.c -o build/lib/net/sock.o"\nmkdir -p build/lib/net && touch build/lib/net/sock.o\necho "cc -O1  -c src/main.c -o build/src/main.o"\nmkdir -p build/src && touch build/src/main.o\necho "cc -O1  -c src/util.c -o build/src/util.o"\nmkdir -p build/src && touch build/src/util.o\necho "link build/app <- [build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o] |[build] ?[build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o]"\ntouch build/app\n', 'stderr': '', 'code': 0}
+E         project/incremental_builds result #1
+E           expected: {'stdout': "brickmake: Nothing to be done for 'all'.\n", 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "mkdir build"; mkdir -p build\necho "cc-lib -O1 -fPIC -c lib/fmt/print.c -o build/lib/fmt/print.o"\nmkdir -p build/lib/fmt && touch build/lib/fmt/print.o\necho "cc-lib -O1 -fPIC -DNET -c lib/net/sock.c -o build/lib/net/sock.o"\nmkdir -p build/lib/net && touch build/lib/net/sock.o\necho "cc -O1  -c src/main.c -o build/src/main.o"\nmkdir -p build/src && touch build/src/main.o\necho "cc -O1  -c src/util.c -o build/src/util.o"\nmkdir -p build/src && touch build/src/util.o\necho "link build/app <- [build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o] |[build] ?[build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o]"\ntouch build/app\n', 'stderr': '', 'code': 0}
+E         project/incremental_builds result #2
+E           expected: {'stdout': 'cc-lib -O3 -DNDEBUG -fPIC -c lib/fmt/print.c -o build/lib/fmt/print.o\ncc-lib -O3 -DNDEBUG -fPIC -DNET -c lib/net/sock.c -o build/lib/net/sock.o\nlink build/app <- [build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o] |[build] ?[build/lib/fmt/print.o build/lib/net/sock.o]\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "cc-lib -O3 -DNDEBUG -fPIC -c lib/fmt/print.c -o build/lib/fmt/print.o"\nmkdir -p build/lib/fmt && touch build/lib/fmt/print.o\necho "cc-lib -O3 -DNDEBUG -fPIC -DNET -c lib/net/sock.c -o build/lib/net/sock.o"\nmkdir -p build/lib/net && touch build/lib/net/sock.o\necho "link build/app <- [build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o] |[build] ?[build/lib/fmt/print.o build/lib/net/sock.o]"\ntouch build/app\n', 'stderr': '', 'code': 0}
+E         project/incremental_builds result #3
+E           expected: {'stdout': "rm -rf build\nbrickmake: Nothing to be done for 'all'.\n", 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo rm -rf build\necho "cc-lib -O1 -fPIC -c lib/fmt/print.c -o build/lib/fmt/print.o"\nmkdir -p build/lib/fmt && touch build/lib/fmt/print.o\necho "cc-lib -O1 -fPIC -DNET -c lib/net/sock.c -o build/lib/net/sock.o"\nmkdir -p build/lib/net && touch build/lib/net/sock.o\necho "link build/app <- [build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o] |[build] ?[build/lib/fmt/print.o build/lib/net/sock.o]"\ntouch build/app\n', 'stderr': '', 'code': 0}
+E         project/generated_parser_and_version_header result #0
+E           expected: {'stdout': 'stamp version\ncc main.c\nyacc parse.y -> parse.c\ncc parse.c\nlink calc <- [main.o parse.o]\nrm parse.c\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "stamp version"; cmp -s VERSION version.h || cp VERSION version.h\necho "cc main.c"; touch main.o\necho "yacc parse.y -> parse.c"; touch parse.c\necho "cc parse.c"; touch parse.o\necho "link calc <- [main.o parse.o]"; touch calc\nrm parse.c\n', 'stderr': '', 'code': 0}
+E         project/generated_parser_and_version_header result #1
+E           expected: {'files': ['Makefile', 'VERSION', 'calc', 'main.c', 'main.o', 'parse.o', 'parse.y', 'version.h']}
+E           actual:   {'files': ['Makefile', 'VERSION', 'main.c', 'parse.y', 'version.h']}
+E         project/generated_parser_and_version_header result #2
+E           expected: {'stdout': 'stamp version\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "stamp version"; cmp -s VERSION version.h || cp VERSION version.h\necho "cc main.c"; touch main.o\necho "yacc parse.y -> parse.c"; touch parse.c\necho "cc parse.c"; touch parse.o\necho "link calc <- [main.o parse.o]"; touch calc\nrm parse.c\n', 'stderr': '', 'code': 0}
+E         project/generated_parser_and_version_header result #3
+E           expected: {'stdout': 'stamp version\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'echo "stamp version"; cmp -s VERSION version.h || cp VERSION version.h\necho "cc main.c"; touch main.o\necho "yacc parse.y -> parse.c"; touch parse.c\necho "cc parse.c"; touch parse.o\necho "link calc <- [main.o parse.o]"; touch calc\nrm parse.c\n', 'stderr': '', 'code': 0}
+E       assert not ['project/incremental_builds result #0\n  expected: {\'stdout\': \'mkdir build\\ncc-lib -O1 -fPIC -c lib/fmt/print.c -...e.o', 'parse.y', 'version.h']}\n  actual:   {'files': ['Makefile', 'VERSION', 'main.c', 'parse.y', 'version.h']}", ...]
+
+/tests/test_outputs.py:35: AssertionError
+=========================== short test summary info ============================
+FAILED ../tests/test_outputs.py::test_cli_builds_and_rebuilds - AssertionErro...
+FAILED ../tests/test_outputs.py::test_shortest_stem_selection - AssertionErro...
+FAILED ../tests/test_outputs.py::test_directory_relative_prerequisites - Asse...
+FAILED ../tests/test_outputs.py::test_mentioned_prerequisite_ought_to_exist
+FAILED ../tests/test_outputs.py::test_pattern_specific_variable_order - Asser...
+FAILED ../tests/test_outputs.py::test_project_builds - AssertionError: projec...
+============================== 6 failed in 3.27s ===============================

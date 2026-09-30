@@ -1,0 +1,83 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 6,
+            "passed": 3,
+            "failed": 3,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790758738.1096318,
+            "stop": 1790758744.427587
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_cli_builds_and_rebuilds",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 6.082214345999091,
+                "start": 1790758738.1200726,
+                "stop": 1790758744.21363,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "def test_cli_builds_and_rebuilds():\n        \"\"\"/app/cmd/brickmake compiles with the standard library only, runs a default-goal\n        build whose recipes create the objects on disk, and rebuilds only what was removed.\"\"\"\n>       replay(\"smoke\")\n\n/tests/test_outputs.py:41: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\ngroup = 'smoke'\n\n    def replay(group):\n        binary = brickmake()\n        names = [n for n, c in CASES.items() if c[\"group\"] == group]\n        assert names, f\"no scenarios for {group}\"\n        failures = []\n        for name in names:\n            case = CASES[name]\n            got = play(case[\"steps\"], binary)\n            for i, (g, want) in enumerate(zip(got, case[\"expect\"])):\n                if g != want:\n                    failures.append(f\"{name} result #{i}\\n  expected: {want!r}\\n  actual:   {g!r}\")\n            if len(got) != len(case[\"expect\"]):\n                failures.append(f\"{name}: expected {len(case['expect'])} results, got {len(got)}\")\n>       assert not failures, \"\\n\".join(failures)\nE       AssertionError: smoke/smoke_layered_flags_and_rerun result #0\nE           expected: {'stdout': 'cc -O1 -Iinclude -c src/main.c -o out/main.o\\ncc -O1 -Iinclude -DUTIL -c src/util/str.c -o out/util/str.o\\nlinked 2 objects\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'cc -O1 -c src/main.c -o out/main.o\\ncc -O1 -c src/util/str.c -o out/util/str.o\\nlinked 2 objects\\n', 'stderr': '', 'code': 0}\nE         smoke/smoke_layered_flags_and_rerun result #3\nE           expected: {'stdout': 'cc -O1 -Iinclude -c src/main.c -o out/main.o\\nlinked 2 objects\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'cc -O1 -c src/main.c -o out/main.o\\nlinked 2 objects\\n', 'stderr': '', 'code': 0}\nE       assert not [\"smoke/smoke_layered_flags_and_rerun result #0\\n  expected: {'stdout': 'cc -O1 -Iinclude -c src/main.c -o out/main.o\\...ode': 0}\\n  actual:   {'stdout': 'cc -O1 -c src/main.c -o out/main.o\\\\nlinked 2 objects\\\\n', 'stderr': '', 'code': 0}\"]\n\n/tests/test_outputs.py:35: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_shortest_stem_selection",
+                "status": "passed",
+                "duration": 0.029055022001557518,
+                "start": 1790758744.2140226,
+                "stop": 1790758744.2444031,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_directory_relative_prerequisites",
+                "status": "passed",
+                "duration": 0.019092184003966395,
+                "start": 1790758744.2447991,
+                "stop": 1790758744.2651403,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_mentioned_prerequisite_ought_to_exist",
+                "status": "passed",
+                "duration": 0.01861197399921366,
+                "start": 1790758744.2655287,
+                "stop": 1790758744.2852912,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_pattern_specific_variable_order",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.024891369001124986,
+                "start": 1790758744.285637,
+                "stop": 1790758744.3146484,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "def test_pattern_specific_variable_order():\n        \"\"\"Pattern-specific variables from all matching patterns apply from the shortest\n        pattern to the longest, equal lengths in definition order; command-line values win.\"\"\"\n>       replay(\"patvars\")\n\n/tests/test_outputs.py:65: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\ngroup = 'patvars'\n\n    def replay(group):\n        binary = brickmake()\n        names = [n for n, c in CASES.items() if c[\"group\"] == group]\n        assert names, f\"no scenarios for {group}\"\n        failures = []\n        for name in names:\n            case = CASES[name]\n            got = play(case[\"steps\"], binary)\n            for i, (g, want) in enumerate(zip(got, case[\"expect\"])):\n                if g != want:\n                    failures.append(f\"{name} result #{i}\\n  expected: {want!r}\\n  actual:   {g!r}\")\n            if len(got) != len(case[\"expect\"]):\n                failures.append(f\"{name}: expected {len(case['expect'])} results, got {len(got)}\")\n>       assert not failures, \"\\n\".join(failures)\nE       AssertionError: patvars/more_specific_pattern_applies_last result #0\nE           expected: {'stdout': 'cc -O2 -g -fPIC -DNET net/sock.c\\ncc -O2 -g -fPIC main.c\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'cc -O2 -DNET -fPIC -g net/sock.c\\ncc -O2 -fPIC -g main.c\\n', 'stderr': '', 'code': 0}\nE         patvars/equal_length_patterns_later_wins result #0\nE           expected: {'stdout': 'lib/a.o OPT=[lib] V=[]\\nb.o OPT=[generic] V=[]\\nxay OPT=[] V=[ypat]\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'lib/a.o OPT=[generic] V=[]\\nb.o OPT=[generic] V=[]\\nxay OPT=[] V=[ypat]\\n', 'stderr': '', 'code': 0}\nE       assert not [\"patvars/more_specific_pattern_applies_last result #0\\n  expected: {'stdout': 'cc -O2 -g -fPIC -DNET net/sock.c\\\\ncc ...  {'stdout': 'lib/a.o OPT=[generic] V=[]\\\\nb.o OPT=[generic] V=[]\\\\nxay OPT=[] V=[ypat]\\\\n', 'stderr': '', 'code': 0}\"]\n\n/tests/test_outputs.py:35: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_project_builds",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.10724377699807519,
+                "start": 1790758744.3149095,
+                "stop": 1790758744.4265614,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "def test_project_builds():\n        \"\"\"Multi-step incremental builds of small projects produce the same commands,\n        messages and files left on disk as GNU make across edits and rebuilds.\"\"\"\n>       replay(\"project\")\n\n/tests/test_outputs.py:71: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\ngroup = 'project'\n\n    def replay(group):\n        binary = brickmake()\n        names = [n for n, c in CASES.items() if c[\"group\"] == group]\n        assert names, f\"no scenarios for {group}\"\n        failures = []\n        for name in names:\n            case = CASES[name]\n            got = play(case[\"steps\"], binary)\n            for i, (g, want) in enumerate(zip(got, case[\"expect\"])):\n                if g != want:\n                    failures.append(f\"{name} result #{i}\\n  expected: {want!r}\\n  actual:   {g!r}\")\n            if len(got) != len(case[\"expect\"]):\n                failures.append(f\"{name}: expected {len(case['expect'])} results, got {len(got)}\")\n>       assert not failures, \"\\n\".join(failures)\nE       AssertionError: project/incremental_builds result #0\nE           expected: {'stdout': 'mkdir build\\ncc-lib -O1 -fPIC -c lib/fmt/print.c -o build/lib/fmt/print.o\\ncc-lib -O1 -fPIC -DNET -c lib/net/sock.c -o build/lib/net/sock.o\\ncc -O1  -c src/main.c -o build/src/main.o\\ncc -O1  -c src/util.c -o build/src/util.o\\nlink build/app <- [build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o] |[build] ?[build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o]\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'mkdir build\\ncc-lib -O1 -fPIC -c lib/fmt/print.c -o build/lib/fmt/print.o\\ncc-lib -O1 -DNET -fPIC -c lib/net/sock.c -o build/lib/net/sock.o\\ncc -O1  -c src/main.c -o build/src/main.o\\ncc -O1  -c src/util.c -o build/src/util.o\\nlink build/app <- [build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o] |[build] ?[build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o]\\n', 'stderr': '', 'code': 0}\nE         project/incremental_builds result #2\nE           expected: {'stdout': 'cc-lib -O3 -DNDEBUG -fPIC -c lib/fmt/print.c -o build/lib/fmt/print.o\\ncc-lib -O3 -DNDEBUG -fPIC -DNET -c lib/net/sock.c -o build/lib/net/sock.o\\nlink build/app <- [build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o] |[build] ?[build/lib/fmt/print.o build/lib/net/sock.o]\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'cc-lib -O3 -DNDEBUG -fPIC -c lib/fmt/print.c -o build/lib/fmt/print.o\\ncc-lib -O3 -DNDEBUG -DNET -fPIC -c lib/net/sock.c -o build/lib/net/sock.o\\nlink build/app <- [build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o] |[build] ?[build/lib/fmt/print.o build/lib/net/sock.o]\\n', 'stderr': '', 'code': 0}\nE       assert not [\"project/incremental_builds result #0\\n  expected: {'stdout': 'mkdir build\\\\ncc-lib -O1 -fPIC -c lib/fmt/print.c -o b...ild/src/main.o build/src/util.o] |[build] ?[build/lib/fmt/print.o build/lib/net/sock.o]\\\\n', 'stderr': '', 'code': 0}\"]\n\n/tests/test_outputs.py:35: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            }
+        ]
+    }
+}

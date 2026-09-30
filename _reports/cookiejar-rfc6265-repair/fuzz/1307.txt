@@ -1,0 +1,15 @@
+at 1767225600
+get https://shop.example.co.uk/ab
+set http://foo.test/ab z=4; Max-Age=3600; Path=/ab; Domain=10.1.2.3; Domain=co.uk
+get https://example.com/a/b/c
+at 1767225630
+set http://www.example.com/ z=2
+get http://localhost/a/b/
+get http://a.b.example.com/a
+set https://shop.example.co.uk a=4; Path=; HttpOnly; Max-Age=3600; SameSite=Lax
+set https://localhost/a/bc/d b=6; Path=/ab
+set http://co.uk/ab sid=4; HttpOnly; Secure; HttpOnly; SameSite=Lax
+at 1767225630
+dump
+get http://co.uk/
+dump

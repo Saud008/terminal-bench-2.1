@@ -1,0 +1,24 @@
+at 1767225600
+at 1767225630
+set http://localhost a=2; Expires=01-Jan-69 00:00:00; Path=/a/; Path=/; SameSite=Lax
+get http://10.1.2.3/a
+get http://github.io/ab
+at 1767225660
+get http://1.2.3/a/b/c
+set https://192.168.0.1/ab z=8
+get https://192.168.0.1/a/b
+get http://www.example.com/a/
+get http://example.org/a/bc/d
+set https://foo.test/a/b/ sid=3
+get https://api.example.com/a/bc/d
+get https://co.uk/a/b/
+set https://shop.example.co.uk/a/bc/d 	=x
+set https://192.168.0.1/x/y?q=/z a=4; Domain=.example.com
+at 1767229660
+get https://api.example.com/a
+set https://co.uk/a/ a=2; HttpOnly; SameSite=Lax
+get http://192.168.0.1/a/b/c
+set https://api.example.com/a/b z=5; Max-Age=; Domain=10.1.2.3; Domain=test
+set https://co.uk/ sid=4
+set https://shop.example.co.uk b=9
+dump

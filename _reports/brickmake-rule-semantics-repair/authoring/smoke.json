@@ -1,0 +1,16 @@
+{
+ "smoke_layered_flags_and_rerun": {
+  "group": "smoke",
+  "steps": [
+   ["write", "Makefile", "OBJS = out/main.o out/util/str.o\nall: $(OBJS)\n\t@echo linked $(words $^) objects\nout/util/%.o: CF += -DUTIL\nout/%.o: CF += -Iinclude\n%.o: CF = -O1\nout/%.o: src/%.c\n\t@mkdir -p $(@D)\n\t@echo '$(CF)' > $@\n\t@echo cc $(CF) -c $< -o $@\n"],
+   ["write", "src/main.c", "int main(void){return 0;}\n"],
+   ["write", "src/util/str.c", "int s;\n"],
+   ["touch", "old", "src/main.c", "src/util/str.c"],
+   ["run"],
+   ["ls"],
+   ["run", "out/util/str.o"],
+   ["rm", "out/main.o"],
+   ["run"]
+  ]
+ }
+}

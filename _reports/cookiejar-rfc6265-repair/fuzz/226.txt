@@ -1,0 +1,37 @@
+at 1767225600
+at 1767229600
+set http://api.example.com/ab z=8; SameSite=Lax; SameSite=Lax; HttpOnly
+set https://1.2.3/a A=0; HttpOnly
+set https://co.uk/x/y?q=/z b=7; SameSite=Lax; HttpOnly; Domain=
+dump
+get https://example.com/a/b/c
+set https://a.b.example.com/ z=8; Domain=EXAMPLE.com
+set http://shop.example.co.uk/a a=4; Expires=29 Feb 2400 00:00:00; Path=/a; SameSite=Lax
+dump
+set http://example.com/ab A=3; SameSite=Lax; Path=ab; SameSite=Lax; Path=
+dump
+at 1767229630
+set http://localhost/a/b z=1; Secure; HttpOnly; Path=/a; HttpOnly
+at 1767229660
+set https://10.1.2.3/x/y?q=/z b=7; HttpOnly; HttpOnly; HttpOnly; Expires=Wed, 09-Jun-61 10:18:14 GMT
+set http://api.example.com/a noequals
+dump
+set https://github.io/a/b/c a=8; Secure; Path=/a; HttpOnly; HttpOnly
+get https://localhost/a/b/c
+get http://co.uk/a
+set https://10.1.2.3/a/bc/d b=3; HttpOnly; Domain=10.1.2.3
+set http://www.example.com/a sid=2
+get http://shop.example.co.uk
+dump
+set https://shop.example.co.uk/ A=8
+get http://10.1.2.3/ab
+set http://x.co.uk sid=6; Domain=.
+set http://www.example.com/x/y?q=/z z=6
+set https://foo.test/ab a=6; Path=/a; Expires=Thu, 01 Jan 2032 00:00:00 GMT; Path=/a/; Expires=31 Apr 2030 00:00:00
+get https://localhost/a
+get http://github.io/a/b
+set http://10.1.2.3/a sid=9; Expires=Wed, 09 Jun 2021 10:18:14 GMT; SameSite=Lax; Secure; Expires=junk
+set http://1.2.3 b=0
+set https://192.168.0.1/a/b/c A=1
+get https://localhost/a
+dump

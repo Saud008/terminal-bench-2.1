@@ -1,0 +1,189 @@
+[step 2] find . -maxdepth 3 -type f | sort
+[step 2] cat go.mod && printf '\n--- ranges ---\n' && cat docs/ranges.md && printf '\n--- resolution ---\n' && cat docs/resolution.md && printf '\n--- lockfile ---\n' && cat docs/lockfile.md && printf '\n--- cli ---\n' && cat docs/cli.md
+[step 2] go test ./...
+[step 3] for f in internal/semver/*.go internal/semrange/*.go; do echo "===== $f ====="; sed -n '1,260p' "$f"; done
+[step 3] for f in internal/resolve/*.go internal/lockfile/*.go internal/manifest/*.go internal/registry/*.go; do echo "===== $f ====="; sed -n '1,300p' "$f"; done
+[step 3] for f in cmd/pinwheel/*.go internal/cli/*.go; do echo "===== $f ====="; sed -n '1,260p' "$f"; done; echo '===== fixtures ====='; for f in examples/*/pin.json registry/*.json; do echo "--- $f"; cat "$f"; done; echo '===== executables ====='; find . -maxdepth 3 -type f -perm -111 -ls
+[step 4] sed -n '1,260p' internal/semver/version.go; echo '--- compare'; cat internal/semver/compare.go; echo '--- tests'; cat internal/semver/version_test.go
+[step 4] for f in internal/semrange/partial.go internal/semrange/comparator.go internal/semrange/range.go; do echo "--- $f"; cat "$f"; done
+[step 4] for f in internal/semrange/caret.go internal/semrange/tilde.go internal/semrange/xrange.go internal/semrange/hyphen.go internal/semrange/range_test.go; do echo "--- $f"; cat "$f"; done
+[step 4] for f in internal/resolve/resolver.go internal/resolve/constraints.go internal/resolve/candidates.go internal/resolve/yanked.go internal/resolve/errors.go; do echo "--- $f"; cat "$f"; done
+[step 5] nl -ba internal/semver/version.go | sed -n '1,220p'
+[step 5] nl -ba internal/semver/compare.go
+[step 6] nl -ba internal/semver/version.go | sed -n '1,240p'
+[step 7] nl -ba internal/semver/version.go | sed -n '1,80p'
+[step 8] nl -ba internal/semver/version.go | sed -n '75,150p'; echo '---'; nl -ba internal/semver/compare.go | sed -n '1,70p'
+[step 9] python3 - <<'PY'
+p='internal/semver/compare.go'
+s=open(p).read()
+s=s.replace('''\treturn 0\n}\n\nfunc compareIdentifier(a, b Identifier) int {\n\tif a.Numeric != b.Numeric {\n\t\tif a.Numeric {\n\t\t\treturn -1\n\t\t}\n\t\treturn 1\n\t}\n\treturn strings.Compare(a.Raw, b.Raw)\n}''','''\tif len(a) < len(b) {\n\t\treturn -1\n\t}\n\tif len(a) > len(b) {\n\t\treturn 1\n\t}\n\treturn 0\n}\n\nfunc compa...[+292 chars]
+[step 9] nl -ba internal/semrange/range.go | sed -n '1,220p'
+[step 10] python3 - <<'PY'
+p='internal/semrange/range.go'
+s=open(p).read().replace('if !c.Any && c.Version.IsPrerelease() {','if !c.Any && c.Version.IsPrerelease() && c.Version.SameTriple(v) {')
+open(p,'w').write(s)
+PY
+sed -n '1,108p' internal/semrange/range.go
+[step 11] nl -ba internal/semrange/range.go | sed -n '1,75p'
+[step 12] python3 - <<'PY'
+p='internal/semrange/range.go'
+s=open(p).read().replace('strings.Split(strings.TrimSpace(s), " || ")','strings.Split(strings.TrimSpace(s), "||")')
+open(p,'w').write(s)
+PY
+nl -ba internal/semrange/partial.go | sed -n '1,220p'
+[step 13] nl -ba internal/semrange/partial.go | sed -n '1,48p'; echo '--- helpers'; for f in internal/semrange/xrange.go internal/semrange/caret.go internal/semrange/tilde.go internal/semrange/hyphen.go internal/semrange/comparator.go; do echo "### $f"; cat "$f"; done
+[step 14] python3 - <<'PY'
+p='internal/semrange/comparator.go'
+s=open(p).read().replace('return v.Equal(c.Version)', 'return d == 0')
+open(p,'w').write(s)
+PY
+sed -n '1,48p' internal/semrange/partial.go; for f in xrange caret tilde hyphen; do echo "--- $f"; cat "internal/semrange/$f.go"; done
+[step 15] cat > internal/semrange/xrange.go <<'EOF'
+package semrange
+
+import "github.com/brightloom/pinwheel/internal/semver"
+
+// xrange expands a plain or operator-prefixed partial.
+func xrange(op string, p partial) []Comparator {
+	if p.fields == 3 {
+		return []Comparator{{Op: opFor(op), Version: p.version()}}
+	}
+	if p.fields == 0 {
+		if op == "<" || op == ">" {
+			return []Comparator{matchNone}
+		}
+		retu...[+1980 chars]
+[step 15] nl -ba internal/resolve/resolver.go; echo '--- constraints'; nl -ba internal/resolve/constraints.go; echo '--- candidates'; nl -ba internal/resolve/candidates.go; echo '--- yanked'; cat internal/resolve/yanked.go
+[step 16] nl -ba internal/resolve/resolver.go
+[step 16] nl -ba internal/resolve/constraints.go
+[step 16] nl -ba internal/resolve/candidates.go
+[step 17] nl -ba internal/resolve/resolver.go
+[step 18] python3 - <<'PY'
+p='internal/resolve/resolver.go'
+s=open(p).read()
+s=s.replace('''\t\tchanged := false\n\t\tfor _, name := range sortedKeys(cons) {''','''\t\tnext := make(map[string]*registry.Release, len(cons))\n\t\tfor _, name := range sortedKeys(cons) {''')
+s=s.replace('''\t\t\tif sel[name] != rel {\n\t\t\t\tsel[name] = rel\n\t\t\t\tchanged = true\n\t\t\t}\n\t\t}\n\t\tif !changed {\n\t\t\tretur...[+2090 chars]
+[step 19] nl -ba internal/resolve/constraints.go | sed -n '1,64p'
+[step 20] python3 - <<'PY'
+p='internal/resolve/constraints.go'
+s=open(p).read()
+s=s.replace('''\tout := append([]Constraint(nil), cons...)\n\treturn append(out, Constraint{From: OverrideName, Raw: raw, Range: semrange.MustParse(raw)})''','''\treturn []Constraint{{From: OverrideName, Raw: raw, Range: semrange.MustParse(raw)}}''')
+open(p,'w').write(s)
+p='internal/semrange/partial.go'
+s=open(p).read().replace(...[+711 chars]
+[step 21] nl -ba internal/lockfile/lockfile.go
+[step 22] nl -ba internal/lockfile/lockfile.go | sed -n '1,63p'
+[step 23] python3 - <<'PY'
+p='internal/lockfile/lockfile.go'
+s=open(p).read().replace('"encoding/json"','"bytes"\n\t"encoding/json"')
+old='''\tdata, err := json.MarshalIndent(l, "", "  ")\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\treturn append(data, '\\n'), nil'''
+new='''\tvar buf bytes.Buffer\n\tenc := json.NewEncoder(&buf)\n\tenc.SetIndent("", "  ")\n\tenc.SetEscapeHTML(false)\n\tif err := enc.Encod...[+217 chars]
+[step 24] cat docs/registry.md; echo '--- source'; nl -ba internal/registry/registry.go
+[step 25] nl -ba internal/registry/registry.go | sed -n '1,70p'
+[step 26] python3 - <<'PY'
+p='internal/registry/registry.go'
+s=open(p).read()
+s=s.replace('"strings"\n', '"strings"\n\t"io"\n')
+s=s.replace('"github.com/brightloom/pinwheel/internal/semver"', '"github.com/brightloom/pinwheel/internal/semrange"\n\t"github.com/brightloom/pinwheel/internal/semver"')
+s=s.replace('''\tif err := dec.Decode(&pkg); err != nil {\n\t\treturn nil, fmt.Errorf("registry: %s: %w", filepa...[+1462 chars]
+[step 27] cat internal/cli/cli.go; echo '--- compare'; cat internal/cli/compare.go; echo '--- satisfies'; cat internal/cli/satisfies.go
+[step 28] nl -ba internal/semver/version.go | sed -n '75,150p'; echo '--- tests'; cat internal/semver/version_test.go; echo '--- range tests'; cat internal/semrange/range_test.go
+[step 29] nl -ba internal/semver/version.go | sed -n '75,150p'
+[step 30] python3 - <<'PY'
+p='internal/semver/version.go'
+s=open(p).read()
+old='''\t\tn, err := strconv.ParseUint(r, 10, 64)\n\t\tif err != nil {\n\t\t\treturn nil, false\n\t\t}\n\t\tids = append(ids, Identifier{Raw: r, Numeric: true, Num: n})'''
+new='''\t\tif len(r) > 1 && r[0] == '0' {\n\t\t\treturn nil, false\n\t\t}\n\t\tids = append(ids, Identifier{Raw: r, Numeric: true})'''
+if old not in s: raise Syste...[+713 chars]
+[step 31] for f in internal/semver/compare.go internal/semrange/{range,partial,xrange,caret,tilde,hyphen,comparator}.go internal/resolve/{resolver,candidates,constraints,yanked}.go internal/lockfile/lockfile.go internal/registry/registry.go internal/manifest/manifest.go; do echo "===== $f"; cat "$f"; done > /tmp/changed.txt; wc -l /tmp/changed.txt; grep -nE '^(package|import|\s*"|func |var |type )' /tmp/cha...[+9 chars]
+[step 31] sed -n '1,120p' internal/cli/cli.go; sed -n '1,80p' internal/cli/resolve.go; python3 - <<'PY'
+from pathlib import Path
+for p in Path('.').rglob('*.go'):
+ s=p.read_text()
+ for a,b in [('(',')'),('{','}'),('[',']')]:
+  if s.count(a)!=s.count(b): print('unbalanced',p,a,s.count(a),b,s.count(b))
+print('go.mod:',Path('go.mod').read_text().strip())
+PY
+[step 31] cat >> internal/semver/version_test.go <<'EOF'
+
+func TestComparePrereleaseNumericAndLength(t *testing.T) {
+	cases := []struct{ a, b string; want int }{
+		{"2.1.0-beta.11", "2.1.0-beta.2", 1},
+		{"1.0.0-alpha", "1.0.0-alpha.1", -1},
+		{"1.0.0-999999999999999999999999", "1.0.0-2", 1},
+		{"1.0.0+a", "1.0.0+b", 0},
+	}
+	for _, c := range cases {
+		if got := Compare(MustParse(c.a), MustParse(c.b)); got ...[+1128 chars]
+[step 32] tail -n 55 internal/semver/version_test.go; echo '---'; tail -n 65 internal/semrange/range_test.go; echo '--- contamination'; grep -RInE 'README\.md|root@|cmd/ +docs/' --include='*.go' . || true
+[step 32] sed -n '1,220p' /tmp/changed.txt
+[step 33] echo '--- semver test'; tail -n 45 internal/semver/version_test.go; echo '--- range test'; tail -n 55 internal/semrange/range_test.go; echo '--- contamination'; grep -RInE 'README\.md|root@|cmd/ +docs/' --include='*.go' . || true
+[step 34] cat internal/cli/cli.go; echo '---'; cat internal/cli/resolve.go; echo '--- registry spec'; cat docs/registry.md
+[step 35] python3 - <<'PY'
+p='internal/cli/cli.go'
+s=open(p).read()
+s=s.replace('''\tif len(args) == 0 {\n\t\tusage(stderr)\n\t\treturn exitUsage\n\t}''','''\tif len(args) == 0 {\n\t\treturn fail(stderr, exitUsage, "missing command")\n\t}''')
+s=s.replace('''\tfmt.Fprintf(stderr, "pinwheel: unknown command %q\\n", args[0])\n\tusage(stderr)\n\treturn exitUsage''','''\treturn fail(stderr, exitUsage, "unknown c...[+1035 chars]
+[step 35] echo '--- manifests'; for f in examples/*/pin.json; do echo "$f"; cat "$f"; done; echo '--- registry summary'; python3 - <<'PY'
+import json,glob
+for p in glob.glob('registry/*.json'):
+ d=json.load(open(p)); print(d['name'])
+ for r in d['versions']:
+  print(' ',r['version'],'yanked='+str(r.get('yanked',False)),'deps='+str(r.get('dependencies',{})))
+PY
+[step 36] python3 - <<'PY'
+p='internal/semrange/range.go'
+s=open(p).read()
+s=s.replace('\t\topSpace  = regexp.MustCompile(`(~>|<=|>=|[<>=~^])\\s+`)\n','')
+old='''\tvar set []Comparator\n\tfor _, tok := range strings.Fields(opSpace.ReplaceAllString(alt, "$1")) {\n\t\tcs, ok := parseToken(tok)\n\t\tif !ok {\n\t\t\treturn nil, false\n\t\t}\n\t\tset = append(set, cs...)\n\t}\n'''
+new='''\tvar set []Comparator\n...[+1236 chars]
+[step 37] python3 - <<'PY'
+p='internal/semver/version.go'
+s=open(p).read()
+s=s.replace('''\tbody := strings.TrimSpace(s)\n\tif len(body) > maxVersionLength {''','''\tif len(s) > maxVersionLength {''')
+s=s.replace('''\t\treturn Version{}, &ParseError{Input: s}\n\t}\n\tbody = strings.TrimPrefix(body, "v")''','''\t\treturn Version{}, &ParseError{Input: s}\n\t}\n\tbody := strings.TrimPrefix(strings.TrimSpace(s)...[+240 chars]
+[step 37] echo '--- semver'; cat internal/semver/compare.go; sed -n '1,125p' internal/semver/version.go; echo '--- lock'; cat internal/lockfile/lockfile.go; echo '--- registry imports/body'; sed -n '1,130p' internal/registry/registry.go; echo '--- manifest'; cat internal/manifest/manifest.go
+[step 38] node -e 'try { console.log(require("semver/package.json").version) } catch(e) { console.log("no semver") }'
+[step 38] sed -n '1,125p' internal/semver/version.go; echo '--- compare'; cat internal/semver/compare.go; echo '--- range'; sed -n '1,190p' internal/semrange/range.go
+[step 38] python3 - <<'PY'
+from pathlib import Path
+import re
+for p in Path('internal').rglob('*.go'):
+ s=p.read_text()
+ m=re.search(r'import \((.*?)\)',s,re.S)
+ if not m: continue
+ for q in re.findall(r'"([^"]+)"',m.group(1)):
+  name=q.rsplit('/',1)[-1]
+  if name not in ('C',) and not re.search(r'\b'+re.escape(name)+r'\.',s[m.end():]):
+   print('possibly unused',p,q)
+PY
+[step 39] node <<'JS'
+try {
+ const s=require('semver'); console.log('semver',require('semver/package.json').version)
+ const ranges=['1||2','< =1.2.3','>= 1.2.3','v1.2.3','=v1.2.3','==1.2.3','1.x.2','1.*.x','||','1.2.3 - 2.3','^0.0','~1','>*','<*']
+ for(const r of ranges){ try { let x=new s.Range(r); console.log(JSON.stringify(r),'valid',x.range) } catch(e){ console.log(JSON.stringify(r),'INVALID') } }
+ cons...[+287 chars]
+[step 40] python3 - <<'PY'
+p='internal/semrange/partial.go'
+s=open(p).read()
+block='''\t// Once a field is missing or a wildcard, later fields may not be concrete.\n\tif (isWild(m[1]) && (!isWild(m[2]) || !isWild(m[3]))) ||\n\t\t(isWild(m[2]) && !isWild(m[3])) {\n\t\treturn partial{}, false\n\t}\n'''
+if block not in s: raise SystemExit('wildcard block not found')
+s=s.replace(block,'')
+open(p,'w').write(s)
+
+...[+676 chars]
+[step 40] python3 - <<'PY'
+from pathlib import Path
+import re
+issues=[]
+for p in Path('.').rglob('*.go'):
+ s=p.read_text()
+ if not s.endswith('\n'): issues.append(f'{p}: missing final newline')
+ for x in ['"os/exec"','"syscall"','"unsafe"','"plugin"','import "C"']:
+  if x in s: issues.append(f'{p}: forbidden {x}')
+ m=re.search(r'import \((.*?)\)',s,re.S)
+ if m:
+  body=s[m.end():]
+  for q in re.findall(r'"([...[+497 chars]
+[step 41] {}
+[step 42] {}

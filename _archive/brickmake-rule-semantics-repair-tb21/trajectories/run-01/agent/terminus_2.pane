@@ -1,0 +1,5666 @@
+[?2004hroot@1445960760bf:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@1445960760bf:/app# clear
+[?2004l[H[J[3J[?2004hroot@1445960760bf:/app# ls -la && printf '\n--- files ---\n' && find . -maxdepth 3 -type f | sort
+[?2004ltotal 32
+drwxr-xr-x  1 root root 4096 Sep 25 20:04 .
+drwxr-xr-x  1 root root 4096 Sep 26 14:22 ..
+-rwxrwxrwx  1 root root 1649 Sep 25 17:30 README.md
+drwxrwxrwx  3 root root 4096 Sep 25 20:04 cmd
+drwxrwxrwx  2 root root 4096 Sep 25 20:04 docs
+drwxrwxrwx  3 root root 4096 Sep 25 20:04 examples
+-rwxrwxrwx  1 root root   26 Sep 25 17:20 go.mod
+drwxrwxrwx 10 root root 4096 Sep 25 20:04 internal
+
+--- files ---
+./README.md
+./cmd/brickmake/main.go
+./docs/cli.md
+./docs/functions.md
+./docs/makefiles.md
+./docs/rules.md
+./docs/updating.md
+./docs/variables.md
+./examples/demo/Makefile
+./go.mod
+./internal/cli/main.go
+./internal/cli/options.go
+./internal/db/db.go
+./internal/diag/diag.go
+./internal/engine/deps.go
+./internal/engine/engine.go
+./internal/engine/implicit.go
+./internal/engine/node.go
+./internal/engine/recipe.go
+./internal/engine/recipe_test.go
+./internal/engine/scope.go
+./internal/engine/update.go
+./internal/expand/auto.go
+./internal/expand/control.go
+./internal/expand/define.go
+./internal/expand/expand.go
+./internal/expand/expand_test.go
+./internal/expand/funcs.go
+./internal/parse/cond.go
+./internal/parse/lines.go
+./internal/parse/parse_test.go
+./internal/parse/parser.go
+./internal/parse/rules.go
+./internal/text/words.go
+./internal/text/words_test.go
+./internal/vars/vars.go
+[?2004hroot@1445960760bf:/app# printf '\n--- docs/cli.md ---\n' && cat docs/cli.md && printf '\n--- other docs ---\n' && for f in docs/*; do [ "$f" = docs/cli.md ] || { echo "### $f"; cat "$f"; }; done
+[?2004l
+--- docs/cli.md ---
+# Command line
+
+```
+brickmake [options] [NAME=value ...] [target ...]
+```
+
+| Option | Meaning |
+|---|---|
+| `-f FILE`, `--file=FILE`, `--makefile=FILE` | read FILE (may be repeated) |
+| `-C DIR`, `--directory=DIR` | change to DIR first; prints `Entering directory` / `Leaving directory` lines unless `-s` |
+| `-n`, `--just-print`, `--dry-run`, `--recon` | print recipes without running them |
+| `-s`, `--silent`, `--quiet` | do not echo recipe lines |
+| `-k`, `--keep-going` | continue after errors |
+| `-B`, `--always-make` | treat every target as out of date |
+| `-r`, `-R` | accepted for compatibility; brickmake never has built-in rules or variables |
+| `-h`, `--help` | usage |
+| `-v`, `--version` | version |
+
+Single-letter options can be combined (`-ns`). Arguments containing an
+assignment operator (`=`, `:=`, `::=`, `+=`, `?=`) before any other `:` are
+command-line variables; see `variables.md`.
+
+## Output
+
+Recipe lines, `$(info)` output, `rm` lines for intermediate files and the
+goal messages go to stdout; warnings and errors go to stderr. brickmake's
+own messages start with `brickmake:`.
+
+## Exit status
+
+0 on success, 2 on any error (parse errors, `$(error)`, missing rules,
+failing recipes). With `-k` the status is 2 if anything failed.
+
+--- other docs ---
+### docs/functions.md
+# Functions
+
+`$(name arguments)` or `${name arguments}` calls a function when `name` is
+one of the names below followed by a blank. Arguments are separated by
+commas that are not inside parentheses (or braces) of the same kind as the
+call; the last argument takes any remaining commas.
+
+## Text
+
+| Call | Result |
+|---|---|
+| `$(subst from,to,text)` | every `from` replaced by `to` |
+| `$(patsubst pattern,replacement,text)` | words matching `pattern` replaced; `%` in `replacement` is the stem |
+| `$(strip text)` | words separated by single spaces |
+| `$(findstring find,text)` | `find` if it occurs in `text`, else empty |
+| `$(filter patterns,text)` / `$(filter-out patterns,text)` | words that match / do not match any pattern |
+| `$(sort list)` | sorted, duplicates removed |
+| `$(word n,text)` | the n-th word (n >= 1) |
+| `$(wordlist s,e,text)` | words s to e |
+| `$(words text)`, `$(firstword text)`, `$(lastword text)` | |
+
+## File names
+
+| Call | Result |
+|---|---|
+| `$(dir names)` | directory part of each word, `./` if none |
+| `$(notdir names)` | file part of each word |
+| `$(suffix names)` | suffix of each word that has one |
+| `$(basename names)` | each word without its suffix |
+| `$(addsuffix s,names)`, `$(addprefix p,names)` | |
+| `$(join list1,list2)` | word-by-word concatenation |
+| `$(wildcard patterns)` | existing files matching each pattern, each pattern's matches sorted |
+
+## Control and introspection
+
+| Call | Result |
+|---|---|
+| `$(if cond,then[,else])` | `then` if `cond` (stripped, then expanded) is not empty; only the chosen branch is expanded |
+| `$(or a,b,...)` | first non-empty argument |
+| `$(and a,b,...)` | last argument if all are non-empty, else empty |
+| `$(foreach var,list,text)` | `text` expanded once per word with `var` bound to it |
+| `$(call name,arg1,...)` | expands variable `name` with `$(1)`, `$(2)`, ... bound; `$(0)` is `name` |
+| `$(origin name)`, `$(flavor name)`, `$(value name)` | see `variables.md` |
+| `$(shell command)` | standard output of `/bin/sh -c command`, newlines turned into spaces |
+| `$(info text)` | prints `text` on stdout |
+| `$(warning text)` | prints `FILE:LINE: text` on stderr |
+| `$(error text)` | stops with `FILE:LINE: *** text.  Stop.` |
+
+Messages raised while a recursive variable is expanded report the position
+of that variable's definition.
+### docs/makefiles.md
+# Reading makefiles
+
+## Which file
+
+Without `-f`, brickmake reads the first of `GNUmakefile`, `makefile` and
+`Makefile` that exists. `-f FILE` may be given several times; the files are
+read in order. Positions in messages use the file name as given.
+
+## Lines
+
+A backslash at the end of a line joins it with the next one. Outside
+recipes, the backslash, the newline, trailing blanks before the backslash
+and leading blanks of the next line become a single space. In recipe lines
+the backslash-newline is kept and passed to the shell; one leading tab of
+the continuation line is removed.
+
+`#` starts a comment outside recipe lines. `\#` is a literal `#`. Comments
+are not stripped from recipe lines, which go to the shell as written.
+
+Whitespace before a comment is part of the line, so `DIR = out # build dir`
+assigns `out ` (with a trailing space) to `DIR`.
+
+## Recipe lines
+
+A line that starts with a tab and follows a rule line (possibly separated by
+blank lines, comment lines and conditional directives) is a recipe line of
+that rule. A rule may also carry its first recipe line after a `;` on the
+rule line: `all: ; @echo done`. Any other line ends the recipe.
+
+A tab-prefixed line that does not follow a rule is read as an ordinary line.
+
+## Conditionals
+
+```
+ifeq (A,B)    ifeq "A" "B"    ifeq 'A' "B"
+ifneq ...     ifdef NAME      ifndef NAME
+else          else ifeq ...   endif
+```
+
+Conditionals nest and may appear anywhere, including between recipe lines.
+Both arguments of `ifeq`/`ifneq` are expanded before they are compared. In
+the parenthesized form the first argument keeps its leading blanks but loses
+its trailing blanks, and the second argument loses its leading blanks but
+keeps its trailing blanks: `ifeq ( a , a )` compares ` a` with `a ` and is
+false.
+
+`ifdef NAME` expands `NAME` to get a variable name and is true when that
+variable is defined with a non-empty value. The value itself is not
+expanded: after `E =` and `R = $(E)`, `ifdef R` is true and `ifdef E` is
+false. A simple variable assigned an empty expansion (`S := $(E)`) is
+empty, so `ifdef S` is false.
+
+## Assignments
+
+```
+NAME = value      recursive
+NAME := value     simple (also ::=)
+NAME += value     append
+NAME ?= value     set only if NAME is not defined
+```
+
+The line is an assignment when an assignment operator appears before any
+other `:` (outside variable references). Leading blanks of the value are
+removed; trailing blanks are kept. The name is expanded.
+See `variables.md` for the meaning of each operator.
+
+A line that is neither an assignment nor a rule is expanded; if the result
+is empty (for example a line holding only `$(info ...)`) it is ignored,
+otherwise it is an error: `Makefile:3: *** missing separator.  Stop.`
+
+## Rule lines
+
+```
+targets : prerequisites [| order-only prerequisites] [; recipe]
+targets : target-pattern : prerequisite-patterns [| order-only ...] [; recipe]
+targets : NAME op value
+```
+
+Targets and prerequisites are expanded when the line is read (see
+`rules.md` for secondary expansion). A rule line whose remainder after the
+first `:` is an assignment defines target-specific or pattern-specific
+variables; such a value may contain `;`.
+
+Double-colon rules are not supported.
+
+## Unsupported directives
+
+`define`, `endef`, `include`, `-include`, `sinclude`, `override`, `export`,
+`unexport`, `vpath`, `undefine`, `private` and `load` stop brickmake with
+`*** unsupported directive 'NAME'.  Stop.`
+### docs/rules.md
+# Rules
+
+## Explicit rules
+
+```
+app: main.o util.o
+	cc -o $@ $^
+```
+
+A target may appear in several rules. Only one of them may have a recipe (a
+later recipe replaces an earlier one with a warning on stderr). The
+prerequisites of all its rules are combined in this order: those of the
+implicit rule (if one is used, see below), then those of the rule that has
+the recipe, then those of the other rules in makefile order.
+
+```
+x: p1
+x: p2 p3
+	@echo $^      # p2 p3 p1 p4
+x: p4
+```
+
+`a b: c` is the same as two rules `a: c` and `b: c`.
+
+## Order-only prerequisites
+
+Prerequisites after a `|` word are order-only: they are brought up to date
+before the target, but their timestamps never make the target out of date,
+and they appear only in `$|`. A name that is also a normal prerequisite of
+the same target (in any of its rules) is a normal prerequisite only; it is
+dropped from the order-only list.
+
+## Static pattern rules
+
+```
+OBJS := obj/x.o obj/y.o
+$(OBJS): obj/%.o: src/%.c | obj
+	cc -c $< -o $@
+```
+
+Each target is matched against the target pattern as a whole (no directory
+handling) and `%` in each prerequisite is replaced by the stem, which is
+also `$*`. A target that does not match gets a warning and no
+prerequisites from the rule.
+
+## Pattern rules
+
+```
+%.o: %.c
+	cc -c $< -o $@
+%.tab.c %.tab.h: %.y
+	bison -d $<
+```
+
+A rule whose targets all contain `%` is a pattern rule. A rule with several
+target patterns makes all of its targets with one run of its recipe.
+
+Defining a pattern rule with the same targets and prerequisites as an
+existing one replaces it, and the new rule counts as defined at the new
+position. The same definition without a recipe cancels the existing rule.
+Pattern rules are never the default goal. A rule whose only target is `%`
+(match-anything) is not supported and is ignored.
+
+## Implicit rule search
+
+A file that is not phony and has no recipe from an explicit or static
+pattern rule is looked up among the pattern rules, even if it exists.
+
+**Matching.** A target pattern that contains a slash is matched against the
+whole file name. A target pattern without a slash is matched against the
+file part of a name that has a directory; the directory is then put in
+front of the stem. For `src/eat` and the rule `e%t: c%r`, the stem is
+`src/a` and the prerequisite is `src/car`. In such a directory-relative
+match the directory is added only to prerequisites that contain `%`:
+with `%.o: %.c config.h`, `net/sock.o` depends on `net/sock.c` and
+`config.h`.
+
+The stem must not be empty.
+
+**Choosing.** All matching rules are ordered by the length of their stem,
+directory part included, shortest first; rules with equally long stems keep
+their makefile order. For `lib/a.o`, the rule `lib/%.o: lib/%.c` (stem `a`)
+comes before `%.o: %.c` (stem `lib/a`), wherever each is defined.
+
+The rules are then tried in that order, in two passes:
+
+1. A rule applies if each of its prerequisites (normal and order-only)
+   exists as a file or **ought to exist**: it is mentioned in the makefile
+   as a target or as a prerequisite of an explicit rule, or it was entered
+   by an earlier implicit rule search. A mentioned prerequisite does not need
+   a rule of its own; if it has none and does not exist, the build then fails
+   with `No rule to make target`.
+2. If no rule applies, the rules are tried again, and a prerequisite that
+   neither exists nor ought to exist is also accepted if it can itself be
+   made by implicit rule search (a chain). A rule is not used twice in one
+   chain.
+
+The first rule that applies is used: its recipe, its stem as `$*`, and its
+prerequisites, which come before the target's explicit prerequisites.
+
+## Intermediate files
+
+A file that was accepted only through a chain in the second pass is
+**intermediate**. Intermediate files are treated specially:
+
+- A missing intermediate file does not by itself make its dependent out of
+  date. The dependent is out of date only if the intermediate file exists
+  and is newer, or if something the intermediate file depends on (checked
+  recursively through further intermediates) is newer than the dependent.
+- An intermediate file is made only when its dependent has to be remade,
+  after the dependent's other prerequisites have been considered.
+- Intermediate files made during the run are deleted at the end, printing
+  `rm FILE ...` (one line for all of them) unless `-s` was given. With `-n`
+  the line is printed but nothing is deleted.
+
+Files listed as prerequisites of `.SECONDARY` or `.PRECIOUS` are never
+deleted; `.SECONDARY` without prerequisites keeps all of them. Files that
+exist or are mentioned in the makefile are never intermediate.
+
+## Secondary expansion
+
+After `.SECONDEXPANSION:` appears, the prerequisite lists of the rules that
+follow are expanded a second time when their target is considered. `$$`
+survives the first expansion as `$`, so `$$@` and `$$*` refer to the target
+and the stem, and `$$($$@_OBJS)` to a per-target variable. The second
+expansion uses the target's variables. For static pattern rules and pattern
+rules, `%` in the result is then replaced by the stem as usual.
+
+## Special targets
+
+| Target | Effect |
+|---|---|
+| `.PHONY` | prerequisites are phony: always remade, never looked up among pattern rules |
+| `.SECONDEXPANSION` | enables secondary expansion for the rules that follow |
+| `.SECONDARY`, `.PRECIOUS` | intermediate files that are kept |
+| `.SUFFIXES`, `.DEFAULT`, `.INTERMEDIATE`, `.NOTINTERMEDIATE`, `.DELETE_ON_ERROR`, `.IGNORE`, `.SILENT`, `.NOTPARALLEL`, `.ONESHELL`, `.POSIX`, `.EXPORT_ALL_VARIABLES`, `.LOW_RESOLUTION_TIME` | accepted and ignored |
+
+## Default goal
+
+The default goal is the first target of the first explicit or static
+pattern rule that does not start with `.` (a target containing `/` is
+allowed even if it starts with `.`). Assigning `.DEFAULT_GOAL` overrides
+it; the value at the end of reading is used.
+### docs/updating.md
+# Updating targets
+
+## Goals
+
+The goals are the targets named on the command line, or the default goal.
+They are updated one after the other, left to right. With no goal and no
+default goal brickmake stops with `brickmake: *** No targets.  Stop.` (or
+`No targets specified and no makefile found` when no makefile was read).
+
+## Considering a file
+
+A file is considered at most once per run. To consider a target,
+brickmake:
+
+1. runs implicit rule search if the target has no recipe (`rules.md`);
+2. considers each prerequisite in order (normal and order-only; intermediate
+   files as described in `rules.md`);
+3. decides whether the target is out of date;
+4. if it is, runs its recipe.
+
+A file that has no rule at all and does not exist cannot be made:
+
+```
+brickmake: *** No rule to make target 'x.h', needed by 'x.o'.  Stop.
+```
+
+A target is out of date when any of these holds:
+
+- it is phony;
+- it does not exist;
+- `-B` was given;
+- a normal prerequisite is phony, does not exist (after it was considered),
+  or has a modification time newer than the target's.
+
+Times are compared with full (sub-second) precision.
+
+## Time of a remade target
+
+After a target's recipe has run, brickmake reads the target's modification
+time from the file system again. A recipe that leaves its target untouched
+therefore does not make the targets that depend on it out of date, and a
+recipe that does not create its target leaves a missing file, which does.
+
+A target without a recipe that was out of date (for example `FORCE:` or a
+header listed with prerequisites but no recipe) is "remade" by doing
+nothing; its time is simply read again. A missing file with an empty rule
+thus makes everything that depends on it out of date.
+
+With `-n`, recipes are printed instead of run, and a target whose recipe was
+printed counts as newer than everything, so its dependents are printed too.
+Lines prefixed with `+` run even with `-n`; a recipe made only of such lines
+is treated like a normal run.
+
+## `$?`
+
+`$?` lists the normal prerequisites (without duplicates) that are phony,
+missing, or newer than the target; all of them if the target does not
+exist.
+
+## Recipes
+
+All lines of a recipe are expanded before the first one runs. Each line runs
+in its own `/bin/sh -c`. Prefixes (`@` do not echo, `-` ignore errors, `+`
+run even with `-n`) are recognized before and after expansion, and leading
+blanks are removed. A line that expands to nothing is skipped. Each other
+line is echoed on stdout before it runs, unless it has `@` or `-s` was
+given; with `-n` every line is printed.
+
+A failing line stops the recipe:
+
+```
+brickmake: *** [Makefile:4: all] Error 1
+```
+
+With `-`, the failure is reported and ignored:
+`brickmake: [Makefile:2: all] Error 1 (ignored)`. The position is that of
+the failing recipe line.
+
+## Messages for goals
+
+For each goal, brickmake checks whether any recipe line was run (or printed,
+with `-n`) **while that goal was being updated**. If none was, it prints on
+stdout:
+
+- `brickmake: Nothing to be done for 'GOAL'.` if the goal is phony or has no
+  recipe (after implicit rule search);
+- `brickmake: 'GOAL' is up to date.` otherwise.
+
+The check is made separately for every goal: `brickmake a b` where updating
+`a` also made `b` prints `brickmake: 'b' is up to date.` for `b`. A goal
+named twice gets the message the second time.
+
+## Errors and `-k`
+
+Without `-k`, the first error stops the run and brickmake exits with status
+2. With `-k`, brickmake continues with the other prerequisites and goals;
+targets that depend on something that failed are not remade, and for a goal
+that was not remade because of a failed prerequisite it prints (on stderr,
+not with `-n`):
+
+```
+brickmake: Target 'all' not remade because of errors.
+```
+
+`No rule to make target` errors end with `.  Stop.` only when brickmake
+actually stops (without `-k`). The exit status is 2 if anything failed and 0
+otherwise.
+
+Intermediate files are removed at the end of the run, also after an error.
+### docs/variables.md
+# Variables
+
+## References
+
+`$(NAME)`, `${NAME}` and `$X` (one character) refer to variables; `$$` is a
+literal `$`. A reference whose name contains references is expanded first:
+`$($(KIND)_SRCS)`. `$(NAME:from=to)` is a substitution reference: without
+`%` it replaces the suffix `from` of each word by `to`; with `%` it works
+like `$(patsubst from,to,$(NAME))`. Undefined variables expand to nothing.
+
+## Flavors
+
+A **recursive** variable (`=`) stores its text unexpanded; every reference
+expands it again, so it sees the current values of the variables it uses. A
+recursive variable that refers to itself is an error:
+`Makefile:1: *** Recursive variable 'A' references itself (eventually).  Stop.`
+
+A **simple** variable (`:=` or `::=`) is expanded once, when it is assigned,
+and stores the result.
+
+`$(flavor NAME)` reports `recursive`, `simple` or `undefined`.
+
+## Appending
+
+`NAME += text` on a variable that is not defined is the same as
+`NAME = text`.
+
+On an existing variable, `+=` keeps the variable's flavor:
+
+- recursive: the unexpanded `text` is added to the unexpanded value, so it
+  is expanded with the rest of the value at every reference;
+- simple: `text` is expanded **now** and the result is added to the stored
+  value. The variable stays simple.
+
+The two parts are separated by one space. If the added part is empty (after
+expansion, for a simple variable) the value is unchanged; if the old value
+is empty the result is just the added part.
+
+```
+BASE := -Wall
+BASE += $(EXTRA)   # EXTRA is not defined yet: BASE stays "-Wall", simple
+EXTRA = -Werror
+```
+
+## Conditional assignment
+
+`NAME ?= text` does nothing if `NAME` is defined at all, even with an empty
+value. Otherwise it is `NAME = text`.
+
+## Command-line and environment variables
+
+`NAME=value` arguments define recursive variables, `NAME:=value` simple
+ones. A command-line variable cannot be changed by the makefile: ordinary
+assignments to it are ignored, and every target-specific or
+pattern-specific definition of the same name takes the command-line value.
+
+Environment variables are imported as recursive variables with origin
+`environment` (except `SHELL`, which is always `/bin/sh`). A makefile
+assignment replaces them. Recipes run with the process environment plus the
+command-line variables.
+
+## Target-specific variables
+
+```
+release: CFLAGS = -O3
+test:    CFLAGS += -DTEST
+debug:   OPT := $(BASE) -g
+lib.a:   AR ?= ar
+```
+
+A target-specific definition applies while that target's recipe is expanded
+and while its prerequisites are considered, recursively: a prerequisite that
+is first reached through `release` sees `release`'s definitions (unless it
+has its own). A file is considered once, so the context of the first target
+that asks for it is the one it keeps.
+
+The operators behave as follows for target-specific (and pattern-specific)
+definitions:
+
+- `=` and `:=` define the variable for the target; `:=` expands the value
+  when the line is read.
+- `?=` defines the variable for the target only if no variable of that name
+  is visible when the line is read (the target's earlier definitions and
+  the global variables defined so far). For a pattern-specific `?=` the
+  check is made when the file's pattern set is built, against the earlier
+  definitions in that set and the global variables as they are at the end
+  of reading.
+- `+=` extends the target's own earlier definition if the same target
+  already defined the variable (`test: CFLAGS = -O0` then
+  `test: CFLAGS += -DTEST` gives `-O0 -DTEST`), following the rules of
+  "Appending" above. Otherwise it appends to whatever value is visible from
+  the enclosing context **when the variable is used**: the global value, the
+  inherited value from the parent target, and so on. In that case the added
+  text is always expanded at use (even if the enclosing variable is simple),
+  and the separating space is added whenever the enclosing value is not
+  empty.
+
+## Pattern-specific variables
+
+```
+build/%.o: CFLAGS += -fPIC
+%.o:       OPT = generic
+```
+
+A definition whose target contains `%` applies to every file whose whole
+name matches the pattern (`a%.o` matches `ab.o` but not `lib/ab.o`).
+
+All pattern-specific definitions that match a file are combined into one
+set for that file. They are applied from the shortest pattern to the
+longest, and patterns of equal length in makefile order, using the
+target-specific rules above; later definitions replace or extend earlier
+ones. The most specific pattern therefore wins, regardless of the order in
+the makefile:
+
+```
+CFLAGS = -O2
+build/net/%.o: CFLAGS += -DNET
+build/%.o:     CFLAGS += -fPIC
+# build/net/sock.o gets "-O2 -fPIC -DNET"
+```
+
+## Lookup order
+
+When a variable is used for a file, brickmake searches:
+
+1. the file's own target-specific variables,
+2. the file's pattern-specific set,
+3. the variables of the target that first asked for the file (its own
+   target-specific variables, then its pattern-specific set, then its own
+   parent, and so on),
+4. the global variables.
+
+A file's own pattern-specific variables therefore take precedence over
+anything inherited from its parent. A `+=` definition found at one level is
+appended to the value found by continuing the search at the next level.
+
+```
+V = g
+parent: V += p
+%.o: V += pat
+c.o: V += own
+parent: c.o
+# c.o, reached through parent, sees "g p pat own"
+```
+
+## Automatic variables
+
+| Variable | Value |
+|---|---|
+| `$@` | the target |
+| `$<` | the first prerequisite |
+| `$^` | the normal prerequisites, duplicates removed |
+| `$+` | the normal prerequisites, in order, with duplicates |
+| `$\|` | the order-only prerequisites, duplicates removed |
+| `$?` | the normal prerequisites newer than the target (see `updating.md`) |
+| `$*` | the stem of an implicit or static pattern rule match; empty otherwise |
+
+`$(@D)`, `$(@F)` and the other `D`/`F` variants give the directory (without
+the trailing slash, `.` if none) and the file part of each word.
+`$(origin @)` is `automatic` inside recipes.
+
+## Other variables
+
+`SHELL` (`/bin/sh`), `CURDIR`, `MAKECMDGOALS` and `.DEFAULT_GOAL` are
+defined. `$(origin NAME)` reports `undefined`, `default`, `environment`,
+`file`, `command line` or `automatic`.
+[?2004hroot@1445960760bf:/app# printf '\n--- go.mod ---\n' && cat go.mod && printf '\n--- Go symbols ---\n' && grep -RInE '^(type|func|var|const) ' --include='*.go' . | head -n 300
+[?2004l
+--- go.mod ---
+module brickmake
+
+go 1.24
+
+--- Go symbols ---
+./cmd/brickmake/main.go:11:func main() {
+./internal/vars/vars.go:10:type Flavor int
+./internal/vars/vars.go:12:const (
+./internal/vars/vars.go:17:func (f Flavor) String() string {
+./internal/vars/vars.go:24:type Origin int
+./internal/vars/vars.go:26:const (
+./internal/vars/vars.go:35:func (o Origin) String() string {
+./internal/vars/vars.go:54:type Var struct {
+./internal/vars/vars.go:64:type Set struct {
+./internal/vars/vars.go:68:func NewSet() *Set { return &Set{m: map[string]*Var{}} }
+./internal/vars/vars.go:70:func (s *Set) Get(name string) *Var {
+./internal/vars/vars.go:77:func (s *Set) Put(v *Var) { s.m[v.Name] = v }
+./internal/vars/vars.go:79:func (s *Set) Len() int {
+./internal/vars/vars.go:86:func (s *Set) Names() []string {
+./internal/vars/vars.go:96:type Op int
+./internal/vars/vars.go:98:const (
+./internal/vars/vars.go:105:func (o Op) String() string {
+./internal/vars/vars.go:119:func Paste(old, add string) string {
+./internal/cli/options.go:13:type Options struct {
+./internal/cli/options.go:27:type Assign struct {
+./internal/cli/options.go:33:var longFlags = map[string]string{
+./internal/cli/options.go:42:func Parse(args []string) (*Options, error) {
+./internal/cli/options.go:107:func (o *Options) flag(c byte) bool {
+./internal/cli/options.go:128:func (o *Options) addOperand(a string) {
+./internal/cli/main.go:18:const version = "brickmake 1.4.2"
+./internal/cli/main.go:20:const usage = `Usage: brickmake [options] [NAME=value ...] [target ...]
+./internal/cli/main.go:33:var defaultMakefiles = []string{"GNUmakefile", "makefile", "Makefile"}
+./internal/cli/main.go:36:func Main(args []string) (code int) {
+./internal/cli/main.go:122:func errText(err error) string {
+./internal/cli/main.go:134:func initVariables(x *expand.Expander, opts *Options) {
+./internal/cli/main.go:154:func environment(x *expand.Expander, opts *Options) []string {
+./internal/parse/rules.go:13:var ignoredSpecial = map[string]bool{
+./internal/parse/rules.go:20:func (p *Parser) flush() {
+./internal/parse/rules.go:41:func anyPattern(targets []string) bool {
+./internal/parse/rules.go:50:func (p *Parser) mention(pr db.Prereqs) {
+./internal/parse/rules.go:59:func (p *Parser) recordExplicit(r *pending) {
+./internal/parse/rules.go:70:func (p *Parser) recordStatic(r *pending) {
+./internal/parse/rules.go:96:func substAll(words []string, stem string) []string {
+./internal/parse/rules.go:104:func (p *Parser) addRule(f *db.File, r *db.Rule) {
+./internal/parse/rules.go:116:func (p *Parser) special(t string, r *pending) bool {
+./internal/parse/rules.go:144:func (p *Parser) defaultGoal(targets []string) {
+./internal/parse/cond.go:10:type cond struct {
+./internal/parse/cond.go:18:func isConditional(word string) bool {
+./internal/parse/cond.go:26:func (p *Parser) skipping() bool {
+./internal/parse/cond.go:35:func (p *Parser) conditional(word, rest string, pos diag.Pos) {
+./internal/parse/cond.go:78:func (p *Parser) evaluate(word, rest string, pos diag.Pos) bool {
+./internal/parse/cond.go:94:func eqArgs(word, s string, pos diag.Pos) (string, string) {
+./internal/parse/parser.go:14:var unsupported = map[string]bool{
+./internal/parse/parser.go:21:type pending struct {
+./internal/parse/parser.go:31:type Parser struct {
+./internal/parse/parser.go:43:func New(d *db.DB, x *expand.Expander) *Parser { return &Parser{DB: d, X: x} }
+./internal/parse/parser.go:46:func (p *Parser) Parse(name string, src []byte) {
+./internal/parse/parser.go:79:func (p *Parser) addRecipeLine(line string, pos diag.Pos) {
+./internal/parse/parser.go:87:func firstWord(s string) (word, rest string) {
+./internal/parse/parser.go:96:func (p *Parser) statement(line string, pos diag.Pos) {
+./internal/parse/parser.go:122:func startsAssignment(rest string) bool {
+./internal/parse/parser.go:131:func (p *Parser) assign(name string, op vars.Op, value string, pos diag.Pos) {
+./internal/parse/parser.go:139:func (p *Parser) ruleLine(line string, pos diag.Pos) {
+./internal/parse/parser.go:187:func (p *Parser) targetVar(targets []string, name string, op vars.Op, value string, pos diag.Pos) {
+./internal/parse/parse_test.go:12:func read(t *testing.T, src string) (*db.DB, *expand.Expander) {
+./internal/parse/parse_test.go:20:func TestRulesAndRecipes(t *testing.T) {
+./internal/parse/parse_test.go:49:func TestAssignmentsAndComments(t *testing.T) {
+./internal/parse/parse_test.go:59:func TestConditionals(t *testing.T) {
+./internal/parse/parse_test.go:87:func TestPatternRulesAndStatic(t *testing.T) {
+./internal/parse/parse_test.go:102:func TestTargetAndPatternVars(t *testing.T) {
+./internal/parse/lines.go:11:func oddBackslashes(s string) bool {
+./internal/parse/lines.go:21:func hashAt(s string, i int) (bool, int) {
+./internal/parse/lines.go:31:func stripComment(s string) string {
+./internal/parse/lines.go:48:func skipRef(s string, i int) int {
+./internal/parse/lines.go:78:func findTop(s string, c byte) int {
+./internal/parse/lines.go:92:func splitRecipe(s string) (rule string, recipe *string) {
+./internal/parse/lines.go:111:func scanAssign(s string) (name string, op vars.Op, value string, ok bool) {
+./internal/parse/lines.go:140:func ScanAssign(s string) (name string, op vars.Op, value string, ok bool) { return scanAssign(s) }
+./internal/db/db.go:11:type Recipe struct {
+./internal/db/db.go:19:type Prereqs struct {
+./internal/db/db.go:28:type Rule struct {
+./internal/db/db.go:38:type File struct {
+./internal/db/db.go:48:func (f *File) RecipeRule() *Rule {
+./internal/db/db.go:59:type PatternRule struct {
+./internal/db/db.go:67:type PatternVar struct {
+./internal/db/db.go:76:type DB struct {
+./internal/db/db.go:85:func New() *DB { return &DB{Files: map[string]*File{}} }
+./internal/db/db.go:88:func (d *DB) Lookup(name string) *File { return d.Files[name] }
+./internal/db/db.go:91:func (d *DB) Enter(name string) *File {
+./internal/db/db.go:101:func sameWords(a, b []string) bool {
+./internal/db/db.go:116:func (d *DB) AddPatternRule(r *PatternRule) {
+./internal/diag/diag.go:12:const Prog = "brickmake"
+./internal/diag/diag.go:14:var (
+./internal/diag/diag.go:20:type Pos struct {
+./internal/diag/diag.go:25:func (p Pos) Valid() bool { return p.File != "" }
+./internal/diag/diag.go:27:func (p Pos) String() string {
+./internal/diag/diag.go:35:type Fatal struct {
+./internal/diag/diag.go:40:func (f Fatal) Error() string {
+./internal/diag/diag.go:48:func Failf(pos Pos, format string, args ...any) {
+./internal/diag/diag.go:53:func Warn(pos Pos, format string, args ...any) {
+./internal/diag/diag.go:63:func Say(format string, args ...any) {
+./internal/diag/diag.go:68:func Err(format string, args ...any) {
+./internal/expand/auto.go:11:type Auto struct {
+./internal/expand/auto.go:23:var autoNames = map[string]bool{"@": true, "<": true, "^": true, "+": true, "|": true, "?": true, "*": true}
+./internal/expand/auto.go:25:func IsAutomatic(name string) bool {
+./internal/expand/auto.go:32:func (a *Auto) raw(c byte) (string, bool) {
+./internal/expand/auto.go:54:func (a *Auto) Value(name string) (string, bool) {
+./internal/expand/funcs.go:15:type function struct {
+./internal/expand/funcs.go:21:var functions map[string]function
+./internal/expand/funcs.go:23:func init() {
+./internal/expand/funcs.go:60:func (e *Expander) call(fn function, name, body string, open, close byte, sc *Scope) string {
+./internal/expand/funcs.go:73:func eachWord(f func(string) string) func(*Expander, []string, *Scope) string {
+./internal/expand/funcs.go:83:func fnSubst(_ *Expander, a []string, _ *Scope) string {
+./internal/expand/funcs.go:90:func fnFindstring(_ *Expander, a []string, _ *Scope) string {
+./internal/expand/funcs.go:97:func filter(patterns, s string, keep bool) string {
+./internal/expand/funcs.go:118:func fnSort(_ *Expander, a []string, _ *Scope) string {
+./internal/expand/funcs.go:124:func (e *Expander) number(s, fn, which string) int {
+./internal/expand/funcs.go:133:func fnWord(e *Expander, a []string, _ *Scope) string {
+./internal/expand/funcs.go:145:func fnWordlist(e *Expander, a []string, _ *Scope) string {
+./internal/expand/funcs.go:164:func fnFirstword(_ *Expander, a []string, _ *Scope) string {
+./internal/expand/funcs.go:171:func fnLastword(_ *Expander, a []string, _ *Scope) string {
+./internal/expand/funcs.go:178:func fnSuffix(_ *Expander, a []string, _ *Scope) string {
+./internal/expand/funcs.go:188:func fnAddsuffix(_ *Expander, a []string, _ *Scope) string {
+./internal/expand/funcs.go:196:func fnAddprefix(_ *Expander, a []string, _ *Scope) string {
+./internal/expand/funcs.go:204:func fnJoin(_ *Expander, a []string, _ *Scope) string {
+./internal/expand/funcs.go:222:func fnWildcard(_ *Expander, a []string, _ *Scope) string {
+./internal/expand/control.go:13:func fnForeach(e *Expander, a []string, sc *Scope) string {
+./internal/expand/control.go:30:func fnIf(e *Expander, a []string, sc *Scope) string {
+./internal/expand/control.go:40:func fnOr(e *Expander, a []string, sc *Scope) string {
+./internal/expand/control.go:49:func fnAnd(e *Expander, a []string, sc *Scope) string {
+./internal/expand/control.go:61:func fnCall(e *Expander, a []string, sc *Scope) string {
+./internal/expand/control.go:101:func (e *Expander) lookupNamed(arg string, sc *Scope) (string, *vars.Var) {
+./internal/expand/control.go:107:func fnOrigin(e *Expander, a []string, sc *Scope) string {
+./internal/expand/control.go:118:func fnFlavor(e *Expander, a []string, sc *Scope) string {
+./internal/expand/control.go:126:func fnValue(e *Expander, a []string, sc *Scope) string {
+./internal/expand/control.go:139:func fnInfo(e *Expander, a []string, _ *Scope) string {
+./internal/expand/control.go:144:func fnWarning(e *Expander, a []string, _ *Scope) string {
+./internal/expand/control.go:149:func fnError(e *Expander, a []string, _ *Scope) string {
+./internal/expand/control.go:154:func fnShell(e *Expander, a []string, _ *Scope) string {
+./internal/expand/expand.go:14:type Scope struct {
+./internal/expand/expand.go:20:func (sc *Scope) With(set *vars.Set) *Scope {
+./internal/expand/expand.go:30:type Expander struct {
+./internal/expand/expand.go:41:func New(global *vars.Set) *Expander {
+./internal/expand/expand.go:45:func (e *Expander) chain(sc *Scope) []*vars.Set {
+./internal/expand/expand.go:56:func (e *Expander) Lookup(name string, sc *Scope) (*vars.Var, []*vars.Set) {
+./internal/expand/expand.go:67:func (e *Expander) Value(name string, sc *Scope) string {
+./internal/expand/expand.go:83:func (e *Expander) plain(v *vars.Var, sc *Scope) string {
+./internal/expand/expand.go:97:func (e *Expander) expandAt(v *vars.Var, sc *Scope) string {
+./internal/expand/expand.go:109:func (e *Expander) appended(v *vars.Var, rest []*vars.Set, sc *Scope) string {
+./internal/expand/expand.go:132:func closing(s string, i int, open, close byte) int {
+./internal/expand/expand.go:149:func (e *Expander) Expand(s string, sc *Scope) string {
+./internal/expand/expand.go:193:func (e *Expander) unterminated(body string, open, close byte) {
+./internal/expand/expand.go:205:func (e *Expander) reference(body string, open, close byte, sc *Scope) string {
+./internal/expand/expand.go:231:func splitArgs(s string, open, close byte, max int) []string {
+./internal/expand/define.go:10:func (e *Expander) DefineGlobal(name string, op vars.Op, value string, origin vars.Origin, pos diag.Pos) {
+./internal/expand/define.go:36:func (e *Expander) DefineIn(set *vars.Set, name string, op vars.Op, value string, pos diag.Pos) {
+./internal/expand/define.go:47:func (e *Expander) DefinePattern(set *vars.Set, name string, op vars.Op, value string, pos diag.Pos) {
+./internal/expand/define.go:58:func (e *Expander) defineIn(set *vars.Set, name string, op vars.Op, value string, pos diag.Pos) {
+./internal/expand/expand_test.go:10:func newX(defs ...string) *Expander {
+./internal/expand/expand_test.go:18:func TestReferences(t *testing.T) {
+./internal/expand/expand_test.go:37:func TestFunctions(t *testing.T) {
+./internal/expand/expand_test.go:70:func TestAutomatic(t *testing.T) {
+./internal/expand/expand_test.go:87:func TestSelfReference(t *testing.T) {
+./internal/engine/scope.go:12:func (e *Engine) patternSet(n *node) *vars.Set {
+./internal/engine/scope.go:38:func (e *Engine) scope(n *node) *expand.Scope {
+./internal/engine/recipe.go:14:type command struct {
+./internal/engine/recipe.go:21:func prefixes(s string, c *command) string {
+./internal/engine/recipe.go:39:func allForced(r *db.Recipe) bool {
+./internal/engine/recipe.go:54:func (e *Engine) run(n *node, auto *expand.Auto) bool {
+./internal/engine/recipe.go:90:func (e *Engine) exec(line string) int {
+./internal/engine/recipe.go:109:func (e *Engine) ShellOutput(line string) string {
+./internal/engine/update.go:11:func (e *Engine) outdated(d, n *node) bool {
+./internal/engine/update.go:18:func (e *Engine) noRule(n, parent *node) {
+./internal/engine/update.go:30:func (e *Engine) fail(n, parent *node, depFailure bool) status {
+./internal/engine/update.go:39:func (e *Engine) update(n, parent *node) status {
+./internal/engine/update.go:111:func (e *Engine) checkIntermediate(m, target *node, hit *bool) status {
+./internal/engine/update.go:147:func (e *Engine) remake(n *node) status {
+./internal/engine/update.go:178:func (e *Engine) refresh(n *node) {
+./internal/engine/node.go:11:type state int
+./internal/engine/node.go:13:const (
+./internal/engine/node.go:19:type status int
+./internal/engine/node.go:21:const (
+./internal/engine/node.go:30:type stamp struct {
+./internal/engine/node.go:36:func statFile(name string) stamp {
+./internal/engine/node.go:45:type node struct {
+./internal/engine/node.go:68:type dep struct {
+./internal/engine/node.go:73:func (n *node) name() string { return n.f.Name }
+./internal/engine/node.go:75:func (n *node) stat() { n.st = statFile(n.f.Name) }
+./internal/engine/node.go:79:func (n *node) hasRule() bool {
+./internal/engine/recipe_test.go:9:func TestPrefixes(t *testing.T) {
+./internal/engine/recipe_test.go:30:func TestAllForced(t *testing.T) {
+./internal/engine/implicit.go:14:const maxChain = 16
+./internal/engine/implicit.go:17:type match struct {
+./internal/engine/implicit.go:26:type candidate struct {
+./internal/engine/implicit.go:33:func (c candidate) fullStem() string { return c.dir + c.stem }
+./internal/engine/implicit.go:39:func (e *Engine) candidates(name string, used map[*db.PatternRule]bool) []candidate {
+./internal/engine/implicit.go:74:func (e *Engine) prereqs(c candidate, name string, sc *expand.Scope) (normal, orderOnly []string) {
+./internal/engine/implicit.go:97:func (e *Engine) oughtToExist(name string) bool {
+./internal/engine/implicit.go:109:func (e *Engine) findImplicit(name string, sc *expand.Scope, depth int, used map[*db.PatternRule]bool) *match {
+./internal/engine/implicit.go:160:func newMatch(c candidate, normal, orderOnly []string, inter map[string]*match) *match {
+./internal/engine/implicit.go:171:func (e *Engine) implicitFor(n *node) {
+./internal/engine/deps.go:11:func (e *Engine) ruleWords(n *node, r *db.Rule) (normal, orderOnly []string) {
+./internal/engine/deps.go:33:func (e *Engine) depsOf(n *node) []dep {
+./internal/engine/deps.go:67:func (e *Engine) autoVars(n *node) *expand.Auto {
+./internal/engine/engine.go:15:type Engine struct {
+./internal/engine/engine.go:30:func New(d *db.DB, x *expand.Expander) *Engine {
+./internal/engine/engine.go:34:func (e *Engine) node(f *db.File) *node {
+./internal/engine/engine.go:45:func (e *Engine) Run(goals []string) (code int) {
+./internal/engine/engine.go:82:func (e *Engine) removeIntermediates() {
+./internal/text/words_test.go:5:func TestMatch(t *testing.T) {
+./internal/text/words_test.go:28:func TestPatsubst(t *testing.T) {
+./internal/text/words_test.go:42:func TestFileNames(t *testing.T) {
+./internal/text/words_test.go:57:func TestSplitOrder(t *testing.T) {
+./internal/text/words.go:7:func isSpace(r rune) bool {
+./internal/text/words.go:16:func Fields(s string) []string { return strings.FieldsFunc(s, isSpace) }
+./internal/text/words.go:19:func Join(words []string) string { return strings.Join(words, " ") }
+./internal/text/words.go:22:func TrimSpace(s string) string { return strings.TrimFunc(s, isSpace) }
+./internal/text/words.go:25:func TrimLeft(s string) string { return strings.TrimLeftFunc(s, isSpace) }
+./internal/text/words.go:28:func IsBlank(c byte) bool { return c == ' ' || c == '\t' }
+./internal/text/words.go:31:type Pattern struct {
+./internal/text/words.go:37:func ParsePattern(p string) Pattern {
+./internal/text/words.go:47:func (p Pattern) Match(s string) (string, bool) {
+./internal/text/words.go:61:func Match(pattern, s string) (string, bool) { return ParsePattern(pattern).Match(s) }
+./internal/text/words.go:65:func Subst(repl, stem string) string {
+./internal/text/words.go:74:func Patsubst(pattern, repl, s string) string {
+./internal/text/words.go:92:func SplitDir(name string) (dir, file string) {
+./internal/text/words.go:101:func Dir(w string) string {
+./internal/text/words.go:110:func Notdir(w string) string {
+./internal/text/words.go:116:func Suffix(w string) string {
+./internal/text/words.go:126:func Basename(w string) string {
+./internal/text/words.go:133:func SplitOrder(words []string) (normal, orderOnly []string) {
+./internal/text/words.go:148:func Uniq(words []string) []string {
+[?2004hroot@1445960760bf:/app# go test ./...
+[?2004l?   	brickmake/cmd/brickmake	[no test files]
+?   	brickmake/internal/cli	[no test files]
+?   	brickmake/internal/db	[no test files]
+?   	brickmake/internal/diag	[no test files]
+ok  	brickmake/internal/engine	0.002s
+ok  	brickmake/internal/expand	0.003s
+ok  	brickmake/internal/parse	0.003s
+ok  	brickmake/internal/text	0.002s
+?   	brickmake/internal/vars	[no test files]
+[?2004hroot@1445960760bf:/app# printf '\n--- db ---\n'; cat internal/db/db.go; printf '\n--- engine.go ---\n'; cat internal/engine/engine.go; printf '\n--- node.go ---\n'; cat internal/engine/node.go; printf '\n--- scope.go ---\n'; cat internal/engine/scope.go; printf '\n--- deps.go ---\n'; cat internal/engine/deps.go
+[?2004l
+--- db ---
+// Package db is the rule database built by the parser and read by the
+// engine.
+package db
+
+import (
+	"brickmake/internal/diag"
+	"brickmake/internal/vars"
+)
+
+// Recipe is the list of raw recipe lines of one rule.
+type Recipe struct {
+	Lines []string
+	Pos   []diag.Pos // position of each line
+}
+
+// Prereqs is the prerequisite list of one rule line. With secondary
+// expansion Text is expanded again when the target is considered and
+// split into normal and order-only words afterwards.
+type Prereqs struct {
+	Normal    []string
+	OrderOnly []string
+	Text      string
+	Second    bool
+}
+
+// Rule is one explicit rule line for a target (static pattern rules
+// produce one Rule per target).
+type Rule struct {
+	Prereqs
+	Recipe *Recipe
+	Stem   string // static pattern rules only
+	Static bool
+	Pos    diag.Pos
+}
+
+// File is a target or prerequisite mentioned in the makefile or entered by
+// implicit rule search.
+type File struct {
+	Name  string
+	Rules []*Rule
+	Phony bool
+	// Precious files are never removed as intermediates.
+	Precious bool
+	Vars     *vars.Set
+}
+
+// RecipeRule returns the rule whose recipe the file uses, or nil.
+func (f *File) RecipeRule() *Rule {
+	var r *Rule
+	for _, x := range f.Rules {
+		if x.Recipe != nil {
+			r = x
+		}
+	}
+	return r
+}
+
+// PatternRule is an implicit rule: every target contains '%'.
+type PatternRule struct {
+	Targets []string
+	Prereqs
+	Recipe *Recipe
+	Pos    diag.Pos
+}
+
+// PatternVar is one pattern-specific assignment.
+type PatternVar struct {
+	Pattern string
+	Name    string
+	Op      vars.Op
+	Value   string // already expanded for ":="
+	Pos     diag.Pos
+}
+
+// DB is the result of reading the makefiles.
+type DB struct {
+	Files        map[string]*File
+	Order        []*File
+	PatternRules []*PatternRule
+	PatternVars  []*PatternVar
+	// SecondaryAll is set by a .SECONDARY rule without prerequisites.
+	SecondaryAll bool
+}
+
+func New() *DB { return &DB{Files: map[string]*File{}} }
+
+// Lookup returns the file entry for name, or nil.
+func (d *DB) Lookup(name string) *File { return d.Files[name] }
+
+// Enter returns the file entry for name, creating it if needed.
+func (d *DB) Enter(name string) *File {
+	if f := d.Files[name]; f != nil {
+		return f
+	}
+	f := &File{Name: name, Vars: vars.NewSet()}
+	d.Files[name] = f
+	d.Order = append(d.Order, f)
+	return f
+}
+
+func sameWords(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
+// AddPatternRule installs a pattern rule. A rule with the same targets and
+// prerequisites as an existing one replaces it and moves to the end; a
+// rule without a recipe only cancels such a rule.
+func (d *DB) AddPatternRule(r *PatternRule) {
+	for i, old := range d.PatternRules {
+		if sameWords(old.Targets, r.Targets) && sameWords(old.Normal, r.Normal) && old.Text == r.Text {
+			d.PatternRules = append(d.PatternRules[:i:i], d.PatternRules[i+1:]...)
+			break
+		}
+	}
+	if r.Recipe != nil {
+		d.PatternRules = append(d.PatternRules, r)
+	}
+}
+
+--- engine.go ---
+// Package engine decides which targets are out of date and runs their
+// recipes.
+package engine
+
+import (
+	"fmt"
+	"os"
+
+	"brickmake/internal/db"
+	"brickmake/internal/diag"
+	"brickmake/internal/expand"
+)
+
+// Engine updates goals against a rule database.
+type Engine struct {
+	DryRun     bool
+	Silent     bool
+	KeepGoing  bool
+	AlwaysMake bool
+	Shell      string
+	Env        []string
+
+	db      *db.DB
+	x       *expand.Expander
+	nodes   map[*db.File]*node
+	order   []*node
+	started int
+}
+
+func New(d *db.DB, x *expand.Expander) *Engine {
+	return &Engine{db: d, x: x, nodes: map[*db.File]*node{}, Shell: "/bin/sh"}
+}
+
+func (e *Engine) node(f *db.File) *node {
+	if n := e.nodes[f]; n != nil {
+		return n
+	}
+	n := &node{f: f}
+	e.nodes[f] = n
+	e.order = append(e.order, n)
+	return n
+}
+
+// Run updates the goals in order and returns the exit status.
+func (e *Engine) Run(goals []string) (code int) {
+	defer e.removeIntermediates()
+	defer func() {
+		if r := recover(); r != nil {
+			f, isFatal := r.(diag.Fatal)
+			if !isFatal {
+				panic(r)
+			}
+			fmt.Fprintln(diag.Stderr, f.Error())
+			code = 2
+		}
+	}()
+	anyFailed := false
+	for _, g := range goals {
+		n := e.node(e.db.Enter(g))
+		if e.update(n, nil) == failed {
+			anyFailed = true
+			if !e.KeepGoing {
+				break
+			}
+			continue
+		}
+		if e.started == 0 {
+			if n.f.Phony || n.recipe == nil {
+				diag.Say("Nothing to be done for '%s'.", g)
+			} else {
+				diag.Say("'%s' is up to date.", g)
+			}
+		}
+	}
+	if anyFailed {
+		return 2
+	}
+	return 0
+}
+
+// removeIntermediates deletes the intermediate files made by this run.
+func (e *Engine) removeIntermediates() {
+	first := true
+	for _, n := range e.order {
+		if !n.intermediate || !n.started || n.f.Precious || e.db.SecondaryAll {
+			continue
+		}
+		if !e.DryRun {
+			if err := os.Remove(n.name()); err != nil && os.IsNotExist(err) {
+				continue
+			}
+		}
+		if e.Silent {
+			continue
+		}
+		if first {
+			fmt.Fprint(diag.Stdout, "rm ")
+			first = false
+		} else {
+			fmt.Fprint(diag.Stdout, " ")
+		}
+		fmt.Fprint(diag.Stdout, n.name())
+	}
+	if !first {
+		fmt.Fprintln(diag.Stdout)
+	}
+}
+
+--- node.go ---
+package engine
+
+import (
+	"os"
+	"time"
+
+	"brickmake/internal/db"
+	"brickmake/internal/vars"
+)
+
+type state int
+
+const (
+	fresh state = iota
+	running
+	done
+)
+
+type status int
+
+const (
+	ok status = iota
+	failed
+	dropped // circular dependency, ignored by the parent
+)
+
+// stamp is a file's modification time as seen by the engine. Newest
+// marks a target that counts as just remade without a new time on disk
+// (dry runs).
+type stamp struct {
+	exists bool
+	t      time.Time
+	newest bool
+}
+
+func statFile(name string) stamp {
+	fi, err := os.Stat(name)
+	if err != nil {
+		return stamp{}
+	}
+	return stamp{exists: true, t: fi.ModTime()}
+}
+
+// node is the run-time state of one file.
+type node struct {
+	f      *db.File
+	state  state
+	status status
+	st     stamp
+	parent *node
+
+	searched     bool
+	match        *match
+	preset       *match // chosen for an intermediate by the parent's search
+	intermediate bool
+	recipe       *db.Recipe
+	stem         string
+
+	depsReady bool
+	deps      []dep
+
+	patReady bool
+	patVars  *vars.Set
+
+	started bool // its recipe was started
+}
+
+type dep struct {
+	n     *node
+	order bool
+}
+
+func (n *node) name() string { return n.f.Name }
+
+func (n *node) stat() { n.st = statFile(n.f.Name) }
+
+// hasRule reports whether make knows how to (re)make the file, even if the
+// answer is "do nothing".
+func (n *node) hasRule() bool {
+	return len(n.f.Rules) > 0 || n.match != nil || n.f.Phony
+}
+
+--- scope.go ---
+package engine
+
+import (
+	"brickmake/internal/db"
+	"brickmake/internal/expand"
+	"brickmake/internal/text"
+	"brickmake/internal/vars"
+)
+
+// patternSet collects the pattern-specific variables whose pattern matches
+// the file into one set. Definitions are applied in makefile order.
+func (e *Engine) patternSet(n *node) *vars.Set {
+	if n.patReady {
+		return n.patVars
+	}
+	n.patReady = true
+	var hits []*db.PatternVar
+	for _, pv := range e.db.PatternVars {
+		if _, ok := text.Match(pv.Pattern, n.name()); ok {
+			hits = append(hits, pv)
+		}
+	}
+	if len(hits) == 0 {
+		return nil
+	}
+	set := vars.NewSet()
+	for _, pv := range hits {
+		e.x.Pos = pv.Pos
+		e.x.DefinePattern(set, pv.Name, pv.Op, pv.Value, pv.Pos)
+	}
+	n.patVars = set
+	return set
+}
+
+// scope is the variable context of a file: its own target-specific
+// variables, then those of the targets that first asked for it, then its
+// pattern-specific variables, and finally the global variables.
+func (e *Engine) scope(n *node) *expand.Scope {
+	sc := &expand.Scope{}
+	for x := n; x != nil; x = x.parent {
+		sc.Sets = append(sc.Sets, x.f.Vars)
+	}
+	if ps := e.patternSet(n); ps != nil {
+		sc.Sets = append(sc.Sets, ps)
+	}
+	return sc
+}
+
+--- deps.go ---
+package engine
+
+import (
+	"brickmake/internal/db"
+	"brickmake/internal/expand"
+	"brickmake/internal/text"
+)
+
+// ruleWords returns the prerequisites of one explicit rule, performing
+// secondary expansion when the rule was read after .SECONDEXPANSION.
+func (e *Engine) ruleWords(n *node, r *db.Rule) (normal, orderOnly []string) {
+	if !r.Second {
+		return r.Normal, r.OrderOnly
+	}
+	sc := e.scope(n)
+	sc.Auto = &expand.Auto{Target: n.name(), Stem: r.Stem}
+	e.x.Pos = r.Pos
+	normal, orderOnly = text.SplitOrder(text.Fields(e.x.Expand(r.Text, sc)))
+	if r.Static {
+		for i, w := range normal {
+			normal[i] = text.Subst(w, r.Stem)
+		}
+		for i, w := range orderOnly {
+			orderOnly[i] = text.Subst(w, r.Stem)
+		}
+	}
+	return normal, orderOnly
+}
+
+// depsOf returns the file's prerequisites in the order make considers
+// them: those of the implicit rule, then those of the explicit rules in
+// makefile order.
+func (e *Engine) depsOf(n *node) []dep {
+	if n.depsReady {
+		return n.deps
+	}
+	n.depsReady = true
+	type list struct{ normal, orderOnly []string }
+	var lists []list
+	if m := n.match; m != nil {
+		lists = append(lists, list{m.normal, m.orderOnly})
+	}
+	for _, r := range n.f.Rules {
+		nw, ow := e.ruleWords(n, r)
+		lists = append(lists, list{nw, ow})
+	}
+	normal := map[string]bool{}
+	for _, l := range lists {
+		for _, w := range l.normal {
+			normal[w] = true
+		}
+	}
+	for _, l := range lists {
+		for _, w := range l.normal {
+			n.deps = append(n.deps, dep{n: e.node(e.db.Enter(w))})
+		}
+		for _, w := range l.orderOnly {
+			if !normal[w] {
+				n.deps = append(n.deps, dep{n: e.node(e.db.Enter(w)), order: true})
+			}
+		}
+	}
+	return n.deps
+}
+
+// autoVars computes the automatic variables of a recipe.
+func (e *Engine) autoVars(n *node) *expand.Auto {
+	a := &expand.Auto{Target: n.name(), Stem: n.stem}
+	var order []string
+	for _, d := range e.depsOf(n) {
+		if d.order {
+			order = append(order, d.n.name())
+			continue
+		}
+		a.Plus = append(a.Plus, d.n.name())
+	}
+	a.All = text.Uniq(a.Plus)
+	a.Order = text.Uniq(order)
+	if len(a.Plus) > 0 {
+		a.First = a.Plus[0]
+	}
+	for _, name := range a.All {
+		d := e.node(e.db.Lookup(name))
+		if !n.st.exists || d.f.Phony || e.outdated(d, n) {
+			a.Newer = append(a.Newer, name)
+		}
+	}
+	return a
+}
+[?2004hroot@1445960760bf:/app# printf '\n--- implicit.go ---\n'; cat internal/engine/implicit.go; printf '\n--- update.go ---\n'; cat internal/engine/update.go; printf '\n--- recipe.go ---\n'; cat internal/engine/recipe.go
+[?2004l
+--- implicit.go ---
+package engine
+
+import (
+	"os"
+	"sort"
+	"strings"
+
+	"brickmake/internal/db"
+	"brickmake/internal/expand"
+	"brickmake/internal/text"
+)
+
+// maxChain bounds implicit rule chains.
+const maxChain = 16
+
+// match is the result of implicit rule search for one target.
+type match struct {
+	rule      *db.PatternRule
+	stem      string // $*, including the directory part
+	normal    []string
+	orderOnly []string
+	also      []string // the rule's other targets
+	inter     map[string]*match
+}
+
+type candidate struct {
+	rule   *db.PatternRule
+	target int
+	dir    string // directory prepended to the stem, if any
+	stem   string // the part matched by '%'
+}
+
+func (c candidate) fullStem() string { return c.dir + c.stem }
+
+// candidates lists the pattern rules whose target pattern matches name,
+// shortest stem first; rules of equal stem length keep makefile order. A
+// target pattern without a slash is matched against the file part of a
+// name that has a directory.
+func (e *Engine) candidates(name string, used map[*db.PatternRule]bool) []candidate {
+	dir, base := text.SplitDir(name)
+	var cs []candidate
+	for _, r := range e.db.PatternRules {
+		if used[r] {
+			continue
+		}
+		for ti, tp := range r.Targets {
+			if tp == "%" {
+				continue
+			}
+			var stem string
+			var ok bool
+			d := ""
+			if dir == "" || strings.IndexByte(tp, '/') >= 0 {
+				stem, ok = text.Match(tp, name)
+			} else {
+				stem, ok = text.Match(tp, base)
+				d = dir
+			}
+			if !ok || stem == "" {
+				continue
+			}
+			cs = append(cs, candidate{rule: r, target: ti, dir: d, stem: stem})
+			break
+		}
+	}
+	sort.SliceStable(cs, func(i, j int) bool {
+		return len(cs[i].stem) < len(cs[j].stem)
+	})
+	return cs
+}
+
+// prereqs computes a candidate's prerequisite names. The directory of a
+// directory-relative match is prepended to every prerequisite.
+func (e *Engine) prereqs(c candidate, name string, sc *expand.Scope) (normal, orderOnly []string) {
+	pr := c.rule.Prereqs
+	normal, orderOnly = pr.Normal, pr.OrderOnly
+	if pr.Second {
+		s := &expand.Scope{Auto: &expand.Auto{Target: name, Stem: c.fullStem()}}
+		if sc != nil {
+			s.Sets = sc.Sets
+		}
+		e.x.Pos = c.rule.Pos
+		normal, orderOnly = text.SplitOrder(text.Fields(e.x.Expand(pr.Text, s)))
+	}
+	conv := func(words []string) []string {
+		out := make([]string, len(words))
+		for i, w := range words {
+			out[i] = c.dir + text.Subst(w, c.stem)
+		}
+		return out
+	}
+	return conv(normal), conv(orderOnly)
+}
+
+// oughtToExist reports whether a prerequisite exists or is a target in
+// the makefile.
+func (e *Engine) oughtToExist(name string) bool {
+	if f := e.db.Lookup(name); f != nil && (len(f.Rules) > 0 || f.Phony) {
+		return true
+	}
+	_, err := os.Stat(name)
+	return err == nil
+}
+
+// findImplicit searches the pattern rules for name. The first pass accepts
+// a rule whose prerequisites all exist or ought to exist; the second pass
+// also accepts prerequisites that can be made by a chain of other pattern
+// rules.
+func (e *Engine) findImplicit(name string, sc *expand.Scope, depth int, used map[*db.PatternRule]bool) *match {
+	type tried struct {
+		c              candidate
+		normal, orders []string
+	}
+	var ts []tried
+	for _, c := range e.candidates(name, used) {
+		n, o := e.prereqs(c, name, sc)
+		ts = append(ts, tried{c, n, o})
+	}
+	all := func(t tried) []string { return append(append([]string{}, t.normal...), t.orders...) }
+	for _, t := range ts {
+		good := true
+		for _, p := range all(t) {
+			if !e.oughtToExist(p) {
+				good = false
+				break
+			}
+		}
+		if good {
+			return newMatch(t.c, t.normal, t.orders, nil)
+		}
+	}
+	if depth >= maxChain {
+		return nil
+	}
+	for _, t := range ts {
+		inter := map[string]*match{}
+		good := true
+		for _, p := range all(t) {
+			if e.oughtToExist(p) {
+				continue
+			}
+			next := map[*db.PatternRule]bool{t.c.rule: true}
+			for r := range used {
+				next[r] = true
+			}
+			m := e.findImplicit(p, nil, depth+1, next)
+			if m == nil {
+				good = false
+				break
+			}
+			inter[p] = m
+		}
+		if good {
+			return newMatch(t.c, t.normal, t.orders, inter)
+		}
+	}
+	return nil
+}
+
+func newMatch(c candidate, normal, orderOnly []string, inter map[string]*match) *match {
+	m := &match{rule: c.rule, stem: c.fullStem(), normal: normal, orderOnly: orderOnly, inter: inter}
+	for i, tp := range c.rule.Targets {
+		if i != c.target {
+			m.also = append(m.also, c.dir+text.Subst(tp, c.stem))
+		}
+	}
+	return m
+}
+
+// implicitFor runs implicit rule search once for a file without a recipe.
+func (e *Engine) implicitFor(n *node) {
+	if n.searched {
+		return
+	}
+	n.searched = true
+	if r := n.f.RecipeRule(); r != nil {
+		n.recipe = r.Recipe
+		if r.Static {
+			n.stem = r.Stem
+		}
+		return
+	}
+	if n.f.Phony {
+		return
+	}
+	m := n.preset
+	if m == nil {
+		m = e.findImplicit(n.name(), e.scope(n), 0, map[*db.PatternRule]bool{})
+	}
+	if m == nil {
+		return
+	}
+	n.match = m
+	n.recipe = m.rule.Recipe
+	n.stem = m.stem
+	for _, p := range append(append([]string{}, m.normal...), m.orderOnly...) {
+		created := e.db.Lookup(p) == nil
+		pn := e.node(e.db.Enter(p))
+		if sub := m.inter[p]; sub != nil && created {
+			pn.intermediate = true
+			pn.preset = sub
+		}
+	}
+}
+
+--- update.go ---
+package engine
+
+import (
+	"fmt"
+
+	"brickmake/internal/diag"
+)
+
+// outdated reports whether prerequisite d makes target n out of date. A
+// prerequisite that is phony, missing, or remade in a dry run always does.
+func (e *Engine) outdated(d, n *node) bool {
+	if d.f.Phony || d.st.newest || !d.st.exists {
+		return true
+	}
+	return !n.st.exists || d.st.t.After(n.st.t)
+}
+
+func (e *Engine) noRule(n, parent *node) {
+	msg := fmt.Sprintf("No rule to make target '%s'", n.name())
+	if parent != nil {
+		msg += fmt.Sprintf(", needed by '%s'", parent.name())
+	}
+	if e.KeepGoing {
+		diag.Err("*** %s.", msg)
+	} else {
+		diag.Err("*** %s.  Stop.", msg)
+	}
+}
+
+func (e *Engine) fail(n, parent *node, depFailure bool) status {
+	n.state, n.status = done, failed
+	if depFailure && parent == nil && e.KeepGoing && !e.DryRun {
+		diag.Err("Target '%s' not remade because of errors.", n.name())
+	}
+	return failed
+}
+
+// update brings n up to date on behalf of parent (nil for a goal).
+func (e *Engine) update(n, parent *node) status {
+	switch n.state {
+	case done:
+		return n.status
+	case running:
+		diag.Err("Circular %s <- %s dependency dropped.", parent.name(), n.name())
+		return dropped
+	}
+	n.state = running
+	if n.parent == nil {
+		n.parent = parent
+	}
+	e.implicitFor(n)
+	deps := e.depsOf(n)
+	n.stat()
+	if !n.hasRule() && !n.st.exists {
+		e.noRule(n, parent)
+		return e.fail(n, parent, false)
+	}
+
+	must, bad := false, false
+	for _, d := range deps {
+		var st status
+		if d.n.intermediate && d.n.state != done {
+			hit := false
+			st = e.checkIntermediate(d.n, n, &hit)
+			if hit && !d.order {
+				must = true
+			}
+		} else {
+			st = e.update(d.n, n)
+			if st == ok && !d.order && e.outdated(d.n, n) {
+				must = true
+			}
+		}
+		if st == failed {
+			bad = true
+			if !e.KeepGoing {
+				break
+			}
+		}
+	}
+	if bad {
+		return e.fail(n, parent, true)
+	}
+	if n.f.Phony || !n.st.exists || e.AlwaysMake {
+		must = true
+	}
+	if !must {
+		n.state, n.status = done, ok
+		return ok
+	}
+	for _, d := range deps {
+		if d.n.intermediate && d.n.state != done {
+			if e.update(d.n, n) == failed {
+				bad = true
+				if !e.KeepGoing {
+					break
+				}
+			}
+		}
+	}
+	if bad {
+		return e.fail(n, parent, true)
+	}
+	return e.remake(n)
+}
+
+// checkIntermediate decides whether a missing intermediate file matters to
+// target: it does when the intermediate exists and is newer than target,
+// or when anything it depends on is. The intermediate itself is only made
+// later, if target has to be remade.
+func (e *Engine) checkIntermediate(m, target *node, hit *bool) status {
+	if m.parent == nil {
+		m.parent = target
+	}
+	e.implicitFor(m)
+	m.stat()
+	if m.st.exists && (!target.st.exists || m.st.t.After(target.st.t)) {
+		*hit = true
+		return ok
+	}
+	if !m.hasRule() {
+		return ok
+	}
+	for _, d := range e.depsOf(m) {
+		var st status
+		if d.n.intermediate && d.n.state != done {
+			sub := false
+			st = e.checkIntermediate(d.n, target, &sub)
+			if sub && !d.order {
+				*hit = true
+			}
+		} else {
+			st = e.update(d.n, m)
+			if st == ok && !d.order && e.outdated(d.n, target) {
+				*hit = true
+			}
+		}
+		if st == failed && !e.KeepGoing {
+			return failed
+		}
+	}
+	return ok
+}
+
+// remake runs n's recipe, or records that a target without a recipe was
+// "remade" by doing nothing.
+func (e *Engine) remake(n *node) status {
+	if n.recipe == nil {
+		n.state, n.status = done, ok
+		n.stat()
+		return ok
+	}
+	auto := e.autoVars(n)
+	n.started = true
+	good := e.run(n, auto)
+	n.state = done
+	if !good {
+		n.status = failed
+		return failed
+	}
+	n.status = ok
+	e.refresh(n)
+	if n.match != nil {
+		for _, name := range n.match.also {
+			o := e.node(e.db.Enter(name))
+			if o.state != done {
+				o.state, o.status, o.started = done, ok, true
+				o.intermediate = o.intermediate || n.intermediate
+				e.refresh(o)
+			}
+		}
+	}
+	return ok
+}
+
+// refresh records that a remade target is now newer than everything
+// considered before it.
+func (e *Engine) refresh(n *node) {
+	if e.DryRun && allForced(n.recipe) {
+		n.stat()
+		return
+	}
+	n.st = stamp{exists: true, newest: true}
+}
+
+--- recipe.go ---
+package engine
+
+import (
+	"errors"
+	"fmt"
+	"os"
+	"os/exec"
+
+	"brickmake/internal/db"
+	"brickmake/internal/diag"
+	"brickmake/internal/expand"
+)
+
+type command struct {
+	text                  string
+	silent, ignore, force bool
+	pos                   diag.Pos
+}
+
+// prefixes strips leading blanks and '@', '-', '+' prefixes into c.
+func prefixes(s string, c *command) string {
+	for len(s) > 0 {
+		switch s[0] {
+		case '@':
+			c.silent = true
+		case '-':
+			c.ignore = true
+		case '+':
+			c.force = true
+		case ' ', '\t':
+		default:
+			return s
+		}
+		s = s[1:]
+	}
+	return s
+}
+
+func allForced(r *db.Recipe) bool {
+	if r == nil || len(r.Lines) == 0 {
+		return false
+	}
+	for _, l := range r.Lines {
+		var c command
+		prefixes(l, &c)
+		if !c.force {
+			return false
+		}
+	}
+	return true
+}
+
+// run expands every line of n's recipe, then executes the lines in order.
+func (e *Engine) run(n *node, auto *expand.Auto) bool {
+	sc := e.scope(n)
+	sc.Auto = auto
+	var cmds []command
+	for i, raw := range n.recipe.Lines {
+		c := command{pos: n.recipe.Pos[i]}
+		raw = prefixes(raw, &c)
+		e.x.Pos = c.pos
+		c.text = prefixes(e.x.Expand(raw, sc), &c)
+		cmds = append(cmds, c)
+	}
+	for _, c := range cmds {
+		if c.text == "" {
+			continue
+		}
+		e.started++
+		if e.DryRun || (!c.silent && !e.Silent) {
+			fmt.Fprintln(diag.Stdout, c.text)
+		}
+		if e.DryRun && !c.force {
+			continue
+		}
+		code := e.exec(c.text)
+		if code == 0 {
+			continue
+		}
+		if c.ignore {
+			diag.Err("[%s: %s] Error %d (ignored)", c.pos, n.name(), code)
+			continue
+		}
+		diag.Err("*** [%s: %s] Error %d", c.pos, n.name(), code)
+		return false
+	}
+	return true
+}
+
+func (e *Engine) exec(line string) int {
+	cmd := exec.Command(e.Shell, "-c", line)
+	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
+	cmd.Env = e.Env
+	err := cmd.Run()
+	if err == nil {
+		return 0
+	}
+	var ee *exec.ExitError
+	if errors.As(err, &ee) {
+		if code := ee.ExitCode(); code > 0 {
+			return code
+		}
+		return 1
+	}
+	return 127
+}
+
+// ShellOutput runs a $(shell ...) command and returns its standard output.
+func (e *Engine) ShellOutput(line string) string {
+	cmd := exec.Command(e.Shell, "-c", line)
+	cmd.Stdin, cmd.Stderr = os.Stdin, os.Stderr
+	cmd.Env = e.Env
+	out, _ := cmd.Output()
+	return string(out)
+}
+[?2004hroot@1445960760bf:/app# printf '\n--- parse rules ---\n'; cat internal/parse/rules.go; printf '\n--- parser rule parsing ---\n'; sed -n '120,240p' internal/parse/parser.go; printf '\n--- README ---\n'; cat README.md
+[?2004l
+--- parse rules ---
+package parse
+
+import (
+	"strings"
+
+	"brickmake/internal/db"
+	"brickmake/internal/diag"
+	"brickmake/internal/text"
+	"brickmake/internal/vars"
+)
+
+// ignoredSpecial are special targets that are accepted and ignored.
+var ignoredSpecial = map[string]bool{
+	".SUFFIXES": true, ".DEFAULT": true, ".INTERMEDIATE": true, ".NOTINTERMEDIATE": true,
+	".DELETE_ON_ERROR": true, ".IGNORE": true, ".SILENT": true, ".NOTPARALLEL": true,
+	".ONESHELL": true, ".POSIX": true, ".EXPORT_ALL_VARIABLES": true, ".LOW_RESOLUTION_TIME": true,
+}
+
+// flush records the pending rule once all of its recipe lines are read.
+func (p *Parser) flush() {
+	r := p.rule
+	if r == nil {
+		return
+	}
+	p.rule = nil
+	switch {
+	case r.static:
+		p.recordStatic(r)
+	case strings.IndexByte(r.targets[0], '%') >= 0 || anyPattern(r.targets):
+		for _, t := range r.targets {
+			if strings.IndexByte(t, '%') < 0 {
+				diag.Failf(r.pos, "mixed implicit and normal rules")
+			}
+		}
+		p.DB.AddPatternRule(&db.PatternRule{Targets: r.targets, Prereqs: r.prereqs, Recipe: r.recipe, Pos: r.pos})
+	default:
+		p.recordExplicit(r)
+	}
+}
+
+func anyPattern(targets []string) bool {
+	for _, t := range targets {
+		if strings.IndexByte(t, '%') >= 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func (p *Parser) mention(pr db.Prereqs) {
+	for _, w := range pr.Normal {
+		p.DB.Enter(w)
+	}
+	for _, w := range pr.OrderOnly {
+		p.DB.Enter(w)
+	}
+}
+
+func (p *Parser) recordExplicit(r *pending) {
+	for _, t := range r.targets {
+		if p.special(t, r) {
+			continue
+		}
+		p.addRule(p.DB.Enter(t), &db.Rule{Prereqs: r.prereqs, Recipe: r.recipe, Pos: r.pos})
+		p.mention(r.prereqs)
+	}
+	p.defaultGoal(r.targets)
+}
+
+func (p *Parser) recordStatic(r *pending) {
+	pat := text.ParsePattern(r.pattern)
+	if !pat.Wild {
+		diag.Failf(r.pos, "target pattern contains no '%%'")
+	}
+	for _, t := range r.targets {
+		rule := &db.Rule{Recipe: r.recipe, Pos: r.pos, Static: true}
+		stem, ok := pat.Match(t)
+		if !ok {
+			diag.Warn(r.pos, "target '%s' doesn't match the target pattern", t)
+			rule.Stem = t
+		} else {
+			rule.Stem = stem
+			if r.prereqs.Second {
+				rule.Prereqs = r.prereqs
+			} else {
+				rule.Normal = substAll(r.prereqs.Normal, stem)
+				rule.OrderOnly = substAll(r.prereqs.OrderOnly, stem)
+			}
+		}
+		p.addRule(p.DB.Enter(t), rule)
+		p.mention(rule.Prereqs)
+	}
+	p.defaultGoal(r.targets)
+}
+
+func substAll(words []string, stem string) []string {
+	out := make([]string, len(words))
+	for i, w := range words {
+		out[i] = text.Subst(w, stem)
+	}
+	return out
+}
+
+func (p *Parser) addRule(f *db.File, r *db.Rule) {
+	if r.Recipe != nil {
+		if old := f.RecipeRule(); old != nil {
+			diag.Warn(r.Recipe.Pos[0], "warning: overriding recipe for target '%s'", f.Name)
+			diag.Warn(old.Recipe.Pos[0], "warning: ignoring old recipe for target '%s'", f.Name)
+			old.Recipe = nil
+		}
+	}
+	f.Rules = append(f.Rules, r)
+}
+
+// special handles special targets and reports whether t was one.
+func (p *Parser) special(t string, r *pending) bool {
+	words := append(append([]string{}, r.prereqs.Normal...), r.prereqs.OrderOnly...)
+	if r.prereqs.Second {
+		words = text.Fields(r.prereqs.Text)
+	}
+	switch {
+	case t == ".PHONY":
+		for _, w := range words {
+			p.DB.Enter(w).Phony = true
+		}
+	case t == ".SECONDEXPANSION":
+		p.second = true
+	case t == ".PRECIOUS" || t == ".SECONDARY":
+		if len(words) == 0 && t == ".SECONDARY" {
+			p.DB.SecondaryAll = true
+		}
+		for _, w := range words {
+			p.DB.Enter(w).Precious = true
+		}
+	case ignoredSpecial[t]:
+	default:
+		return false
+	}
+	return true
+}
+
+// defaultGoal makes the first ordinary target the default goal unless
+// .DEFAULT_GOAL already has a value.
+func (p *Parser) defaultGoal(targets []string) {
+	if v := p.X.Global.Get(".DEFAULT_GOAL"); v != nil && v.Value != "" {
+		return
+	}
+	for _, t := range targets {
+		if strings.HasPrefix(t, ".") && strings.IndexByte(t, '/') < 0 {
+			continue
+		}
+		p.X.DefineGlobal(".DEFAULT_GOAL", vars.OpRecursive, t, vars.File, diag.Pos{})
+		return
+	}
+}
+
+--- parser rule parsing ---
+}
+
+func startsAssignment(rest string) bool {
+	for _, op := range []string{"=", ":=", "::=", "+=", "?="} {
+		if strings.HasPrefix(rest, op) {
+			return true
+		}
+	}
+	return strings.HasPrefix(rest, ":")
+}
+
+func (p *Parser) assign(name string, op vars.Op, value string, pos diag.Pos) {
+	name = text.TrimSpace(p.X.Expand(name, nil))
+	if name == "" {
+		diag.Failf(pos, "empty variable name")
+	}
+	p.X.DefineGlobal(name, op, value, vars.File, pos)
+}
+
+func (p *Parser) ruleLine(line string, pos diag.Pos) {
+	ruleText, recipe := splitRecipe(line)
+	colon := findTop(ruleText, ':')
+	if colon < 0 {
+		if text.TrimSpace(p.X.Expand(ruleText, nil)) == "" {
+			return
+		}
+		diag.Failf(pos, "missing separator")
+	}
+	rest := ruleText[colon+1:]
+	if strings.HasPrefix(rest, ":") {
+		diag.Failf(pos, "double-colon rules are not supported")
+	}
+	targets := text.Fields(p.X.Expand(ruleText[:colon], nil))
+	if len(targets) == 0 {
+		diag.Failf(pos, "missing target")
+	}
+	if name, op, value, ok := scanAssign(text.TrimLeft(rest)); ok {
+		if recipe != nil {
+			value += ";" + stripComment(*recipe)
+		}
+		name = text.TrimSpace(p.X.Expand(name, nil))
+		if name == "" {
+			diag.Failf(pos, "empty variable name")
+		}
+		p.targetVar(targets, name, op, value, pos)
+		return
+	}
+	r := &pending{targets: targets, pos: pos}
+	prereqText := rest
+	if c := findTop(rest, ':'); c >= 0 {
+		r.static = true
+		r.pattern = text.TrimSpace(p.X.Expand(rest[:c], nil))
+		prereqText = rest[c+1:]
+	}
+	expanded := p.X.Expand(prereqText, nil)
+	if p.second {
+		r.prereqs = db.Prereqs{Text: expanded, Second: true}
+	} else {
+		r.prereqs.Normal, r.prereqs.OrderOnly = text.SplitOrder(text.Fields(expanded))
+	}
+	p.rule = r
+	if recipe != nil {
+		p.addRecipeLine(*recipe, pos)
+	}
+}
+
+// targetVar records "targets: name op value".
+func (p *Parser) targetVar(targets []string, name string, op vars.Op, value string, pos diag.Pos) {
+	for _, t := range targets {
+		if strings.IndexByte(t, '%') >= 0 {
+			v := value
+			if op == vars.OpSimple {
+				v = p.X.Expand(value, nil)
+			}
+			p.DB.PatternVars = append(p.DB.PatternVars, &db.PatternVar{Pattern: t, Name: name, Op: op, Value: v, Pos: pos})
+			continue
+		}
+		f := p.DB.Enter(t)
+		p.X.DefineIn(f.Vars, name, op, value, pos)
+	}
+}
+
+--- README ---
+# brickmake
+
+brickmake is a small, dependency-free build tool that reads GNU-style
+makefiles. It is meant to be a drop-in replacement for GNU make 4.3 run as
+`make -r -R` (no built-in rules, no built-in variables) for the part of the
+makefile language described in `docs/`. For every supported construct,
+brickmake prints the same recipe lines, the same messages and exits with
+the same status as GNU make; the only intended difference is that its own
+messages start with `brickmake:` instead of `make:`.
+
+## Building
+
+```
+go build -o brickmake ./cmd/brickmake
+go test ./...
+```
+
+Go 1.24, standard library only.
+
+## Layout
+
+| Path | Contents |
+|---|---|
+| `cmd/brickmake` | entry point |
+| `internal/cli` | command-line options, variable setup, makefile lookup |
+| `internal/parse` | logical lines, comments, conditionals, assignments, rule lines |
+| `internal/db` | files, explicit rules, pattern rules, pattern-specific variables |
+| `internal/vars` | variable definitions and sets |
+| `internal/expand` | variable references, substitution references, functions, assignment semantics |
+| `internal/engine` | implicit rule search, variable scopes, the update algorithm, recipes |
+| `internal/text` | words and `%` patterns |
+| `internal/diag` | message formatting |
+
+## Documentation
+
+- `docs/makefiles.md` - how makefiles are read
+- `docs/variables.md` - flavors, appending, target- and pattern-specific variables
+- `docs/rules.md` - explicit, static pattern and pattern rules; implicit rule search
+- `docs/updating.md` - when targets are remade and what brickmake prints
+- `docs/functions.md` - supported functions
+- `docs/cli.md` - command line
+[?2004hroot@1445960760bf:/app# go build -o /tmp/brickmake ./cmd/brickmake && echo BUILD_OK
+[?2004lBUILD_OK
+[?2004hroot@1445960760bf:/app# nl -ba internal/engine/scope.go; nl -ba internal/engine/deps.go; nl -ba internal/engine/engine.go; nl -ba internal/engine/node.go
+[?2004l     1	package engine
+     2	
+     3	import (
+     4		"brickmake/internal/db"
+     5		"brickmake/internal/expand"
+     6		"brickmake/internal/text"
+     7		"brickmake/internal/vars"
+     8	)
+     9	
+    10	// patternSet collects the pattern-specific variables whose pattern matches
+    11	// the file into one set. Definitions are applied in makefile order.
+    12	func (e *Engine) patternSet(n *node) *vars.Set {
+    13		if n.patReady {
+    14			return n.patVars
+    15		}
+    16		n.patReady = true
+    17		var hits []*db.PatternVar
+    18		for _, pv := range e.db.PatternVars {
+    19			if _, ok := text.Match(pv.Pattern, n.name()); ok {
+    20				hits = append(hits, pv)
+    21			}
+    22		}
+    23		if len(hits) == 0 {
+    24			return nil
+    25		}
+    26		set := vars.NewSet()
+    27		for _, pv := range hits {
+    28			e.x.Pos = pv.Pos
+    29			e.x.DefinePattern(set, pv.Name, pv.Op, pv.Value, pv.Pos)
+    30		}
+    31		n.patVars = set
+    32		return set
+    33	}
+    34	
+    35	// scope is the variable context of a file: its own target-specific
+    36	// variables, then those of the targets that first asked for it, then its
+    37	// pattern-specific variables, and finally the global variables.
+    38	func (e *Engine) scope(n *node) *expand.Scope {
+    39		sc := &expand.Scope{}
+    40		for x := n; x != nil; x = x.parent {
+    41			sc.Sets = append(sc.Sets, x.f.Vars)
+    42		}
+    43		if ps := e.patternSet(n); ps != nil {
+    44			sc.Sets = append(sc.Sets, ps)
+    45		}
+    46		return sc
+    47	}
+     1	package engine
+     2	
+     3	import (
+     4		"brickmake/internal/db"
+     5		"brickmake/internal/expand"
+     6		"brickmake/internal/text"
+     7	)
+     8	
+     9	// ruleWords returns the prerequisites of one explicit rule, performing
+    10	// secondary expansion when the rule was read after .SECONDEXPANSION.
+    11	func (e *Engine) ruleWords(n *node, r *db.Rule) (normal, orderOnly []string) {
+    12		if !r.Second {
+    13			return r.Normal, r.OrderOnly
+    14		}
+    15		sc := e.scope(n)
+    16		sc.Auto = &expand.Auto{Target: n.name(), Stem: r.Stem}
+    17		e.x.Pos = r.Pos
+    18		normal, orderOnly = text.SplitOrder(text.Fields(e.x.Expand(r.Text, sc)))
+    19		if r.Static {
+    20			for i, w := range normal {
+    21				normal[i] = text.Subst(w, r.Stem)
+    22			}
+    23			for i, w := range orderOnly {
+    24				orderOnly[i] = text.Subst(w, r.Stem)
+    25			}
+    26		}
+    27		return normal, orderOnly
+    28	}
+    29	
+    30	// depsOf returns the file's prerequisites in the order make considers
+    31	// them: those of the implicit rule, then those of the explicit rules in
+    32	// makefile order.
+    33	func (e *Engine) depsOf(n *node) []dep {
+    34		if n.depsReady {
+    35			return n.deps
+    36		}
+    37		n.depsReady = true
+    38		type list struct{ normal, orderOnly []string }
+    39		var lists []list
+    40		if m := n.match; m != nil {
+    41			lists = append(lists, list{m.normal, m.orderOnly})
+    42		}
+    43		for _, r := range n.f.Rules {
+    44			nw, ow := e.ruleWords(n, r)
+    45			lists = append(lists, list{nw, ow})
+    46		}
+    47		normal := map[string]bool{}
+    48		for _, l := range lists {
+    49			for _, w := range l.normal {
+    50				normal[w] = true
+    51			}
+    52		}
+    53		for _, l := range lists {
+    54			for _, w := range l.normal {
+    55				n.deps = append(n.deps, dep{n: e.node(e.db.Enter(w))})
+    56			}
+    57			for _, w := range l.orderOnly {
+    58				if !normal[w] {
+    59					n.deps = append(n.deps, dep{n: e.node(e.db.Enter(w)), order: true})
+    60				}
+    61			}
+    62		}
+    63		return n.deps
+    64	}
+    65	
+    66	// autoVars computes the automatic variables of a recipe.
+    67	func (e *Engine) autoVars(n *node) *expand.Auto {
+    68		a := &expand.Auto{Target: n.name(), Stem: n.stem}
+    69		var order []string
+    70		for _, d := range e.depsOf(n) {
+    71			if d.order {
+    72				order = append(order, d.n.name())
+    73				continue
+    74			}
+    75			a.Plus = append(a.Plus, d.n.name())
+    76		}
+    77		a.All = text.Uniq(a.Plus)
+    78		a.Order = text.Uniq(order)
+    79		if len(a.Plus) > 0 {
+    80			a.First = a.Plus[0]
+    81		}
+    82		for _, name := range a.All {
+    83			d := e.node(e.db.Lookup(name))
+    84			if !n.st.exists || d.f.Phony || e.outdated(d, n) {
+    85				a.Newer = append(a.Newer, name)
+    86			}
+    87		}
+    88		return a
+    89	}
+     1	// Package engine decides which targets are out of date and runs their
+     2	// recipes.
+     3	package engine
+     4	
+     5	import (
+     6		"fmt"
+     7		"os"
+     8	
+     9		"brickmake/internal/db"
+    10		"brickmake/internal/diag"
+    11		"brickmake/internal/expand"
+    12	)
+    13	
+    14	// Engine updates goals against a rule database.
+    15	type Engine struct {
+    16		DryRun     bool
+    17		Silent     bool
+    18		KeepGoing  bool
+    19		AlwaysMake bool
+    20		Shell      string
+    21		Env        []string
+    22	
+    23		db      *db.DB
+    24		x       *expand.Expander
+    25		nodes   map[*db.File]*node
+    26		order   []*node
+    27		started int
+    28	}
+    29	
+    30	func New(d *db.DB, x *expand.Expander) *Engine {
+    31		return &Engine{db: d, x: x, nodes: map[*db.File]*node{}, Shell: "/bin/sh"}
+    32	}
+    33	
+    34	func (e *Engine) node(f *db.File) *node {
+    35		if n := e.nodes[f]; n != nil {
+    36			return n
+    37		}
+    38		n := &node{f: f}
+    39		e.nodes[f] = n
+    40		e.order = append(e.order, n)
+    41		return n
+    42	}
+    43	
+    44	// Run updates the goals in order and returns the exit status.
+    45	func (e *Engine) Run(goals []string) (code int) {
+    46		defer e.removeIntermediates()
+    47		defer func() {
+    48			if r := recover(); r != nil {
+    49				f, isFatal := r.(diag.Fatal)
+    50				if !isFatal {
+    51					panic(r)
+    52				}
+    53				fmt.Fprintln(diag.Stderr, f.Error())
+    54				code = 2
+    55			}
+    56		}()
+    57		anyFailed := false
+    58		for _, g := range goals {
+    59			n := e.node(e.db.Enter(g))
+    60			if e.update(n, nil) == failed {
+    61				anyFailed = true
+    62				if !e.KeepGoing {
+    63					break
+    64				}
+    65				continue
+    66			}
+    67			if e.started == 0 {
+    68				if n.f.Phony || n.recipe == nil {
+    69					diag.Say("Nothing to be done for '%s'.", g)
+    70				} else {
+    71					diag.Say("'%s' is up to date.", g)
+    72				}
+    73			}
+    74		}
+    75		if anyFailed {
+    76			return 2
+    77		}
+    78		return 0
+    79	}
+    80	
+    81	// removeIntermediates deletes the intermediate files made by this run.
+    82	func (e *Engine) removeIntermediates() {
+    83		first := true
+    84		for _, n := range e.order {
+    85			if !n.intermediate || !n.started || n.f.Precious || e.db.SecondaryAll {
+    86				continue
+    87			}
+    88			if !e.DryRun {
+    89				if err := os.Remove(n.name()); err != nil && os.IsNotExist(err) {
+    90					continue
+    91				}
+    92			}
+    93			if e.Silent {
+    94				continue
+    95			}
+    96			if first {
+    97				fmt.Fprint(diag.Stdout, "rm ")
+    98				first = false
+    99			} else {
+   100				fmt.Fprint(diag.Stdout, " ")
+   101			}
+   102			fmt.Fprint(diag.Stdout, n.name())
+   103		}
+   104		if !first {
+   105			fmt.Fprintln(diag.Stdout)
+   106		}
+   107	}
+     1	package engine
+     2	
+     3	import (
+     4		"os"
+     5		"time"
+     6	
+     7		"brickmake/internal/db"
+     8		"brickmake/internal/vars"
+     9	)
+    10	
+    11	type state int
+    12	
+    13	const (
+    14		fresh state = iota
+    15		running
+    16		done
+    17	)
+    18	
+    19	type status int
+    20	
+    21	const (
+    22		ok status = iota
+    23		failed
+    24		dropped // circular dependency, ignored by the parent
+    25	)
+    26	
+    27	// stamp is a file's modification time as seen by the engine. Newest
+    28	// marks a target that counts as just remade without a new time on disk
+    29	// (dry runs).
+    30	type stamp struct {
+    31		exists bool
+    32		t      time.Time
+    33		newest bool
+    34	}
+    35	
+    36	func statFile(name string) stamp {
+    37		fi, err := os.Stat(name)
+    38		if err != nil {
+    39			return stamp{}
+    40		}
+    41		return stamp{exists: true, t: fi.ModTime()}
+    42	}
+    43	
+    44	// node is the run-time state of one file.
+    45	type node struct {
+    46		f      *db.File
+    47		state  state
+    48		status status
+    49		st     stamp
+    50		parent *node
+    51	
+    52		searched     bool
+    53		match        *match
+    54		preset       *match // chosen for an intermediate by the parent's search
+    55		intermediate bool
+    56		recipe       *db.Recipe
+    57		stem         string
+    58	
+    59		depsReady bool
+    60		deps      []dep
+    61	
+    62		patReady bool
+    63		patVars  *vars.Set
+    64	
+    65		started bool // its recipe was started
+    66	}
+    67	
+    68	type dep struct {
+    69		n     *node
+    70		order bool
+    71	}
+    72	
+    73	func (n *node) name() string { return n.f.Name }
+    74	
+    75	func (n *node) stat() { n.st = statFile(n.f.Name) }
+    76	
+    77	// hasRule reports whether make knows how to (re)make the file, even if the
+    78	// answer is "do nothing".
+    79	func (n *node) hasRule() bool {
+    80		return len(n.f.Rules) > 0 || n.match != nil || n.f.Phony
+    81	}
+[?2004hroot@1445960760bf:/app# nl -ba internal/engine/implicit.go | sed -n '1,240p'
+[?2004l     1	package engine
+     2	
+     3	import (
+     4		"os"
+     5		"sort"
+     6		"strings"
+     7	
+     8		"brickmake/internal/db"
+     9		"brickmake/internal/expand"
+    10		"brickmake/internal/text"
+    11	)
+    12	
+    13	// maxChain bounds implicit rule chains.
+    14	const maxChain = 16
+    15	
+    16	// match is the result of implicit rule search for one target.
+    17	type match struct {
+    18		rule      *db.PatternRule
+    19		stem      string // $*, including the directory part
+    20		normal    []string
+    21		orderOnly []string
+    22		also      []string // the rule's other targets
+    23		inter     map[string]*match
+    24	}
+    25	
+    26	type candidate struct {
+    27		rule   *db.PatternRule
+    28		target int
+    29		dir    string // directory prepended to the stem, if any
+    30		stem   string // the part matched by '%'
+    31	}
+    32	
+    33	func (c candidate) fullStem() string { return c.dir + c.stem }
+    34	
+    35	// candidates lists the pattern rules whose target pattern matches name,
+    36	// shortest stem first; rules of equal stem length keep makefile order. A
+    37	// target pattern without a slash is matched against the file part of a
+    38	// name that has a directory.
+    39	func (e *Engine) candidates(name string, used map[*db.PatternRule]bool) []candidate {
+    40		dir, base := text.SplitDir(name)
+    41		var cs []candidate
+    42		for _, r := range e.db.PatternRules {
+    43			if used[r] {
+    44				continue
+    45			}
+    46			for ti, tp := range r.Targets {
+    47				if tp == "%" {
+    48					continue
+    49				}
+    50				var stem string
+    51				var ok bool
+    52				d := ""
+    53				if dir == "" || strings.IndexByte(tp, '/') >= 0 {
+    54					stem, ok = text.Match(tp, name)
+    55				} else {
+    56					stem, ok = text.Match(tp, base)
+    57					d = dir
+    58				}
+    59				if !ok || stem == "" {
+    60					continue
+    61				}
+    62				cs = append(cs, candidate{rule: r, target: ti, dir: d, stem: stem})
+    63				break
+    64			}
+    65		}
+    66		sort.SliceStable(cs, func(i, j int) bool {
+    67			return len(cs[i].stem) < len(cs[j].stem)
+    68		})
+    69		return cs
+    70	}
+    71	
+    72	// prereqs computes a candidate's prerequisite names. The directory of a
+    73	// directory-relative match is prepended to every prerequisite.
+    74	func (e *Engine) prereqs(c candidate, name string, sc *expand.Scope) (normal, orderOnly []string) {
+    75		pr := c.rule.Prereqs
+    76		normal, orderOnly = pr.Normal, pr.OrderOnly
+    77		if pr.Second {
+    78			s := &expand.Scope{Auto: &expand.Auto{Target: name, Stem: c.fullStem()}}
+    79			if sc != nil {
+    80				s.Sets = sc.Sets
+    81			}
+    82			e.x.Pos = c.rule.Pos
+    83			normal, orderOnly = text.SplitOrder(text.Fields(e.x.Expand(pr.Text, s)))
+    84		}
+    85		conv := func(words []string) []string {
+    86			out := make([]string, len(words))
+    87			for i, w := range words {
+    88				out[i] = c.dir + text.Subst(w, c.stem)
+    89			}
+    90			return out
+    91		}
+    92		return conv(normal), conv(orderOnly)
+    93	}
+    94	
+    95	// oughtToExist reports whether a prerequisite exists or is a target in
+    96	// the makefile.
+    97	func (e *Engine) oughtToExist(name string) bool {
+    98		if f := e.db.Lookup(name); f != nil && (len(f.Rules) > 0 || f.Phony) {
+    99			return true
+   100		}
+   101		_, err := os.Stat(name)
+   102		return err == nil
+   103	}
+   104	
+   105	// findImplicit searches the pattern rules for name. The first pass accepts
+   106	// a rule whose prerequisites all exist or ought to exist; the second pass
+   107	// also accepts prerequisites that can be made by a chain of other pattern
+   108	// rules.
+   109	func (e *Engine) findImplicit(name string, sc *expand.Scope, depth int, used map[*db.PatternRule]bool) *match {
+   110		type tried struct {
+   111			c              candidate
+   112			normal, orders []string
+   113		}
+   114		var ts []tried
+   115		for _, c := range e.candidates(name, used) {
+   116			n, o := e.prereqs(c, name, sc)
+   117			ts = append(ts, tried{c, n, o})
+   118		}
+   119		all := func(t tried) []string { return append(append([]string{}, t.normal...), t.orders...) }
+   120		for _, t := range ts {
+   121			good := true
+   122			for _, p := range all(t) {
+   123				if !e.oughtToExist(p) {
+   124					good = false
+   125					break
+   126				}
+   127			}
+   128			if good {
+   129				return newMatch(t.c, t.normal, t.orders, nil)
+   130			}
+   131		}
+   132		if depth >= maxChain {
+   133			return nil
+   134		}
+   135		for _, t := range ts {
+   136			inter := map[string]*match{}
+   137			good := true
+   138			for _, p := range all(t) {
+   139				if e.oughtToExist(p) {
+   140					continue
+   141				}
+   142				next := map[*db.PatternRule]bool{t.c.rule: true}
+   143				for r := range used {
+   144					next[r] = true
+   145				}
+   146				m := e.findImplicit(p, nil, depth+1, next)
+   147				if m == nil {
+   148					good = false
+   149					break
+   150				}
+   151				inter[p] = m
+   152			}
+   153			if good {
+   154				return newMatch(t.c, t.normal, t.orders, inter)
+   155			}
+   156		}
+   157		return nil
+   158	}
+   159	
+   160	func newMatch(c candidate, normal, orderOnly []string, inter map[string]*match) *match {
+   161		m := &match{rule: c.rule, stem: c.fullStem(), normal: normal, orderOnly: orderOnly, inter: inter}
+   162		for i, tp := range c.rule.Targets {
+   163			if i != c.target {
+   164				m.also = append(m.also, c.dir+text.Subst(tp, c.stem))
+   165			}
+   166		}
+   167		return m
+   168	}
+   169	
+   170	// implicitFor runs implicit rule search once for a file without a recipe.
+   171	func (e *Engine) implicitFor(n *node) {
+   172		if n.searched {
+   173			return
+   174		}
+   175		n.searched = true
+   176		if r := n.f.RecipeRule(); r != nil {
+   177			n.recipe = r.Recipe
+   178			if r.Static {
+   179				n.stem = r.Stem
+   180			}
+   181			return
+   182		}
+   183		if n.f.Phony {
+   184			return
+   185		}
+   186		m := n.preset
+   187		if m == nil {
+   188			m = e.findImplicit(n.name(), e.scope(n), 0, map[*db.PatternRule]bool{})
+   189		}
+   190		if m == nil {
+   191			return
+   192		}
+   193		n.match = m
+   194		n.recipe = m.rule.Recipe
+   195		n.stem = m.stem
+   196		for _, p := range append(append([]string{}, m.normal...), m.orderOnly...) {
+   197			created := e.db.Lookup(p) == nil
+   198			pn := e.node(e.db.Enter(p))
+   199			if sub := m.inter[p]; sub != nil && created {
+   200				pn.intermediate = true
+   201				pn.preset = sub
+   202			}
+   203		}
+   204	}
+[?2004hroot@1445960760bf:/app# nl -ba internal/engine/update.go | sed -n '1,260p'; nl -ba internal/db/db.go | sed -n '1,180p'; nl -ba internal/parse/rules.go | sed -n '1,190p'
+[?2004l     1	package engine
+     2	
+     3	import (
+     4		"fmt"
+     5	
+     6		"brickmake/internal/diag"
+     7	)
+     8	
+     9	// outdated reports whether prerequisite d makes target n out of date. A
+    10	// prerequisite that is phony, missing, or remade in a dry run always does.
+    11	func (e *Engine) outdated(d, n *node) bool {
+    12		if d.f.Phony || d.st.newest || !d.st.exists {
+    13			return true
+    14		}
+    15		return !n.st.exists || d.st.t.After(n.st.t)
+    16	}
+    17	
+    18	func (e *Engine) noRule(n, parent *node) {
+    19		msg := fmt.Sprintf("No rule to make target '%s'", n.name())
+    20		if parent != nil {
+    21			msg += fmt.Sprintf(", needed by '%s'", parent.name())
+    22		}
+    23		if e.KeepGoing {
+    24			diag.Err("*** %s.", msg)
+    25		} else {
+    26			diag.Err("*** %s.  Stop.", msg)
+    27		}
+    28	}
+    29	
+    30	func (e *Engine) fail(n, parent *node, depFailure bool) status {
+    31		n.state, n.status = done, failed
+    32		if depFailure && parent == nil && e.KeepGoing && !e.DryRun {
+    33			diag.Err("Target '%s' not remade because of errors.", n.name())
+    34		}
+    35		return failed
+    36	}
+    37	
+    38	// update brings n up to date on behalf of parent (nil for a goal).
+    39	func (e *Engine) update(n, parent *node) status {
+    40		switch n.state {
+    41		case done:
+    42			return n.status
+    43		case running:
+    44			diag.Err("Circular %s <- %s dependency dropped.", parent.name(), n.name())
+    45			return dropped
+    46		}
+    47		n.state = running
+    48		if n.parent == nil {
+    49			n.parent = parent
+    50		}
+    51		e.implicitFor(n)
+    52		deps := e.depsOf(n)
+    53		n.stat()
+    54		if !n.hasRule() && !n.st.exists {
+    55			e.noRule(n, parent)
+    56			return e.fail(n, parent, false)
+    57		}
+    58	
+    59		must, bad := false, false
+    60		for _, d := range deps {
+    61			var st status
+    62			if d.n.intermediate && d.n.state != done {
+    63				hit := false
+    64				st = e.checkIntermediate(d.n, n, &hit)
+    65				if hit && !d.order {
+    66					must = true
+    67				}
+    68			} else {
+    69				st = e.update(d.n, n)
+    70				if st == ok && !d.order && e.outdated(d.n, n) {
+    71					must = true
+    72				}
+    73			}
+    74			if st == failed {
+    75				bad = true
+    76				if !e.KeepGoing {
+    77					break
+    78				}
+    79			}
+    80		}
+    81		if bad {
+    82			return e.fail(n, parent, true)
+    83		}
+    84		if n.f.Phony || !n.st.exists || e.AlwaysMake {
+    85			must = true
+    86		}
+    87		if !must {
+    88			n.state, n.status = done, ok
+    89			return ok
+    90		}
+    91		for _, d := range deps {
+    92			if d.n.intermediate && d.n.state != done {
+    93				if e.update(d.n, n) == failed {
+    94					bad = true
+    95					if !e.KeepGoing {
+    96						break
+    97					}
+    98				}
+    99			}
+   100		}
+   101		if bad {
+   102			return e.fail(n, parent, true)
+   103		}
+   104		return e.remake(n)
+   105	}
+   106	
+   107	// checkIntermediate decides whether a missing intermediate file matters to
+   108	// target: it does when the intermediate exists and is newer than target,
+   109	// or when anything it depends on is. The intermediate itself is only made
+   110	// later, if target has to be remade.
+   111	func (e *Engine) checkIntermediate(m, target *node, hit *bool) status {
+   112		if m.parent == nil {
+   113			m.parent = target
+   114		}
+   115		e.implicitFor(m)
+   116		m.stat()
+   117		if m.st.exists && (!target.st.exists || m.st.t.After(target.st.t)) {
+   118			*hit = true
+   119			return ok
+   120		}
+   121		if !m.hasRule() {
+   122			return ok
+   123		}
+   124		for _, d := range e.depsOf(m) {
+   125			var st status
+   126			if d.n.intermediate && d.n.state != done {
+   127				sub := false
+   128				st = e.checkIntermediate(d.n, target, &sub)
+   129				if sub && !d.order {
+   130					*hit = true
+   131				}
+   132			} else {
+   133				st = e.update(d.n, m)
+   134				if st == ok && !d.order && e.outdated(d.n, target) {
+   135					*hit = true
+   136				}
+   137			}
+   138			if st == failed && !e.KeepGoing {
+   139				return failed
+   140			}
+   141		}
+   142		return ok
+   143	}
+   144	
+   145	// remake runs n's recipe, or records that a target without a recipe was
+   146	// "remade" by doing nothing.
+   147	func (e *Engine) remake(n *node) status {
+   148		if n.recipe == nil {
+   149			n.state, n.status = done, ok
+   150			n.stat()
+   151			return ok
+   152		}
+   153		auto := e.autoVars(n)
+   154		n.started = true
+   155		good := e.run(n, auto)
+   156		n.state = done
+   157		if !good {
+   158			n.status = failed
+   159			return failed
+   160		}
+   161		n.status = ok
+   162		e.refresh(n)
+   163		if n.match != nil {
+   164			for _, name := range n.match.also {
+   165				o := e.node(e.db.Enter(name))
+   166				if o.state != done {
+   167					o.state, o.status, o.started = done, ok, true
+   168					o.intermediate = o.intermediate || n.intermediate
+   169					e.refresh(o)
+   170				}
+   171			}
+   172		}
+   173		return ok
+   174	}
+   175	
+   176	// refresh records that a remade target is now newer than everything
+   177	// considered before it.
+   178	func (e *Engine) refresh(n *node) {
+   179		if e.DryRun && allForced(n.recipe) {
+   180			n.stat()
+   181			return
+   182		}
+   183		n.st = stamp{exists: true, newest: true}
+   184	}
+     1	// Package db is the rule database built by the parser and read by the
+     2	// engine.
+     3	package db
+     4	
+     5	import (
+     6		"brickmake/internal/diag"
+     7		"brickmake/internal/vars"
+     8	)
+     9	
+    10	// Recipe is the list of raw recipe lines of one rule.
+    11	type Recipe struct {
+    12		Lines []string
+    13		Pos   []diag.Pos // position of each line
+    14	}
+    15	
+    16	// Prereqs is the prerequisite list of one rule line. With secondary
+    17	// expansion Text is expanded again when the target is considered and
+    18	// split into normal and order-only words afterwards.
+    19	type Prereqs struct {
+    20		Normal    []string
+    21		OrderOnly []string
+    22		Text      string
+    23		Second    bool
+    24	}
+    25	
+    26	// Rule is one explicit rule line for a target (static pattern rules
+    27	// produce one Rule per target).
+    28	type Rule struct {
+    29		Prereqs
+    30		Recipe *Recipe
+    31		Stem   string // static pattern rules only
+    32		Static bool
+    33		Pos    diag.Pos
+    34	}
+    35	
+    36	// File is a target or prerequisite mentioned in the makefile or entered by
+    37	// implicit rule search.
+    38	type File struct {
+    39		Name  string
+    40		Rules []*Rule
+    41		Phony bool
+    42		// Precious files are never removed as intermediates.
+    43		Precious bool
+    44		Vars     *vars.Set
+    45	}
+    46	
+    47	// RecipeRule returns the rule whose recipe the file uses, or nil.
+    48	func (f *File) RecipeRule() *Rule {
+    49		var r *Rule
+    50		for _, x := range f.Rules {
+    51			if x.Recipe != nil {
+    52				r = x
+    53			}
+    54		}
+    55		return r
+    56	}
+    57	
+    58	// PatternRule is an implicit rule: every target contains '%'.
+    59	type PatternRule struct {
+    60		Targets []string
+    61		Prereqs
+    62		Recipe *Recipe
+    63		Pos    diag.Pos
+    64	}
+    65	
+    66	// PatternVar is one pattern-specific assignment.
+    67	type PatternVar struct {
+    68		Pattern string
+    69		Name    string
+    70		Op      vars.Op
+    71		Value   string // already expanded for ":="
+    72		Pos     diag.Pos
+    73	}
+    74	
+    75	// DB is the result of reading the makefiles.
+    76	type DB struct {
+    77		Files        map[string]*File
+    78		Order        []*File
+    79		PatternRules []*PatternRule
+    80		PatternVars  []*PatternVar
+    81		// SecondaryAll is set by a .SECONDARY rule without prerequisites.
+    82		SecondaryAll bool
+    83	}
+    84	
+    85	func New() *DB { return &DB{Files: map[string]*File{}} }
+    86	
+    87	// Lookup returns the file entry for name, or nil.
+    88	func (d *DB) Lookup(name string) *File { return d.Files[name] }
+    89	
+    90	// Enter returns the file entry for name, creating it if needed.
+    91	func (d *DB) Enter(name string) *File {
+    92		if f := d.Files[name]; f != nil {
+    93			return f
+    94		}
+    95		f := &File{Name: name, Vars: vars.NewSet()}
+    96		d.Files[name] = f
+    97		d.Order = append(d.Order, f)
+    98		return f
+    99	}
+   100	
+   101	func sameWords(a, b []string) bool {
+   102		if len(a) != len(b) {
+   103			return false
+   104		}
+   105		for i := range a {
+   106			if a[i] != b[i] {
+   107				return false
+   108			}
+   109		}
+   110		return true
+   111	}
+   112	
+   113	// AddPatternRule installs a pattern rule. A rule with the same targets and
+   114	// prerequisites as an existing one replaces it and moves to the end; a
+   115	// rule without a recipe only cancels such a rule.
+   116	func (d *DB) AddPatternRule(r *PatternRule) {
+   117		for i, old := range d.PatternRules {
+   118			if sameWords(old.Targets, r.Targets) && sameWords(old.Normal, r.Normal) && old.Text == r.Text {
+   119				d.PatternRules = append(d.PatternRules[:i:i], d.PatternRules[i+1:]...)
+   120				break
+   121			}
+   122		}
+   123		if r.Recipe != nil {
+   124			d.PatternRules = append(d.PatternRules, r)
+   125		}
+   126	}
+     1	package parse
+     2	
+     3	import (
+     4		"strings"
+     5	
+     6		"brickmake/internal/db"
+     7		"brickmake/internal/diag"
+     8		"brickmake/internal/text"
+     9		"brickmake/internal/vars"
+    10	)
+    11	
+    12	// ignoredSpecial are special targets that are accepted and ignored.
+    13	var ignoredSpecial = map[string]bool{
+    14		".SUFFIXES": true, ".DEFAULT": true, ".INTERMEDIATE": true, ".NOTINTERMEDIATE": true,
+    15		".DELETE_ON_ERROR": true, ".IGNORE": true, ".SILENT": true, ".NOTPARALLEL": true,
+    16		".ONESHELL": true, ".POSIX": true, ".EXPORT_ALL_VARIABLES": true, ".LOW_RESOLUTION_TIME": true,
+    17	}
+    18	
+    19	// flush records the pending rule once all of its recipe lines are read.
+    20	func (p *Parser) flush() {
+    21		r := p.rule
+    22		if r == nil {
+    23			return
+    24		}
+    25		p.rule = nil
+    26		switch {
+    27		case r.static:
+    28			p.recordStatic(r)
+    29		case strings.IndexByte(r.targets[0], '%') >= 0 || anyPattern(r.targets):
+    30			for _, t := range r.targets {
+    31				if strings.IndexByte(t, '%') < 0 {
+    32					diag.Failf(r.pos, "mixed implicit and normal rules")
+    33				}
+    34			}
+    35			p.DB.AddPatternRule(&db.PatternRule{Targets: r.targets, Prereqs: r.prereqs, Recipe: r.recipe, Pos: r.pos})
+    36		default:
+    37			p.recordExplicit(r)
+    38		}
+    39	}
+    40	
+    41	func anyPattern(targets []string) bool {
+    42		for _, t := range targets {
+    43			if strings.IndexByte(t, '%') >= 0 {
+    44				return true
+    45			}
+    46		}
+    47		return false
+    48	}
+    49	
+    50	func (p *Parser) mention(pr db.Prereqs) {
+    51		for _, w := range pr.Normal {
+    52			p.DB.Enter(w)
+    53		}
+    54		for _, w := range pr.OrderOnly {
+    55			p.DB.Enter(w)
+    56		}
+    57	}
+    58	
+    59	func (p *Parser) recordExplicit(r *pending) {
+    60		for _, t := range r.targets {
+    61			if p.special(t, r) {
+    62				continue
+    63			}
+    64			p.addRule(p.DB.Enter(t), &db.Rule{Prereqs: r.prereqs, Recipe: r.recipe, Pos: r.pos})
+    65			p.mention(r.prereqs)
+    66		}
+    67		p.defaultGoal(r.targets)
+    68	}
+    69	
+    70	func (p *Parser) recordStatic(r *pending) {
+    71		pat := text.ParsePattern(r.pattern)
+    72		if !pat.Wild {
+    73			diag.Failf(r.pos, "target pattern contains no '%%'")
+    74		}
+    75		for _, t := range r.targets {
+    76			rule := &db.Rule{Recipe: r.recipe, Pos: r.pos, Static: true}
+    77			stem, ok := pat.Match(t)
+    78			if !ok {
+    79				diag.Warn(r.pos, "target '%s' doesn't match the target pattern", t)
+    80				rule.Stem = t
+    81			} else {
+    82				rule.Stem = stem
+    83				if r.prereqs.Second {
+    84					rule.Prereqs = r.prereqs
+    85				} else {
+    86					rule.Normal = substAll(r.prereqs.Normal, stem)
+    87					rule.OrderOnly = substAll(r.prereqs.OrderOnly, stem)
+    88				}
+    89			}
+    90			p.addRule(p.DB.Enter(t), rule)
+    91			p.mention(rule.Prereqs)
+    92		}
+    93		p.defaultGoal(r.targets)
+    94	}
+    95	
+    96	func substAll(words []string, stem string) []string {
+    97		out := make([]string, len(words))
+    98		for i, w := range words {
+    99			out[i] = text.Subst(w, stem)
+   100		}
+   101		return out
+   102	}
+   103	
+   104	func (p *Parser) addRule(f *db.File, r *db.Rule) {
+   105		if r.Recipe != nil {
+   106			if old := f.RecipeRule(); old != nil {
+   107				diag.Warn(r.Recipe.Pos[0], "warning: overriding recipe for target '%s'", f.Name)
+   108				diag.Warn(old.Recipe.Pos[0], "warning: ignoring old recipe for target '%s'", f.Name)
+   109				old.Recipe = nil
+   110			}
+   111		}
+   112		f.Rules = append(f.Rules, r)
+   113	}
+   114	
+   115	// special handles special targets and reports whether t was one.
+   116	func (p *Parser) special(t string, r *pending) bool {
+   117		words := append(append([]string{}, r.prereqs.Normal...), r.prereqs.OrderOnly...)
+   118		if r.prereqs.Second {
+   119			words = text.Fields(r.prereqs.Text)
+   120		}
+   121		switch {
+   122		case t == ".PHONY":
+   123			for _, w := range words {
+   124				p.DB.Enter(w).Phony = true
+   125			}
+   126		case t == ".SECONDEXPANSION":
+   127			p.second = true
+   128		case t == ".PRECIOUS" || t == ".SECONDARY":
+   129			if len(words) == 0 && t == ".SECONDARY" {
+   130				p.DB.SecondaryAll = true
+   131			}
+   132			for _, w := range words {
+   133				p.DB.Enter(w).Precious = true
+   134			}
+   135		case ignoredSpecial[t]:
+   136		default:
+   137			return false
+   138		}
+   139		return true
+   140	}
+   141	
+   142	// defaultGoal makes the first ordinary target the default goal unless
+   143	// .DEFAULT_GOAL already has a value.
+   144	func (p *Parser) defaultGoal(targets []string) {
+   145		if v := p.X.Global.Get(".DEFAULT_GOAL"); v != nil && v.Value != "" {
+   146			return
+   147		}
+   148		for _, t := range targets {
+   149			if strings.HasPrefix(t, ".") && strings.IndexByte(t, '/') < 0 {
+   150				continue
+   151			}
+   152			p.X.DefineGlobal(".DEFAULT_GOAL", vars.OpRecursive, t, vars.File, diag.Pos{})
+   153			return
+   154		}
+   155	}
+[?2004hroot@1445960760bf:/app# printf '%s\n' '--- scope.go ---'; nl -ba internal/engine/scope.go; printf '%s\n' '--- deps.go ---'; nl -ba internal/engine/deps.go
+[?2004l--- scope.go ---
+     1	package engine
+     2	
+     3	import (
+     4		"brickmake/internal/db"
+     5		"brickmake/internal/expand"
+     6		"brickmake/internal/text"
+     7		"brickmake/internal/vars"
+     8	)
+     9	
+    10	// patternSet collects the pattern-specific variables whose pattern matches
+    11	// the file into one set. Definitions are applied in makefile order.
+    12	func (e *Engine) patternSet(n *node) *vars.Set {
+    13		if n.patReady {
+    14			return n.patVars
+    15		}
+    16		n.patReady = true
+    17		var hits []*db.PatternVar
+    18		for _, pv := range e.db.PatternVars {
+    19			if _, ok := text.Match(pv.Pattern, n.name()); ok {
+    20				hits = append(hits, pv)
+    21			}
+    22		}
+    23		if len(hits) == 0 {
+    24			return nil
+    25		}
+    26		set := vars.NewSet()
+    27		for _, pv := range hits {
+    28			e.x.Pos = pv.Pos
+    29			e.x.DefinePattern(set, pv.Name, pv.Op, pv.Value, pv.Pos)
+    30		}
+    31		n.patVars = set
+    32		return set
+    33	}
+    34	
+    35	// scope is the variable context of a file: its own target-specific
+    36	// variables, then those of the targets that first asked for it, then its
+    37	// pattern-specific variables, and finally the global variables.
+    38	func (e *Engine) scope(n *node) *expand.Scope {
+    39		sc := &expand.Scope{}
+    40		for x := n; x != nil; x = x.parent {
+    41			sc.Sets = append(sc.Sets, x.f.Vars)
+    42		}
+    43		if ps := e.patternSet(n); ps != nil {
+    44			sc.Sets = append(sc.Sets, ps)
+    45		}
+    46		return sc
+    47	}
+--- deps.go ---
+     1	package engine
+     2	
+     3	import (
+     4		"brickmake/internal/db"
+     5		"brickmake/internal/expand"
+     6		"brickmake/internal/text"
+     7	)
+     8	
+     9	// ruleWords returns the prerequisites of one explicit rule, performing
+    10	// secondary expansion when the rule was read after .SECONDEXPANSION.
+    11	func (e *Engine) ruleWords(n *node, r *db.Rule) (normal, orderOnly []string) {
+    12		if !r.Second {
+    13			return r.Normal, r.OrderOnly
+    14		}
+    15		sc := e.scope(n)
+    16		sc.Auto = &expand.Auto{Target: n.name(), Stem: r.Stem}
+    17		e.x.Pos = r.Pos
+    18		normal, orderOnly = text.SplitOrder(text.Fields(e.x.Expand(r.Text, sc)))
+    19		if r.Static {
+    20			for i, w := range normal {
+    21				normal[i] = text.Subst(w, r.Stem)
+    22			}
+    23			for i, w := range orderOnly {
+    24				orderOnly[i] = text.Subst(w, r.Stem)
+    25			}
+    26		}
+    27		return normal, orderOnly
+    28	}
+    29	
+    30	// depsOf returns the file's prerequisites in the order make considers
+    31	// them: those of the implicit rule, then those of the explicit rules in
+    32	// makefile order.
+    33	func (e *Engine) depsOf(n *node) []dep {
+    34		if n.depsReady {
+    35			return n.deps
+    36		}
+    37		n.depsReady = true
+    38		type list struct{ normal, orderOnly []string }
+    39		var lists []list
+    40		if m := n.match; m != nil {
+    41			lists = append(lists, list{m.normal, m.orderOnly})
+    42		}
+    43		for _, r := range n.f.Rules {
+    44			nw, ow := e.ruleWords(n, r)
+    45			lists = append(lists, list{nw, ow})
+    46		}
+    47		normal := map[string]bool{}
+    48		for _, l := range lists {
+    49			for _, w := range l.normal {
+    50				normal[w] = true
+    51			}
+    52		}
+    53		for _, l := range lists {
+    54			for _, w := range l.normal {
+    55				n.deps = append(n.deps, dep{n: e.node(e.db.Enter(w))})
+    56			}
+    57			for _, w := range l.orderOnly {
+    58				if !normal[w] {
+    59					n.deps = append(n.deps, dep{n: e.node(e.db.Enter(w)), order: true})
+    60				}
+    61			}
+    62		}
+    63		return n.deps
+    64	}
+    65	
+    66	// autoVars computes the automatic variables of a recipe.
+    67	func (e *Engine) autoVars(n *node) *expand.Auto {
+    68		a := &expand.Auto{Target: n.name(), Stem: n.stem}
+    69		var order []string
+    70		for _, d := range e.depsOf(n) {
+    71			if d.order {
+    72				order = append(order, d.n.name())
+    73				continue
+    74			}
+    75			a.Plus = append(a.Plus, d.n.name())
+    76		}
+    77		a.All = text.Uniq(a.Plus)
+    78		a.Order = text.Uniq(order)
+    79		if len(a.Plus) > 0 {
+    80			a.First = a.Plus[0]
+    81		}
+    82		for _, name := range a.All {
+    83			d := e.node(e.db.Lookup(name))
+    84			if !n.st.exists || d.f.Phony || e.outdated(d, n) {
+    85				a.Newer = append(a.Newer, name)
+    86			}
+    87		}
+    88		return a
+    89	}
+[?2004hroot@1445960760bf:/app# nl -ba internal/engine/scope.go
+[?2004l     1	package engine
+     2	
+     3	import (
+     4		"brickmake/internal/db"
+     5		"brickmake/internal/expand"
+     6		"brickmake/internal/text"
+     7		"brickmake/internal/vars"
+     8	)
+     9	
+    10	// patternSet collects the pattern-specific variables whose pattern matches
+    11	// the file into one set. Definitions are applied in makefile order.
+    12	func (e *Engine) patternSet(n *node) *vars.Set {
+    13		if n.patReady {
+    14			return n.patVars
+    15		}
+    16		n.patReady = true
+    17		var hits []*db.PatternVar
+    18		for _, pv := range e.db.PatternVars {
+    19			if _, ok := text.Match(pv.Pattern, n.name()); ok {
+    20				hits = append(hits, pv)
+    21			}
+    22		}
+    23		if len(hits) == 0 {
+    24			return nil
+    25		}
+    26		set := vars.NewSet()
+    27		for _, pv := range hits {
+    28			e.x.Pos = pv.Pos
+    29			e.x.DefinePattern(set, pv.Name, pv.Op, pv.Value, pv.Pos)
+    30		}
+    31		n.patVars = set
+    32		return set
+    33	}
+    34	
+    35	// scope is the variable context of a file: its own target-specific
+    36	// variables, then those of the targets that first asked for it, then its
+    37	// pattern-specific variables, and finally the global variables.
+    38	func (e *Engine) scope(n *node) *expand.Scope {
+    39		sc := &expand.Scope{}
+    40		for x := n; x != nil; x = x.parent {
+    41			sc.Sets = append(sc.Sets, x.f.Vars)
+    42		}
+    43		if ps := e.patternSet(n); ps != nil {
+    44			sc.Sets = append(sc.Sets, ps)
+    45		}
+    46		return sc
+    47	}
+[?2004hroot@1445960760bf:/app# nl -ba internal/engine/deps.go | sed -n '1,48p'
+[?2004l     1	package engine
+     2	
+     3	import (
+     4		"brickmake/internal/db"
+     5		"brickmake/internal/expand"
+     6		"brickmake/internal/text"
+     7	)
+     8	
+     9	// ruleWords returns the prerequisites of one explicit rule, performing
+    10	// secondary expansion when the rule was read after .SECONDEXPANSION.
+    11	func (e *Engine) ruleWords(n *node, r *db.Rule) (normal, orderOnly []string) {
+    12		if !r.Second {
+    13			return r.Normal, r.OrderOnly
+    14		}
+    15		sc := e.scope(n)
+    16		sc.Auto = &expand.Auto{Target: n.name(), Stem: r.Stem}
+    17		e.x.Pos = r.Pos
+    18		normal, orderOnly = text.SplitOrder(text.Fields(e.x.Expand(r.Text, sc)))
+    19		if r.Static {
+    20			for i, w := range normal {
+    21				normal[i] = text.Subst(w, r.Stem)
+    22			}
+    23			for i, w := range orderOnly {
+    24				orderOnly[i] = text.Subst(w, r.Stem)
+    25			}
+    26		}
+    27		return normal, orderOnly
+    28	}
+    29	
+    30	// depsOf returns the file's prerequisites in the order make considers
+    31	// them: those of the implicit rule, then those of the explicit rules in
+    32	// makefile order.
+    33	func (e *Engine) depsOf(n *node) []dep {
+    34		if n.depsReady {
+    35			return n.deps
+    36		}
+    37		n.depsReady = true
+    38		type list struct{ normal, orderOnly []string }
+    39		var lists []list
+    40		if m := n.match; m != nil {
+    41			lists = append(lists, list{m.normal, m.orderOnly})
+    42		}
+    43		for _, r := range n.f.Rules {
+    44			nw, ow := e.ruleWords(n, r)
+    45			lists = append(lists, list{nw, ow})
+    46		}
+    47		normal := map[string]bool{}
+    48		for _, l := range lists {
+[?2004hroot@1445960760bf:/app# nl -ba internal/engine/node.go | sed -n '1,100p'
+[?2004l     1	package engine
+     2	
+     3	import (
+     4		"os"
+     5		"time"
+     6	
+     7		"brickmake/internal/db"
+     8		"brickmake/internal/vars"
+     9	)
+    10	
+    11	type state int
+    12	
+    13	const (
+    14		fresh state = iota
+    15		running
+    16		done
+    17	)
+    18	
+    19	type status int
+    20	
+    21	const (
+    22		ok status = iota
+    23		failed
+    24		dropped // circular dependency, ignored by the parent
+    25	)
+    26	
+    27	// stamp is a file's modification time as seen by the engine. Newest
+    28	// marks a target that counts as just remade without a new time on disk
+    29	// (dry runs).
+    30	type stamp struct {
+    31		exists bool
+    32		t      time.Time
+    33		newest bool
+    34	}
+    35	
+    36	func statFile(name string) stamp {
+    37		fi, err := os.Stat(name)
+    38		if err != nil {
+    39			return stamp{}
+    40		}
+    41		return stamp{exists: true, t: fi.ModTime()}
+    42	}
+    43	
+    44	// node is the run-time state of one file.
+    45	type node struct {
+    46		f      *db.File
+    47		state  state
+    48		status status
+    49		st     stamp
+    50		parent *node
+    51	
+    52		searched     bool
+    53		match        *match
+    54		preset       *match // chosen for an intermediate by the parent's search
+    55		intermediate bool
+    56		recipe       *db.Recipe
+    57		stem         string
+    58	
+    59		depsReady bool
+    60		deps      []dep
+    61	
+    62		patReady bool
+    63		patVars  *vars.Set
+    64	
+    65		started bool // its recipe was started
+    66	}
+    67	
+    68	type dep struct {
+    69		n     *node
+    70		order bool
+    71	}
+    72	
+    73	func (n *node) name() string { return n.f.Name }
+    74	
+    75	func (n *node) stat() { n.st = statFile(n.f.Name) }
+    76	
+    77	// hasRule reports whether make knows how to (re)make the file, even if the
+    78	// answer is "do nothing".
+    79	func (n *node) hasRule() bool {
+    80		return len(n.f.Rules) > 0 || n.match != nil || n.f.Phony
+    81	}
+[?2004hroot@1445960760bf:/app# nl -ba internal/engine/deps.go | sed -n '1,48p'
+[?2004l     1	package engine
+     2	
+     3	import (
+     4		"brickmake/internal/db"
+     5		"brickmake/internal/expand"
+     6		"brickmake/internal/text"
+     7	)
+     8	
+     9	// ruleWords returns the prerequisites of one explicit rule, performing
+    10	// secondary expansion when the rule was read after .SECONDEXPANSION.
+    11	func (e *Engine) ruleWords(n *node, r *db.Rule) (normal, orderOnly []string) {
+    12		if !r.Second {
+    13			return r.Normal, r.OrderOnly
+    14		}
+    15		sc := e.scope(n)
+    16		sc.Auto = &expand.Auto{Target: n.name(), Stem: r.Stem}
+    17		e.x.Pos = r.Pos
+    18		normal, orderOnly = text.SplitOrder(text.Fields(e.x.Expand(r.Text, sc)))
+    19		if r.Static {
+    20			for i, w := range normal {
+    21				normal[i] = text.Subst(w, r.Stem)
+    22			}
+    23			for i, w := range orderOnly {
+    24				orderOnly[i] = text.Subst(w, r.Stem)
+    25			}
+    26		}
+    27		return normal, orderOnly
+    28	}
+    29	
+    30	// depsOf returns the file's prerequisites in the order make considers
+    31	// them: those of the implicit rule, then those of the explicit rules in
+    32	// makefile order.
+    33	func (e *Engine) depsOf(n *node) []dep {
+    34		if n.depsReady {
+    35			return n.deps
+    36		}
+    37		n.depsReady = true
+    38		type list struct{ normal, orderOnly []string }
+    39		var lists []list
+    40		if m := n.match; m != nil {
+    41			lists = append(lists, list{m.normal, m.orderOnly})
+    42		}
+    43		for _, r := range n.f.Rules {
+    44			nw, ow := e.ruleWords(n, r)
+    45			lists = append(lists, list{nw, ow})
+    46		}
+    47		normal := map[string]bool{}
+    48		for _, l := range lists {
+[?2004hroot@1445960760bf:/app# nl -ba internal/db/db.go | sed -n '1,75p'; nl -ba internal/parse/rules.go | sed -n '20,115p'
+[?2004l     1	// Package db is the rule database built by the parser and read by the
+     2	// engine.
+     3	package db
+     4	
+     5	import (
+     6		"brickmake/internal/diag"
+     7		"brickmake/internal/vars"
+     8	)
+     9	
+    10	// Recipe is the list of raw recipe lines of one rule.
+    11	type Recipe struct {
+    12		Lines []string
+    13		Pos   []diag.Pos // position of each line
+    14	}
+    15	
+    16	// Prereqs is the prerequisite list of one rule line. With secondary
+    17	// expansion Text is expanded again when the target is considered and
+    18	// split into normal and order-only words afterwards.
+    19	type Prereqs struct {
+    20		Normal    []string
+    21		OrderOnly []string
+    22		Text      string
+    23		Second    bool
+    24	}
+    25	
+    26	// Rule is one explicit rule line for a target (static pattern rules
+    27	// produce one Rule per target).
+    28	type Rule struct {
+    29		Prereqs
+    30		Recipe *Recipe
+    31		Stem   string // static pattern rules only
+    32		Static bool
+    33		Pos    diag.Pos
+    34	}
+    35	
+    36	// File is a target or prerequisite mentioned in the makefile or entered by
+    37	// implicit rule search.
+    38	type File struct {
+    39		Name  string
+    40		Rules []*Rule
+    41		Phony bool
+    42		// Precious files are never removed as intermediates.
+    43		Precious bool
+    44		Vars     *vars.Set
+    45	}
+    46	
+    47	// RecipeRule returns the rule whose recipe the file uses, or nil.
+    48	func (f *File) RecipeRule() *Rule {
+    49		var r *Rule
+    50		for _, x := range f.Rules {
+    51			if x.Recipe != nil {
+    52				r = x
+    53			}
+    54		}
+    55		return r
+    56	}
+    57	
+    58	// PatternRule is an implicit rule: every target contains '%'.
+    59	type PatternRule struct {
+    60		Targets []string
+    61		Prereqs
+    62		Recipe *Recipe
+    63		Pos    diag.Pos
+    64	}
+    65	
+    66	// PatternVar is one pattern-specific assignment.
+    67	type PatternVar struct {
+    68		Pattern string
+    69		Name    string
+    70		Op      vars.Op
+    71		Value   string // already expanded for ":="
+    72		Pos     diag.Pos
+    73	}
+    74	
+    75	// DB is the result of reading the makefiles.
+    20	func (p *Parser) flush() {
+    21		r := p.rule
+    22		if r == nil {
+    23			return
+    24		}
+    25		p.rule = nil
+    26		switch {
+    27		case r.static:
+    28			p.recordStatic(r)
+    29		case strings.IndexByte(r.targets[0], '%') >= 0 || anyPattern(r.targets):
+    30			for _, t := range r.targets {
+    31				if strings.IndexByte(t, '%') < 0 {
+    32					diag.Failf(r.pos, "mixed implicit and normal rules")
+    33				}
+    34			}
+    35			p.DB.AddPatternRule(&db.PatternRule{Targets: r.targets, Prereqs: r.prereqs, Recipe: r.recipe, Pos: r.pos})
+    36		default:
+    37			p.recordExplicit(r)
+    38		}
+    39	}
+    40	
+    41	func anyPattern(targets []string) bool {
+    42		for _, t := range targets {
+    43			if strings.IndexByte(t, '%') >= 0 {
+    44				return true
+    45			}
+    46		}
+    47		return false
+    48	}
+    49	
+    50	func (p *Parser) mention(pr db.Prereqs) {
+    51		for _, w := range pr.Normal {
+    52			p.DB.Enter(w)
+    53		}
+    54		for _, w := range pr.OrderOnly {
+    55			p.DB.Enter(w)
+    56		}
+    57	}
+    58	
+    59	func (p *Parser) recordExplicit(r *pending) {
+    60		for _, t := range r.targets {
+    61			if p.special(t, r) {
+    62				continue
+    63			}
+    64			p.addRule(p.DB.Enter(t), &db.Rule{Prereqs: r.prereqs, Recipe: r.recipe, Pos: r.pos})
+    65			p.mention(r.prereqs)
+    66		}
+    67		p.defaultGoal(r.targets)
+    68	}
+    69	
+    70	func (p *Parser) recordStatic(r *pending) {
+    71		pat := text.ParsePattern(r.pattern)
+    72		if !pat.Wild {
+    73			diag.Failf(r.pos, "target pattern contains no '%%'")
+    74		}
+    75		for _, t := range r.targets {
+    76			rule := &db.Rule{Recipe: r.recipe, Pos: r.pos, Static: true}
+    77			stem, ok := pat.Match(t)
+    78			if !ok {
+    79				diag.Warn(r.pos, "target '%s' doesn't match the target pattern", t)
+    80				rule.Stem = t
+    81			} else {
+    82				rule.Stem = stem
+    83				if r.prereqs.Second {
+    84					rule.Prereqs = r.prereqs
+    85				} else {
+    86					rule.Normal = substAll(r.prereqs.Normal, stem)
+    87					rule.OrderOnly = substAll(r.prereqs.OrderOnly, stem)
+    88				}
+    89			}
+    90			p.addRule(p.DB.Enter(t), rule)
+    91			p.mention(rule.Prereqs)
+    92		}
+    93		p.defaultGoal(r.targets)
+    94	}
+    95	
+    96	func substAll(words []string, stem string) []string {
+    97		out := make([]string, len(words))
+    98		for i, w := range words {
+    99			out[i] = text.Subst(w, stem)
+   100		}
+   101		return out
+   102	}
+   103	
+   104	func (p *Parser) addRule(f *db.File, r *db.Rule) {
+   105		if r.Recipe != nil {
+   106			if old := f.RecipeRule(); old != nil {
+   107				diag.Warn(r.Recipe.Pos[0], "warning: overriding recipe for target '%s'", f.Name)
+   108				diag.Warn(old.Recipe.Pos[0], "warning: ignoring old recipe for target '%s'", f.Name)
+   109				old.Recipe = nil
+   110			}
+   111		}
+   112		f.Rules = append(f.Rules, r)
+   113	}
+   114	
+   115	// special handles special targets and reports whether t was one.
+[?2004hroot@1445960760bf:/app# nl -ba internal/engine/engine.go | sed -n '1,110p'
+[?2004l     1	// Package engine decides which targets are out of date and runs their
+     2	// recipes.
+     3	package engine
+     4	
+     5	import (
+     6		"fmt"
+     7		"os"
+     8	
+     9		"brickmake/internal/db"
+    10		"brickmake/internal/diag"
+    11		"brickmake/internal/expand"
+    12	)
+    13	
+    14	// Engine updates goals against a rule database.
+    15	type Engine struct {
+    16		DryRun     bool
+    17		Silent     bool
+    18		KeepGoing  bool
+    19		AlwaysMake bool
+    20		Shell      string
+    21		Env        []string
+    22	
+    23		db      *db.DB
+    24		x       *expand.Expander
+    25		nodes   map[*db.File]*node
+    26		order   []*node
+    27		started int
+    28	}
+    29	
+    30	func New(d *db.DB, x *expand.Expander) *Engine {
+    31		return &Engine{db: d, x: x, nodes: map[*db.File]*node{}, Shell: "/bin/sh"}
+    32	}
+    33	
+    34	func (e *Engine) node(f *db.File) *node {
+    35		if n := e.nodes[f]; n != nil {
+    36			return n
+    37		}
+    38		n := &node{f: f}
+    39		e.nodes[f] = n
+    40		e.order = append(e.order, n)
+    41		return n
+    42	}
+    43	
+    44	// Run updates the goals in order and returns the exit status.
+    45	func (e *Engine) Run(goals []string) (code int) {
+    46		defer e.removeIntermediates()
+    47		defer func() {
+    48			if r := recover(); r != nil {
+    49				f, isFatal := r.(diag.Fatal)
+    50				if !isFatal {
+    51					panic(r)
+    52				}
+    53				fmt.Fprintln(diag.Stderr, f.Error())
+    54				code = 2
+    55			}
+    56		}()
+    57		anyFailed := false
+    58		for _, g := range goals {
+    59			n := e.node(e.db.Enter(g))
+    60			if e.update(n, nil) == failed {
+    61				anyFailed = true
+    62				if !e.KeepGoing {
+    63					break
+    64				}
+    65				continue
+    66			}
+    67			if e.started == 0 {
+    68				if n.f.Phony || n.recipe == nil {
+    69					diag.Say("Nothing to be done for '%s'.", g)
+    70				} else {
+    71					diag.Say("'%s' is up to date.", g)
+    72				}
+    73			}
+    74		}
+    75		if anyFailed {
+    76			return 2
+    77		}
+    78		return 0
+    79	}
+    80	
+    81	// removeIntermediates deletes the intermediate files made by this run.
+    82	func (e *Engine) removeIntermediates() {
+    83		first := true
+    84		for _, n := range e.order {
+    85			if !n.intermediate || !n.started || n.f.Precious || e.db.SecondaryAll {
+    86				continue
+    87			}
+    88			if !e.DryRun {
+    89				if err := os.Remove(n.name()); err != nil && os.IsNotExist(err) {
+    90					continue
+    91				}
+    92			}
+    93			if e.Silent {
+    94				continue
+    95			}
+    96			if first {
+    97				fmt.Fprint(diag.Stdout, "rm ")
+    98				first = false
+    99			} else {
+   100				fmt.Fprint(diag.Stdout, " ")
+   101			}
+   102			fmt.Fprint(diag.Stdout, n.name())
+   103		}
+   104		if !first {
+   105			fmt.Fprintln(diag.Stdout)
+   106		}
+   107	}
+[?2004hroot@1445960760bf:/app# nl -ba internal/engine/update.go | sed -n '1,110p'
+[?2004l     1	package engine
+     2	
+     3	import (
+     4		"fmt"
+     5	
+     6		"brickmake/internal/diag"
+     7	)
+     8	
+     9	// outdated reports whether prerequisite d makes target n out of date. A
+    10	// prerequisite that is phony, missing, or remade in a dry run always does.
+    11	func (e *Engine) outdated(d, n *node) bool {
+    12		if d.f.Phony || d.st.newest || !d.st.exists {
+    13			return true
+    14		}
+    15		return !n.st.exists || d.st.t.After(n.st.t)
+    16	}
+    17	
+    18	func (e *Engine) noRule(n, parent *node) {
+    19		msg := fmt.Sprintf("No rule to make target '%s'", n.name())
+    20		if parent != nil {
+    21			msg += fmt.Sprintf(", needed by '%s'", parent.name())
+    22		}
+    23		if e.KeepGoing {
+    24			diag.Err("*** %s.", msg)
+    25		} else {
+    26			diag.Err("*** %s.  Stop.", msg)
+    27		}
+    28	}
+    29	
+    30	func (e *Engine) fail(n, parent *node, depFailure bool) status {
+    31		n.state, n.status = done, failed
+    32		if depFailure && parent == nil && e.KeepGoing && !e.DryRun {
+    33			diag.Err("Target '%s' not remade because of errors.", n.name())
+    34		}
+    35		return failed
+    36	}
+    37	
+    38	// update brings n up to date on behalf of parent (nil for a goal).
+    39	func (e *Engine) update(n, parent *node) status {
+    40		switch n.state {
+    41		case done:
+    42			return n.status
+    43		case running:
+    44			diag.Err("Circular %s <- %s dependency dropped.", parent.name(), n.name())
+    45			return dropped
+    46		}
+    47		n.state = running
+    48		if n.parent == nil {
+    49			n.parent = parent
+    50		}
+    51		e.implicitFor(n)
+    52		deps := e.depsOf(n)
+    53		n.stat()
+    54		if !n.hasRule() && !n.st.exists {
+    55			e.noRule(n, parent)
+    56			return e.fail(n, parent, false)
+    57		}
+    58	
+    59		must, bad := false, false
+    60		for _, d := range deps {
+    61			var st status
+    62			if d.n.intermediate && d.n.state != done {
+    63				hit := false
+    64				st = e.checkIntermediate(d.n, n, &hit)
+    65				if hit && !d.order {
+    66					must = true
+    67				}
+    68			} else {
+    69				st = e.update(d.n, n)
+    70				if st == ok && !d.order && e.outdated(d.n, n) {
+    71					must = true
+    72				}
+    73			}
+    74			if st == failed {
+    75				bad = true
+    76				if !e.KeepGoing {
+    77					break
+    78				}
+    79			}
+    80		}
+    81		if bad {
+    82			return e.fail(n, parent, true)
+    83		}
+    84		if n.f.Phony || !n.st.exists || e.AlwaysMake {
+    85			must = true
+    86		}
+    87		if !must {
+    88			n.state, n.status = done, ok
+    89			return ok
+    90		}
+    91		for _, d := range deps {
+    92			if d.n.intermediate && d.n.state != done {
+    93				if e.update(d.n, n) == failed {
+    94					bad = true
+    95					if !e.KeepGoing {
+    96						break
+    97					}
+    98				}
+    99			}
+   100		}
+   101		if bad {
+   102			return e.fail(n, parent, true)
+   103		}
+   104		return e.remake(n)
+   105	}
+   106	
+   107	// checkIntermediate decides whether a missing intermediate file matters to
+   108	// target: it does when the intermediate exists and is newer than target,
+   109	// or when anything it depends on is. The intermediate itself is only made
+   110	// later, if target has to be remade.
+[?2004hroot@1445960760bf:/app# python3 - <<'PY'
+[?2004l[?2004h> p='internal/engine/scope.go'
+[?2004l[?2004h> s=open(p).read()
+[?2004l[?2004h> s=s.replace('"brickmake/internal/vars"\n', '"brickmake/internal/vars"\n\t"sort"\n')
+[?2004l[?2004h> s=s.replace('''\tif len(hits) == 0 {
+[?2004l[?2004h> \t\treturn nil
+[?2004l[?2004h> \t}
+[?2004l[?2004h> \tset := vars.NewSet()
+[?2004l[?2004h> ''','''\tif len(hits) == 0 {
+[?2004l[?2004h> \t\treturn nil
+[?2004l[?2004h> \t}
+[?2004l[?2004h> \t// GNU make applies less specific (shorter) patterns first.  Stable
+[?2004l[?2004h> \t// sorting preserves makefile order for patterns of equal length.
+[?2004l[?2004h> \tsort.SliceStable(hits, func(i, j int) bool {
+[?2004l[?2004h> \t\treturn len(hits[i].Pattern) < len(hits[j].Pattern)
+[?2004l[?2004h> \t})
+[?2004l[?2004h> \tset := vars.NewSet()
+[?2004l[?2004h> ''')
+[?2004l[?2004h> s=s.replace('''\tfor x := n; x != nil; x = x.parent {
+[?2004l[?2004h> \t\tsc.Sets = append(sc.Sets, x.f.Vars)
+[?2004l[?2004h> \t}
+[?2004l[?2004h> \tif ps := e.patternSet(n); ps != nil {
+[?2004l[?2004h> \t\tsc.Sets = append(sc.Sets, ps)
+[?2004l[?2004h> \t}
+[?2004l[?2004h> ''','''\tfor x := n; x != nil; x = x.parent {
+[?2004l[?2004h> \t\tsc.Sets = append(sc.Sets, x.f.Vars)
+[?2004l[?2004h> \t\tif ps := e.patternSet(x); ps != nil {
+[?2004l[?2004h> \t\t\tsc.Sets = append(sc.Sets, ps)
+[?2004l[?2004h> \t\t}
+[?2004l[?2004h> \t}
+[?2004l[?2004h> ''')
+[?2004l[?2004h> open(p,'w').write(s)
+[?2004l[?2004h> 
+[?2004l[?2004h> p='internal/engine/deps.go'
+[?2004l[?2004h> s=open(p).read()
+[?2004l[?2004h> s=s.replace('''\tfor _, r := range n.f.Rules {
+[?2004l[?2004h> \t\tnw, ow := e.ruleWords(n, r)
+[?2004l[?2004h> \t\tlists = append(lists, list{nw, ow})
+[?2004l[?2004h> \t}
+[?2004l[?2004h> ''','''\t// The prerequisites on the rule supplying the recipe precede those
+[?2004l[?2004h> \t// from the target's other explicit rules, regardless of definition order.
+[?2004l[?2004h> \tif rr := n.f.RecipeRule(); rr != nil {
+[?2004l[?2004h> \t\tnw, ow := e.ruleWords(n, rr)
+[?2004l[?2004h> \t\tlists = append(lists, list{nw, ow})
+[?2004l[?2004h> \t}
+[?2004l[?2004h> \tfor _, r := range n.f.Rules {
+[?2004l[?2004h> \t\tif r == n.f.RecipeRule() {
+[?2004l[?2004h> \t\t\tcontinue
+[?2004l[?2004h> \t\t}
+[?2004l[?2004h> \t\tnw, ow := e.ruleWords(n, r)
+[?2004l[?2004h> \t\tlists = append(lists, list{nw, ow})
+[?2004l[?2004h> \t}
+[?2004l[?2004h> ''')
+[?2004l[?2004h> open(p,'w').write(s)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@1445960760bf:/app# gofmt -w internal/engine/scope.go internal/engine/deps.go
+[?2004l[?2004hroot@1445960760bf:/app# go test ./...
+[?2004l?   	brickmake/cmd/brickmake	[no test files]
+?   	brickmake/internal/cli	[no test files]
+?   	brickmake/internal/db	[no test files]
+?   	brickmake/internal/diag	[no test files]
+ok  	brickmake/internal/engine	(cached)
+ok  	brickmake/internal/expand	(cached)
+ok  	brickmake/internal/parse	(cached)
+ok  	brickmake/internal/text	(cached)
+?   	brickmake/internal/vars	[no test files]
+[?2004hroot@1445960760bf:/app# nl -ba internal/engine/engine.go
+[?2004l     1	// Package engine decides which targets are out of date and runs their
+     2	// recipes.
+     3	package engine
+     4	
+     5	import (
+     6		"fmt"
+     7		"os"
+     8	
+     9		"brickmake/internal/db"
+    10		"brickmake/internal/diag"
+    11		"brickmake/internal/expand"
+    12	)
+    13	
+    14	// Engine updates goals against a rule database.
+    15	type Engine struct {
+    16		DryRun     bool
+    17		Silent     bool
+    18		KeepGoing  bool
+    19		AlwaysMake bool
+    20		Shell      string
+    21		Env        []string
+    22	
+    23		db      *db.DB
+    24		x       *expand.Expander
+    25		nodes   map[*db.File]*node
+    26		order   []*node
+    27		started int
+    28	}
+    29	
+    30	func New(d *db.DB, x *expand.Expander) *Engine {
+    31		return &Engine{db: d, x: x, nodes: map[*db.File]*node{}, Shell: "/bin/sh"}
+    32	}
+    33	
+    34	func (e *Engine) node(f *db.File) *node {
+    35		if n := e.nodes[f]; n != nil {
+    36			return n
+    37		}
+    38		n := &node{f: f}
+    39		e.nodes[f] = n
+    40		e.order = append(e.order, n)
+    41		return n
+    42	}
+    43	
+    44	// Run updates the goals in order and returns the exit status.
+    45	func (e *Engine) Run(goals []string) (code int) {
+    46		defer e.removeIntermediates()
+    47		defer func() {
+    48			if r := recover(); r != nil {
+    49				f, isFatal := r.(diag.Fatal)
+    50				if !isFatal {
+    51					panic(r)
+    52				}
+    53				fmt.Fprintln(diag.Stderr, f.Error())
+    54				code = 2
+    55			}
+    56		}()
+    57		anyFailed := false
+    58		for _, g := range goals {
+    59			n := e.node(e.db.Enter(g))
+    60			if e.update(n, nil) == failed {
+    61				anyFailed = true
+    62				if !e.KeepGoing {
+    63					break
+    64				}
+    65				continue
+    66			}
+    67			if e.started == 0 {
+    68				if n.f.Phony || n.recipe == nil {
+    69					diag.Say("Nothing to be done for '%s'.", g)
+    70				} else {
+    71					diag.Say("'%s' is up to date.", g)
+    72				}
+    73			}
+    74		}
+    75		if anyFailed {
+    76			return 2
+    77		}
+    78		return 0
+    79	}
+    80	
+    81	// removeIntermediates deletes the intermediate files made by this run.
+    82	func (e *Engine) removeIntermediates() {
+    83		first := true
+    84		for _, n := range e.order {
+    85			if !n.intermediate || !n.started || n.f.Precious || e.db.SecondaryAll {
+    86				continue
+    87			}
+    88			if !e.DryRun {
+    89				if err := os.Remove(n.name()); err != nil && os.IsNotExist(err) {
+    90					continue
+    91				}
+    92			}
+    93			if e.Silent {
+    94				continue
+    95			}
+    96			if first {
+    97				fmt.Fprint(diag.Stdout, "rm ")
+    98				first = false
+    99			} else {
+   100				fmt.Fprint(diag.Stdout, " ")
+   101			}
+   102			fmt.Fprint(diag.Stdout, n.name())
+   103		}
+   104		if !first {
+   105			fmt.Fprintln(diag.Stdout)
+   106		}
+   107	}
+[?2004hroot@1445960760bf:/app# nl -ba internal/engine/engine.go | sed -n '25,80p'
+[?2004l    25		nodes   map[*db.File]*node
+    26		order   []*node
+    27		started int
+    28	}
+    29	
+    30	func New(d *db.DB, x *expand.Expander) *Engine {
+    31		return &Engine{db: d, x: x, nodes: map[*db.File]*node{}, Shell: "/bin/sh"}
+    32	}
+    33	
+    34	func (e *Engine) node(f *db.File) *node {
+    35		if n := e.nodes[f]; n != nil {
+    36			return n
+    37		}
+    38		n := &node{f: f}
+    39		e.nodes[f] = n
+    40		e.order = append(e.order, n)
+    41		return n
+    42	}
+    43	
+    44	// Run updates the goals in order and returns the exit status.
+    45	func (e *Engine) Run(goals []string) (code int) {
+    46		defer e.removeIntermediates()
+    47		defer func() {
+    48			if r := recover(); r != nil {
+    49				f, isFatal := r.(diag.Fatal)
+    50				if !isFatal {
+    51					panic(r)
+    52				}
+    53				fmt.Fprintln(diag.Stderr, f.Error())
+    54				code = 2
+    55			}
+    56		}()
+    57		anyFailed := false
+    58		for _, g := range goals {
+    59			n := e.node(e.db.Enter(g))
+    60			if e.update(n, nil) == failed {
+    61				anyFailed = true
+    62				if !e.KeepGoing {
+    63					break
+    64				}
+    65				continue
+    66			}
+    67			if e.started == 0 {
+    68				if n.f.Phony || n.recipe == nil {
+    69					diag.Say("Nothing to be done for '%s'.", g)
+    70				} else {
+    71					diag.Say("'%s' is up to date.", g)
+    72				}
+    73			}
+    74		}
+    75		if anyFailed {
+    76			return 2
+    77		}
+    78		return 0
+    79	}
+    80	
+[?2004hroot@1445960760bf:/app# python3 - <<'PY'
+[?2004l[?2004h> p='internal/engine/engine.go'
+[?2004l[?2004h> s=open(p).read()
+[?2004l[?2004h> s=s.replace('''\tfor _, g := range goals {
+[?2004l[?2004h> \t\tn := e.node(e.db.Enter(g))
+[?2004l[?2004h> \t\tif e.update(n, nil) == failed {
+[?2004l[?2004h> ''','''\tfor _, g := range goals {
+[?2004l[?2004h> \t\tstarted := e.started
+[?2004l[?2004h> \t\tn := e.node(e.db.Enter(g))
+[?2004l[?2004h> \t\tif e.update(n, nil) == failed {
+[?2004l[?2004h> ''')
+[?2004l[?2004h> s=s.replace('''\t\tif e.started == 0 {
+[?2004l[?2004h> ''','''\t\tif e.started == started {
+[?2004l[?2004h> ''')
+[?2004l[?2004h> open(p,'w').write(s)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@1445960760bf:/app# gofmt -w internal/engine/engine.go
+[?2004l[?2004hroot@1445960760bf:/app# go test ./...
+[?2004l?   	brickmake/cmd/brickmake	[no test files]
+?   	brickmake/internal/cli	[no test files]
+?   	brickmake/internal/db	[no test files]
+?   	brickmake/internal/diag	[no test files]
+ok  	brickmake/internal/engine	(cached)
+ok  	brickmake/internal/expand	(cached)
+ok  	brickmake/internal/parse	(cached)
+ok  	brickmake/internal/text	(cached)
+?   	brickmake/internal/vars	[no test files]
+[?2004hroot@1445960760bf:/app# nl -ba internal/engine/update.go | sed -n '1,105p'
+[?2004l     1	package engine
+     2	
+     3	import (
+     4		"fmt"
+     5	
+     6		"brickmake/internal/diag"
+     7	)
+     8	
+     9	// outdated reports whether prerequisite d makes target n out of date. A
+    10	// prerequisite that is phony, missing, or remade in a dry run always does.
+    11	func (e *Engine) outdated(d, n *node) bool {
+    12		if d.f.Phony || d.st.newest || !d.st.exists {
+    13			return true
+    14		}
+    15		return !n.st.exists || d.st.t.After(n.st.t)
+    16	}
+    17	
+    18	func (e *Engine) noRule(n, parent *node) {
+    19		msg := fmt.Sprintf("No rule to make target '%s'", n.name())
+    20		if parent != nil {
+    21			msg += fmt.Sprintf(", needed by '%s'", parent.name())
+    22		}
+    23		if e.KeepGoing {
+    24			diag.Err("*** %s.", msg)
+    25		} else {
+    26			diag.Err("*** %s.  Stop.", msg)
+    27		}
+    28	}
+    29	
+    30	func (e *Engine) fail(n, parent *node, depFailure bool) status {
+    31		n.state, n.status = done, failed
+    32		if depFailure && parent == nil && e.KeepGoing && !e.DryRun {
+    33			diag.Err("Target '%s' not remade because of errors.", n.name())
+    34		}
+    35		return failed
+    36	}
+    37	
+    38	// update brings n up to date on behalf of parent (nil for a goal).
+    39	func (e *Engine) update(n, parent *node) status {
+    40		switch n.state {
+    41		case done:
+    42			return n.status
+    43		case running:
+    44			diag.Err("Circular %s <- %s dependency dropped.", parent.name(), n.name())
+    45			return dropped
+    46		}
+    47		n.state = running
+    48		if n.parent == nil {
+    49			n.parent = parent
+    50		}
+    51		e.implicitFor(n)
+    52		deps := e.depsOf(n)
+    53		n.stat()
+    54		if !n.hasRule() && !n.st.exists {
+    55			e.noRule(n, parent)
+    56			return e.fail(n, parent, false)
+    57		}
+    58	
+    59		must, bad := false, false
+    60		for _, d := range deps {
+    61			var st status
+    62			if d.n.intermediate && d.n.state != done {
+    63				hit := false
+    64				st = e.checkIntermediate(d.n, n, &hit)
+    65				if hit && !d.order {
+    66					must = true
+    67				}
+    68			} else {
+    69				st = e.update(d.n, n)
+    70				if st == ok && !d.order && e.outdated(d.n, n) {
+    71					must = true
+    72				}
+    73			}
+    74			if st == failed {
+    75				bad = true
+    76				if !e.KeepGoing {
+    77					break
+    78				}
+    79			}
+    80		}
+    81		if bad {
+    82			return e.fail(n, parent, true)
+    83		}
+    84		if n.f.Phony || !n.st.exists || e.AlwaysMake {
+    85			must = true
+    86		}
+    87		if !must {
+    88			n.state, n.status = done, ok
+    89			return ok
+    90		}
+    91		for _, d := range deps {
+    92			if d.n.intermediate && d.n.state != done {
+    93				if e.update(d.n, n) == failed {
+    94					bad = true
+    95					if !e.KeepGoing {
+    96						break
+    97					}
+    98				}
+    99			}
+   100		}
+   101		if bad {
+   102			return e.fail(n, parent, true)
+   103		}
+   104		return e.remake(n)
+   105	}
+[?2004hroot@1445960760bf:/app# nl -ba internal/engine/update.go | sed -n '1,65p'
+[?2004l     1	package engine
+     2	
+     3	import (
+     4		"fmt"
+     5	
+     6		"brickmake/internal/diag"
+     7	)
+     8	
+     9	// outdated reports whether prerequisite d makes target n out of date. A
+    10	// prerequisite that is phony, missing, or remade in a dry run always does.
+    11	func (e *Engine) outdated(d, n *node) bool {
+    12		if d.f.Phony || d.st.newest || !d.st.exists {
+    13			return true
+    14		}
+    15		return !n.st.exists || d.st.t.After(n.st.t)
+    16	}
+    17	
+    18	func (e *Engine) noRule(n, parent *node) {
+    19		msg := fmt.Sprintf("No rule to make target '%s'", n.name())
+    20		if parent != nil {
+    21			msg += fmt.Sprintf(", needed by '%s'", parent.name())
+    22		}
+    23		if e.KeepGoing {
+    24			diag.Err("*** %s.", msg)
+    25		} else {
+    26			diag.Err("*** %s.  Stop.", msg)
+    27		}
+    28	}
+    29	
+    30	func (e *Engine) fail(n, parent *node, depFailure bool) status {
+    31		n.state, n.status = done, failed
+    32		if depFailure && parent == nil && e.KeepGoing && !e.DryRun {
+    33			diag.Err("Target '%s' not remade because of errors.", n.name())
+    34		}
+    35		return failed
+    36	}
+    37	
+    38	// update brings n up to date on behalf of parent (nil for a goal).
+    39	func (e *Engine) update(n, parent *node) status {
+    40		switch n.state {
+    41		case done:
+    42			return n.status
+    43		case running:
+    44			diag.Err("Circular %s <- %s dependency dropped.", parent.name(), n.name())
+    45			return dropped
+    46		}
+    47		n.state = running
+    48		if n.parent == nil {
+    49			n.parent = parent
+    50		}
+    51		e.implicitFor(n)
+    52		deps := e.depsOf(n)
+    53		n.stat()
+    54		if !n.hasRule() && !n.st.exists {
+    55			e.noRule(n, parent)
+    56			return e.fail(n, parent, false)
+    57		}
+    58	
+    59		must, bad := false, false
+    60		for _, d := range deps {
+    61			var st status
+    62			if d.n.intermediate && d.n.state != done {
+    63				hit := false
+    64				st = e.checkIntermediate(d.n, n, &hit)
+    65				if hit && !d.order {
+[?2004hroot@1445960760bf:/app# nl -ba internal/engine/update.go | sed -n '140,205p'
+[?2004l   140			}
+   141		}
+   142		return ok
+   143	}
+   144	
+   145	// remake runs n's recipe, or records that a target without a recipe was
+   146	// "remade" by doing nothing.
+   147	func (e *Engine) remake(n *node) status {
+   148		if n.recipe == nil {
+   149			n.state, n.status = done, ok
+   150			n.stat()
+   151			return ok
+   152		}
+   153		auto := e.autoVars(n)
+   154		n.started = true
+   155		good := e.run(n, auto)
+   156		n.state = done
+   157		if !good {
+   158			n.status = failed
+   159			return failed
+   160		}
+   161		n.status = ok
+   162		e.refresh(n)
+   163		if n.match != nil {
+   164			for _, name := range n.match.also {
+   165				o := e.node(e.db.Enter(name))
+   166				if o.state != done {
+   167					o.state, o.status, o.started = done, ok, true
+   168					o.intermediate = o.intermediate || n.intermediate
+   169					e.refresh(o)
+   170				}
+   171			}
+   172		}
+   173		return ok
+   174	}
+   175	
+   176	// refresh records that a remade target is now newer than everything
+   177	// considered before it.
+   178	func (e *Engine) refresh(n *node) {
+   179		if e.DryRun && allForced(n.recipe) {
+   180			n.stat()
+   181			return
+   182		}
+   183		n.st = stamp{exists: true, newest: true}
+   184	}
+[?2004hroot@1445960760bf:/app# python3 - <<'PY'
+[?2004l[?2004h> p='internal/engine/update.go'
+[?2004l[?2004h> s=open(p).read()
+[?2004l[?2004h> s=s.replace('''\tif e.DryRun && allForced(n.recipe) {
+[?2004l[?2004h> \t\tn.stat()
+[?2004l[?2004h> \t\treturn
+[?2004l[?2004h> \t}
+[?2004l[?2004h> \tn.st = stamp{exists: true, newest: true}
+[?2004l[?2004h> ''','''\tif !e.DryRun || allForced(n.recipe) {
+[?2004l[?2004h> \t\tn.stat()
+[?2004l[?2004h> \t\treturn
+[?2004l[?2004h> \t}
+[?2004l[?2004h> \tn.st = stamp{exists: true, newest: true}
+[?2004l[?2004h> ''')
+[?2004l[?2004h> open(p,'w').write(s)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@1445960760bf:/app# gofmt -w internal/engine/update.go
+[?2004l[?2004hroot@1445960760bf:/app# go test ./...
+[?2004l?   	brickmake/cmd/brickmake	[no test files]
+?   	brickmake/internal/cli	[no test files]
+?   	brickmake/internal/db	[no test files]
+?   	brickmake/internal/diag	[no test files]
+ok  	brickmake/internal/engine	(cached)
+ok  	brickmake/internal/expand	(cached)
+ok  	brickmake/internal/parse	(cached)
+ok  	brickmake/internal/text	(cached)
+?   	brickmake/internal/vars	[no test files]
+[?2004hroot@1445960760bf:/app# nl -ba internal/engine/implicit.go | sed -n '1,95p'
+[?2004l     1	package engine
+     2	
+     3	import (
+     4		"os"
+     5		"sort"
+     6		"strings"
+     7	
+     8		"brickmake/internal/db"
+     9		"brickmake/internal/expand"
+    10		"brickmake/internal/text"
+    11	)
+    12	
+    13	// maxChain bounds implicit rule chains.
+    14	const maxChain = 16
+    15	
+    16	// match is the result of implicit rule search for one target.
+    17	type match struct {
+    18		rule      *db.PatternRule
+    19		stem      string // $*, including the directory part
+    20		normal    []string
+    21		orderOnly []string
+    22		also      []string // the rule's other targets
+    23		inter     map[string]*match
+    24	}
+    25	
+    26	type candidate struct {
+    27		rule   *db.PatternRule
+    28		target int
+    29		dir    string // directory prepended to the stem, if any
+    30		stem   string // the part matched by '%'
+    31	}
+    32	
+    33	func (c candidate) fullStem() string { return c.dir + c.stem }
+    34	
+    35	// candidates lists the pattern rules whose target pattern matches name,
+    36	// shortest stem first; rules of equal stem length keep makefile order. A
+    37	// target pattern without a slash is matched against the file part of a
+    38	// name that has a directory.
+    39	func (e *Engine) candidates(name string, used map[*db.PatternRule]bool) []candidate {
+    40		dir, base := text.SplitDir(name)
+    41		var cs []candidate
+    42		for _, r := range e.db.PatternRules {
+    43			if used[r] {
+    44				continue
+    45			}
+    46			for ti, tp := range r.Targets {
+    47				if tp == "%" {
+    48					continue
+    49				}
+    50				var stem string
+    51				var ok bool
+    52				d := ""
+    53				if dir == "" || strings.IndexByte(tp, '/') >= 0 {
+    54					stem, ok = text.Match(tp, name)
+    55				} else {
+    56					stem, ok = text.Match(tp, base)
+    57					d = dir
+    58				}
+    59				if !ok || stem == "" {
+    60					continue
+    61				}
+    62				cs = append(cs, candidate{rule: r, target: ti, dir: d, stem: stem})
+    63				break
+    64			}
+    65		}
+    66		sort.SliceStable(cs, func(i, j int) bool {
+    67			return len(cs[i].stem) < len(cs[j].stem)
+    68		})
+    69		return cs
+    70	}
+    71	
+    72	// prereqs computes a candidate's prerequisite names. The directory of a
+    73	// directory-relative match is prepended to every prerequisite.
+    74	func (e *Engine) prereqs(c candidate, name string, sc *expand.Scope) (normal, orderOnly []string) {
+    75		pr := c.rule.Prereqs
+    76		normal, orderOnly = pr.Normal, pr.OrderOnly
+    77		if pr.Second {
+    78			s := &expand.Scope{Auto: &expand.Auto{Target: name, Stem: c.fullStem()}}
+    79			if sc != nil {
+    80				s.Sets = sc.Sets
+    81			}
+    82			e.x.Pos = c.rule.Pos
+    83			normal, orderOnly = text.SplitOrder(text.Fields(e.x.Expand(pr.Text, s)))
+    84		}
+    85		conv := func(words []string) []string {
+    86			out := make([]string, len(words))
+    87			for i, w := range words {
+    88				out[i] = c.dir + text.Subst(w, c.stem)
+    89			}
+    90			return out
+    91		}
+    92		return conv(normal), conv(orderOnly)
+    93	}
+    94	
+    95	// oughtToExist reports whether a prerequisite exists or is a target in
+[?2004hroot@1445960760bf:/app# nl -ba internal/engine/implicit.go | sed -n '1,70p'
+[?2004l     1	package engine
+     2	
+     3	import (
+     4		"os"
+     5		"sort"
+     6		"strings"
+     7	
+     8		"brickmake/internal/db"
+     9		"brickmake/internal/expand"
+    10		"brickmake/internal/text"
+    11	)
+    12	
+    13	// maxChain bounds implicit rule chains.
+    14	const maxChain = 16
+    15	
+    16	// match is the result of implicit rule search for one target.
+    17	type match struct {
+    18		rule      *db.PatternRule
+    19		stem      string // $*, including the directory part
+    20		normal    []string
+    21		orderOnly []string
+    22		also      []string // the rule's other targets
+    23		inter     map[string]*match
+    24	}
+    25	
+    26	type candidate struct {
+    27		rule   *db.PatternRule
+    28		target int
+    29		dir    string // directory prepended to the stem, if any
+    30		stem   string // the part matched by '%'
+    31	}
+    32	
+    33	func (c candidate) fullStem() string { return c.dir + c.stem }
+    34	
+    35	// candidates lists the pattern rules whose target pattern matches name,
+    36	// shortest stem first; rules of equal stem length keep makefile order. A
+    37	// target pattern without a slash is matched against the file part of a
+    38	// name that has a directory.
+    39	func (e *Engine) candidates(name string, used map[*db.PatternRule]bool) []candidate {
+    40		dir, base := text.SplitDir(name)
+    41		var cs []candidate
+    42		for _, r := range e.db.PatternRules {
+    43			if used[r] {
+    44				continue
+    45			}
+    46			for ti, tp := range r.Targets {
+    47				if tp == "%" {
+    48					continue
+    49				}
+    50				var stem string
+    51				var ok bool
+    52				d := ""
+    53				if dir == "" || strings.IndexByte(tp, '/') >= 0 {
+    54					stem, ok = text.Match(tp, name)
+    55				} else {
+    56					stem, ok = text.Match(tp, base)
+    57					d = dir
+    58				}
+    59				if !ok || stem == "" {
+    60					continue
+    61				}
+    62				cs = append(cs, candidate{rule: r, target: ti, dir: d, stem: stem})
+    63				break
+    64			}
+    65		}
+    66		sort.SliceStable(cs, func(i, j int) bool {
+    67			return len(cs[i].stem) < len(cs[j].stem)
+    68		})
+    69		return cs
+    70	}
+[?2004hroot@1445960760bf:/app# python3 - <<'PY'
+[?2004l[?2004h> p='internal/engine/implicit.go'
+[?2004l[?2004h> s=open(p).read()
+[?2004l[?2004h> s=s.replace('return len(cs[i].stem) < len(cs[j].stem)', 'return len(cs[i].fullStem()) < len(cs[j].fullStem())')
+[?2004l[?2004h> s=s.replace('''\t\tfor i, w := range words {
+[?2004l[?2004h> \t\t\tout[i] = c.dir + text.Subst(w, c.stem)
+[?2004l[?2004h> \t\t}
+[?2004l[?2004h> ''','''\t\tfor i, w := range words {
+[?2004l[?2004h> \t\t\tout[i] = text.Subst(w, c.stem)
+[?2004l[?2004h> \t\t\tif c.dir != "" && strings.IndexByte(w, '%') >= 0 {
+[?2004l[?2004h> \t\t\t\tout[i] = c.dir + out[i]
+[?2004l[?2004h> \t\t\t}
+[?2004l[?2004h> \t\t}
+[?2004l[?2004h> ''')
+[?2004l[?2004h> open(p,'w').write(s)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@1445960760bf:/app# gofmt -w internal/engine/implicit.go
+[?2004l[?2004hroot@1445960760bf:/app# go test ./... && go build -o /tmp/brickmake ./cmd/brickmake
+[?2004l?   	brickmake/cmd/brickmake	[no test files]
+?   	brickmake/internal/cli	[no test files]
+?   	brickmake/internal/db	[no test files]
+?   	brickmake/internal/diag	[no test files]
+ok  	brickmake/internal/engine	0.002s
+ok  	brickmake/internal/expand	(cached)
+ok  	brickmake/internal/parse	(cached)
+ok  	brickmake/internal/text	(cached)
+?   	brickmake/internal/vars	[no test files]
+[?2004hroot@1445960760bf:/app# rm -rf /tmp/bmtest && mkdir -p /tmp/bmtest/net && cat >/tmp/bmtest/Makefile <<'EOF'
+[?2004l[?2004h> CFLAGS = -O2
+[?2004l[?2004h> net/%.o: CFLAGS += -DNET
+[?2004l[?2004h> %.o: CFLAGS += -fPIC
+[?2004l[?2004h> net/%.o: net/%.c
+[?2004l[?2004h> @echo FLAGS=$(CFLAGS)
+[?2004l[?2004h> @touch $@
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@1445960760bf:/app# touch /tmp/bmtest/net/sock.c
+[?2004l[?2004hroot@1445960760bf:/app# cd /tmp/bmtest && /tmp/brickmake -r -R net/sock.o
+[?2004lMakefile:6: *** missing separator.  Stop.
+[?2004hroot@1445960760bf:/tmp/bmtest# rm -rf /tmp/bmtest && mkdir /tmp/bmtest && cat >/tmp/bmtest/Makefile <<'EOF'
+[?2004l[?2004h> OBJS := a.o
+[?2004l[?2004h> a.o: common.h
+[?2004l[?2004h> $(OBJS): %.o: %.c
+[?2004l[?2004h> @echo FIRST=$< ALL=$^
+[?2004l[?2004h> @touch $@
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@1445960760bf:/tmp/bmtest# touch /tmp/bmtest/a.c /tmp/bmtest/common.h
+[?2004l[?2004hroot@1445960760bf:/tmp/bmtest# cd /tmp/bmtest && /tmp/brickmake -r -R a.o
+[?2004lMakefile:5: *** missing separator.  Stop.
+[?2004hroot@1445960760bf:/tmp/bmtest# rm -rf /tmp/bmtest && mkdir /tmp/bmtest && cat >/tmp/bmtest/Makefile <<'EOF'
+[?2004l[?2004h> all: app
+[?2004l[?2004h> app: generated
+[?2004l[?2004h> @echo RELINK
+[?2004l[?2004h> @touch app
+[?2004l[?2004h> generated: source
+[?2004l[?2004h> @echo CODEGEN
+[?2004l[?2004h> @true
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@1445960760bf:/tmp/bmtest# touch -t 202001010000 /tmp/bmtest/source /tmp/bmtest/generated /tmp/bmtest/app
+[?2004l[?2004hroot@1445960760bf:/tmp/bmtest# touch -t 202101010000 /tmp/bmtest/source
+[?2004l[?2004hroot@1445960760bf:/tmp/bmtest# touch -t 202201010000 /tmp/bmtest/app
+[?2004l[?2004hroot@1445960760bf:/tmp/bmtest# cd /tmp/bmtest && /tmp/brickmake -r -R all
+[?2004lMakefile:3: *** missing separator.  Stop.
+[?2004hroot@1445960760bf:/tmp/bmtest# rm -rf /tmp/bmtest && mkdir /tmp/bmtest && cat >/tmp/bmtest/Makefile <<'EOF'
+[?2004l[?2004h> a:
+[?2004l[?2004h> @echo BUILD-A
+[?2004l[?2004h> @touch a
+[?2004l[?2004h> b:
+[?2004l[?2004h> @echo BUILD-B
+[?2004l[?2004h> @touch b
+[?2004l[?2004h> p: ;
+[?2004l[?2004h> .PHONY: p
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@1445960760bf:/tmp/bmtest# cd /tmp/bmtest && touch b && /tmp/brickmake -r -R a b b p p
+[?2004lMakefile:2: *** missing separator.  Stop.
+[?2004hroot@1445960760bf:/tmp/bmtest# rm -rf /tmp/bmtest && mkdir -p /tmp/bmtest/net && cat >/tmp/bmtest/Makefile <<'EOF'
+[?2004l[?2004h> CFLAGS = -O2
+[?2004l[?2004h> net/%.o: CFLAGS += -DNET
+[?2004l[?2004h> %.o: CFLAGS += -fPIC
+[?2004l[?2004h> net/%.o: net/%.c ; @echo FLAGS=$(CFLAGS)
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@1445960760bf:/tmp/bmtest# touch /tmp/bmtest/net/sock.c
+[?2004l[?2004hroot@1445960760bf:/tmp/bmtest# cd /tmp/bmtest && /tmp/brickmake -r -R net/sock.o
+[?2004lFLAGS=-O2 -DNET
+[?2004hroot@1445960760bf:/tmp/bmtest# rm -rf /tmp/bmtest && mkdir /tmp/bmtest && cat >/tmp/bmtest/Makefile <<'EOF'
+[?2004l[?2004h> OBJS := a.o
+[?2004l[?2004h> a.o: common.h
+[?2004l[?2004h> $(OBJS): %.o: %.c ; @echo FIRST=$< ALL=$^
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@1445960760bf:/tmp/bmtest# touch /tmp/bmtest/a.c /tmp/bmtest/common.h
+[?2004l[?2004hroot@1445960760bf:/tmp/bmtest# cd /tmp/bmtest && /tmp/brickmake -r -R a.o
+[?2004lFIRST=a.c ALL=a.c common.h
+[?2004hroot@1445960760bf:/tmp/bmtest# rm -rf /tmp/bmtest && mkdir /tmp/bmtest && cat >/tmp/bmtest/Makefile <<'EOF'
+[?2004l[?2004h> all: app
+[?2004l[?2004h> app: generated ; @echo RELINK
+[?2004l[?2004h> generated: source ; @echo CODEGEN
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@1445960760bf:/tmp/bmtest# touch -t 202001010000 /tmp/bmtest/generated
+[?2004l[?2004hroot@1445960760bf:/tmp/bmtest# touch -t 202101010000 /tmp/bmtest/source
+[?2004l[?2004hroot@1445960760bf:/tmp/bmtest# touch -t 202201010000 /tmp/bmtest/app
+[?2004l[?2004hroot@1445960760bf:/tmp/bmtest# cd /tmp/bmtest && /tmp/brickmake -r -R all
+[?2004lCODEGEN
+[?2004hroot@1445960760bf:/tmp/bmtest# rm -rf /tmp/bmtest && mkdir /tmp/bmtest && cat >/tmp/bmtest/Makefile <<'EOF'
+[?2004l[?2004h> a: ; @echo BUILD-A; touch a
+[?2004l[?2004h> b: ; @echo BUILD-B; touch b
+[?2004l[?2004h> p: ;
+[?2004l[?2004h> .PHONY: p
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@1445960760bf:/tmp/bmtest# cd /tmp/bmtest && touch b && /tmp/brickmake -r -R a b b p p
+[?2004lBUILD-A
+brickmake: 'b' is up to date.
+brickmake: 'b' is up to date.
+brickmake: Nothing to be done for 'p'.
+brickmake: Nothing to be done for 'p'.
+[?2004hroot@1445960760bf:/tmp/bmtest# rm -rf /tmp/bmtest && mkdir -p /tmp/bmtest/net && cat >/tmp/bmtest/Makefile <<'EOF'
+[?2004l[?2004h> %.o: %.c config.h ; @echo FIXED=$^
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@1445960760bf:/tmp/bmtest# touch /tmp/bmtest/net/sock.c /tmp/bmtest/config.h
+[?2004l[?2004hroot@1445960760bf:/tmp/bmtest# cd /tmp/bmtest && /tmp/brickmake -r -R net/sock.o
+[?2004lFIXED=net/sock.c config.h
+[?2004hroot@1445960760bf:/tmp/bmtest# rm -rf /tmp/bmtest && mkdir -p /tmp/bmtest/lib && cat >/tmp/bmtest/Makefile <<'EOF'
+[?2004l[?2004h> %.o: %.generic ; @echo GENERIC
+[?2004l[?2004h> lib/%.o: lib/%.specific ; @echo SPECIFIC
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@1445960760bf:/tmp/bmtest# touch /tmp/bmtest/lib/a.generic /tmp/bmtest/lib/a.specific
+[?2004l[?2004hroot@1445960760bf:/tmp/bmtest# cd /tmp/bmtest && /tmp/brickmake -r -R lib/a.o
+[?2004lSPECIFIC
+[?2004hroot@1445960760bf:/tmp/bmtest# nl -ba internal/expand/define.go
+[?2004lnl: internal/expand/define.go: No such file or directory
+[?2004hroot@1445960760bf:/tmp/bmtest# nl -ba internal/expand/expand.go | sed -n '40,130p'
+[?2004lnl: internal/expand/expand.go: No such file or directory
+[?2004hroot@1445960760bf:/tmp/bmtest# nl -ba internal/parse/parser.go | sed -n '175,225p'; nl -ba internal/db/db.go | sed -n '55,90p'
+[?2004lnl: internal/parse/parser.go: No such file or directory
+nl: internal/db/db.go: No such file or directory
+[?2004hroot@1445960760bf:/tmp/bmtest# cd /app && nl -ba internal/expand/define.go
+[?2004l     1	package expand
+     2	
+     3	import (
+     4		"brickmake/internal/diag"
+     5		"brickmake/internal/vars"
+     6	)
+     7	
+     8	// DefineGlobal applies an assignment to the global set. Makefile
+     9	// assignments never replace a command-line variable.
+    10	func (e *Expander) DefineGlobal(name string, op vars.Op, value string, origin vars.Origin, pos diag.Pos) {
+    11		g := e.Global
+    12		old := g.Get(name)
+    13		if old != nil && old.Origin == vars.CommandLine && origin != vars.CommandLine {
+    14			return
+    15		}
+    16		switch op {
+    17		case vars.OpRecursive:
+    18			g.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Recursive, Origin: origin, Pos: pos})
+    19		case vars.OpSimple:
+    20			g.Put(&vars.Var{Name: name, Value: e.Expand(value, nil), Flavor: vars.Simple, Origin: origin, Pos: pos})
+    21		case vars.OpConditional:
+    22			if old == nil {
+    23				g.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Recursive, Origin: origin, Pos: pos})
+    24			}
+    25		case vars.OpAppend:
+    26			if old == nil {
+    27				g.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Recursive, Origin: origin, Pos: pos})
+    28				return
+    29			}
+    30			g.Put(&vars.Var{Name: name, Value: vars.Paste(old.Value, value), Flavor: vars.Recursive, Origin: origin, Pos: pos})
+    31		}
+    32	}
+    33	
+    34	// DefineIn applies a target- or pattern-specific assignment to set. The
+    35	// enclosing scope used for ":=" and "?=" is set followed by the global set.
+    36	func (e *Expander) DefineIn(set *vars.Set, name string, op vars.Op, value string, pos diag.Pos) {
+    37		if g := e.Global.Get(name); g != nil && g.Origin == vars.CommandLine {
+    38			set.Put(&vars.Var{Name: name, Value: g.Value, Flavor: g.Flavor, Origin: vars.CommandLine, Pos: g.Pos})
+    39			return
+    40		}
+    41		e.defineIn(set, name, op, value, pos)
+    42	}
+    43	
+    44	// DefinePattern applies one pattern-specific assignment while building a
+    45	// file's pattern set. A command-line variable replaces the assigned text
+    46	// but the operator is kept.
+    47	func (e *Expander) DefinePattern(set *vars.Set, name string, op vars.Op, value string, pos diag.Pos) {
+    48		if g := e.Global.Get(name); g != nil && g.Origin == vars.CommandLine {
+    49			value = g.Value
+    50		}
+    51		if op == vars.OpSimple {
+    52			set.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Simple, Origin: vars.File, Pos: pos})
+    53			return
+    54		}
+    55		e.defineIn(set, name, op, value, pos)
+    56	}
+    57	
+    58	func (e *Expander) defineIn(set *vars.Set, name string, op vars.Op, value string, pos diag.Pos) {
+    59		sc := &Scope{Sets: []*vars.Set{set}}
+    60		switch op {
+    61		case vars.OpRecursive:
+    62			set.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Recursive, Origin: vars.File, Pos: pos})
+    63		case vars.OpSimple:
+    64			set.Put(&vars.Var{Name: name, Value: e.Expand(value, sc), Flavor: vars.Simple, Origin: vars.File, Pos: pos})
+    65		case vars.OpConditional:
+    66			if v, _ := e.Lookup(name, sc); v != nil {
+    67				return
+    68			}
+    69			set.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Recursive, Origin: vars.File, Pos: pos})
+    70		case vars.OpAppend:
+    71			set.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Recursive, Origin: vars.File, Append: true, Pos: pos})
+    72		}
+    73	}
+[?2004hroot@1445960760bf:/app# nl -ba internal/expand/expand.go | sed -n '40,130p'
+[?2004l    40	
+    41	func New(global *vars.Set) *Expander {
+    42		return &Expander{Global: global, active: map[*vars.Var]bool{}}
+    43	}
+    44	
+    45	func (e *Expander) chain(sc *Scope) []*vars.Set {
+    46		if sc == nil {
+    47			return []*vars.Set{e.Global}
+    48		}
+    49		out := make([]*vars.Set, 0, len(sc.Sets)+1)
+    50		out = append(out, sc.Sets...)
+    51		return append(out, e.Global)
+    52	}
+    53	
+    54	// Lookup finds the definition of name visible in sc and the sets that
+    55	// enclose it.
+    56	func (e *Expander) Lookup(name string, sc *Scope) (*vars.Var, []*vars.Set) {
+    57		sets := e.chain(sc)
+    58		for i, s := range sets {
+    59			if v := s.Get(name); v != nil {
+    60				return v, sets[i+1:]
+    61			}
+    62		}
+    63		return nil, nil
+    64	}
+    65	
+    66	// Value returns the expanded value of variable name.
+    67	func (e *Expander) Value(name string, sc *Scope) string {
+    68		if sc != nil && sc.Auto != nil {
+    69			if v, ok := sc.Auto.Value(name); ok {
+    70				return v
+    71			}
+    72		}
+    73		v, rest := e.Lookup(name, sc)
+    74		if v == nil {
+    75			return ""
+    76		}
+    77		if v.Append {
+    78			return e.appended(v, rest, sc)
+    79		}
+    80		return e.plain(v, sc)
+    81	}
+    82	
+    83	func (e *Expander) plain(v *vars.Var, sc *Scope) string {
+    84		if v.Flavor == vars.Simple {
+    85			return v.Value
+    86		}
+    87		if e.active[v] {
+    88			diag.Failf(v.Pos, "Recursive variable '%s' references itself (eventually)", v.Name)
+    89		}
+    90		e.active[v] = true
+    91		defer delete(e.active, v)
+    92		return e.expandAt(v, sc)
+    93	}
+    94	
+    95	// expandAt expands a recursive variable's text; messages raised while
+    96	// doing so report the variable's definition.
+    97	func (e *Expander) expandAt(v *vars.Var, sc *Scope) string {
+    98		if v.Pos.Valid() {
+    99			saved := e.Pos
+   100			e.Pos = v.Pos
+   101			defer func() { e.Pos = saved }()
+   102		}
+   103		return e.Expand(v.Value, sc)
+   104	}
+   105	
+   106	// appended builds the value of a target- or pattern-specific "+="
+   107	// definition: the value visible from the enclosing sets, a space when that
+   108	// value is not empty, then this definition's own text.
+   109	func (e *Expander) appended(v *vars.Var, rest []*vars.Set, sc *Scope) string {
+   110		buf := ""
+   111		for i, s := range rest {
+   112			u := s.Get(v.Name)
+   113			if u == nil {
+   114				continue
+   115			}
+   116			if u.Append {
+   117				buf = e.appended(u, rest[i+1:], sc)
+   118			} else {
+   119				buf = e.plain(u, sc)
+   120			}
+   121			break
+   122		}
+   123		if buf != "" {
+   124			buf += " "
+   125		}
+   126		return buf + e.plain(v, sc)
+   127	}
+   128	
+   129	// closing returns the index of the delimiter that closes an opening
+   130	// delimiter whose body starts at s[i]. Only delimiters of the same kind
+[?2004hroot@1445960760bf:/app# nl -ba internal/parse/parser.go | sed -n '175,225p'; nl -ba internal/db/db.go | sed -n '55,90p'
+[?2004l   175		if p.second {
+   176			r.prereqs = db.Prereqs{Text: expanded, Second: true}
+   177		} else {
+   178			r.prereqs.Normal, r.prereqs.OrderOnly = text.SplitOrder(text.Fields(expanded))
+   179		}
+   180		p.rule = r
+   181		if recipe != nil {
+   182			p.addRecipeLine(*recipe, pos)
+   183		}
+   184	}
+   185	
+   186	// targetVar records "targets: name op value".
+   187	func (p *Parser) targetVar(targets []string, name string, op vars.Op, value string, pos diag.Pos) {
+   188		for _, t := range targets {
+   189			if strings.IndexByte(t, '%') >= 0 {
+   190				v := value
+   191				if op == vars.OpSimple {
+   192					v = p.X.Expand(value, nil)
+   193				}
+   194				p.DB.PatternVars = append(p.DB.PatternVars, &db.PatternVar{Pattern: t, Name: name, Op: op, Value: v, Pos: pos})
+   195				continue
+   196			}
+   197			f := p.DB.Enter(t)
+   198			p.X.DefineIn(f.Vars, name, op, value, pos)
+   199		}
+   200	}
+    55		return r
+    56	}
+    57	
+    58	// PatternRule is an implicit rule: every target contains '%'.
+    59	type PatternRule struct {
+    60		Targets []string
+    61		Prereqs
+    62		Recipe *Recipe
+    63		Pos    diag.Pos
+    64	}
+    65	
+    66	// PatternVar is one pattern-specific assignment.
+    67	type PatternVar struct {
+    68		Pattern string
+    69		Name    string
+    70		Op      vars.Op
+    71		Value   string // already expanded for ":="
+    72		Pos     diag.Pos
+    73	}
+    74	
+    75	// DB is the result of reading the makefiles.
+    76	type DB struct {
+    77		Files        map[string]*File
+    78		Order        []*File
+    79		PatternRules []*PatternRule
+    80		PatternVars  []*PatternVar
+    81		// SecondaryAll is set by a .SECONDARY rule without prerequisites.
+    82		SecondaryAll bool
+    83	}
+    84	
+    85	func New() *DB { return &DB{Files: map[string]*File{}} }
+    86	
+    87	// Lookup returns the file entry for name, or nil.
+    88	func (d *DB) Lookup(name string) *File { return d.Files[name] }
+    89	
+    90	// Enter returns the file entry for name, creating it if needed.
+[?2004hroot@1445960760bf:/app# nl -ba internal/expand/define.go
+[?2004l     1	package expand
+     2	
+     3	import (
+     4		"brickmake/internal/diag"
+     5		"brickmake/internal/vars"
+     6	)
+     7	
+     8	// DefineGlobal applies an assignment to the global set. Makefile
+     9	// assignments never replace a command-line variable.
+    10	func (e *Expander) DefineGlobal(name string, op vars.Op, value string, origin vars.Origin, pos diag.Pos) {
+    11		g := e.Global
+    12		old := g.Get(name)
+    13		if old != nil && old.Origin == vars.CommandLine && origin != vars.CommandLine {
+    14			return
+    15		}
+    16		switch op {
+    17		case vars.OpRecursive:
+    18			g.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Recursive, Origin: origin, Pos: pos})
+    19		case vars.OpSimple:
+    20			g.Put(&vars.Var{Name: name, Value: e.Expand(value, nil), Flavor: vars.Simple, Origin: origin, Pos: pos})
+    21		case vars.OpConditional:
+    22			if old == nil {
+    23				g.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Recursive, Origin: origin, Pos: pos})
+    24			}
+    25		case vars.OpAppend:
+    26			if old == nil {
+    27				g.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Recursive, Origin: origin, Pos: pos})
+    28				return
+    29			}
+    30			g.Put(&vars.Var{Name: name, Value: vars.Paste(old.Value, value), Flavor: vars.Recursive, Origin: origin, Pos: pos})
+    31		}
+    32	}
+    33	
+    34	// DefineIn applies a target- or pattern-specific assignment to set. The
+    35	// enclosing scope used for ":=" and "?=" is set followed by the global set.
+    36	func (e *Expander) DefineIn(set *vars.Set, name string, op vars.Op, value string, pos diag.Pos) {
+    37		if g := e.Global.Get(name); g != nil && g.Origin == vars.CommandLine {
+    38			set.Put(&vars.Var{Name: name, Value: g.Value, Flavor: g.Flavor, Origin: vars.CommandLine, Pos: g.Pos})
+    39			return
+    40		}
+    41		e.defineIn(set, name, op, value, pos)
+    42	}
+    43	
+    44	// DefinePattern applies one pattern-specific assignment while building a
+    45	// file's pattern set. A command-line variable replaces the assigned text
+    46	// but the operator is kept.
+    47	func (e *Expander) DefinePattern(set *vars.Set, name string, op vars.Op, value string, pos diag.Pos) {
+    48		if g := e.Global.Get(name); g != nil && g.Origin == vars.CommandLine {
+    49			value = g.Value
+    50		}
+    51		if op == vars.OpSimple {
+    52			set.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Simple, Origin: vars.File, Pos: pos})
+    53			return
+    54		}
+    55		e.defineIn(set, name, op, value, pos)
+    56	}
+    57	
+    58	func (e *Expander) defineIn(set *vars.Set, name string, op vars.Op, value string, pos diag.Pos) {
+    59		sc := &Scope{Sets: []*vars.Set{set}}
+    60		switch op {
+    61		case vars.OpRecursive:
+    62			set.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Recursive, Origin: vars.File, Pos: pos})
+    63		case vars.OpSimple:
+    64			set.Put(&vars.Var{Name: name, Value: e.Expand(value, sc), Flavor: vars.Simple, Origin: vars.File, Pos: pos})
+    65		case vars.OpConditional:
+    66			if v, _ := e.Lookup(name, sc); v != nil {
+    67				return
+    68			}
+    69			set.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Recursive, Origin: vars.File, Pos: pos})
+    70		case vars.OpAppend:
+    71			set.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Recursive, Origin: vars.File, Append: true, Pos: pos})
+    72		}
+    73	}
+[?2004hroot@1445960760bf:/app# nl -ba internal/vars/vars.go | sed -n '90,135p'; nl -ba internal/expand/expand.go | sed -n '40,125p'
+[?2004l    90		}
+    91		sort.Strings(names)
+    92		return names
+    93	}
+    94	
+    95	// Op is an assignment operator.
+    96	type Op int
+    97	
+    98	const (
+    99		OpRecursive   Op = iota // =
+   100		OpSimple                // := and ::=
+   101		OpAppend                // +=
+   102		OpConditional           // ?=
+   103	)
+   104	
+   105	func (o Op) String() string {
+   106		switch o {
+   107		case OpSimple:
+   108			return ":="
+   109		case OpAppend:
+   110			return "+="
+   111		case OpConditional:
+   112			return "?="
+   113		}
+   114		return "="
+   115	}
+   116	
+   117	// Paste joins an old value and an appended value. An empty appended value
+   118	// leaves the old value unchanged.
+   119	func Paste(old, add string) string {
+   120		if add == "" {
+   121			return old
+   122		}
+   123		if old == "" {
+   124			return add
+   125		}
+   126		return old + " " + add
+   127	}
+    40	
+    41	func New(global *vars.Set) *Expander {
+    42		return &Expander{Global: global, active: map[*vars.Var]bool{}}
+    43	}
+    44	
+    45	func (e *Expander) chain(sc *Scope) []*vars.Set {
+    46		if sc == nil {
+    47			return []*vars.Set{e.Global}
+    48		}
+    49		out := make([]*vars.Set, 0, len(sc.Sets)+1)
+    50		out = append(out, sc.Sets...)
+    51		return append(out, e.Global)
+    52	}
+    53	
+    54	// Lookup finds the definition of name visible in sc and the sets that
+    55	// enclose it.
+    56	func (e *Expander) Lookup(name string, sc *Scope) (*vars.Var, []*vars.Set) {
+    57		sets := e.chain(sc)
+    58		for i, s := range sets {
+    59			if v := s.Get(name); v != nil {
+    60				return v, sets[i+1:]
+    61			}
+    62		}
+    63		return nil, nil
+    64	}
+    65	
+    66	// Value returns the expanded value of variable name.
+    67	func (e *Expander) Value(name string, sc *Scope) string {
+    68		if sc != nil && sc.Auto != nil {
+    69			if v, ok := sc.Auto.Value(name); ok {
+    70				return v
+    71			}
+    72		}
+    73		v, rest := e.Lookup(name, sc)
+    74		if v == nil {
+    75			return ""
+    76		}
+    77		if v.Append {
+    78			return e.appended(v, rest, sc)
+    79		}
+    80		return e.plain(v, sc)
+    81	}
+    82	
+    83	func (e *Expander) plain(v *vars.Var, sc *Scope) string {
+    84		if v.Flavor == vars.Simple {
+    85			return v.Value
+    86		}
+    87		if e.active[v] {
+    88			diag.Failf(v.Pos, "Recursive variable '%s' references itself (eventually)", v.Name)
+    89		}
+    90		e.active[v] = true
+    91		defer delete(e.active, v)
+    92		return e.expandAt(v, sc)
+    93	}
+    94	
+    95	// expandAt expands a recursive variable's text; messages raised while
+    96	// doing so report the variable's definition.
+    97	func (e *Expander) expandAt(v *vars.Var, sc *Scope) string {
+    98		if v.Pos.Valid() {
+    99			saved := e.Pos
+   100			e.Pos = v.Pos
+   101			defer func() { e.Pos = saved }()
+   102		}
+   103		return e.Expand(v.Value, sc)
+   104	}
+   105	
+   106	// appended builds the value of a target- or pattern-specific "+="
+   107	// definition: the value visible from the enclosing sets, a space when that
+   108	// value is not empty, then this definition's own text.
+   109	func (e *Expander) appended(v *vars.Var, rest []*vars.Set, sc *Scope) string {
+   110		buf := ""
+   111		for i, s := range rest {
+   112			u := s.Get(v.Name)
+   113			if u == nil {
+   114				continue
+   115			}
+   116			if u.Append {
+   117				buf = e.appended(u, rest[i+1:], sc)
+   118			} else {
+   119				buf = e.plain(u, sc)
+   120			}
+   121			break
+   122		}
+   123		if buf != "" {
+   124			buf += " "
+   125		}
+[?2004hroot@1445960760bf:/app# nl -ba internal/expand/expand.go | sed -n '106,135p'; nl -ba internal/vars/vars.go | sed -n '50,130p'
+[?2004l   106	// appended builds the value of a target- or pattern-specific "+="
+   107	// definition: the value visible from the enclosing sets, a space when that
+   108	// value is not empty, then this definition's own text.
+   109	func (e *Expander) appended(v *vars.Var, rest []*vars.Set, sc *Scope) string {
+   110		buf := ""
+   111		for i, s := range rest {
+   112			u := s.Get(v.Name)
+   113			if u == nil {
+   114				continue
+   115			}
+   116			if u.Append {
+   117				buf = e.appended(u, rest[i+1:], sc)
+   118			} else {
+   119				buf = e.plain(u, sc)
+   120			}
+   121			break
+   122		}
+   123		if buf != "" {
+   124			buf += " "
+   125		}
+   126		return buf + e.plain(v, sc)
+   127	}
+   128	
+   129	// closing returns the index of the delimiter that closes an opening
+   130	// delimiter whose body starts at s[i]. Only delimiters of the same kind
+   131	// are counted.
+   132	func closing(s string, i int, open, close byte) int {
+   133		depth := 0
+   134		for ; i < len(s); i++ {
+   135			switch s[i] {
+    50	
+    51	// Var is one variable definition. Append marks a target- or
+    52	// pattern-specific "+=" whose value is added to the value visible from
+    53	// the enclosing scope at expansion time.
+    54	type Var struct {
+    55		Name   string
+    56		Value  string
+    57		Flavor Flavor
+    58		Origin Origin
+    59		Append bool
+    60		Pos    diag.Pos
+    61	}
+    62	
+    63	// Set is one level of variable definitions.
+    64	type Set struct {
+    65		m map[string]*Var
+    66	}
+    67	
+    68	func NewSet() *Set { return &Set{m: map[string]*Var{}} }
+    69	
+    70	func (s *Set) Get(name string) *Var {
+    71		if s == nil {
+    72			return nil
+    73		}
+    74		return s.m[name]
+    75	}
+    76	
+    77	func (s *Set) Put(v *Var) { s.m[v.Name] = v }
+    78	
+    79	func (s *Set) Len() int {
+    80		if s == nil {
+    81			return 0
+    82		}
+    83		return len(s.m)
+    84	}
+    85	
+    86	func (s *Set) Names() []string {
+    87		names := make([]string, 0, len(s.m))
+    88		for n := range s.m {
+    89			names = append(names, n)
+    90		}
+    91		sort.Strings(names)
+    92		return names
+    93	}
+    94	
+    95	// Op is an assignment operator.
+    96	type Op int
+    97	
+    98	const (
+    99		OpRecursive   Op = iota // =
+   100		OpSimple                // := and ::=
+   101		OpAppend                // +=
+   102		OpConditional           // ?=
+   103	)
+   104	
+   105	func (o Op) String() string {
+   106		switch o {
+   107		case OpSimple:
+   108			return ":="
+   109		case OpAppend:
+   110			return "+="
+   111		case OpConditional:
+   112			return "?="
+   113		}
+   114		return "="
+   115	}
+   116	
+   117	// Paste joins an old value and an appended value. An empty appended value
+   118	// leaves the old value unchanged.
+   119	func Paste(old, add string) string {
+   120		if add == "" {
+   121			return old
+   122		}
+   123		if old == "" {
+   124			return add
+   125		}
+   126		return old + " " + add
+   127	}
+[?2004hroot@1445960760bf:/app# python3 - <<'PY'
+[?2004ls.Recursive, Origin: vars.File, Append: true, Pos: pos})
+\t\t\treturn
+\t\t}
+\t\tadd := value
+\t\tif !old.Append && old.Flavor == vars.Simple {
+\t\t\tadd = e.Expand(value, sc)
+\t\t}
+\t\tset.Put(&vars.Var{Name: name, Value: vars.Paste(old.Value, add), Flavor: old.Flavor, Origin: vars.File, Append: old.Append, Pos: pos})
+''')
+open(p,'w').write(s)
+PY
+gofmt -w internal/expand/define.go
+go test ./... && go build -o /tmp/brickmake ./cmd/brickmake
+[?2004h> p='internal/expand/define.go'
+[?2004l[?2004h> s=open(p).read()
+[?2004l[?2004h> s=s.replace('''\tcase vars.OpAppend:
+[?2004l[?2004h> \t\tif old == nil {
+[?2004l[?2004h> \t\t\tg.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Recursive, Origin: origin, Pos: pos})
+[?2004l[?2004h> \t\t\treturn
+[?2004l[?2004h> \t\t}
+[?2004l[?2004h> \t\tg.Put(&vars.Var{Name: name, Value: vars.Paste(old.Value, value), Flavor: vars.Recursive, Origin: origin, Pos: pos})
+[?2004l[?2004h> ''','''\tcase vars.OpAppend:
+[?2004l[?2004h> \t\tif old == nil {
+[?2004l[?2004h> \t\t\tg.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Recursive, Origin: origin, Pos: pos})
+[?2004l[?2004h> \t\t\treturn
+[?2004l[?2004h> \t\t}
+[?2004l[?2004h> \t\tadd := value
+[?2004l[?2004h> \t\tif old.Flavor == vars.Simple {
+[?2004l[?2004h> \t\t\tadd = e.Expand(value, nil)
+[?2004l[?2004h> \t\t}
+[?2004l[?2004h> \t\tg.Put(&vars.Var{Name: name, Value: vars.Paste(old.Value, add), Flavor: old.Flavor, Origin: origin, Pos: pos})
+[?2004l[?2004h> ''')
+[?2004l[?2004h> s=s.replace('''\tcase vars.OpAppend:
+[?2004l[?2004h> \t\tset.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Recursive, Origin: vars.File, Append: true, Pos: pos})
+[?2004l[?2004h> ''','''\tcase vars.OpAppend:
+[?2004l[?2004h> \t\told := set.Get(name)
+[?2004l[?2004h> \t\tif old == nil {
+[?2004l[?2004h> \t\t\tset.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Recursive, Origin: vars.File, Append: true, Pos: pos})
+[?2004l[?2004h> \t\t\treturn
+[?2004l[?2004h> \t\t}
+[?2004l[?2004h> \t\tadd := value
+[?2004l[?2004h> \t\tif !old.Append && old.Flavor == vars.Simple {
+[?2004l[?2004h> \t\t\tadd = e.Expand(value, sc)
+[?2004l[?2004h> \t\t}
+[?2004l[?2004h> \t\tset.Put(&vars.Var{Name: name, Value: vars.Paste(old.Value, add), Flavor: old.Flavor, Origin: vars.File, Append: old.Append, Pos: pos})
+[?2004l[?2004h> ''')
+[?2004l[?2004h> open(p,'w').write(s)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@1445960760bf:/app# gofmt -w internal/expand/define.go
+[?2004l[?2004hroot@1445960760bf:/app# go test ./... && go build -o /tmp/brickmake ./cmd/brickmake
+[?2004l?   	brickmake/cmd/brickmake	[no test files]
+?   	brickmake/internal/cli	[no test files]
+?   	brickmake/internal/db	[no test files]
+?   	brickmake/internal/diag	[no test files]
+ok  	brickmake/internal/engine	(cached)
+ok  	brickmake/internal/expand	0.002s
+ok  	brickmake/internal/parse	0.002s
+ok  	brickmake/internal/text	(cached)
+?   	brickmake/internal/vars	[no test files]
+[?2004hroot@1445960760bf:/app# rm -rf /tmp/bmtest && mkdir -p /tmp/bmtest/net && cat >/tmp/bmtest/Makefile <<'EOF'
+[?2004l[?2004h> CFLAGS = -O2
+[?2004l[?2004h> net/%.o: CFLAGS += -DNET
+[?2004l[?2004h> %.o: CFLAGS += -fPIC
+[?2004l[?2004h> net/%.o: net/%.c ; @echo FLAGS=$(CFLAGS)
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@1445960760bf:/app# touch /tmp/bmtest/net/sock.c
+[?2004l[?2004hroot@1445960760bf:/app# cd /tmp/bmtest && /tmp/brickmake -r -R net/sock.o
+[?2004lFLAGS=-O2 -fPIC -DNET
+[?2004hroot@1445960760bf:/tmp/bmtest# cd /app && git diff -- internal/engine internal/expand/define.go 2>/dev/null || diff -u /dev/null /dev/null
+[?2004l[?2004hroot@1445960760bf:/app# cat >> internal/expand/expand_test.go <<'EOF'
+[?2004l[?2004h> 
+[?2004l[?2004h> func TestAppendPreservesFlavorAndComposes(t *testing.T) {
+[?2004l[?2004h> x := New(vars.NewSet())
+[?2004l[?2004h> x.DefineGlobal("LATE", vars.OpRecursive, "one", vars.File, diag.Pos{})
+[?2004l[?2004h> x.DefineGlobal("S", vars.OpSimple, "base", vars.File, diag.Pos{})
+[?2004l[?2004h> x.DefineGlobal("S", vars.OpAppend, "$(LATE)", vars.File, diag.Pos{})
+[?2004l[?2004h> x.DefineGlobal("LATE", vars.OpRecursive, "two", vars.File, diag.Pos{})
+[?2004l[?2004h> if got := x.Value("S", nil); got != "base one" {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      examples/  go.mod     internal/  
+> t.Fatalf("simple append = %q, want %q", got, "base one")
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> set := vars.NewSet()
+[?2004l[?2004h> x.DefineIn(set, "V", vars.OpAppend, "first", diag.Pos{})
+[?2004l[?2004h> x.DefineIn(set, "V", vars.OpAppend, "second", diag.Pos{})
+[?2004l[?2004h> x.DefineGlobal("V", vars.OpRecursive, "global", vars.File, diag.Pos{})
+[?2004l[?2004h> if got := x.Value("V", &Scope{Sets: []*vars.Set{set}}); got != "global first second" {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      examples/  go.mod     internal/  
+> t.Fatalf("composed scoped appends = %q", got)
+[?2004l[?2004h> }
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@1445960760bf:/app# # Add imports only if this test file does not already have them.
+[?2004l[?2004hroot@1445960760bf:/app# sed -n '1,18p' internal/expand/expand_test.go
+[?2004lpackage expand
+
+import (
+	"testing"
+
+	"brickmake/internal/diag"
+	"brickmake/internal/vars"
+)
+
+func newX(defs ...string) *Expander {
+	x := New(vars.NewSet())
+	for i := 0; i+1 < len(defs); i += 2 {
+		x.DefineGlobal(defs[i], vars.OpRecursive, defs[i+1], vars.File, diag.Pos{File: "Makefile", Line: i/2 + 1})
+	}
+	return x
+}
+
+func TestReferences(t *testing.T) {
+[?2004hroot@1445960760bf:/app# cd /app && python3 - <<'PY'
+[?2004l[?2004h> p='internal/expand/define.go'
+[?2004l[?2004h> s=open(p).read()
+[?2004l[?2004h> s=s.replace('''func (e *Expander) DefinePattern(set *vars.Set, name string, op vars.Op, value string, pos diag.Pos) {
+[?2004l[?2004h> if g := e.Global.Get(name); g != nil && g.Origin == vars.CommandLine {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      examples/  go.mod     internal/  
+> value = g.Value
+[?2004l[?2004h> }
+[?2004l[?2004h> ''','''func (e *Expander) DefinePattern(set *vars.Set, name string, op vars.Op, value string, pos diag.Pos) {
+[?2004l[?2004h> if g := e.Global.Get(name); g != nil && g.Origin == vars.CommandLine {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      examples/  go.mod     internal/  
+> set.Put(&vars.Var{Name: name, Value: g.Value, Flavor: g.Flavor, Origin: vars.CommandLine, Pos: g.Pos})
+[?2004l[?2004h> 
+README.md  cmd/       docs/      examples/  go.mod     internal/  
+> return
+[?2004l[?2004h> }
+[?2004l[?2004h> ''')
+[?2004l[?2004h> open(p,'w').write(s)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@1445960760bf:/app# gofmt -w internal/expand/define.go internal/expand/expand_test.go
+[?2004l[?2004hroot@1445960760bf:/app# go test ./internal/expand
+[?2004lok  	brickmake/internal/expand	0.003s
+[?2004hroot@1445960760bf:/app# cat >> internal/expand/expand_test.go <<'EOF'
+[?2004l[?2004h> 
+[?2004l[?2004h> func TestPatternCannotChangeCommandLineVariable(t *testing.T) {
+[?2004l[?2004h> x := New(vars.NewSet())
+[?2004l[?2004h> x.DefineGlobal("V", vars.OpRecursive, "command", vars.CommandLine, diag.Pos{})
+[?2004l[?2004h> set := vars.NewSet()
+[?2004l[?2004h> x.DefinePattern(set, "V", vars.OpAppend, "extra", diag.Pos{})
+[?2004l[?2004h> if got := x.Value("V", &Scope{Sets: []*vars.Set{set}}); got != "command" {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      examples/  go.mod     internal/  
+> t.Fatalf("pattern assignment changed command-line value: %q", got)
+[?2004l[?2004h> }
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@1445960760bf:/app# gofmt -w internal/expand/expand_test.go
+[?2004l[?2004hroot@1445960760bf:/app# go test ./internal/expand
+[?2004l--- FAIL: TestPatternCannotChangeCommandLineVariable (0.00s)
+    expand_test.go:123: pattern assignment changed command-line value: "command command"
+FAIL
+FAIL	brickmake/internal/expand	0.002s
+FAIL
+[?2004hroot@1445960760bf:/app# go test -count=1 ./... && go vet ./... && go build -o /tmp/brickmake-final ./cmd/brickmake
+[?2004l?   	brickmake/cmd/brickmake	[no test files]
+?   	brickmake/internal/cli	[no test files]
+?   	brickmake/internal/db	[no test files]
+?   	brickmake/internal/diag	[no test files]
+ok  	brickmake/internal/engine	0.002s
+--- FAIL: TestPatternCannotChangeCommandLineVariable (0.00s)
+    expand_test.go:123: pattern assignment changed command-line value: "command command"
+FAIL
+FAIL	brickmake/internal/expand	0.003s
+ok  	brickmake/internal/parse	0.003s
+ok  	brickmake/internal/text	0.002s
+?   	brickmake/internal/vars	[no test files]
+FAIL
+[?2004hroot@1445960760bf:/app# nl -ba internal/expand/expand.go | sed -n '35,112p'
+[?2004l    35		// Shell runs $(shell ...) commands.
+    36		Shell func(cmd string) string
+    37	
+    38		active map[*vars.Var]bool
+    39	}
+    40	
+    41	func New(global *vars.Set) *Expander {
+    42		return &Expander{Global: global, active: map[*vars.Var]bool{}}
+    43	}
+    44	
+    45	func (e *Expander) chain(sc *Scope) []*vars.Set {
+    46		if sc == nil {
+    47			return []*vars.Set{e.Global}
+    48		}
+    49		out := make([]*vars.Set, 0, len(sc.Sets)+1)
+    50		out = append(out, sc.Sets...)
+    51		return append(out, e.Global)
+    52	}
+    53	
+    54	// Lookup finds the definition of name visible in sc and the sets that
+    55	// enclose it.
+    56	func (e *Expander) Lookup(name string, sc *Scope) (*vars.Var, []*vars.Set) {
+    57		sets := e.chain(sc)
+    58		for i, s := range sets {
+    59			if v := s.Get(name); v != nil {
+    60				return v, sets[i+1:]
+    61			}
+    62		}
+    63		return nil, nil
+    64	}
+    65	
+    66	// Value returns the expanded value of variable name.
+    67	func (e *Expander) Value(name string, sc *Scope) string {
+    68		if sc != nil && sc.Auto != nil {
+    69			if v, ok := sc.Auto.Value(name); ok {
+    70				return v
+    71			}
+    72		}
+    73		v, rest := e.Lookup(name, sc)
+    74		if v == nil {
+    75			return ""
+    76		}
+    77		if v.Append {
+    78			return e.appended(v, rest, sc)
+    79		}
+    80		return e.plain(v, sc)
+    81	}
+    82	
+    83	func (e *Expander) plain(v *vars.Var, sc *Scope) string {
+    84		if v.Flavor == vars.Simple {
+    85			return v.Value
+    86		}
+    87		if e.active[v] {
+    88			diag.Failf(v.Pos, "Recursive variable '%s' references itself (eventually)", v.Name)
+    89		}
+    90		e.active[v] = true
+    91		defer delete(e.active, v)
+    92		return e.expandAt(v, sc)
+    93	}
+    94	
+    95	// expandAt expands a recursive variable's text; messages raised while
+    96	// doing so report the variable's definition.
+    97	func (e *Expander) expandAt(v *vars.Var, sc *Scope) string {
+    98		if v.Pos.Valid() {
+    99			saved := e.Pos
+   100			e.Pos = v.Pos
+   101			defer func() { e.Pos = saved }()
+   102		}
+   103		return e.Expand(v.Value, sc)
+   104	}
+   105	
+   106	// appended builds the value of a target- or pattern-specific "+="
+   107	// definition: the value visible from the enclosing sets, a space when that
+   108	// value is not empty, then this definition's own text.
+   109	func (e *Expander) appended(v *vars.Var, rest []*vars.Set, sc *Scope) string {
+   110		buf := ""
+   111		for i, s := range rest {
+   112			u := s.Get(v.Name)
+[?2004hroot@1445960760bf:/app# nl -ba internal/vars/vars.go | sed -n '45,75p'
+[?2004l    45		case Automatic:
+    46			return "automatic"
+    47		}
+    48		return "undefined"
+    49	}
+    50	
+    51	// Var is one variable definition. Append marks a target- or
+    52	// pattern-specific "+=" whose value is added to the value visible from
+    53	// the enclosing scope at expansion time.
+    54	type Var struct {
+    55		Name   string
+    56		Value  string
+    57		Flavor Flavor
+    58		Origin Origin
+    59		Append bool
+    60		Pos    diag.Pos
+    61	}
+    62	
+    63	// Set is one level of variable definitions.
+    64	type Set struct {
+    65		m map[string]*Var
+    66	}
+    67	
+    68	func NewSet() *Set { return &Set{m: map[string]*Var{}} }
+    69	
+    70	func (s *Set) Get(name string) *Var {
+    71		if s == nil {
+    72			return nil
+    73		}
+    74		return s.m[name]
+    75	}
+[?2004hroot@1445960760bf:/app# nl -ba internal/expand/expand.go | sed -n '40,94p'
+[?2004l    40	
+    41	func New(global *vars.Set) *Expander {
+    42		return &Expander{Global: global, active: map[*vars.Var]bool{}}
+    43	}
+    44	
+    45	func (e *Expander) chain(sc *Scope) []*vars.Set {
+    46		if sc == nil {
+    47			return []*vars.Set{e.Global}
+    48		}
+    49		out := make([]*vars.Set, 0, len(sc.Sets)+1)
+    50		out = append(out, sc.Sets...)
+    51		return append(out, e.Global)
+    52	}
+    53	
+    54	// Lookup finds the definition of name visible in sc and the sets that
+    55	// enclose it.
+    56	func (e *Expander) Lookup(name string, sc *Scope) (*vars.Var, []*vars.Set) {
+    57		sets := e.chain(sc)
+    58		for i, s := range sets {
+    59			if v := s.Get(name); v != nil {
+    60				return v, sets[i+1:]
+    61			}
+    62		}
+    63		return nil, nil
+    64	}
+    65	
+    66	// Value returns the expanded value of variable name.
+    67	func (e *Expander) Value(name string, sc *Scope) string {
+    68		if sc != nil && sc.Auto != nil {
+    69			if v, ok := sc.Auto.Value(name); ok {
+    70				return v
+    71			}
+    72		}
+    73		v, rest := e.Lookup(name, sc)
+    74		if v == nil {
+    75			return ""
+    76		}
+    77		if v.Append {
+    78			return e.appended(v, rest, sc)
+    79		}
+    80		return e.plain(v, sc)
+    81	}
+    82	
+    83	func (e *Expander) plain(v *vars.Var, sc *Scope) string {
+    84		if v.Flavor == vars.Simple {
+    85			return v.Value
+    86		}
+    87		if e.active[v] {
+    88			diag.Failf(v.Pos, "Recursive variable '%s' references itself (eventually)", v.Name)
+    89		}
+    90		e.active[v] = true
+    91		defer delete(e.active, v)
+    92		return e.expandAt(v, sc)
+    93	}
+    94	
+[?2004hroot@1445960760bf:/app# nl -ba internal/expand/define.go | sed -n '40,62p'
+[?2004l    40	func (e *Expander) DefineIn(set *vars.Set, name string, op vars.Op, value string, pos diag.Pos) {
+    41		if g := e.Global.Get(name); g != nil && g.Origin == vars.CommandLine {
+    42			set.Put(&vars.Var{Name: name, Value: g.Value, Flavor: g.Flavor, Origin: vars.CommandLine, Pos: g.Pos})
+    43			return
+    44		}
+    45		e.defineIn(set, name, op, value, pos)
+    46	}
+    47	
+    48	// DefinePattern applies one pattern-specific assignment while building a
+    49	// file's pattern set. A command-line variable replaces the assigned text
+    50	// but the operator is kept.
+    51	func (e *Expander) DefinePattern(set *vars.Set, name string, op vars.Op, value string, pos diag.Pos) {
+    52		if g := e.Global.Get(name); g != nil && g.Origin == vars.CommandLine {
+    53			value = g.Value
+    54		}
+    55		if op == vars.OpSimple {
+    56			set.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Simple, Origin: vars.File, Pos: pos})
+    57			return
+    58		}
+    59		e.defineIn(set, name, op, value, pos)
+    60	}
+    61	
+    62	func (e *Expander) defineIn(set *vars.Set, name string, op vars.Op, value string, pos diag.Pos) {
+[?2004hroot@1445960760bf:/app# python3 - <<'PY'
+[?2004l= 1:
+    raise SystemExit(f'replacement count {n}')
+p.write_text(s)
+PY
+gofmt -w internal/expand/define.go
+go test -count=1 ./internal/expand
+[?2004h> from pathlib import Path
+[?2004l[?2004h> import re
+[?2004l[?2004h> p = Path('/app/internal/expand/define.go')
+[?2004l[?2004h> s = p.read_text()
+[?2004l[?2004h> pat = r'// DefinePattern applies one pattern-specific assignment while building a\n// file\'s pattern set\.[\s\S]*?\nfunc \(e \*Expander\) DefinePattern\(set \*vars\.Set, name string, op vars\.Op, value string, pos diag\.Pos\) \{[\s\S]*?\n\}'
+[?2004l[?2004h> rep = '''// DefinePattern applies one pattern-specific assignment while building a
+[?2004l[?2004h> // file's pattern set. Command-line variables cannot be changed by it.
+[?2004l[?2004h> func (e *Expander) DefinePattern(set *vars.Set, name string, op vars.Op, value string, pos diag.Pos) {
+[?2004l[?2004h> if g := e.Global.Get(name); g != nil && g.Origin == vars.CommandLine {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      examples/  go.mod     internal/  
+> set.Put(&vars.Var{Name: name, Value: g.Value, Flavor: g.Flavor, Origin: vars.CommandLine, Pos: g.Pos})
+[?2004l[?2004h> 
+README.md  cmd/       docs/      examples/  go.mod     internal/  
+> return
+[?2004l[?2004h> }
+[?2004l[?2004h> if op == vars.OpSimple {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      examples/  go.mod     internal/  
+> set.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Simple, Origin: vars.File, Pos: pos})
+[?2004l[?2004h> 
+README.md  cmd/       docs/      examples/  go.mod     internal/  
+> return
+[?2004l[?2004h> }
+[?2004l[?2004h> e.defineIn(set, name, op, value, pos)
+[?2004l[?2004h> }'''
+[?2004l[?2004h> s, n = re.subn(pat, rep, s, count=1)
+[?2004l[?2004h> if n != 1:
+[?2004l[?2004h>     raise SystemExit(f'replacement count {n}')
+[?2004l[?2004h> p.write_text(s)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@1445960760bf:/app# gofmt -w internal/expand/define.go
+[?2004l[?2004hroot@1445960760bf:/app# go test -count=1 ./internal/expand
+[?2004lok  	brickmake/internal/expand	0.003s
+[?2004hroot@1445960760bf:/app# cd /app && go test -count=1 ./... && go vet ./... && go build -o /tmp/brickmake-final ./cmd/brickmake && echo ALL_OK
+[?2004l?   	brickmake/cmd/brickmake	[no test files]
+?   	brickmake/internal/cli	[no test files]
+?   	brickmake/internal/db	[no test files]
+?   	brickmake/internal/diag	[no test files]
+ok  	brickmake/internal/engine	0.002s
+ok  	brickmake/internal/expand	0.003s
+ok  	brickmake/internal/parse	0.003s
+ok  	brickmake/internal/text	0.003s
+?   	brickmake/internal/vars	[no test files]
+ALL_OK
+[?2004hroot@1445960760bf:/app# 

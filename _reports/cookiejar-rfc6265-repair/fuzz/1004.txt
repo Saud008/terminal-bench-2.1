@@ -1,0 +1,33 @@
+at 1767225600
+set http://192.168.0.1/a/b a=2; Expires=Sun Nov  6 08:49:37 1994; Secure; Path=; Domain=.example.com
+get http://api.example.com/a
+get https://co.uk/a/b/c
+at 1767225700
+set http://localhost/a/b/c b=0; Expires=1 jan 9999 23:59:59; Domain=b.example.com; SameSite=Lax
+set https://192.168.0.1/a/bc/d z=7; Path=/a/b
+set https://api.example.com/a/ =v
+dump
+get https://github.io/
+get http://example.org
+get https://co.uk/a/b
+get https://192.168.0.1/a/bc/d
+set https://x.co.uk/a/bc/d b=2; Expires=24:00:00 1 jan 2030; Secure; Domain=example.com
+set http://foo.test/a z=8; SameSite=Lax; Expires=1 jan 9999 23:59:59; Path=/a/
+get http://www.example.com/ab
+set https://localhost/x/y?q=/z  
+get https://alice.github.io/
+get https://1.2.3/a/b
+dump
+get https://co.uk/a/b/
+set http://example.com/a/b A=1; Secure; Expires=junk
+set https://1.2.3/a/b/c sid=8; Expires=2030 12:00:00 5 mar
+set http://example.com/ab sid=7
+get http://localhost/a/b
+at 1767229700
+set http://x.co.uk/a/b A=9; Secure
+set https://example.org/x/y?q=/z  
+get https://a.b.example.com/a/b/
+get http://192.168.0.1
+get https://example.com/a/b/
+set http://www.example.com/ab a=8; Domain=example.co.uk
+dump

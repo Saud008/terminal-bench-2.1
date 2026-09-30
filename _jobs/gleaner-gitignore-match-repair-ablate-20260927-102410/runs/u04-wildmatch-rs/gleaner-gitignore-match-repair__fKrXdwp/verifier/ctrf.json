@@ -1,0 +1,161 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 15,
+            "passed": 13,
+            "failed": 2,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790485122.2358892,
+            "stop": 1790485123.8416684
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_file_encodings",
+                "status": "passed",
+                "duration": 1.217268910997518,
+                "start": 1790485122.2512355,
+                "stop": 1790485123.4700537,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_trailing_spaces",
+                "status": "passed",
+                "duration": 0.015116763999685645,
+                "start": 1790485123.470393,
+                "stop": 1790485123.4868877,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_escaped_leading_characters",
+                "status": "passed",
+                "duration": 0.014427691003220389,
+                "start": 1790485123.487242,
+                "stop": 1790485123.5030634,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_directory_only_patterns",
+                "status": "passed",
+                "duration": 0.016651372003252618,
+                "start": 1790485123.5033836,
+                "stop": 1790485123.521558,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_anchoring",
+                "status": "passed",
+                "duration": 0.023223670996230794,
+                "start": 1790485123.5218952,
+                "stop": 1790485123.546248,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_double_star",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.02028948500083061,
+                "start": 1790485123.546516,
+                "stop": 1790485123.5831234,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "gleaner = '/tmp/gleaner-verify-target/release/gleaner'\n\n    def test_double_star(gleaner):\n        \"\"\"`**` as a whole component matches zero or more directories; any other run of stars acts like `*`.\"\"\"\n>       _check_group(gleaner, \"double_star\")\n\n/tests/test_outputs.py:151: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/gleaner-verify-target/release/gleaner', group = 'double_star'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            _materialize(case)\n            rc, out, err = _run(binary, case, [\"list\"])\n            if (rc, out) != (0, case[\"list\"]):\n                failures.append(f\"--- {case['name']}: list\\nexpected rc=0\\n{case['list']}got rc={rc} {err}\\n{out}\")\n            rc, out, err = _run(binary, case, [\"check\", \"--\", *case[\"checks\"]])\n            if (rc, out) != (case[\"check_rc\"], case[\"check\"]):\n                failures.append(\n                    f\"--- {case['name']}: check {case['checks']}\\n\"\n                    f\"expected rc={case['check_rc']}\\n{case['check']}got rc={rc} {err}\\n{out}\"\n                )\n>       assert not failures, f\"{len(failures)} mismatches in {len(CASES[group])} trees:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 8 mismatches in 4 trees:\nE         --- star_star_inside_a_component: list\nE         expected rc=0\nE         .gitignore\nE         logs/2024-old/x/raw\nE         logs/2024/jan/raw\nE         w/.gitignore\nE         w/data/a1/b/c.csv\nE         got rc=0 \nE         .gitignore\nE         w/.gitignore\nE         \nE         --- star_star_inside_a_component: check ['logs/2024/jan/raw', 'logs/2024-old/x/raw', 'logs/2024x/raw', 'w/data/a1/b/c.csv', 'w/data/a1/c.csv']\nE         expected rc=0\nE         ::\tlogs/2024/jan/raw\nE         ::\tlogs/2024-old/x/raw\nE         .gitignore:1:logs/202?**/raw\tlogs/2024x/raw\nE         ::\tw/data/a1/b/c.csv\nE         w/.gitignore:1:data/[a]**/*.csv\tw/data/a1/c.csv\nE         got rc=0 \nE         .gitignore:1:logs/202?**/raw\tlogs/2024/jan/raw\nE         .gitignore:1:logs/202?**/raw\tlogs/2024-old/x/raw\nE         .gitignore:1:logs/202?**/raw\tlogs/2024x/raw\nE         w/.gitignore:1:data/[a]**/*.csv\tw/data/a1/b/c.csv\nE         w/.gitignore:1:data/[a]**/*.csv\tw/data/a1/c.csv\nE         \nE         --- zero_or_more_directories: list\nE         expected rc=0\nE         .gitignore\nE         a/xb\nE         b/a/b\nE         got rc=0 \nE         .gitignore\nE         a/b\nE         a/xb\nE         b/a/b\nE         logs\nE         \nE         --- zero_or_more_directories: check ['a/b', 'a/x/b', 'a/x/y/b', 'a/xb', 'b/a/b', 'logs', 'x/logs', 'x/y/logs', 'x/y/logs/z']\nE         expected rc=0\nE         .gitignore:1:a/**/b\ta/b\nE         .gitignore:1:a/**/b\ta/x/b\nE         .gitignore:1:a/**/b\ta/x/y/b\nE         ::\ta/xb\nE         ::\tb/a/b\nE         .gitignore:2:**/logs\tlogs\nE         .gitignore:2:**/logs\tx/logs\nE         .gitignore:2:**/logs\tx/y/logs\nE         .gitignore:2:**/logs\tx/y/logs/z\nE         got rc=0 \nE         ::\ta/b\nE         .gitignore:1:a/**/b\ta/x/b\nE         .gitignore:1:a/**/b\ta/x/y/b\nE         ::\ta/xb\nE         ::\tb/a/b\nE         ::\tlogs\nE         .gitignore:2:**/logs\tx/logs\nE         .gitignore:2:**/logs\tx/y/logs\nE         .gitignore:2:**/logs\tx/y/logs/z\nE         \nE         --- star_star_not_a_whole_component: list\nE         expected rc=0\nE         .gitignore\nE         a/b/z/q\nE         a/bz/q\nE         foo/x/bar\nE         got rc=0 \nE         .gitignore\nE         \nE         --- star_star_not_a_whole_component: check ['foo/bar', 'foo/x/bar', 'fooz/bar', 'a/bz/q', 'bz/q', 'a/b/z/q']\nE         expected rc=0\nE         .gitignore:1:?oo**/bar\tfoo/bar\nE         ::\tfoo/x/bar\nE         .gitignore:1:?oo**/bar\tfooz/bar\nE         ::\ta/bz/q\nE         .gitignore:2:**z/q\tbz/q\nE         ::\ta/b/z/q\nE         got rc=0 \nE         .gitignore:1:?oo**/bar\tfoo/bar\nE         .gitignore:1:?oo**/bar\tfoo/x/bar\nE         .gitignore:1:?oo**/bar\tfooz/bar\nE         .gitignore:2:**z/q\ta/bz/q\nE         .gitignore:2:**z/q\tbz/q\nE         .gitignore:2:**z/q\ta/b/z/q\nE         \nE         --- trailing_and_triple_star: list\nE         expected rc=0\nE         .gitignore\nE         k/cache/f\nE         got rc=0 \nE         .gitignore\nE         k/cache/f\nE         m/p\nE         \nE         --- trailing_and_triple_star: check ['cache/a', 'cache/d', 'cache/d/e', 'k/cache/f', 'm/n/o/p', 'm/p', 'q/r', 'q/r/s']\nE         expected rc=0\nE         .gitignore:1:/cache/**\tcache/a\nE         .gitignore:1:/cache/**\tcache/d\nE         .gitignore:1:/cache/**\tcache/d/e\nE         ::\tk/cache/f\nE         .gitignore:2:m/***/p\tm/n/o/p\nE         .gitignore:2:m/***/p\tm/p\nE         .gitignore:3:q/**/\tq/r\nE         .gitignore:3:q/**/\tq/r/s\nE         got rc=0 \nE         .gitignore:1:/cache/**\tcache/a\nE         .gitignore:1:/cache/**\tcache/d\nE         .gitignore:1:/cache/**\tcache/d/e\nE         ::\tk/cache/f\nE         .gitignore:2:m/***/p\tm/n/o/p\nE         ::\tm/p\nE         .gitignore:3:q/**/\tq/r\nE         .gitignore:3:q/**/\tq/r/s\nE         \nE       assert not ['--- star_star_inside_a_component: list\\nexpected rc=0\\n.gitignore\\nlogs/2024-old/x/raw\\nlogs/2024/jan/raw\\nw/.gitign...gnore:1:?oo**/bar\\tfooz/bar\\n.gitignore:2:**z/q\\ta/bz/q\\n.gitignore:2:**z/q\\tbz/q\\n.gitignore:2:**z/q\\ta/b/z/q\\n\", ...]\n\n/tests/test_outputs.py:121: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_bracket_expressions",
+                "status": "passed",
+                "duration": 0.011881522998010041,
+                "start": 1790485123.5834215,
+                "stop": 1790485123.5963712,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_reinclude_under_excluded_directory",
+                "status": "passed",
+                "duration": 0.01115817100071581,
+                "start": 1790485123.5966144,
+                "stop": 1790485123.6088474,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_per_directory_precedence",
+                "status": "passed",
+                "duration": 0.010035577994131017,
+                "start": 1790485123.609081,
+                "stop": 1790485123.6201508,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_tree_wide_sources",
+                "status": "passed",
+                "duration": 0.01426336800068384,
+                "start": 1790485123.6203914,
+                "stop": 1790485123.6363406,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_default_excludes_file",
+                "status": "passed",
+                "duration": 0.022599621002882486,
+                "start": 1790485123.6368053,
+                "stop": 1790485123.660956,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_config_spelling",
+                "status": "passed",
+                "duration": 0.011007166001945734,
+                "start": 1790485123.6613207,
+                "stop": 1790485123.6735368,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_list_order",
+                "status": "passed",
+                "duration": 0.009334393998869928,
+                "start": 1790485123.6737907,
+                "stop": 1790485123.6842258,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_check_line_numbers",
+                "status": "passed",
+                "duration": 0.007035185997665394,
+                "start": 1790485123.6845067,
+                "stop": 1790485123.6926842,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_mixed_trees",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.13900010100041982,
+                "start": 1790485123.692974,
+                "stop": 1790485123.840421,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "gleaner = '/tmp/gleaner-verify-target/release/gleaner'\n\n    def test_mixed_trees(gleaner):\n        \"\"\"Randomly generated trees combining nested .gitignore files, info/exclude and excludes files.\"\"\"\n>       _check_group(gleaner, \"mixed_trees\")\n\n/tests/test_outputs.py:196: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/gleaner-verify-target/release/gleaner', group = 'mixed_trees'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            _materialize(case)\n            rc, out, err = _run(binary, case, [\"list\"])\n            if (rc, out) != (0, case[\"list\"]):\n                failures.append(f\"--- {case['name']}: list\\nexpected rc=0\\n{case['list']}got rc={rc} {err}\\n{out}\")\n            rc, out, err = _run(binary, case, [\"check\", \"--\", *case[\"checks\"]])\n            if (rc, out) != (case[\"check_rc\"], case[\"check\"]):\n                failures.append(\n                    f\"--- {case['name']}: check {case['checks']}\\n\"\n                    f\"expected rc={case['check_rc']}\\n{case['check']}got rc={rc} {err}\\n{out}\"\n                )\n>       assert not failures, f\"{len(failures)} mismatches in {len(CASES[group])} trees:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 9 mismatches in 30 trees:\nE         --- mixed_06: check ['log/a/a ', 'deep/b', 'log/!n', 'ab/doc/a', 'deep/a b', 'ab/doc/ba', 'deep/A/x', 'log/a/b.log', 'ab/doc', 'ab/.gitignore', 'foo/!n', 'foo/x.o', 'ab', 'a-b']\nE         expected rc=0\nE         ::\tlog/a/a \nE         deep/.gitignore:1:![[:alpha:]]\tdeep/b\nE         ::\tlog/!n\nE         ab/doc/.gitignore:1:/a\tab/doc/a\nE         deep/.gitignore:2:**/a b\tdeep/a b\nE         ::\tab/doc/ba\nE         deep/A/.gitignore:8:***\tdeep/A/x\nE         ::\tlog/a/b.log\nE         ::\tab/doc\nE         ::\tab/.gitignore\nE         ::\tfoo/!n\nE         ::\tfoo/x.o\nE         ::\tab\nE         ::\ta-b\nE         got rc=0 \nE         ::\tlog/a/a \nE         deep/.gitignore:1:![[:alpha:]]\tdeep/b\nE         ::\tlog/!n\nE         ab/doc/.gitignore:1:/a\tab/doc/a\nE         /tmp/gleaner-case/user/.config/git/ignore:1:a b\tdeep/a b\nE         ::\tab/doc/ba\nE         deep/A/.gitignore:8:***\tdeep/A/x\nE         ::\tlog/a/b.log\nE         ::\tab/doc\nE         ::\tab/.gitignore\nE         ::\tfoo/!n\nE         ::\tfoo/x.o\nE         ::\tab\nE         ::\ta-b\nE         \nE         --- mixed_15: list\nE         expected rc=0\nE         .gitignore\nE         ab\nE         got rc=0 \nE         .gitignore\nE         ab\nE         sub/-\nE         sub/a b\nE         sub/a-b\nE         \nE         --- mixed_15: check ['sub/a b', 'ab', 'a/sub/-', 'a/sub/z0', 'a/a b', 'a/sub', 'sub/-', 'sub/a-b', 'a/sub/#c', 'a/sub/a.b', 'a/ba', 'a', 'sub', 'a/!n']\nE         expected rc=0\nE         .gitignore:6:**/sub/\tsub/a b\nE         ::\tab\nE         .gitignore:5:/a\ta/sub/-\nE         .gitignore:5:/a\ta/sub/z0\nE         .gitignore:5:/a\ta/a b\nE         .gitignore:5:/a\ta/sub\nE         .gitignore:6:**/sub/\tsub/-\nE         .gitignore:6:**/sub/\tsub/a-b\nE         .gitignore:5:/a\ta/sub/#c\nE         .gitignore:5:/a\ta/sub/a.b\nE         .gitignore:5:/a\ta/ba\nE         .gitignore:5:/a\ta\nE         .gitignore:6:**/sub/\tsub\nE         .gitignore:5:/a\ta/!n\nE         got rc=0 \nE         ::\tsub/a b\nE         ::\tab\nE         .gitignore:5:/a\ta/sub/-\nE         .gitignore:5:/a\ta/sub/z0\nE         .gitignore:5:/a\ta/a b\nE         .gitignore:5:/a\ta/sub\nE         ::\tsub/-\nE         ::\tsub/a-b\nE         .gitignore:5:/a\ta/sub/#c\nE         .gitignore:5:/a\ta/sub/a.b\nE         .gitignore:5:/a\ta/ba\nE         .gitignore:5:/a\ta\nE         ::\tsub\nE         .gitignore:5:/a\ta/!n\nE         \nE         --- mixed_18: list\nE         expected rc=0\nE         !n\nE         a\nE         a.b/.gitignore\nE         a.b/1\nE         a.b/ab/a.b\nE         a.b/ab/build\nE         a.b/b.log\nE         a.b/keep\nE         a.b/x\nE         a0\nE         build\nE         log/.gitignore\nE         log/a-b/.gitignore\nE         log/a-b/1\nE         log/a-b/A/.gitignore\nE         log/a-b/A/A\nE         log/a-b/A/x.o\nE         log/a-b/a \nE         log/a-b/ab\nE         log/a.b\nE         log/ab\nE         log/foo.txt\nE         got rc=0 \nE         !n\nE         a\nE         a.b/.gitignore\nE         a.b/1\nE         a.b/ab/a.b\nE         a.b/ab/build\nE         a.b/b.log\nE         a.b/keep\nE         a.b/x\nE         a0\nE         build\nE         log/-\nE         log/.gitignore\nE         log/a-b/.gitignore\nE         log/a-b/1\nE         log/a-b/A/.gitignore\nE         log/a-b/A/A\nE         log/a-b/A/x.o\nE         log/a-b/a \nE         log/a-b/ab\nE         log/a.b\nE         log/ab\nE         log/foo.txt\nE         \nE         --- mixed_20: list\nE         expected rc=0\nE         .gitignore\nE         [x]\nE         a \nE         a b\nE         a-b/a.b\nE         a-b/b.log\nE         a/.gitignore\nE         a/a b\nE         a/abc\nE         a/build\nE         build\nE         doc/a \nE         doc/b.log\nE         doc/foo\nE         got rc=0 \nE         -\nE         .gitignore\nE         [x]\nE         a \nE         a b\nE         a-b/a.b\nE         a-b/b.log\nE         a/.gitignore\nE         a/a b\nE         a/abc\nE         a/build\nE         build\nE         doc/a \nE         doc/b.log\nE         doc/foo\nE         \nE         --- mixed_21: list\nE         expected rc=0\nE         A/.gitignore\nE         A/1\nE         A/a0\nE         A/ba\nE         A/x.o\nE         ba\nE         got rc=0 \nE         A/.gitignore\nE         A/1\nE         A/a0\nE         A/ba\nE         A/x.o\nE         ab/[x]\nE         ab/a-b/.gitignore\nE         ab/a-b/a.b/.gitignore\nE         ab/a-b/a.b/A\nE         ab/a-b/a/.gitignore\nE         ab/a-b/a/1\nE         ab/a-b/a/a0\nE         ab/a-b/a/b\nE         ab/a-b/a/log\nE         ab/a-b/ab\nE         ab/a-b/foo\nE         ab/a-b/foo.txt\nE         ab/a-b/x\nE         ab/abc\nE         ab/bar\nE         ab/build\nE         ab/x/.gitignore\nE         ab/x/[x]\nE         ba\nE         \nE         --- mixed_21: check ['ab/a-b/a.b/.gitignore', 'ab/x/[x]', 'A/ba', 'ab/a-b', 'A/x.o', 'A', 'ab/[x]', 'ab/abc', 'A/.gitignore', 'ab/a-b/a/.gitignore', 'ab/a-b/ab', 'ab/a-b/a.b', 'ab', 'ab/a-b/a/a0']\nE         expected rc=0\nE         .git/info/exclude:6:**/ab\tab/a-b/a.b/.gitignore\nE         .git/info/exclude:6:**/ab\tab/x/[x]\nE         ::\tA/ba\nE         .git/info/exclude:6:**/ab\tab/a-b\nE         /tmp/gleaner-case/user/.config/git/ignore:6:!/**/***[!a]\tA/x.o\nE         /tmp/gleaner-case/user/.config/git/ignore:6:!/**/***[!a]\tA\nE         .git/info/exclude:6:**/ab\tab/[x]\nE         .git/info/exclude:6:**/ab\tab/abc\nE         /tmp/gleaner-case/user/.config/git/ignore:6:!/**/***[!a]\tA/.gitignore\nE         .git/info/exclude:6:**/ab\tab/a-b/a/.gitignore\nE         .git/info/exclude:6:**/ab\tab/a-b/ab\nE         .git/info/exclude:6:**/ab\tab/a-b/a.b\nE         .git/info/exclude:6:**/ab\tab\nE         .git/info/exclude:6:**/ab\tab/a-b/a/a0\nE         got rc=1 \nE         ab/a-b/.gitignore:2:!****\tab/a-b/a.b/.gitignore\nE         /tmp/gleaner-case/user/.config/git/ignore:6:!/**/***[!a]\tab/x/[x]\nE         ::\tA/ba\nE         /tmp/gleaner-case/user/.config/git/ignore:6:!/**/***[!a]\tab/a-b\nE         /tmp/gleaner-case/user/.config/git/ignore:6:!/**/***[!a]\tA/x.o\nE         ::\tA\nE         /tmp/gleaner-case/user/.config/git/ignore:6:!/**/***[!a]\tab/[x]\nE         /tmp/gleaner-case/user/.config/git/ignore:6:!/**/***[!a]\tab/abc\nE         /tmp/gleaner-case/user/.config/git/ignore:6:!/**/***[!a]\tA/.gitignore\nE         ab/a-b/.gitignore:2:!****\tab/a-b/a/.gitignore\nE         ab/a-b/.gitignore:2:!****\tab/a-b/ab\nE         ab/a-b/.gitignore:2:!****\tab/a-b/a.b\nE         ::\tab\nE         ab/a-b/.gitignore:2:!****\tab/a-b/a/a0\nE         \nE         --- mixed_22: list\nE         expected rc=0\nE         .gitignore\nE         a.b\nE         abc\nE         foo/.gitignore\nE         foo/a*b\nE         foo/a-b\nE         foo/abc\nE         sub/!n\nE         sub/a\nE         sub/ab\nE         got rc=0 \nE         .gitignore\nE         a.b\nE         abc\nE         doc/#c\nE         foo/.gitignore\nE         foo/a*b\nE         foo/a-b\nE         foo/abc\nE         sub/!n\nE         sub/a\nE         sub/ab\nE         \nE         --- mixed_22: check ['foo', '.gitignore', 'foo/abc', 'sub/ab', 'abc', 'sub', 'a.b', 'foo/.gitignore', 'foo/a*b', 'sub/!n', 'doc/#c', 'doc', 'foo/a-b', 'sub/a']\nE         expected rc=0\nE         ::\tfoo\nE         ::\t.gitignore\nE         ::\tfoo/abc\nE         ::\tsub/ab\nE         ::\tabc\nE         ::\tsub\nE         ::\ta.b\nE         ::\tfoo/.gitignore\nE         ::\tfoo/a*b\nE         ::\tsub/!n\nE         .git/info/exclude:1:**/doc/\tdoc/#c\nE         .git/info/exclude:1:**/doc/\tdoc\nE         ::\tfoo/a-b\nE         ::\tsub/a\nE         got rc=1 \nE         ::\tfoo\nE         ::\t.gitignore\nE         ::\tfoo/abc\nE         ::\tsub/ab\nE         ::\tabc\nE         ::\tsub\nE         ::\ta.b\nE         ::\tfoo/.gitignore\nE         ::\tfoo/a*b\nE         ::\tsub/!n\nE         ::\tdoc/#c\nE         ::\tdoc\nE         ::\tfoo/a-b\nE         ::\tsub/a\nE         \nE       assert not [\"--- mixed_06: check ['log/a/a ', 'deep/b', 'log/!n', 'ab/doc/a', 'deep/a b', 'ab/doc/ba', 'deep/A/x', 'log/a/b.log',.../log\\nab/a-b/ab\\nab/a-b/foo\\nab/a-b/foo.txt\\nab/a-b/x\\nab/abc\\nab/bar\\nab/build\\nab/x/.gitignore\\nab/x/[x]\\nba\\n', ...]\n\n/tests/test_outputs.py:121: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            }
+        ]
+    }
+}

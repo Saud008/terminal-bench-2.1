@@ -1,0 +1,381 @@
+[step 2] find . -maxdepth 3 -type f -print | sort
+[step 2] printf '%s\n' '--- Cargo.toml ---'; cat Cargo.toml; printf '%s\n' '--- docs ---'; for f in docs/*; do echo "### $f"; cat "$f"; done
+[step 2] printf '%s\n' '--- source and tests ---'; for f in src/*.rs tests/*.rs; do if [ -f "$f" ]; then echo "### $f"; sed -n '1,260p' "$f"; fi; done
+[step 2] cargo test
+[step 3] for f in README.md $(find src -type f -name '*.rs' | sort); do echo "===== $f ====="; cat "$f"; done
+[step 3] printf 'PATH=%s\n' "$PATH"; command -v cargo || true; command -v rustc || true; find /root /usr/local /opt -maxdepth 4 \( -name cargo -o -name rustc \) -type f 2>/dev/null | head -30
+[step 3] rm -rf /tmp/gcase; mkdir -p /tmp/gcase/{sub/build,build,sub}; touch /tmp/gcase/build/a /tmp/gcase/sub/build/b /tmp/gcase/a.tmp /tmp/gcase/sub/keep.tmp; printf 'build/\n*.tmp\n' >/tmp/gcase/.gitignore; printf '!keep.tmp\n' >/tmp/gcase/sub/.gitignore; echo '--- list baseline ---'; ./target/release/gleaner --root /tmp/gcase list; echo '--- checks ---'; ./target/release/gleaner --root /tmp/gcase check build/a sub/build/b a.tmp sub/keep.tmp; echo status:$?
+[step 3] rm -rf /tmp/gcrlf; mkdir -p /tmp/gcrlf; touch /tmp/gcrlf/foo /tmp/gcrlf/bar; printf 'foo\r\n' >/tmp/gcrlf/.gitignore; ./target/release/gleaner --root /tmp/gcrlf check foo bar; echo status:$?
+[step 4] cat > src/ignore/lines.rs <<'EOF'
+//! Splitting a pattern file into candidate lines.
+
+#[derive(Debug, Clone)]
+pub struct RawLine {
+    pub number: usize,
+    pub text: Vec<u8>,
+}
+
+/// Split on LF, remove a UTF-8 BOM at the start and a CR immediately before
+/// LF (or at EOF). Line numbers include blank and comment lines.
+pub fn split(buf: &[u8]) -> Vec<RawLine> {
+    let buf = buf.strip_prefix(&[0xef, 0xbb, 0xbf]).unwrap_or(buf);
+    let mut out = Vec::new();
+    for (index, raw) in buf.split(|&b| b == b'\n').enumerate() {
+        let line = raw.strip_suffix(b"\r").unwrap_or(raw);
+        if line.is_empty() || line[0] == b'#' {
+            continue;
+        }
+        out.push(RawLine { number: index + 1, text: line.to_vec() });
+    }
+    out
+}
+EOF
+cat > src/ignore/parse.rs <<'EOF'
+//! Turning one line of a pattern file into a pattern.
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Parsed {
+    pub text: Vec<u8>,
+    pub body: Vec<u8>,
+    pub negative: bool,
+    pub dir_only: bool,
+    pub basename_only: bool,
+}
+
+/// Remove only unescaped trailing spaces. In a final run, a space is escaped
+/// exactly when immediately preceded by a backslash that remains in the line.
+pub fn trim_trailing_spaces(line: &[u8]) -> &[u8] {
+    let mut end = line.len();
+    while end > 0 && line[end - 1] == b' ' {
+        let mut slashes = 0;
+        let mut i = end - 1;
+        while i > 0 && line[i - 1] == b'\\' {
+            slashes += 1;
+            i -= 1;
+        }
+        if slashes % 2 == 1 {
+            break;
+        }
+        end -= 1;
+    }
+    &line[..end]
+}
+
+pub fn parse_line(line: &[u8]) -> Option<Parsed> {
+    let text = trim_trailing_spaces(line);
+    if text.is_empty() {
+        return None;
+    }
+    let negative = text[0] == b'!';
+    let mut body = if negative { &text[1..] } else { text };
+    if body.is_empty() {
+        return None;
+    }
+    let dir_only = body.last() == Some(&b'/');
+    if dir_only {
+        body = &body[..body.len() - 1];
+    }
+    if body.is_empty() {
+        return None;
+    }
+    let basename_only = !body.contains(&b'/');
+    Some(Parsed {
+        text: text.to_vec(),
+        body: body.to_vec(),
+        negative,
+        dir_only,
+        basename_only,
+    })
+}
+EOF
+python3 - <<'PY'
+p='src/ignore/pattern.rs'
+s=open(p).read()
+s=s.replace('''            if pat.basename_only {
+                wildmatch(&pat.body, basename.as_bytes(), false)
+            } else {
+                match_pathname(path, &pat.body)
+            }''','''   ...[+506 chars]
+[step 4] python3 - <<'PY'
+p='src/ignore/sources.rs'; s=open(p).read()
+s=s.replace('''        if let Some(name) = &self.excludes_file {
+            let path = resolve(root, name);
+            if let Some(list) = read_optional(&path, name)? {
+                lists.push(list);
+            }
+        }
+        if let Some(list) = read_optional(&root.join(INFO_EXCLUDE), INFO_EXCLUDE)? {
+            lists.push(list);
+        }''','''        if let Some(list) = read_optional(&root.join(INFO_EXCLUDE), INFO_EXCLUDE)? {
+            lists.push(list);
+        }
+        if let Some(name) = &self.excludes_file {
+            let path = resolve(root, name);
+            if let Some(list) = read_optional(&path, name)? {
+                lists.push(list);
+            }
+        }''')
+open(p,'w').write(s)
+
+p='src/ignore/stack.rs'; s=open(p).read()
+s=s.replace('''    match own {
+        Some(h) if h.negative => Some(h),
+        own => inherited.or(own),
+    }''','''    inherited.or(own)''')
+s=s.replace('''        stack
+            .iter()
+            .chain(self.globals.iter())
+            .find_map(|list| list.last_match(path, basename, is_dir).map(|p| hit(list, p)))''','''        stack
+            .iter()
+            .rev()
+            .chain(self.globals.iter())
+            .find_map(|list| list.last_match(path, basename, is_dir).map(|p| hit(list, p)))''')
+old='''        for comp in &components[..components.len() - 1] {
+            if !prefix.is_empty() {
+                prefix.push('/');
+            }
+            prefix.push_str(comp);
+            let own = self.classify(&stack, &prefix, true);
+            inherited = inherit(&resolve(inherited, own));
+            stack.push(self.dir_list(&prefix)?);
+        }'''
+new='''        for comp in &components[..components.len() - 1] {
+            if !prefix.is_empty() {
+                prefix.push('/');
+            }
+            prefix.push_str(comp);
+            let own = self.classify(&stack, &prefix, true);
+            inherited = inherit(&resolve(inherited, own));
+            if inherited.is_some() {
+                return Ok(Verdict::Matched(inherited.unwrap()));
+            }
+            stack.push(self.dir_list(&prefix)?);
+        }'''
+assert old in s
+s=s.replace(old,new)
+open(p,'w').write(s)
+
+p='src/walk/tree.rs'; s=open(p).read()
+old='''        if is_dir {
+            stack.push(matcher.dir_list(&rel)?);
+            let result = visit(matcher, &rel, crate::ignore::inherit(&resolved), stack, out);
+            stack.pop();
+            ...[+1554 chars]
+[step 4] cat > src/ignore/charclass.rs <<'EOF'
+//! Bracket expressions used by wildmatch.
+
+pub(super) fn bracket(pat: &[u8], mut p: usize, tc: u8) -> Option<(bool, usize)> {
+    let negated = matches!(pat.get(p), Some(b'!') | Some(b'^'));
+    if negated { p += 1; }
+    let mut matched = false;
+    let mut first = true;
+    let mut previous: Option<u8> = None;
+
+    loop {
+        let c = *pat.get(p)?;
+        if c == b']' && !first {
+            return Some((matched != negated, p));
+        }
+        first = false;
+
+        if c == b'[' && pat.get(p + 1) == Some(&b':') {
+            let mut q = p + 2;
+            while q + 1 < pat.len() && !(pat[q] == b':' && pat[q + 1] == b']') { q += 1; }
+            if q + 1 >= pat.len() { return None; }
+            if posix_class(&pat[p + 2..q], tc)? { matched = true; }
+            previous = None;
+            p = q + 2;
+            continue;
+        }
+
+        let (literal, next) = if c == b'\\' {
+            (*pat.get(p + 1)?, p + 2)
+        } else {
+            (c, p + 1)
+        };
+
+        if literal == b'-' && previous.is_some() && pat.get(next).is_some() && pat[next] != b']' {
+            let (end, after) = if pat[next] == b'\\' {
+                (*pat.get(next + 1)?, next + 2)
+            } else {
+                (pat[next], next + 1)
+            };
+            let start = previous.unwrap();
+            if start <= tc && tc <= end { matched = true; }
+            previous = None;
+            p = after;
+        } else {
+            if literal == tc { matched = true; }
+            previous = Some(literal);
+            p = next;
+        }
+    }
+}
+
+fn posix_class(name: &[u8], c: u8) -> Option<bool> {
+    Some(match name {
+        b"alnum" => c.is_ascii_alphanumeric(), b"alpha" => c.is_ascii_alphabetic(),
+        b"blank" => c == b' ' || c == b'\t', b"cntrl" => c.is_ascii_control(),
+        b"digit" => c.is_ascii_digit(), b"graph" => c.is_ascii_graphic(),
+        b"lower" => c.is_ascii_lowercase(), b"print" => c.is_ascii_graphic() || c == b' ',
+        b"punct" => c.is_ascii_punctuation(), b"space" => c.is_ascii_whitespace(),
+        b"upper" => c.is_ascii_uppercase(), b"xdigit" => c.is_ascii_hexdigit(),
+        _ => return None,
+    })
+}
+EOF
+cat > src/ignore/wildmatch.rs <<'EOF'
+//! Git-style wildmatch. `**` crosses directories only when it is an entire
+//! path component; all other star runs have ordinary `*` behavior.
+
+use super::charclass;
+use std::collections::HashMap;
+
+pub fn wildmatch(pattern: &[u8], text: &[u8], pathna...[+3057 chars]
+[step 4] grep -R "is_ascii_whitespace\|split('/').cmp\|chain(self.globals\|fn resolve\|for comp" -n src; sed -n '1,260p' src/ignore/{parse.rs,pattern.rs,stack.rs,wildmatch.rs}; sed -n '1,180p' src/walk/tree.rs; git_status_dummy=true
+[step 5] python3 - <<'PY'
+p='src/ignore/sources.rs'
+s=open(p).read()
+old='''pub fn read_optional(path: &Path, source: &str) -> Result<Option<PatternList>> {
+    match fs::read(path) {
+        Ok(buf) => Ok(Some(PatternList::from_bytes(source, "", &buf))),
+        Err(e)
+            if matches!(
+                e.kind(),
+                io::ErrorKind::NotFound | io::ErrorKind::IsADirectory | io::ErrorKind::NotADirectory
+            ) =>
+        {
+            Ok(None)
+        }
+        Err(e) => Err(Error::io(path, e)),
+    }
+}'''
+new='''pub fn read_optional(path: &Path, source: &str) -> Result<Option<PatternList>> {
+    let metadata = match fs::metadata(path) {
+        Ok(metadata) => metadata,
+        Err(e)
+            if matches!(e.kind(), io::ErrorKind::NotFound | io::ErrorKind::NotADirectory) =>
+        {
+            return Ok(None);
+        }
+        Err(e) => return Err(Error::io(path, e)),
+    };
+    if !metadata.is_file() {
+        return Ok(None);
+    }
+    fs::read(path)
+        .map(|buf| Some(PatternList::from_bytes(source, "", &buf)))
+        .map_err(|e| Error::io(path, e))
+}'''
+assert old in s
+open(p,'w').write(s.replace(old,new))
+PY
+sed -n '1,240p' src/ignore/stack.rs; sed -n '1,240p' src/ignore/wildmatch.rs; sed -n '1,180p' src/ignore/sources.rs
+[step 5] apt-cache policy cargo rustc 2>/dev/null | sed -n '1,80p'
+[step 5] apt-get update -qq && apt-get install -y -qq cargo rustc
+[step 6] 
+[step 6] command -v cargo; cargo --version; rustc --version; cargo test
+[step 6] cargo build --release
+[step 7] 
+[step 8] cargo test && cargo build --release
+[step 8] rm -rf /tmp/t1; mkdir -p /tmp/t1/{build,sub/build,ignored,sub}; touch /tmp/t1/build/a /tmp/t1/sub/build/b /tmp/t1/root.tmp /tmp/t1/sub/keep.tmp /tmp/t1/ignored/keep.txt; printf '\357\273\277# comment\r\nbuild/\r\n*.tmp\r\nignored/\r\n!ignored/keep.txt\r\n' >/tmp/t1/.gitignore; printf '!keep.tmp\r\n' >/tmp/t1/sub/.gitignore; echo LIST; ./target/release/gleaner --root /tmp/t1 list; echo CHECK; ./target/release/gleaner --root /tmp/t1 check build/a sub/build/b root.tmp sub/keep.tmp ignored/keep.txt; echo status:$?
+[step 8] rm -rf /tmp/t2; mkdir -p /tmp/t2/sub/doc /tmp/t2/sub/a/doc /tmp/t2/doc /tmp/t2/a/x/y /tmp/t2/a /tmp/t2/logs/2024xx/raw; touch /tmp/t2/sub/doc/frotz /tmp/t2/sub/a/doc/frotz /tmp/t2/doc/frotz /tmp/t2/a/b /tmp/t2/a/x/b /tmp/t2/a/x/y/b /tmp/t2/logs/2024xx/raw/z; printf 'doc/frotz\na/**/b\nlogs/202?**/raw/z\n' >/tmp/t2/sub/.gitignore; ./target/release/gleaner --root /tmp/t2 check sub/doc/frotz sub/a/doc/frotz doc/frotz sub/a/b sub/a/x/b sub/a/x/y/b sub/logs/2024xx/raw/z
+[step 9] python3 - <<'PY'
+p='src/ignore/sources.rs'; s=open(p).read().replace('let metadata = match fs::metadata(path) {', 'let metadata = match fs::symlink_metadata(path) {'); open(p,'w').write(s)
+PY
+rm -f Cargo.lock && cargo generate-lockfile && cargo test && cargo build --release
+[step 9] echo '--- t1 rebuilt ---'; ./target/release/gleaner --root /tmp/t1 list; echo CHECK; ./target/release/gleaner --root /tmp/t1 check build/a sub/build/b root.tmp sub/keep.tmp ignored/keep.txt; echo status:$?; echo '--- t2 rebuilt ---'; ./target/release/gleaner --root /tmp/t2 check sub/doc/frotz sub/a/doc/frotz doc/frotz sub/a/b sub/a/x/b sub/a/x/y/b sub/logs/2024xx/raw/z; echo status:$?
+[step 9] cat >> src/ignore/parse.rs <<'EOF'
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn trailing_spaces_and_flags() {
+        assert_eq!(trim_trailing_spaces(b"foo  "), b"foo");
+        assert_eq!(trim_trailing_spaces(b"foo\\  "), b"foo\\ ");
+        let p = parse_line(b"!build/").unwrap();
+        assert!(p.negative && p.dir_only);
+        assert!(p.basename_only);
+        assert_eq!(p.body, b"build");
+        let p = parse_line(b"\\!name").unwrap();
+        assert!(!p.negative);
+        assert_eq!(p.body, b"\\!name");
+    }
+}
+EOF
+cat >> src/ignore/wildmatch.rs <<'EOF'
+
+#[cfg(test)]
+mod tests {
+    use super::wildmatch;
+    fn m(p: &str, s: &str) -> bool { wildmatch(p.as_bytes(), s.as_bytes(), true) }
+
+    #[test]
+    fn stars() {
+        assert!(m("**/x", "x"));
+        assert!(m("**/x", "a/b/x"));
+        assert!(m("a/**/b", "a/b"));
+        assert!(m("a/**/b", "a/x/y/b"));
+        assert!(m("a/**", "a/x/y"));
+        assert!(!m("a/*/b", "a/x/y/b"));
+        assert!(!m("logs/202?**/raw", "logs/2024/x/raw"));
+        assert!(m("logs/202?**/raw", "logs/2024xx/raw"));
+    }
+
+    #[test]
+    fn classes_and_escapes() {
+        assert!(m("[!a]", "b"));
+        assert!(m("[^a]", "b"));
+        assert!(m("[]-]", "]"));
+        assert!(m("[]-]", "-"));
+        assert!(m("[[:digit:]]", "7"));
+        assert!(!m("[[:bogus:]]", "x"));
+        assert!(m("\\*", "*"));
+        assert!(!m("x\\", "x"));
+    }
+}
+EOF
+cargo test
+[step 10] python3 - <<'PY'
+p='src/config/gitconfig.rs'; s=open(p).read(); s=s.replace("let Some(end) = header.find(']') else { continue };", "let end = match header.find(']') { Some(end) => end, None => continue };"); open(p,'w').write(s)
+p='src/ignore/sources.rs'; s=open(p).read(); s=s.replace('io::ErrorKind::NotFound | io::ErrorKind::NotADirectory', 'io::ErrorKind::NotFound'); open(p,'w').write(s)
+PY
+cargo test && cargo build --release
+[step 10] echo '--- t1 rebuilt ---'; ./target/release/gleaner --root /tmp/t1 list; echo CHECK; ./target/release/gleaner --root /tmp/t1 check build/a sub/build/b root.tmp sub/keep.tmp ignored/keep.txt; echo status:$?; echo '--- t2 rebuilt ---'; ./target/release/gleaner --root /tmp/t2 check sub/doc/frotz sub/a/doc/frotz doc/frotz sub/a/b sub/a/x/b sub/a/x/y/b sub/logs/2024xx/raw/z; echo status:$?
+[step 10] rm -rf /tmp/t3; mkdir -p /tmp/t3/.git/info /tmp/t3/sub /tmp/t3/home/git; touch /tmp/t3/a.log /tmp/t3/a.tmp /tmp/t3/sub/a.log /tmp/t3/sub/a.tmp /tmp/t3/global /tmp/t3/info; printf '*.tmp\n*.log\n' >/tmp/t3/home/git/ignore; printf '!a.log\ninfo\n' >/tmp/t3/.git/info/exclude; printf '*.tmp\n' >/tmp/t3/.gitignore; printf '!a.tmp\n!a.log\n' >/tmp/t3/sub/.gitignore; XDG_CONFIG_HOME=/tmp/t3/home ./target/release/gleaner --root /tmp/t3 check a.log a.tmp sub/a.log sub/a.tmp info global; echo status:$?
+[step 11] python3 - <<'PY'
+p='src/config/gitconfig.rs'
+s=open(p).read()
+old='''        if let Some(head) = raw.strip_suffix('\\\\') {
+            if !head.ends_with('\\\\') {
+                current.push_str(head);
+                continue;
+            }
+        }'''
+new='''        if let Some(head) = raw.strip_suffix('\\\\') {
+            current.push_str(head);
+            continue;
+        }'''
+assert old in s
+open(p,'w').write(s.replace(old,new))
+PY
+cargo test -- --list && cargo test
+[step 11] rm -rf /tmp/t4; mkdir -p /tmp/t4/{foo,sub/foo,a}; touch '/tmp/t4/name ' /tmp/t4/name /tmp/t4/'#hash' /tmp/t4/'!bang' /tmp/t4/foo/x /tmp/t4/sub/foo/x /tmp/t4/foo.txt /tmp/t4/a-b /tmp/t4/a0 /tmp/t4/a/z; printf 'name\\ \n\\#hash\n\\!bang\nfoo/\n' >/tmp/t4/.gitignore; ./target/release/gleaner --root /tmp/t4 check 'name ' name '#hash' '!bang' foo/x sub/foo/x foo.txt; echo status:$?; echo SORTED; ./target/release/gleaner --root /tmp/t4 list
+[step 11] rm -rf /tmp/t5; mkdir -p /tmp/t5/.git /tmp/t5/rules /tmp/t5/sub; touch /tmp/t5/one /tmp/t5/two /tmp/t5/three; printf '[Core]\nExcludesFile = "rules/ig"\nExcludesFile = rules/\\\nig2\n' >/tmp/t5/.git/config; printf one >/tmp/t5/rules/ig; printf 'two\n' >/tmp/t5/rules/ig2; ./target/release/gleaner --root /tmp/t5 check one two three; echo status:$?; ln -s rules/ig2 /tmp/t5/sub/.gitignore; ./target/release/gleaner --root /tmp/t5 check sub/two
+[step 11] set +e; ./target/release/gleaner --root /tmp/t1 check good ../bad >/tmp/out 2>/tmp/err; rc=$?; printf 'invalid rc=%s stdout=%s stderr=' "$rc" "$(wc -c </tmp/out)"; cat /tmp/err; ./target/release/gleaner --root /tmp/t1 check sub/keep.tmp >/tmp/out; echo negation_rc:$?; cat /tmp/out; grep -R '^unsafe\| unsafe\|Command::new' -n src || true; cat Cargo.toml Cargo.lock
+[step 11] cargo fmt -- --check && cargo test && cargo build --release
+[step 12] python3 - <<'PY'
+p='src/config/gitconfig.rs'; s=open(p).read(); s=s.replace('''            Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(GitConfig::default()),''','''            Err(e) if absent_path(&e) => Ok(GitConfig::default()),'''); insert='''\nfn absent_path(error: &io::Error) -> bool {\n    error.kind() == io::ErrorKind::NotFound || error.raw_os_error() == Some(20)\n}\n'''; marker='\n#[derive(Debug, Clone)]\nstruct Entry'
+assert marker in s
+s=s.replace(marker, insert+marker)
+open(p,'w').write(s)
+
+p='src/ignore/sources.rs'; s=open(p).read(); s=s.replace('''            if matches!(e.kind(), io::ErrorKind::NotFound) =>''','''            if e.kind() == io::ErrorKind::NotFound || e.raw_os_error() == Some(20) =>'''); open(p,'w').write(s)
+PY
+cargo test && cargo build --release
+[step 12] apt-get install -y -qq rustfmt >/dev/null 2>&1 || true; command -v rustfmt || true; rustfmt --edition 2021 $(find src -name '*.rs' -type f | sort); cargo test && cargo build --release
+[step 12] rm -rf /tmp/notdir; mkdir /tmp/notdir; printf x >/tmp/notdir/.git; touch /tmp/notdir/file; ./target/release/gleaner --root /tmp/notdir list; ./target/release/gleaner --root /tmp/t1 check build/a sub/keep.tmp ignored/keep.txt; echo check_status:$?; cargo tree; grep -R -nE 'unsafe|std::process|Command::new' src || true
+[step 13] {}
+[step 14] {}

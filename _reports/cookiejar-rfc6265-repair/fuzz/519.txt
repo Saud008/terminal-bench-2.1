@@ -1,0 +1,35 @@
+at 1767225600
+at 1767225630
+set https://192.168.0.1/x/y?q=/z a=9; HttpOnly; Path=/a; Domain=b.example.com
+set https://example.com sid=9
+get http://www.example.com/a/bc/d
+at 1767225660
+set https://example.com/a/b/c z=4; Secure; Path=/a/b; SameSite=Lax; Expires=Thu, 01 Jan 2032 00:00:00 GMT
+get https://192.168.0.1/a
+set http://192.168.0.1/x/y?q=/z b=7; Domain=github.io
+get https://10.1.2.3/a
+set http://localhost/a/b A=4; Expires=29 Feb 2100 00:00:00; HttpOnly
+get http://github.io/a/b
+at 1767225661
+get https://x.co.uk/
+set https://api.example.com/ b=9; Max-Age=999999999999999999999; Max-Age=; Secure
+set http://co.uk/ sid=3
+get http://1.2.3/
+set https://foo.test z=3
+at 1767225691
+set https://api.example.com sid=0; Path=/a/
+get http://www.example.com/
+set http://github.io/a/b/c sid=4
+set https://example.org/a/ A=2; Secure
+at 1767229691
+get http://www.example.com/a/
+set http://github.io/a/ a=7; Expires=31 Apr 2030 00:00:00
+set http://example.org/a/bc/d z=5; Domain=example.co.uk; Max-Age=999999999999999999999
+set https://api.example.com/a/bc/d A=5; HttpOnly; Secure
+set https://api.example.com/a/b/c b=0; SameSite=Lax; Domain=co.uk; Path=; Secure
+set https://192.168.0.1/a/ sid=5
+set https://localhost b=1; Max-Age=60; SameSite=Lax
+get http://10.1.2.3/a/
+set https://api.example.com/a/bc/d a=1; HttpOnly; HttpOnly; Path=/ab; Max-Age=abc
+set https://example.com/a/bc/d sid=1; Domain=example.com
+dump

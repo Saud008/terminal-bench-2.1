@@ -1,0 +1,78 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 11 items
+
+../tests/test_outputs.py .......F...                                     [100%]
+
+=================================== FAILURES ===================================
+_______________________________ test_time_values _______________________________
+
+hopcfg = '/tmp/hopcfg-verify-tcer6xzy/hopcfg'
+
+    def test_time_values(hopcfg):
+        """Time values with compound units, none, ControlPersist forms and keep-alive defaults and aliases."""
+>       _check(hopcfg, "time_values")
+
+/tests/test_outputs.py:155: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/hopcfg-verify-tcer6xzy/hopcfg', groups = ('time_values',)
+failures = ["[time_values] args=['-F', '/root/.ssh/config', 'slow'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -20,3 +20,... hopcfg\n@@ -9,3 +9,3 @@\n serveralivecountmax 4\n-serveraliveinterval 3661\n+serveraliveinterval 1\n loglevel INFO\n"]
+total = 9, group = 'time_values'
+
+    def _check(binary, *groups):
+        failures = []
+        total = 0
+        for group in groups:
+            for case in GROUPS[group]:
+                total += 1
+                rc, out = _run(binary, case)
+                if (rc, out) == (case["rc"], case["stdout"]):
+                    continue
+                diff = "".join(difflib.unified_diff(
+                    case["stdout"].splitlines(True), out.splitlines(True),
+                    "ssh -G", "hopcfg", n=1))
+                failures.append(f"[{group}] args={case['args']} expected rc={case['rc']} "
+                                f"got rc={rc}\n{diff}")
+        assert total > 0
+>       assert not failures, (f"{len(failures)}/{total} cases differ from ssh -G:\n"
+                              + "\n".join(failures[:4]))
+E       AssertionError: 2/9 cases differ from ssh -G:
+E         [time_values] args=['-F', '/root/.ssh/config', 'slow'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -20,3 +20,3 @@
+E          forwardagent no
+E         -connecttimeout 90
+E         -controlpersist 3900
+E         +connecttimeout 30
+E         +controlpersist 300
+E         
+E         [time_values] args=['-F', '/root/.ssh/config', 'short'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -9,3 +9,3 @@
+E          serveralivecountmax 4
+E         -serveraliveinterval 3661
+E         +serveraliveinterval 1
+E          loglevel INFO
+E         
+E       assert not ["[time_values] args=['-F', '/root/.ssh/config', 'slow'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -20,3 +20,... hopcfg\n@@ -9,3 +9,3 @@\n serveralivecountmax 4\n-serveraliveinterval 3661\n+serveraliveinterval 1\n loglevel INFO\n"]
+
+/tests/test_outputs.py:114: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_host_line_patterns
+PASSED ../tests/test_outputs.py::test_match_criteria
+PASSED ../tests/test_outputs.py::test_final_pass
+PASSED ../tests/test_outputs.py::test_include_scoping
+PASSED ../tests/test_outputs.py::test_include_paths
+PASSED ../tests/test_outputs.py::test_precedence_and_lists
+PASSED ../tests/test_outputs.py::test_sendenv_setenv
+PASSED ../tests/test_outputs.py::test_proxy_settings
+PASSED ../tests/test_outputs.py::test_token_expansion
+PASSED ../tests/test_outputs.py::test_syntax_and_rejections
+FAILED ../tests/test_outputs.py::test_time_values - AssertionError: 2/9 cases...
+========================= 1 failed, 10 passed in 1.13s =========================

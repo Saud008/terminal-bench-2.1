@@ -1,0 +1,17 @@
+at 1767225600
+set http://co.uk/a/b/c a=0; HttpOnly; Domain=; SameSite=Lax
+at 1767229600
+get https://co.uk/
+get https://localhost
+set https://1.2.3/a/b/c sid=7; Expires=01-Jan-69 00:00:00
+at 1767229601
+dump
+get http://www.example.com/
+set http://1.2.3/ab sid=2; Expires=Sun Nov  6 08:49:37 1994; Max-Age=60; Path=/; Expires=29 Feb 2028 1:2:3
+set https://localhost/x/y?q=/z a=7; Secure
+set https://a.b.example.com/x/y?q=/z a=9; Path=/ab; Path=/a/; HttpOnly; Secure
+dump
+get https://github.io/a/b/c
+set http://1.2.3/a/ sid=1; SameSite=Lax; Secure; HttpOnly
+at 1767233601
+dump

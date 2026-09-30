@@ -1,0 +1,113 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 10,
+            "passed": 9,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790432890.4094822,
+            "stop": 1790432890.8548124
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_shortest_stem_selection",
+                "status": "passed",
+                "duration": 0.1932392490125494,
+                "start": 1790432890.4189425,
+                "stop": 1790432890.6125684,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_directory_relative_prerequisites",
+                "status": "passed",
+                "duration": 0.016994327990687452,
+                "start": 1790432890.6128378,
+                "stop": 1790432890.6300824,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_mentioned_prerequisite_ought_to_exist",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.014802200996200554,
+                "start": 1790432890.6303282,
+                "stop": 1790432890.6540406,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "brickmake = '/tmp/brickmake-verify'\n\n    def test_mentioned_prerequisite_ought_to_exist(brickmake):\n        \"\"\"A prerequisite that is mentioned anywhere in the makefile counts as one that\n        ought to exist during the first implicit-rule pass, even without a rule of its own.\"\"\"\n>       replay(brickmake, \"mention\")\n\n/tests/test_outputs.py:65: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/brickmake-verify', group = 'mention'\n\n    def replay(binary, group):\n        names = [n for n, c in CASES.items() if c[\"group\"] == group]\n        assert names, f\"no scenarios for {group}\"\n        failures = []\n        for name in names:\n            case = CASES[name]\n            got = play(case[\"steps\"], [binary])\n            for i, (g, want) in enumerate(zip(got, case[\"expect\"])):\n                if g != want:\n                    failures.append(f\"{name} result #{i}\\n  expected: {want!r}\\n  actual:   {g!r}\")\n            if len(got) != len(case[\"expect\"]):\n                failures.append(f\"{name}: expected {len(case['expect'])} results, got {len(got)}\")\n>       assert not failures, \"\\n\".join(failures)\nE       AssertionError: mention/prerequisite_mentioned_elsewhere_ought_to_exist result #1\nE           expected: {'stdout': '', 'stderr': \"brickmake: *** No rule to make target 'parser.h', needed by 'parser.o'.  Stop.\\n\", 'code': 2}\nE           actual:   {'stdout': 'compile parser.c alone\\n', 'stderr': '', 'code': 0}\nE       assert not ['mention/prerequisite_mentioned_elsewhere_ought_to_exist result #1\\n  expected: {\\'stdout\\': \\'\\', \\'stderr\\': \"brick...o\\'.  Stop.\\\\n\", \\'code\\': 2}\\n  actual:   {\\'stdout\\': \\'compile parser.c alone\\\\n\\', \\'stderr\\': \\'\\', \\'code\\': 0}']\n\n/tests/test_outputs.py:47: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_timestamps_reread_after_recipe",
+                "status": "passed",
+                "duration": 0.030297007004264742,
+                "start": 1790432890.6542387,
+                "stop": 1790432890.6847491,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_per_goal_messages",
+                "status": "passed",
+                "duration": 0.03881576599087566,
+                "start": 1790432890.6849928,
+                "stop": 1790432890.724041,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_pattern_specific_variable_order",
+                "status": "passed",
+                "duration": 0.018579781986773014,
+                "start": 1790432890.7242563,
+                "stop": 1790432890.7430446,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_target_variable_inheritance",
+                "status": "passed",
+                "duration": 0.03292659200087655,
+                "start": 1790432890.7432506,
+                "stop": 1790432890.7765431,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_append_semantics",
+                "status": "passed",
+                "duration": 0.013497296982677653,
+                "start": 1790432890.7769134,
+                "stop": 1790432890.7906153,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_prerequisite_merge_order",
+                "status": "passed",
+                "duration": 0.016707540009520017,
+                "start": 1790432890.7907987,
+                "stop": 1790432890.8076823,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_project_builds",
+                "status": "passed",
+                "duration": 0.04652894800528884,
+                "start": 1790432890.807875,
+                "stop": 1790432890.8546085,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

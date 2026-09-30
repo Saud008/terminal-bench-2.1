@@ -1,0 +1,110 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 15 items
+
+../tests/test_outputs.py .F...........F.                                 [100%]
+
+=================================== FAILURES ===================================
+______________________________ test_tilde_ranges _______________________________
+
+pinwheel = '/tmp/pinwheel-verify/pinwheel'
+
+    def test_tilde_ranges(pinwheel):
+        """Tilde ranges (~, ~>, major-only and major.minor forms) match node-semver."""
+>       _check_satisfies(pinwheel, "tilde")
+
+/tests/test_outputs.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/pinwheel-verify/pinwheel', group = 'tilde'
+
+    def _check_satisfies(binary, group):
+        rows = CASES["satisfies"][group]
+        failures = []
+        for version, rng, want in rows:
+            rc, out, err = _run(binary, "satisfies", version, rng)
+            expected = "true\n" if want else "false\n"
+            if (rc, out) != (0, expected):
+                failures.append(
+                    f"satisfies {version!r} {rng!r}: expected rc=0 {expected.strip()}, "
+                    f"got rc={rc} stdout={out.strip()!r} stderr={err.strip()!r}"
+                )
+>       assert not failures, f"{len(failures)} of {len(rows)} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 5 of 16 cases differ:
+E         satisfies '1.9.0' '~1': expected rc=0 true, got rc=0 stdout='false' stderr=''
+E         satisfies '1.4.0' '~>1': expected rc=0 true, got rc=0 stdout='false' stderr=''
+E         satisfies '2.7.1' '~2': expected rc=0 true, got rc=0 stdout='false' stderr=''
+E         satisfies '1.5.2' '~1.x': expected rc=0 true, got rc=0 stdout='false' stderr=''
+E         satisfies '0.9.0' '~0': expected rc=0 true, got rc=0 stdout='false' stderr=''
+E       assert not ["satisfies '1.9.0' '~1': expected rc=0 true, got rc=0 stdout='false' stderr=''", "satisfies '1.4.0' '~>1': expected r...e, got rc=0 stdout='false' stderr=''", "satisfies '0.9.0' '~0': expected rc=0 true, got rc=0 stdout='false' stderr=''"]
+
+/tests/test_outputs.py:75: AssertionError
+_________________________ test_lock_mixed_range_forms __________________________
+
+pinwheel = '/tmp/pinwheel-verify/pinwheel'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_mixed_range_forms0')
+
+    def test_lock_mixed_range_forms(pinwheel, tmp_path):
+        """A project using caret, tilde, hyphen, partial, union, prerelease and build-metadata ranges locks correctly."""
+>       _check_lock(pinwheel, "mixed", tmp_path)
+
+/tests/test_outputs.py:197: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/pinwheel-verify/pinwheel', name = 'mixed'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_mixed_range_forms0')
+
+    def _check_lock(binary, name, tmp_path):
+        expected = (FIXTURES / "expected" / f"{name}.lock").read_text(encoding="utf-8")
+        count = len(json.loads(expected)["packages"])
+        rc, out, err, lock = _resolve(binary, name, tmp_path)
+        assert rc == 0, f"resolve {name}: exit {rc}, stderr: {err.strip()}"
+        assert out == f"resolved {count} packages\n", f"resolve {name}: stdout {out!r}"
+        assert lock.is_file(), f"resolve {name}: no pin.lock written"
+        actual = lock.read_text(encoding="utf-8")
+        diff = "".join(difflib.unified_diff(
+            expected.splitlines(True), actual.splitlines(True), "expected pin.lock", "actual pin.lock"))
+>       assert actual == expected, f"resolve {name}: lock differs\n{diff}"
+E       AssertionError: resolve mixed: lock differs
+E         --- expected pin.lock
+E         +++ actual pin.lock
+E         @@ -19,7 +19,7 @@
+E                }
+E              },
+E              "rune-cli": {
+E         -      "version": "1.9.1",
+E         +      "version": "1.0.2",
+E                "requiredBy": [
+E                  "<root>"
+E                ],
+E         
+E       assert '{\n  "lockfi...  }\n  }\n}\n' == '{\n  "lockfi...  }\n  }\n}\n'
+E         
+E         Skipping 391 identical leading characters in diff, use -v to show
+E         Skipping 736 identical trailing characters in diff, use -v to show
+E         - sion": "1.9.1",
+E         ?           ^ ^
+E         + sion": "1.0.2",
+E         ?           ^ ^
+
+/tests/test_outputs.py:107: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_caret_ranges
+PASSED ../tests/test_outputs.py::test_partial_version_comparators
+PASSED ../tests/test_outputs.py::test_hyphen_ranges
+PASSED ../tests/test_outputs.py::test_prerelease_admission
+PASSED ../tests/test_outputs.py::test_union_and_operator_spacing
+PASSED ../tests/test_outputs.py::test_build_metadata_ignored
+PASSED ../tests/test_outputs.py::test_prerelease_precedence
+PASSED ../tests/test_outputs.py::test_invalid_input_rejected
+PASSED ../tests/test_outputs.py::test_lock_drops_packages_no_longer_required
+PASSED ../tests/test_outputs.py::test_lock_applies_overrides
+PASSED ../tests/test_outputs.py::test_lock_yanked_releases
+PASSED ../tests/test_outputs.py::test_lock_prefer_lowest_and_ties
+PASSED ../tests/test_outputs.py::test_resolution_failures
+FAILED ../tests/test_outputs.py::test_tilde_ranges - AssertionError: 5 of 16 ...
+FAILED ../tests/test_outputs.py::test_lock_mixed_range_forms - AssertionError...
+========================= 2 failed, 13 passed in 7.63s =========================

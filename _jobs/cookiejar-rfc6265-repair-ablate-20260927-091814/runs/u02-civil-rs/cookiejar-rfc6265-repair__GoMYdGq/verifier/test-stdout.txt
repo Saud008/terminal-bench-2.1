@@ -1,0 +1,96 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 12 items
+
+../tests/test_outputs.py ......F.....                                    [100%]
+
+=================================== FAILURES ===================================
+______________________________ test_invalid_dates ______________________________
+
+crumbjar = '/tmp/crumbjar-verify-target/release/crumbjar'
+
+    def test_invalid_dates(crumbjar):
+        """Expires dates that do not exist on the Gregorian calendar are ignored; real leap days are kept."""
+>       _check_group(crumbjar, "invalid_dates")
+
+/tests/test_outputs.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/crumbjar-verify-target/release/crumbjar', group = 'invalid_dates'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            p = subprocess.run(
+                [binary, "replay", "-"],
+                input=case["transcript"], capture_output=True, text=True, timeout=60,
+                env={"PATH": "/usr/local/bin:/usr/bin:/bin", "LC_ALL": "C"},
+            )
+            if p.returncode != 0 or p.stdout != case["stdout"]:
+                failures.append(
+                    f"--- transcript\n{case['transcript']}"
+                    f"--- expected (exit 0)\n{case['stdout']}"
+                    f"--- got (exit {p.returncode})\n{p.stdout}{p.stderr[-500:]}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} transcripts differ:\n" + "\n".join(failures)
+E       AssertionError: 2 of 2 transcripts differ:
+E         --- transcript
+E         at 1767225600
+E         set https://pay.example.com/ a=1; Expires=Mon, 29 Feb 2100 12:00:00 GMT
+E         set https://pay.example.com/ b=1; Expires=Tue, 29 Feb 2400 12:00:00 GMT
+E         set https://pay.example.com/ c=1; Expires=Tue, 29 Feb 2028 12:00:00 GMT
+E         set https://pay.example.com/ d=1; Expires=Fri, 31 Apr 2027 00:00:00 GMT
+E         set https://pay.example.com/ f=1; Expires=Sun, 29 Feb 2032 25:00:00 GMT
+E         dump
+E         --- expected (exit 0)
+E         -- jar @1767225600: 5 cookie(s)
+E         pay.example.com	/	a=1	host-only	session	1767225600	1767225600
+E         pay.example.com	/	b=1	host-only	13574606400	1767225600	1767225600
+E         pay.example.com	/	c=1	host-only	1835438400	1767225600	1767225600
+E         pay.example.com	/	d=1	host-only	session	1767225600	1767225600
+E         pay.example.com	/	f=1	host-only	session	1767225600	1767225600
+E         --- got (exit 0)
+E         -- jar @1767225600: 5 cookie(s)
+E         pay.example.com	/	a=1	host-only	4107585600	1767225600	1767225600
+E         pay.example.com	/	b=1	host-only	session	1767225600	1767225600
+E         pay.example.com	/	c=1	host-only	1835438400	1767225600	1767225600
+E         pay.example.com	/	d=1	host-only	session	1767225600	1767225600
+E         pay.example.com	/	f=1	host-only	session	1767225600	1767225600
+E         
+E         --- transcript
+E         at 1767225600
+E         set https://pay.example.com/ e=1
+E         set https://pay.example.com/ e=2; Expires=Tue, 29 Feb 2000 00:00:00 GMT
+E         set https://pay.example.com/ h=1; Expires=2200-02-29 00:00:00 feb
+E         get https://pay.example.com/
+E         dump
+E         --- expected (exit 0)
+E         https://pay.example.com/	h=1
+E         -- jar @1767225600: 1 cookie(s)
+E         pay.example.com	/	h=1	host-only	7260883200	1767225600	1767225600
+E         --- got (exit 0)
+E         https://pay.example.com/	e=2; h=1
+E         -- jar @1767225600: 2 cookie(s)
+E         pay.example.com	/	e=2	host-only	session	1767225600	1767225600
+E         pay.example.com	/	h=1	host-only	7260883200	1767225600	1767225600
+E         
+E       assert not ['--- transcript\nat 1767225600\nset https://pay.example.com/ a=1; Expires=Mon, 29 Feb 2100 12:00:00 GMT\nset https://...thost-only\tsession\t1767225600\t1767225600\npay.example.com\t/\th=1\thost-only\t7260883200\t1767225600\t1767225600\n']
+
+/tests/test_outputs.py:76: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_default_path
+PASSED ../tests/test_outputs.py::test_path_boundary
+PASSED ../tests/test_outputs.py::test_host_only
+PASSED ../tests/test_outputs.py::test_ip_hosts
+PASSED ../tests/test_outputs.py::test_max_age_precedence
+PASSED ../tests/test_outputs.py::test_two_digit_years
+PASSED ../tests/test_outputs.py::test_replacement
+PASSED ../tests/test_outputs.py::test_header_order
+PASSED ../tests/test_outputs.py::test_public_suffix
+PASSED ../tests/test_outputs.py::test_site_limit
+PASSED ../tests/test_outputs.py::test_name_value_pair
+FAILED ../tests/test_outputs.py::test_invalid_dates - AssertionError: 2 of 2 ...
+========================= 1 failed, 11 passed in 1.74s =========================

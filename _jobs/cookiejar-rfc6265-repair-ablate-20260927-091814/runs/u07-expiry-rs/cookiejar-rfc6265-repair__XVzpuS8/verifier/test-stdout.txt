@@ -1,0 +1,98 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 12 items
+
+../tests/test_outputs.py ....F.......                                    [100%]
+
+=================================== FAILURES ===================================
+___________________________ test_max_age_precedence ____________________________
+
+crumbjar = '/tmp/crumbjar-verify-target/release/crumbjar'
+
+    def test_max_age_precedence(crumbjar):
+        """Max-Age decides the lifetime over Expires regardless of attribute order; invalid Max-Age is skipped."""
+>       _check_group(crumbjar, "max_age_precedence")
+
+/tests/test_outputs.py:101: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/crumbjar-verify-target/release/crumbjar'
+group = 'max_age_precedence'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            p = subprocess.run(
+                [binary, "replay", "-"],
+                input=case["transcript"], capture_output=True, text=True, timeout=60,
+                env={"PATH": "/usr/local/bin:/usr/bin:/bin", "LC_ALL": "C"},
+            )
+            if p.returncode != 0 or p.stdout != case["stdout"]:
+                failures.append(
+                    f"--- transcript\n{case['transcript']}"
+                    f"--- expected (exit 0)\n{case['stdout']}"
+                    f"--- got (exit {p.returncode})\n{p.stdout}{p.stderr[-500:]}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} transcripts differ:\n" + "\n".join(failures)
+E       AssertionError: 1 of 2 transcripts differ:
+E         --- transcript
+E         at 1767225600
+E         set https://news.example.org/ a=1; Max-Age=3600; Expires=Wed, 01 Jan 2031 00:00:00 GMT
+E         set https://news.example.org/ b=1; Expires=Wed, 01 Jan 2031 00:00:00 GMT; Max-Age=60
+E         set https://news.example.org/ c=1; Max-Age=soon; Expires=Wed, 01 Jan 2031 00:00:00 GMT
+E         set https://news.example.org/ d=1; Expires=Wed, 01 Jan 2031 00:00:00 GMT; Max-Age=0
+E         set https://news.example.org/ e=1; Max-Age=+60
+E         set https://news.example.org/ f=1; Max-Age=-1
+E         set https://news.example.org/ g=1; Max-Age=0; Expires=Wed, 01 Jan 2031 00:00:00 GMT
+E         dump
+E         at 1767225700
+E         get https://news.example.org/
+E         at 1767229300
+E         get https://news.example.org/
+E         dump
+E         --- expected (exit 0)
+E         -- jar @1767225600: 4 cookie(s)
+E         news.example.org	/	a=1	host-only	1767229200	1767225600	1767225600
+E         news.example.org	/	b=1	host-only	1767225660	1767225600	1767225600
+E         news.example.org	/	c=1	host-only	1924992000	1767225600	1767225600
+E         news.example.org	/	e=1	host-only	session	1767225600	1767225600
+E         https://news.example.org/	a=1; c=1; e=1
+E         https://news.example.org/	c=1; e=1
+E         -- jar @1767229300: 2 cookie(s)
+E         news.example.org	/	c=1	host-only	1924992000	1767225600	1767229300
+E         news.example.org	/	e=1	host-only	session	1767225600	1767229300
+E         --- got (exit 0)
+E         -- jar @1767225600: 5 cookie(s)
+E         news.example.org	/	a=1	host-only	1924992000	1767225600	1767225600
+E         news.example.org	/	b=1	host-only	1767225660	1767225600	1767225600
+E         news.example.org	/	c=1	host-only	1924992000	1767225600	1767225600
+E         news.example.org	/	e=1	host-only	session	1767225600	1767225600
+E         news.example.org	/	g=1	host-only	1924992000	1767225600	1767225600
+E         https://news.example.org/	a=1; c=1; e=1; g=1
+E         https://news.example.org/	a=1; c=1; e=1; g=1
+E         -- jar @1767229300: 4 cookie(s)
+E         news.example.org	/	a=1	host-only	1924992000	1767225600	1767229300
+E         news.example.org	/	c=1	host-only	1924992000	1767225600	1767229300
+E         news.example.org	/	e=1	host-only	session	1767225600	1767229300
+E         news.example.org	/	g=1	host-only	1924992000	1767225600	1767229300
+E         
+E       assert not ['--- transcript\nat 1767225600\nset https://news.example.org/ a=1; Max-Age=3600; Expires=Wed, 01 Jan 2031 00:00:00 GM...host-only\tsession\t1767225600\t1767229300\nnews.example.org\t/\tg=1\thost-only\t1924992000\t1767225600\t1767229300\n']
+
+/tests/test_outputs.py:76: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_default_path
+PASSED ../tests/test_outputs.py::test_path_boundary
+PASSED ../tests/test_outputs.py::test_host_only
+PASSED ../tests/test_outputs.py::test_ip_hosts
+PASSED ../tests/test_outputs.py::test_two_digit_years
+PASSED ../tests/test_outputs.py::test_invalid_dates
+PASSED ../tests/test_outputs.py::test_replacement
+PASSED ../tests/test_outputs.py::test_header_order
+PASSED ../tests/test_outputs.py::test_public_suffix
+PASSED ../tests/test_outputs.py::test_site_limit
+PASSED ../tests/test_outputs.py::test_name_value_pair
+FAILED ../tests/test_outputs.py::test_max_age_precedence - AssertionError: 1 ...
+========================= 1 failed, 11 passed in 1.24s =========================

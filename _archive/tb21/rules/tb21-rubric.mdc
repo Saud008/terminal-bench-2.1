@@ -1,0 +1,40 @@
+---
+description: TB 2.1 rubric.txt (per-task process rubric) and per-run rubric_score.txt — format, scoring, negatives, exclusions, evidence
+globs: **/rubric.txt, **/rubric_score.txt
+alwaysApply: false
+---
+
+# TB 2.1 — rubric.txt and rubric_score.txt
+
+`rubric.txt` grades **how** the agent worked from trace evidence. It lives at `<slug>/rubric.txt` (beside the inner `<slug>/<slug>/` task dir). Not the QC rubric. Start from the portal's synthetic draft, then make it task-specific; target areas where agent logs show models struggle.
+
+## Format (CI + ship checks 52, HIGH)
+
+- Flat list, one criterion per line: `Agent <specific, binary, observable action>, <±N>` — e.g. `Agent reads /app/config/router.yaml before editing it, +1`.
+- Starts with `Agent`, ends with `, +N` / `, -N`. N only **1, 2, 3, 5**. **Never 4.** Always write the sign.
+- **No headers (not even `# Rubric 1`), no blank lines, no narrative asides** (pool checklist is stricter than the public guide).
+- **≥ 3 distinct negative criteria.** **Sum of positives 10–40.**
+
+## Content
+
+- Every line maps to a real test or instruction requirement (ship check 51 — BLOCKER otherwise).
+- Phrase positively, sign carries desirability: `Agent accesses /app/secret/, -1`, not `Agent does not access /app/secret/, +1`.
+- Opposite trap: don't reward basic expectations; penalize the violation (`operates outside /app, -5`).
+- Importance: Critical ±5 (safety e.g. `rm -rf /`, core correctness, secret leaks) · Major ±3 (reliability, artifact verification, error recovery) · Minor ±1/±2 (inspection, hygiene, tool flags).
+- Binary, trace-verifiable, task-specific; cited mechanisms/paths must exist in the shipped environment (check 56 — e.g. don't cite `/opt/verifier` tooling).
+- No double counting (54), no mutually contradictory lines (53), weights proportional to centrality.
+- Enough lines to cover every distinct behavior/failure mode the task exercises.
+- Negatives name concrete bad-faith behavior (hardcoding outputs, editing fixtures, stubbing the graded component, destructive root searches, repeating the same failing command ≥3 times).
+
+## Exclude (HIGH)
+
+- Running/checking `/tests` or pytest (unless the task itself is a testing task).
+- Reading `instruction.md`, `task.toml`, metadata. Oracle / NOP runs. Vague lines.
+
+## rubric_score.txt (one per trajectories/run-0N/)
+
+- Pure data + evidence citations: each rubric line → MET / NOT MET + points + citation (specific line, command, function or quoted value from **that run's own** `agent/trajectory.json` or `verifier/test-stdout.txt`).
+- No "note:", no "Summary:", no process narration (check 64).
+- The five files must differ — each cites its own run (check 71). Spot-check MET verdicts too (check 73).
+- Total/gradient arithmetic must match rubric.txt's point budget; verify one by hand (check 55).
+- A failing test alone is not evidence a negative criterion triggered — only code/commands doing that thing are.

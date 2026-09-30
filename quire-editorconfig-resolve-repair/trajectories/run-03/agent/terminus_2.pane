@@ -1,0 +1,3066 @@
+[?2004hroot@aeaec0505fac:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@aeaec0505fac:/app# clear
+[?2004l[H[J[3J[?2004hroot@aeaec0505fac:/app# find . -maxdepth 4 -type f -print | sort
+[?2004l./README.md
+./cmd/quire/main.go
+./docs/cli.md
+./docs/format.md
+./docs/globs.md
+./docs/resolution.md
+./go.mod
+./internal/cli/args.go
+./internal/cli/inputs.go
+./internal/cli/run.go
+./internal/cli/usage.go
+./internal/ctext/ctext.go
+./internal/ctext/ctext_test.go
+./internal/glob/braces.go
+./internal/glob/brackets.go
+./internal/glob/compile.go
+./internal/glob/compile_test.go
+./internal/glob/literal.go
+./internal/glob/ranges.go
+./internal/ini/parser.go
+./internal/ini/parser_test.go
+./internal/ini/reader.go
+./internal/ini/scan.go
+./internal/props/derive.go
+./internal/props/fold.go
+./internal/props/store.go
+./internal/resolve/errors.go
+./internal/resolve/paths.go
+./internal/resolve/paths_test.go
+./internal/resolve/resolve.go
+./internal/resolve/section.go
+./internal/version/version.go
+./quire
+[?2004hroot@aeaec0505fac:/app# printf '%s\n' '--- cli.md ---'; cat docs/cli.md; printf '%s\n' '--- other docs ---'; find docs -type f ! -name cli.md -maxdepth 2 -print -exec sh -c 'echo "--- $1 ---"; cat "$1"' sh {} \;
+[?2004l--- cli.md ---
+# quire command line
+
+quire is a drop-in replacement for the `editorconfig` program of EditorConfig
+C Core 0.12.6 (Debian bookworm package `editorconfig`, version 0.12.6-0.1).
+Given the same arguments, EditorConfig files and standard input, it writes the
+same bytes to standard output and standard error and exits with the same
+status. The one difference is that the usage text names the program the way
+it was invoked.
+
+## Synopsis
+
+    quire [OPTIONS] FILEPATH1 [FILEPATH2 FILEPATH3 ...]
+
+Options are only recognised before the first file path. The first argument
+that is not one of the options below starts the path list, and every argument
+after it is a path, even one that looks like an option.
+
+| Option | Meaning |
+|---|---|
+| `-f NAME` | read EditorConfig files named `NAME` instead of `.editorconfig` |
+| `-b VERSION` | resolve the way core version `VERSION` would (see `resolution.md`) |
+| `-h`, `--help` | print the version line and the usage text to stdout, exit 0 |
+| `-v`, `--version` | print `EditorConfig C Core Version 0.12.6` to stdout, exit 0 |
+
+Without any argument the version line and the usage text go to stderr and the
+exit status is 1. With options but no file path (a trailing `-f` or `-b`
+without its value included) the usage text goes to stderr, exit status 1.
+
+### `-b VERSION`
+
+`VERSION` is split at dots; empty components are skipped, so `0..10` means
+0.10. Each component is read like C `strtol` in base 10: optional leading
+whitespace and sign, then the leading digits, 0 when there are none. The
+components are major, minor and patch; a negative component counts as not
+given. With more than three components quire prints
+`Invalid version number: VERSION` to stderr and exits with status 1 before
+looking at any file.
+
+Components that were not given are 0, and 0.0.0 means the current version
+0.12.6. `-b` may be given more than once; a later one only overwrites the
+components it contains.
+
+## File paths
+
+Every file path must be absolute, i.e. start with `/`. Paths are used exactly
+as written: `.` and `..` are not cleaned up, symbolic links are not followed
+and the file does not have to exist.
+
+A path argument `-` stands for the file paths read from standard input, one
+per line, until the end of input. Whitespace around each line is removed and
+blank lines are skipped. Once standard input is exhausted, a further `-`
+yields no paths.
+
+## Output
+
+For every file, quire prints one `name=value` line per property, in the order
+given in `resolution.md`. A file with no properties prints nothing.
+
+A header line `[PATH]` precedes a file's properties when more than one path
+argument was given, and always for a path read from standard input, even when
+`-` is the only argument. The header is printed before the file is resolved,
+so it also appears when resolving that file fails.
+
+## Errors
+
+quire stops at the first file that cannot be resolved; everything printed for
+earlier files stays printed. It then writes one line to stderr and exits with
+status 1. The checks are made in this order:
+
+| Situation | Message |
+|---|---|
+| `-b` asks for a version newer than 0.12.6 | `Required version is greater than the current version.` |
+| the path does not start with `/` | `Input file must be a full path name.` |
+| an EditorConfig file has a syntax error | `Failed to parse file.:LINE "FILE"` |
+
+`LINE` is the number of the first line with a syntax error in that file (see
+`format.md`) and `FILE` is the EditorConfig file's path as quire built it
+(see `resolution.md`). EditorConfig files that cannot be opened are skipped
+without a message. When every file resolves, the exit status is 0.
+--- other docs ---
+find: warning: you have specified the global option -maxdepth after the argument -type, but global options are not positional, i.e., -maxdepth affects tests specified before it as well as those specified after it.  Please specify global options before other arguments.
+docs/format.md
+--- docs/format.md ---
+# EditorConfig file format
+
+An EditorConfig file is read line by line. A UTF-8 byte order mark at the very
+start of the file is ignored. Whitespace below means space, tab, line feed,
+vertical tab, form feed and carriage return, so CRLF line endings behave like
+LF. Leading and trailing whitespace of every line is ignored.
+
+After that trimming, a line is one of:
+
+- empty;
+- a comment: its first character is `;` or `#`;
+- a section header: its first character is `[`;
+- a property: anything else, which must contain `=` or `:`.
+
+## Inline comments
+
+A `;` or `#` later in a line starts a comment only when the character right
+before it is whitespace. The comment runs to the end of the line.
+
+| Line | Result |
+|---|---|
+| `color = #ff0000` | value `#ff0000` |
+| `list = a;b` | value `a;b` |
+| `list = a ;b` | value `a` |
+| `[*.txt] ; text files` | section `*.txt` |
+| `[*.txt;x]` | section `*.txt;x` |
+
+The value of a property is examined on its own after the whitespace following
+the separator has been skipped: a `;` or `#` at the start of the value is not
+preceded by whitespace within the value and is kept (`a = ;x` has value `;x`).
+
+## Section headers
+
+The section name is the text between the `[` and the last `]` that comes
+before an inline comment; whatever follows that `]` is ignored. The name is
+used verbatim, spaces included. A header line without such a `]` is a syntax
+error. A header whose name is longer than 4096 bytes is ignored: the line is
+skipped and the previous section continues.
+
+Properties before the first section header make up the preamble. They belong
+to the section named "" whose glob never matches a file, so the only
+meaningful preamble property is `root` (see `resolution.md`).
+
+## Properties
+
+The separator is the first `=` on the line. Only when there is no `=` before
+an inline comment is the first `:` used instead. So `d: x=y` sets `d: x` to
+`y`, and `c = x:y` sets `c` to `x:y`. A line whose separator would only come
+after an inline comment has no separator and is a syntax error.
+
+The name is the text before the separator with trailing whitespace removed.
+The value is the text after it with leading whitespace removed, then the
+inline comment removed, then trailing whitespace removed. Empty values are
+allowed. A property whose name is longer than 1024 bytes or whose value is
+longer than 4096 bytes is ignored.
+
+## Syntax errors
+
+A header line without a closing `]` and a property line without a separator
+are syntax errors. Reading continues after an error, but the file is reported
+with the number of its first error line (lines count from 1, comment and
+blank lines included) and resolution stops (see `cli.md`).
+docs/resolution.md
+--- docs/resolution.md ---
+# Resolving a file
+
+## EditorConfig files read
+
+For the file `/a/b/c.txt` quire reads `/.editorconfig`, `/a/.editorconfig`
+and `/a/b/.editorconfig`, in that order: one EditorConfig file per `/` in the
+path, taking the directory as the path cut at that `/`, farthest first. With
+`-f NAME` the files are named `NAME` instead. Files that cannot be opened are
+skipped.
+
+## Collecting properties
+
+Every property in a section whose glob (see `globs.md`) matches the file path
+is recorded:
+
+- Property names are case-insensitive. They are recorded and printed in
+  lowercase.
+- Recording a name that has already been recorded replaces its value and
+  keeps its position. A new name is added at the end.
+
+Because files are read farthest first and top to bottom, later lines and
+nearer files win, and properties are printed in the order in which their
+names were first recorded.
+
+### root
+
+A property named `root` with the value `true` in the preamble of an
+EditorConfig file (both compared case-insensitively) discards everything
+recorded so far, i.e. everything that came from the files farther up. Order
+starts afresh from there. A preamble `root` with another value has no effect.
+
+Inside a section, `root` is an ordinary property: when the section matches,
+it is recorded and printed like any other.
+
+### Value case
+
+The values of these six properties are lowercased when recorded:
+`end_of_line`, `indent_style`, `indent_size`, `insert_final_newline`,
+`trim_trailing_whitespace` and `charset`. Every other value, `tab_width` and
+`max_line_length` included, is printed as written.
+
+Lowercasing and case-insensitive comparisons only affect the ASCII letters.
+
+## Derived indentation
+
+After all EditorConfig files have been read, three rules run in this order.
+The version is the one given with `-b` (see `cli.md`), 0.12.6 by default;
+versions are compared numerically, major first, then minor, then patch.
+
+1. From version 0.9.0 on: if `indent_style` is `tab` and `indent_size` has
+   not been recorded, record `indent_size` = `tab`.
+2. From version 0.9.0 on: if `indent_size` is `tab` and `tab_width` has been
+   recorded, record `indent_size` = the value of `tab_width` (lowercased, as
+   every `indent_size` value is).
+3. If `indent_size` has been recorded and `tab_width` has not, record
+   `tab_width` = the value of `indent_size`, except when the version is at
+   least 0.9.0 and `indent_size` is `tab`.
+
+These records follow the rules above, so a derived `indent_size` that replaces
+an existing one keeps its position and a newly derived property comes last.
+docs/globs.md
+--- docs/globs.md ---
+# Section globs
+
+A property applies to a file when the glob built from its section header
+matches the file's full path. The glob must match the whole path.
+
+## From header to glob
+
+`DIR` is the directory that holds the EditorConfig file, i.e. its path up to
+the last `/` (the empty string for `/.editorconfig`).
+
+| Header | Glob |
+|---|---|
+| contains no `/` | `DIR` + `**/` + header |
+| starts with `/` | `DIR` + header |
+| contains `/`, but not first | `DIR` + `/` + header |
+
+So `[*.sh]` applies to shell scripts at any depth below `DIR`, while
+`[scripts/*.sh]` applies only to `DIR/scripts/*.sh`, exactly like
+`[/scripts/*.sh]`.
+
+`DIR` is inserted escaped: each of the characters `?` `[` `]` `\` `*` `-` `{`
+`}` `,` in it is preceded by a backslash, so a directory such as
+`/srv/work/[wip] shop` or `/srv/alt{1,2}` matches only itself.
+
+## Wildcards
+
+| Glob | Matches |
+|---|---|
+| `*` | any run of characters other than `/`, including none |
+| `**` | any run of characters, `/` included |
+| `?` | one character other than `/` |
+| `/**/` | a single `/`, or `/` + any path + `/` (zero or more directories) |
+| `[abc]`, `[a-z]` | one character from the set |
+| `[!abc]` | one character not in the set |
+| `{a,b,c}` | any one of the alternatives |
+| `{N1..N2}` | an integer from N1 to N2, see below |
+| `\c` | the character `c` itself |
+
+Every other character matches itself, including `,` outside braces, `-`
+outside brackets and `^`. Matching is case-sensitive.
+
+## Brackets
+
+Inside a bracket expression, `-` between two characters is a range and `!`
+right after the `[` negates the set. `^` is an ordinary character: `[^a]`
+matches `^` or `a`.
+
+When a `/` occurs between the `[` and the next `]`, the bracket is not a
+character class: the text from `[` through that `]` matches itself, so
+`[a/b]` only matches the five characters `[a/b]`. A `[` that is never closed
+makes the whole glob match nothing.
+
+## Braces
+
+Braces only take effect when every `}` closes an earlier `{` and there are as
+many of each (escaped braces do not count); otherwise every brace in the glob
+is an ordinary character.
+
+A brace group with a comma at its top level is a list of alternatives, which
+may themselves contain wildcards and brace groups; an alternative may be
+empty. A group without such a comma is special:
+
+- `{}` and `{word}` match the text itself, braces included;
+- `{N1..N2}`, where N1 and N2 are integers with an optional `+` or `-`,
+  matches an optionally signed integer whose value lies between N1 and N2
+  inclusive. A number written with a leading `0`, `0` itself included, never
+  matches, and when N1 is greater than N2 nothing matches.
+
+How ranges are checked has one catch. Every `{N1..N2}` and every `/**/` in
+the glob is a numbered group, counted from the left. The first range is
+checked against the text of the first numbered group, the second range
+against the second group, and so on, whether or not that group is the range
+itself. The text matched by a `/**/` starts with `/` and counts as the value
+0 (it has no leading `0`). So `v{1..9}/**/*.md` matches `v3/a.md` and
+`v3/x/a.md`, while `docs/**/v{1..9}/*.md` matches nothing, because its range
+is checked against the `/**/` group; and `a/**/b{-1..1}` matches `a/b5`.
+[?2004hroot@aeaec0505fac:/app# printf '%s\n' '--- Go sources ---'; find . -name '*.go' -type f -print -exec sh -c 'echo "--- $1 ---"; sed -n "1,260p" "$1"' sh {} \;
+[?2004l--- Go sources ---
+./cmd/quire/main.go
+--- ./cmd/quire/main.go ---
+// Command quire prints the EditorConfig properties that apply to files.
+package main
+
+import (
+	"os"
+
+	"quire/internal/cli"
+)
+
+func main() {
+	os.Exit(cli.Main(os.Args, os.Stdin, os.Stdout, os.Stderr))
+}
+./internal/version/version.go
+--- ./internal/version/version.go ---
+// Package version handles the core version quire emulates and the -b
+// compatibility version requested on the command line.
+package version
+
+import (
+	"fmt"
+	"strings"
+
+	"quire/internal/ctext"
+)
+
+// Version is a major.minor.patch triple.
+type Version struct {
+	Major, Minor, Patch int
+}
+
+// Current is the EditorConfig core version whose behaviour quire reproduces.
+var Current = Version{0, 12, 6}
+
+// TabIndent is the first version that derives indent_size from
+// indent_style = tab and resolves indent_size = tab through tab_width.
+var TabIndent = Version{0, 9, 0}
+
+func (v Version) String() string {
+	return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
+}
+
+// Compare returns -1, 0 or +1 comparing v with o.
+func (v Version) Compare(o Version) int {
+	return strings.Compare(v.String(), o.String())
+}
+
+// Request collects the components given with -b. A negative component was
+// not given.
+type Request struct {
+	Major, Minor, Patch int
+}
+
+// NoRequest is the state before any -b option.
+var NoRequest = Request{-1, -1, -1}
+
+// Apply reads a -b argument into r. Components are separated by dots (empty
+// components are skipped) and read like strtol. It reports false when the
+// argument has more than three components; the components before the fourth
+// have been stored by then.
+func (r *Request) Apply(arg string) bool {
+	pos := 0
+	for _, tok := range strings.Split(arg, ".") {
+		if tok == "" {
+			continue
+		}
+		n := ctext.Atoi(tok)
+		switch pos {
+		case 0:
+			r.Major = n
+		case 1:
+			r.Minor = n
+		case 2:
+			r.Patch = n
+		default:
+			return false
+		}
+		pos++
+	}
+	return true
+}
+
+// Effective is the version a file is resolved with: components that were not
+// given (or are negative) count as 0, and 0.0.0 means Current.
+func (r Request) Effective() Version {
+	v := Version{max(r.Major, 0), max(r.Minor, 0), max(r.Patch, 0)}
+	if v == (Version{}) {
+		return Current
+	}
+	return v
+}
+./internal/cli/run.go
+--- ./internal/cli/run.go ---
+// Package cli implements the quire command line.
+package cli
+
+import (
+	"bufio"
+	"fmt"
+	"io"
+
+	"quire/internal/resolve"
+)
+
+// Main runs quire and returns its exit status.
+func Main(argv []string, stdin io.Reader, stdout, stderr io.Writer) int {
+	out := bufio.NewWriter(stdout)
+	defer out.Flush()
+
+	opts, code, done := parseArgs(argv, out, stderr)
+	if done {
+		return code
+	}
+	ro := resolve.Options{ConfName: opts.confName, Version: opts.version.Effective()}
+	headers := len(opts.paths) > 1
+	in := newInputs(opts.paths, stdin)
+	for {
+		f, ok := in.next()
+		if !ok {
+			return 0
+		}
+		if headers {
+			fmt.Fprintf(out, "[%s]\n", f.name)
+		}
+		pairs, err := resolve.File(f.name, ro)
+		if err != nil {
+			out.Flush()
+			fmt.Fprintln(stderr, err)
+			return 1
+		}
+		for _, p := range pairs {
+			fmt.Fprintf(out, "%s=%s\n", p.Name, p.Value)
+		}
+	}
+}
+./internal/cli/inputs.go
+--- ./internal/cli/inputs.go ---
+package cli
+
+import (
+	"bufio"
+	"io"
+
+	"quire/internal/ctext"
+)
+
+// input is one file to resolve and whether its name came from stdin.
+type input struct {
+	name      string
+	fromStdin bool
+}
+
+// inputs walks the path arguments. A "-" argument stands for every
+// non-blank line of stdin, trimmed of surrounding whitespace, until EOF.
+type inputs struct {
+	args  []string
+	stdin *bufio.Reader
+	pos   int
+}
+
+func newInputs(args []string, stdin io.Reader) *inputs {
+	return &inputs{args: args, stdin: bufio.NewReader(stdin)}
+}
+
+func (in *inputs) next() (input, bool) {
+	for in.pos < len(in.args) {
+		arg := in.args[in.pos]
+		if arg != "-" {
+			in.pos++
+			return input{name: arg}, true
+		}
+		line, err := in.stdin.ReadString('\n')
+		if line == "" && err != nil {
+			in.pos++
+			continue
+		}
+		name := ctext.TrimLeft(ctext.TrimRight(line))
+		if name == "" {
+			continue
+		}
+		return input{name: name, fromStdin: true}, true
+	}
+	return input{}, false
+}
+./internal/cli/usage.go
+--- ./internal/cli/usage.go ---
+package cli
+
+import (
+	"fmt"
+	"io"
+
+	"quire/internal/version"
+)
+
+func printVersion(w io.Writer) {
+	fmt.Fprintf(w, "EditorConfig C Core Version %s\n", version.Current)
+}
+
+func printUsage(w io.Writer, command string) {
+	fmt.Fprintf(w, "Usage: %s [OPTIONS] FILEPATH1 [FILEPATH2 FILEPATH3 ...]\n", command)
+	fmt.Fprintf(w, "FILEPATH can be a hyphen (-) if you want to path(s) to be read from stdin.\n")
+	fmt.Fprintf(w, "\n")
+	fmt.Fprintf(w, "-f                 Specify conf filename other than \".editorconfig\".\n")
+	fmt.Fprintf(w, "-b                 Specify version (used by devs to test compatibility).\n")
+	fmt.Fprintf(w, "-h OR --help       Print this help message.\n")
+	fmt.Fprintf(w, "-v OR --version    Display version information.\n")
+}
+./internal/cli/args.go
+--- ./internal/cli/args.go ---
+package cli
+
+import (
+	"fmt"
+	"io"
+
+	"quire/internal/resolve"
+	"quire/internal/version"
+)
+
+type options struct {
+	confName string
+	version  version.Request
+	paths    []string
+}
+
+// parseArgs reads the options that precede the file paths. The first
+// argument that is not an option starts the path list; everything after it
+// is a path. It returns done=true with an exit code when quire should stop.
+func parseArgs(argv []string, stdout, stderr io.Writer) (opts options, code int, done bool) {
+	opts = options{confName: resolve.DefaultConfName, version: version.NoRequest}
+	if len(argv) <= 1 {
+		printVersion(stderr)
+		printUsage(stderr, argv[0])
+		return opts, 1, true
+	}
+	wantVersion, wantConf := false, false
+	for i := 1; i < len(argv); i++ {
+		arg := argv[i]
+		switch {
+		case wantVersion:
+			wantVersion = false
+			if !opts.version.Apply(arg) {
+				fmt.Fprintf(stderr, "Invalid version number: %s\n", arg)
+				return opts, 1, true
+			}
+		case wantConf:
+			wantConf = false
+			opts.confName = arg
+		case arg == "--version" || arg == "-v":
+			printVersion(stdout)
+			return opts, 0, true
+		case arg == "--help" || arg == "-h":
+			printVersion(stdout)
+			printUsage(stdout, argv[0])
+			return opts, 0, true
+		case arg == "-b":
+			wantVersion = true
+		case arg == "-f":
+			wantConf = true
+		default:
+			opts.paths = argv[i:]
+			i = len(argv)
+		}
+	}
+	if len(opts.paths) == 0 {
+		printUsage(stderr, argv[0])
+		return opts, 1, true
+	}
+	return opts, 0, false
+}
+./internal/resolve/resolve.go
+--- ./internal/resolve/resolve.go ---
+// Package resolve computes the EditorConfig properties for one file.
+package resolve
+
+import (
+	"strings"
+
+	"quire/internal/ctext"
+	"quire/internal/glob"
+	"quire/internal/ini"
+	"quire/internal/props"
+	"quire/internal/version"
+)
+
+// DefaultConfName is the EditorConfig file name used without -f.
+const DefaultConfName = ".editorconfig"
+
+// Options control one resolution.
+type Options struct {
+	ConfName string
+	Version  version.Version
+}
+
+type walker struct {
+	full  string
+	dir   string
+	store props.Store
+}
+
+// File returns the properties for the file at full, in output order.
+func File(full string, o Options) ([]props.Pair, error) {
+	if o.Version.Compare(version.Current) > 0 {
+		return nil, ErrVersionTooNew
+	}
+	if !strings.HasPrefix(full, "/") {
+		return nil, ErrNotFullPath
+	}
+	w := &walker{full: full}
+	for _, conf := range configPaths(full, o.ConfName) {
+		w.dir = dirOf(conf)
+		line, err := ini.ParseFile(conf, w.property)
+		if err != nil {
+			continue
+		}
+		if line != 0 {
+			return nil, &ParseError{Line: line, File: conf}
+		}
+	}
+	props.Derive(&w.store, o.Version)
+	return w.store.Pairs(), nil
+}
+
+// property handles one name/value pair from the file in w.dir. root = true
+// discards everything collected from the files above.
+func (w *walker) property(section, name, value string) {
+	if ctext.EqualFold(name, "root") && ctext.EqualFold(value, "true") {
+		w.store.Reset()
+		return
+	}
+	if glob.Match(sectionPattern(w.dir, section), w.full) {
+		w.store.Set(name, value)
+	}
+}
+./internal/resolve/section.go
+--- ./internal/resolve/section.go ---
+package resolve
+
+import (
+	"strings"
+
+	"quire/internal/glob"
+)
+
+// sectionPattern builds the glob a file path is matched against for a
+// section header found in the EditorConfig file in dir. A header starting
+// with '/' is matched from dir itself; any other header can match in dir or
+// in any directory below it. The directory part is escaped so it only
+// matches itself.
+func sectionPattern(dir, header string) string {
+	base := glob.EscapeDir(dir)
+	if strings.HasPrefix(header, "/") {
+		return base + header
+	}
+	return base + "**/" + header
+}
+./internal/resolve/errors.go
+--- ./internal/resolve/errors.go ---
+package resolve
+
+import (
+	"errors"
+	"fmt"
+)
+
+var (
+	// ErrNotFullPath is returned for a path that does not start with '/'.
+	ErrNotFullPath = errors.New("Input file must be a full path name.")
+	// ErrVersionTooNew is returned when -b asks for a newer core.
+	ErrVersionTooNew = errors.New("Required version is greater than the current version.")
+)
+
+// ParseError reports the first line with a syntax error in a file.
+type ParseError struct {
+	Line int
+	File string
+}
+
+func (e *ParseError) Error() string {
+	return fmt.Sprintf("Failed to parse file.:%d \"%s\"", e.Line, e.File)
+}
+./internal/resolve/paths.go
+--- ./internal/resolve/paths.go ---
+package resolve
+
+import "strings"
+
+// configPaths lists the EditorConfig files that can apply to full, farthest
+// first: one per directory from the root down to the file's own directory.
+// The path is split on '/' as written; nothing is cleaned or resolved.
+func configPaths(full, confName string) []string {
+	n := strings.Count(full, "/")
+	paths := make([]string, n)
+	dir := full
+	for i := n - 1; i >= 0; i-- {
+		dir = dir[:strings.LastIndexByte(dir, '/')]
+		paths[i] = dir + "/" + confName
+	}
+	return paths
+}
+
+// dirOf returns everything before the last '/' of path.
+func dirOf(path string) string {
+	return path[:strings.LastIndexByte(path, '/')]
+}
+./internal/resolve/paths_test.go
+--- ./internal/resolve/paths_test.go ---
+package resolve
+
+import (
+	"reflect"
+	"testing"
+)
+
+func TestConfigPaths(t *testing.T) {
+	got := configPaths("/a/b/c.txt", ".editorconfig")
+	want := []string{"/.editorconfig", "/a/.editorconfig", "/a/b/.editorconfig"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("got %v", got)
+	}
+	if d := dirOf("/a/b/.editorconfig"); d != "/a/b" {
+		t.Fatalf("dirOf = %q", d)
+	}
+}
+./internal/ini/parser_test.go
+--- ./internal/ini/parser_test.go ---
+package ini
+
+import (
+	"reflect"
+	"strings"
+	"testing"
+)
+
+type prop struct{ section, name, value string }
+
+func parse(t *testing.T, text string) ([]prop, int) {
+	t.Helper()
+	var got []prop
+	line := Parse(strings.NewReader(text), func(s, n, v string) {
+		got = append(got, prop{s, n, v})
+	})
+	return got, line
+}
+
+func TestParseSections(t *testing.T) {
+	got, line := parse(t, "root = true\n; comment\n\n[*.go]\nindent_style = tab\n  [Makefile]  \nx:1\n")
+	want := []prop{{"", "root", "true"}, {"*.go", "indent_style", "tab"}, {"Makefile", "x", "1"}}
+	if line != 0 || !reflect.DeepEqual(got, want) {
+		t.Fatalf("got %v line %d", got, line)
+	}
+}
+
+func TestParseFirstErrorLine(t *testing.T) {
+	_, line := parse(t, "[*]\na = 1\nnot a property\nb = 2\n[broken\n")
+	if line != 3 {
+		t.Fatalf("error line %d, want 3", line)
+	}
+}
+
+func TestParseLongName(t *testing.T) {
+	got, _ := parse(t, "[*]\n"+strings.Repeat("n", MaxPropertyName+1)+" = 1\nok = 2\n")
+	if len(got) != 1 || got[0].name != "ok" {
+		t.Fatalf("got %v", got)
+	}
+}
+./internal/ini/reader.go
+--- ./internal/ini/reader.go ---
+package ini
+
+import (
+	"bufio"
+	"io"
+	"strings"
+)
+
+// maxLine is the size of the core's line buffer; a physical line longer than
+// maxLine-1 bytes is read as several lines.
+const maxLine = 5000
+
+type lineReader struct {
+	r *bufio.Reader
+}
+
+func newLineReader(r io.Reader) *lineReader {
+	return &lineReader{r: bufio.NewReader(r)}
+}
+
+// next returns the next line including its newline, at most maxLine-1 bytes.
+// Anything after a NUL byte is dropped, as the core works on C strings.
+func (lr *lineReader) next() (string, bool) {
+	buf := make([]byte, 0, 128)
+	for len(buf) < maxLine-1 {
+		c, err := lr.r.ReadByte()
+		if err != nil {
+			if len(buf) == 0 {
+				return "", false
+			}
+			break
+		}
+		buf = append(buf, c)
+		if c == '\n' {
+			break
+		}
+	}
+	line := string(buf)
+	if i := strings.IndexByte(line, 0); i >= 0 {
+		line = line[:i]
+	}
+	return line, true
+}
+./internal/ini/scan.go
+--- ./internal/ini/scan.go ---
+package ini
+
+// isCommentAt reports whether s[i] opens an inline comment.
+func isCommentAt(s string, i int) bool {
+	return s[i] == ';' || s[i] == '#'
+}
+
+// indexOrComment returns the index of the first c in s, or of the first
+// inline comment if that comes earlier, or len(s).
+func indexOrComment(s string, c byte) int {
+	for i := 0; i < len(s); i++ {
+		if s[i] == c || isCommentAt(s, i) {
+			return i
+		}
+	}
+	return len(s)
+}
+
+// lastIndexBeforeComment returns the index of the last c in s before any
+// inline comment, or 0 when there is none (the caller checks s[0]).
+func lastIndexBeforeComment(s string, c byte) int {
+	last := 0
+	for i := 0; i < len(s) && !isCommentAt(s, i); i++ {
+		if s[i] == c {
+			last = i
+		}
+	}
+	return last
+}
+
+// stripComment cuts an inline comment off a value.
+func stripComment(value string) string {
+	for i := 0; i < len(value); i++ {
+		if isCommentAt(value, i) {
+			return value[:i]
+		}
+	}
+	return value
+}
+./internal/ini/parser.go
+--- ./internal/ini/parser.go ---
+// Package ini reads EditorConfig files with the same line rules as the
+// inih-based parser in the C core.
+package ini
+
+import (
+	"io"
+	"os"
+	"strings"
+
+	"quire/internal/ctext"
+)
+
+// Length limits in bytes. Longer section headers and properties are skipped.
+const (
+	MaxSectionName   = 4096
+	MaxPropertyName  = 1024
+	MaxPropertyValue = 4096
+)
+
+// Handler receives each property with the section it appeared under; the
+// preamble before the first section header has section "".
+type Handler func(section, name, value string)
+
+// ParseFile parses the file at path. The error is non-nil only when the file
+// could not be opened; a syntax error is reported as a non-zero line number.
+func ParseFile(path string, h Handler) (int, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return 0, err
+	}
+	defer f.Close()
+	return Parse(f, h), nil
+}
+
+// Parse calls h for every property in r and returns the number of the first
+// line with a syntax error, or 0. Parsing continues after an error.
+func Parse(r io.Reader, h Handler) int {
+	lr := newLineReader(r)
+	section := ""
+	errLine := 0
+	for lineno := 1; ; lineno++ {
+		line, ok := lr.next()
+		if !ok {
+			break
+		}
+		if lineno == 1 {
+			line = strings.TrimPrefix(line, "\xef\xbb\xbf")
+		}
+		start := ctext.TrimLeft(ctext.TrimRight(line))
+		switch {
+		case start == "", start[0] == ';', start[0] == '#':
+		case start[0] == '[':
+			body := start[1:]
+			end := lastIndexBeforeComment(body, ']')
+			if end >= len(body) || body[end] != ']' {
+				if errLine == 0 {
+					errLine = lineno
+				}
+				continue
+			}
+			if end > MaxSectionName {
+				continue
+			}
+			section = body[:end]
+		default:
+			end := indexOrComment(start, '=')
+			if end == len(start) || start[end] != '=' {
+				end = indexOrComment(start, ':')
+			}
+			if end == len(start) || (start[end] != '=' && start[end] != ':') {
+				if errLine == 0 {
+					errLine = lineno
+				}
+				continue
+			}
+			name := ctext.TrimRight(start[:end])
+			value := ctext.TrimRight(stripComment(ctext.TrimLeft(start[end+1:])))
+			if len(name) > MaxPropertyName || len(value) > MaxPropertyValue {
+				continue
+			}
+			h(section, name, value)
+		}
+	}
+	return errLine
+}
+./internal/glob/compile_test.go
+--- ./internal/glob/compile_test.go ---
+package glob
+
+import "testing"
+
+func TestMatch(t *testing.T) {
+	cases := []struct {
+		pattern, name string
+		want          bool
+	}{
+		{"/p/**/*.go", "/p/x/y/a.go", true},
+		{"/p/*.go", "/p/x/a.go", false},
+		{"/p/a?c", "/p/abc", true},
+		{"/p/a?c", "/p/a/c", false},
+		{"/p/{a,b}.txt", "/p/b.txt", true},
+		{"/p/{a,b}.txt", "/p/c.txt", false},
+		{"/p/{a,{b,c}}", "/p/c", true},
+		{"/p/[a-c]x", "/p/bx", true},
+		{"/p/f{1..3}", "/p/f2", true},
+		{"/p/f{1..3}", "/p/f4", false},
+		{"/p/f{1..3}", "/p/f02", false},
+		{"/p/x{}", "/p/x{}", true},
+		{"/p/a,b", "/p/a,b", true},
+		{"/p/{a", "/p/{a", true},
+		{"/p/\\*", "/p/*", true},
+		{"/p/[abc", "/p/[abc", false},
+	}
+	for _, c := range cases {
+		if got := Match(c.pattern, c.name); got != c.want {
+			t.Errorf("Match(%q, %q) = %v, want %v", c.pattern, c.name, got, c.want)
+		}
+	}
+}
+
+func TestEscapeDirStar(t *testing.T) {
+	dir := EscapeDir("/srv/a*b")
+	if !Match(dir+"/x", "/srv/a*b/x") || Match(dir+"/x", "/srv/aZZb/x") {
+		t.Errorf("escaped %q", dir)
+	}
+}
+./internal/glob/ranges.go
+--- ./internal/glob/ranges.go ---
+package glob
+
+import (
+	"regexp"
+	"strings"
+
+	"quire/internal/ctext"
+)
+
+// numRange is a {lo..hi} group; the number it captured must lie in [lo, hi].
+type numRange struct {
+	lo, hi int
+}
+
+var numRangeGroup = regexp.MustCompile(`^\{[+\-]?\d+\.\.[+\-]?\d+\}$`)
+
+// numberPattern captures the number matched in place of a {lo..hi} group.
+const numberPattern = `([\+\-]?\d+)`
+
+// parseRange reads a brace group such as "{-3..12}".
+func parseRange(group string) (numRange, bool) {
+	if !numRangeGroup.MatchString(group) {
+		return numRange{}, false
+	}
+	dots := strings.Index(group, "..")
+	return numRange{ctext.Atoi(group[1:]), ctext.Atoi(group[dots+2:])}, true
+}
+
+// accepts reports whether the captured text is a number inside the range.
+// A number written with a leading zero, including 0 itself, never matches.
+func (r numRange) accepts(text string) bool {
+	if text == "" || text[0] == '0' {
+		return false
+	}
+	n := ctext.Atoi(text)
+	return n >= r.lo && n <= r.hi
+}
+./internal/glob/compile.go
+--- ./internal/glob/compile.go ---
+// Package glob matches file paths against EditorConfig section globs by
+// translating each glob into an anchored regular expression.
+package glob
+
+import (
+	"regexp"
+	"strings"
+
+	"quire/internal/ctext"
+)
+
+// maxRegexp bounds the translated expression, counted the way the C core
+// counts its PCRE pattern buffer. Longer translations never match.
+const maxRegexp = 2 * 4097
+
+// Matcher is a compiled section glob.
+type Matcher struct {
+	re     *regexp.Regexp
+	ranges []numRange
+}
+
+// Match reports whether name matches pattern. A pattern that cannot be
+// translated or compiled matches nothing.
+func Match(pattern, name string) bool {
+	m, ok := Compile(pattern)
+	return ok && m.Match(name)
+}
+
+// Compile translates pattern.
+func Compile(pattern string) (*Matcher, bool) {
+	expr, ranges, ok := translate([]byte(pattern))
+	if !ok {
+		return nil, false
+	}
+	re, err := regexp.Compile(expr)
+	if err != nil {
+		return nil, false
+	}
+	return &Matcher{re: re, ranges: ranges}, true
+}
+
+// Match reports whether name matches. Every {lo..hi} group must have
+// captured a number inside its range.
+func (m *Matcher) Match(name string) bool {
+	idx := m.re.FindStringSubmatchIndex(name)
+	if idx == nil {
+		return false
+	}
+	for k, r := range m.ranges {
+		g := 2 * (k + 1)
+		if g+1 >= len(idx) || idx[g] < 0 {
+			return false
+		}
+		if !r.accepts(name[idx[g]:idx[g+1]]) {
+			return false
+		}
+	}
+	return true
+}
+
+type builder struct {
+	out  strings.Builder
+	size int
+	ok   bool
+}
+
+// add appends text whose length in the C core's buffer is size.
+func (b *builder) add(text string, size int) {
+	if b.size+size >= maxRegexp {
+		b.ok = false
+	}
+	b.out.WriteString(text)
+	b.size += size
+}
+
+func translate(p []byte) (string, []numRange, bool) {
+	paired := bracesPaired(p)
+	b := &builder{size: 1, ok: true}
+	b.out.WriteString("^")
+	var ranges []numRange
+	depth := 0
+	inClass := false
+	for i := 0; i < len(p) && b.ok; i++ {
+		c := p[i]
+		switch c {
+		case '\\':
+			if i+1 < len(p) {
+				i++
+				b.add(escapedPair(p[i]), 2)
+			} else {
+				b.add(`\\`, 2)
+			}
+		case '?':
+			b.add(`[^/]`, 4)
+		case '*':
+			if i+1 < len(p) && p[i+1] == '*' {
+				b.add(`.*`, 2)
+				i++
+			} else {
+				b.add(`[^\/]*`, 6)
+			}
+		case '[':
+			if inClass {
+				b.add(`\[`, 2)
+				break
+			}
+			text, last, cls, literal := openBracket(p, i)
+			if literal {
+				b.out.WriteString(text)
+				b.size += len(text)
+			} else {
+				b.add(text, len(text))
+			}
+			i, inClass = last, cls
+		case ']':
+			inClass = false
+			b.add("]", 1)
+		case '-':
+			if inClass {
+				b.add("-", 1)
+			} else {
+				b.add(`\-`, 2)
+			}
+		case '{':
+			if !paired {
+				b.add(`\{`, 2)
+				break
+			}
+			if end, single := singleBrace(p, i); single {
+				if r, ok := parseRange(string(p[i : end+1])); ok {
+					ranges = append(ranges, r)
+					b.add(numberPattern, len(numberPattern))
+					i = end
+					break
+				}
+				b.add(`\{`, 2)
+				p = insertByte(p, end, '\\')
+				break
+			}
+			depth++
+			b.add(`(?:`, 3)
+		case '}':
+			if !paired {
+				b.add(`\}`, 2)
+				break
+			}
+			depth--
+			b.add(")", 1)
+		case ',':
+			if depth > 0 {
+				b.add("|", 1)
+			} else {
+				b.add(`\,`, 2)
+			}
+		case '/':
+			b.add(`\/`, 2)
+		default:
+			if ctext.IsAlnum(c) {
+				b.add(string([]byte{c}), 1)
+			} else {
+				b.add(quoteByte(c), 2)
+			}
+		}
+	}
+	if !b.ok {
+		return "", nil, false
+	}
+	return b.out.String() + "$", ranges, true
+}
+./internal/glob/braces.go
+--- ./internal/glob/braces.go ---
+package glob
+
+// bracesPaired reports whether every '}' in p closes an earlier '{' and the
+// counts match. Escaped braces are ignored. Unpaired braces are literal.
+func bracesPaired(p []byte) bool {
+	open, closed := 0, 0
+	for i := 0; i < len(p); i++ {
+		if p[i] == '\\' && i+1 < len(p) {
+			i++
+			continue
+		}
+		switch p[i] {
+		case '{':
+			open++
+		case '}':
+			closed++
+		}
+		if closed > open {
+			return false
+		}
+	}
+	return open == closed
+}
+
+// singleBrace looks at the brace group opening at p[i]. It returns the index
+// of the closing '}' and true when the group has no top-level comma, i.e. it
+// is "{}" , "{word}" or a numeric range. Escaped bytes are skipped.
+func singleBrace(p []byte, i int) (int, bool) {
+	j := i + 1
+	for ; j < len(p) && p[j] != '}'; j++ {
+		if p[j] == '\\' && j+1 < len(p) {
+			j++
+			continue
+		}
+		if p[j] == ',' {
+			return j, false
+		}
+	}
+	if j >= len(p) {
+		return j, false
+	}
+	return j, true
+}
+
+// insertByte returns p with c inserted before index i.
+func insertByte(p []byte, i int, c byte) []byte {
+	p = append(p, 0)
+	copy(p[i+1:], p[i:])
+	p[i] = c
+	return p
+}
+./internal/glob/literal.go
+--- ./internal/glob/literal.go ---
+package glob
+
+import (
+	"fmt"
+	"strings"
+
+	"quire/internal/ctext"
+)
+
+// Special lists the bytes that have a meaning in a section glob.
+const Special = `?\*-{},`
+
+// EscapeDir escapes the glob-special bytes of a directory path so that the
+// path matches only itself when a section glob is appended to it.
+func EscapeDir(dir string) string {
+	var b strings.Builder
+	for i := 0; i < len(dir); i++ {
+		if strings.IndexByte(Special, dir[i]) >= 0 {
+			b.WriteByte('\\')
+		}
+		b.WriteByte(dir[i])
+	}
+	return b.String()
+}
+
+// isPunct reports whether RE2 accepts c after a backslash as a literal.
+func isPunct(c byte) bool {
+	return c >= '!' && c <= '/' || c >= ':' && c <= '@' || c >= '[' && c <= '`' || c >= '{' && c <= '~'
+}
+
+// quoteByte returns the regexp text that matches the byte c literally.
+func quoteByte(c byte) string {
+	switch {
+	case ctext.IsAlnum(c), c >= 0x80:
+		return string([]byte{c})
+	case isPunct(c):
+		return `\` + string([]byte{c})
+	default:
+		return fmt.Sprintf(`\x{%02x}`, c)
+	}
+}
+
+// escapedPair returns the regexp text for a backslash followed by c, which
+// the core passes to the regexp engine unchanged.
+func escapedPair(c byte) string {
+	if ctext.IsAlnum(c) {
+		return `\` + string([]byte{c})
+	}
+	return quoteByte(c)
+}
+./internal/glob/brackets.go
+--- ./internal/glob/brackets.go ---
+package glob
+
+import "bytes"
+
+// openBracket translates the '[' at p[i], outside any class. A bracket
+// expression containing '/' is taken literally up to its first ']'. It
+// returns the regexp text, the index of the last byte consumed, whether a
+// character class is now open, and whether the text is a literal copy.
+func openBracket(p []byte, i int) (text string, last int, inClass, literal bool) {
+	if bracketHasSlash(p, i) {
+		end := bytes.IndexByte(p[i:], ']')
+		if end < 0 {
+			return `\` + string(p[i:]), len(p) - 1, false, true
+		}
+		end += i
+		return `\` + string(p[i:end]) + `\]`, end, false, true
+	}
+	if i+1 < len(p) && p[i+1] == '^' {
+		return "[^", i + 1, true, false
+	}
+	return "[", i, true, false
+}
+
+// bracketHasSlash reports whether a '/' occurs between p[i] and the next
+// unescaped ']'.
+func bracketHasSlash(p []byte, i int) bool {
+	for j := i; j < len(p) && p[j] != ']'; j++ {
+		if p[j] == '\\' && j+1 < len(p) {
+			j++
+			continue
+		}
+		if p[j] == '/' {
+			return true
+		}
+	}
+	return false
+}
+./internal/props/derive.go
+--- ./internal/props/derive.go ---
+package props
+
+import "quire/internal/version"
+
+// Derive fills in the indentation properties implied by the ones that were
+// set, for a file resolved with compatibility version v.
+func Derive(s *Store, v version.Version) {
+	tabIndent := v.Compare(version.TabIndent) >= 0
+	if tabIndent {
+		if style, ok := s.Get("indent_style"); ok && style == "tab" {
+			if _, ok := s.Get("indent_size"); !ok {
+				s.Set("indent_size", "tab")
+			}
+		}
+		if size, ok := s.Get("indent_size"); ok && size == "tab" {
+			if width, ok := s.Get("tab_width"); ok {
+				s.Set("indent_size", width)
+			}
+		}
+	}
+	if size, ok := s.Get("indent_size"); ok {
+		if _, ok := s.Get("tab_width"); !ok && (!tabIndent || size != "tab") {
+			s.Set("tab_width", size)
+		}
+	}
+}
+./internal/props/store.go
+--- ./internal/props/store.go ---
+// Package props keeps the properties collected for one file.
+package props
+
+import "quire/internal/ctext"
+
+// Pair is one property as printed.
+type Pair struct {
+	Name, Value string
+}
+
+// Store is an ordered set of properties keyed by lowercased name.
+type Store struct {
+	pairs []Pair
+}
+
+// Set records a property. Names are case-insensitive and stored lowercased;
+// values of the properties listed in folded are lowercased too. The last
+// value set for a name wins.
+func (s *Store) Set(name, value string) {
+	name = ctext.Lower(name)
+	value = foldValue(name, value)
+	for i := range s.pairs {
+		if s.pairs[i].Name == name {
+			s.pairs = append(s.pairs[:i], s.pairs[i+1:]...)
+			break
+		}
+	}
+	s.pairs = append(s.pairs, Pair{name, value})
+}
+
+// Get returns the value stored for a lowercased name.
+func (s *Store) Get(name string) (string, bool) {
+	for _, p := range s.pairs {
+		if p.Name == name {
+			return p.Value, true
+		}
+	}
+	return "", false
+}
+
+// Reset forgets every property.
+func (s *Store) Reset() {
+	s.pairs = nil
+}
+
+// Pairs returns the properties in output order.
+func (s *Store) Pairs() []Pair {
+	return s.pairs
+}
+./internal/props/fold.go
+--- ./internal/props/fold.go ---
+package props
+
+import "quire/internal/ctext"
+
+// folded lists the properties whose values are case-insensitive.
+var folded = map[string]bool{
+	"end_of_line":              true,
+	"indent_style":             true,
+	"indent_size":              true,
+	"tab_width":                true,
+	"insert_final_newline":     true,
+	"trim_trailing_whitespace": true,
+	"charset":                  true,
+	"max_line_length":          true,
+}
+
+func foldValue(name, value string) string {
+	if folded[name] {
+		return ctext.Lower(value)
+	}
+	return value
+}
+./internal/ctext/ctext_test.go
+--- ./internal/ctext/ctext_test.go ---
+package ctext
+
+import "testing"
+
+func TestAtoi(t *testing.T) {
+	for in, want := range map[string]int{
+		"12":    12,
+		" -7x":  -7,
+		"+3..5": 3,
+		"":      0,
+		"abc":   0,
+		"08":    8,
+	} {
+		if got := Atoi(in); got != want {
+			t.Errorf("Atoi(%q) = %d, want %d", in, got, want)
+		}
+	}
+}
+
+func TestLowerIsASCIIOnly(t *testing.T) {
+	if got := Lower("UTF-8 ÄB"); got != "utf-8 Äb" {
+		t.Errorf("Lower = %q", got)
+	}
+	if !EqualFold("ROOT", "root") || EqualFold("root", "roots") {
+		t.Error("EqualFold")
+	}
+}
+
+func TestTrim(t *testing.T) {
+	if got := TrimLeft(TrimRight(" \t a b \r\n")); got != "a b" {
+		t.Errorf("trim = %q", got)
+	}
+}
+./internal/ctext/ctext.go
+--- ./internal/ctext/ctext.go ---
+// Package ctext holds the byte-level character rules quire shares with the
+// C core: ASCII-only case folding, C isspace/isalnum and strtol-style numbers.
+package ctext
+
+import "math"
+
+// IsSpace reports whether c is one of the six C whitespace characters.
+func IsSpace(c byte) bool {
+	return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r'
+}
+
+// IsAlnum reports whether c is an ASCII letter or digit.
+func IsAlnum(c byte) bool {
+	return c >= '0' && c <= '9' || c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'
+}
+
+// Lower lowercases ASCII letters and leaves every other byte alone.
+func Lower(s string) string {
+	b := []byte(s)
+	for i, c := range b {
+		if c >= 'A' && c <= 'Z' {
+			b[i] = c + ('a' - 'A')
+		}
+	}
+	return string(b)
+}
+
+// EqualFold compares two strings ignoring ASCII case only.
+func EqualFold(a, b string) bool {
+	return len(a) == len(b) && Lower(a) == Lower(b)
+}
+
+// TrimRight removes trailing whitespace.
+func TrimRight(s string) string {
+	for len(s) > 0 && IsSpace(s[len(s)-1]) {
+		s = s[:len(s)-1]
+	}
+	return s
+}
+
+// TrimLeft removes leading whitespace.
+func TrimLeft(s string) string {
+	for len(s) > 0 && IsSpace(s[0]) {
+		s = s[1:]
+	}
+	return s
+}
+
+// Atoi converts the leading decimal number of s the way strtol does:
+// optional leading whitespace and sign, digits up to the first non-digit,
+// 0 when there are no digits. Out-of-range values saturate and are then
+// narrowed to a C int.
+func Atoi(s string) int {
+	i := 0
+	for i < len(s) && IsSpace(s[i]) {
+		i++
+	}
+	neg := false
+	if i < len(s) && (s[i] == '+' || s[i] == '-') {
+		neg = s[i] == '-'
+		i++
+	}
+	var n uint64
+	overflow := false
+	for ; i < len(s) && s[i] >= '0' && s[i] <= '9'; i++ {
+		if n > (math.MaxInt64-9)/10 {
+			overflow = true
+			continue
+		}
+		n = n*10 + uint64(s[i]-'0')
+	}
+	var v int64
+	switch {
+	case overflow && neg:
+		v = math.MinInt64
+	case overflow:
+		v = math.MaxInt64
+	case neg:
+		v = -int64(n)
+	default:
+		v = int64(n)
+	}
+	return int(int32(v))
+}
+[?2004hroot@aeaec0505fac:/app# go test ./...
+[?2004lbash: go: command not found
+[?2004hroot@aeaec0505fac:/app# python3 - <<'PY'
+[?2004l[?2004h> from pathlib import Path
+[?2004l[?2004h> 
+[?2004l[?2004h> p=Path('internal/version/version.go')
+[?2004l[?2004h> s=p.read_text().replace('\t"strings"\n','')
+[?2004l[?2004h> s=s.replace('func (v Version) Compare(o Version) int {\n\treturn strings.Compare(v.String(), o.String())\n}', '''func (v Version) Compare(o Version) int {
+[?2004l[?2004h> if v.Major != o.Major {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if v.Major < o.Major { return -1 }
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return 1
+[?2004l[?2004h> }
+[?2004lnal[?2004h> if v.Minor != o.Minor {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if v.Minor < o.Minor { return -1 }
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return 1
+[?2004l[?2004h> }
+[?2004l[?2004h> if v.Patch < o.Patch { return -1 }
+[?2004l[?2004h> if v.Patch > o.Patch { return 1 }
+[?2004l[?2004h> return 0
+[?2004l[?2004h> }''')
+[?2004l[?2004h> p.write_text(s)
+[?2004l[?2004h> 
+[?2004l[?2004h> p=Path('internal/props/store.go')
+[?2004l[?2004h> s=p.read_text().replace('''for i := range s.pairs {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if s.pairs[i].Name == name {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> s.pairs = append(s.pairs[:i], s.pairs[i+1:]...)
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> break
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> }
+[?2004l[?2004h> }
+[?2004l[?2004h> s.pairs = append(s.pairs, Pair{name, value})''','''for i := range s.pairs {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if s.pairs[i].Name == name {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> s.pairs[i].Value = value
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> }
+[?2004l[?2004h> }
+[?2004l[?2004h> s.pairs = append(s.pairs, Pair{name, value})''')
+[?2004l[?2004h> p.write_text(s)
+[?2004l[?2004h> 
+[?2004l[?2004h> p=Path('internal/props/fold.go')
+[?2004l[?2004h> s=p.read_text().replace('\t"tab_width":                true,\n','').replace('\t"max_line_length":          true,\n','')
+[?2004l[?2004h> p.write_text(s)
+[?2004l[?2004h> 
+[?2004l[?2004h> p=Path('internal/resolve/resolve.go')
+[?2004l[?2004h> s=p.read_text().replace('''if ctext.EqualFold(name, "root") && ctext.EqualFold(value, "true") {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> w.store.Reset()
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return
+[?2004l[?2004h> }
+[?2004l[?2004h> if glob.Match(sectionPattern(w.dir, section), w.full) {''','''if section == "" {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if ctext.EqualFold(name, "root") && ctext.EqualFold(value, "true") {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> w.store.Reset()
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> }
+[?2004lel[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return
+[?2004l[?2004h> }
+[?2004l[?2004h> if glob.Match(sectionPattern(w.dir, section), w.full) {''')
+[?2004l[?2004h> p.write_text(s)
+[?2004l[?2004h> 
+[?2004l[?2004h> p=Path('internal/resolve/section.go')
+[?2004l[?2004h> s=p.read_text().replace('''if strings.HasPrefix(header, "/") {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return base + header
+[?2004l[?2004h> }
+[?2004l[?2004h> return base + "**/" + header''','''if strings.HasPrefix(header, "/") {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return base + header
+[?2004l[?2004h> }
+[?2004l[?2004h> if strings.Contains(header, "/") {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return base + "/" + header
+[?2004l[?2004h> }
+[?2004l[?2004h> return base + "/**/" + header''')
+[?2004l[?2004h> p.write_text(s)
+[?2004l"[?2004h> 
+[?2004l[?2004h> p=Path('internal/cli/run.go')
+[?2004l:= []Pair{{"a", "two"},[?2004h> s=p.read_text().replace('''
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> s=p.read_text().replace('''if headers {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> fmt.Fprintf(out, "[%s]\\n", f.name)
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> }''','''if headers || f.fromStdin {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> fmt.Fprintf(out, "[%s]\\n", f.name)
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> }''')
+[?2004lind[?2004h> p.write_text(s)
+[?2004l[?2004h> 
+[?2004l[?2004h> p=Path('internal/glob/literal.go')
+[?2004l[?2004h> s=p.read_text().replace('const Special = `?\\*-{},`','const Special = `?[]\\*-{},`')
+[?2004l[?2004h> p.write_text(s)
+[?2004l[?2004h> 
+[?2004l[?2004h> p=Path('internal/ini/scan.go')
+[?2004l[?2004h> p.write_text(r'''package ini
+[?2004l[?2004h> 
+[?2004l[?2004h> import "quire/internal/ctext"
+[?2004l[?2004h> 
+[?2004l[?2004h> // isCommentAt reports whether s[i] opens an inline comment. At the start of
+[?2004l[?2004h> // the already-trimmed line comments are handled by the parser; inline comments
+[?2004l[?2004h> // require whitespace immediately before the marker.
+[?2004l[?2004h> func isCommentAt(s string, i int) bool {
+[?2004l[?2004h> return i > 0 && (s[i] == ';' || s[i] == '#') && ctext.IsSpace(s[i-1])
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> // indexOrComment returns the index of the first c in s, or of the first
+[?2004l[?2004h> // inline comment if that comes earlier, or len(s).
+[?2004l[?2004h> func indexOrComment(s string, c byte) int {
+[?2004l[?2004h> for i := 0; i < len(s); i++ {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if s[i] == c || isCommentAt(s, i) {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return i
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> }
+[?2004lo",[?2004h> }
+[?2004l[?2004h> return len(s)
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> // lastIndexBeforeComment returns the index of the last c before an inline
+[?2004l[?2004h> // comment, or -1 when there is none.
+[?2004l [?2004h> func lastIndexBeforeComment(s string, c byte) int {
+[?2004l[?2004h> last := -1
+[?2004l[?2004h> for i := 0; i < len(s) && !isCommentAt(s, i); i++ {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if s[i] == c {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> last = i
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> }
+[?2004l[?2004h> }
+[?2004l[?2004h> return last
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> // stripComment cuts an inline comment off a value. The value has already had
+[?2004l[?2004h> // separator-following whitespace removed, so a marker at index zero is data.
+[?2004l[?2004h> func stripComment(value string) string {
+[?2004l[?2004h> for i := 0; i < len(value); i++ {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if isCommentAt(value, i) {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return value[:i]
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> }
+[?2004l[?2004h> }
+[?2004l[?2004h> return value
+[?2004l[?2004h> }
+[?2004l[?2004h> ''')
+[?2004l[?2004h> 
+[?2004l[?2004h> p=Path('internal/ini/parser.go')
+[?2004l[?2004h> s=p.read_text().replace('''
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> s=p.read_text().replace('''
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> s=p.read_text().replace('''end := lastIndexBeforeComment(body, ']')
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if end >= len(body) || body[end] != ']' {''','''end := lastIndexBeforeComment(body, ']')
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if end < 0 {''')
+[?2004l[?2004h> p.write_text(s)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@aeaec0505fac:/app# 
+[?2004l[?2004hroot@aeaec0505fac:/app# python3 - <<'PY'
+[?2004l[?2004h> from pathlib import Path
+[?2004l[?2004h> p=Path('internal/glob/compile.go')
+[?2004l[?2004h> s=p.read_text()
+[?2004l[?2004h> s=s.replace('''
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> s=s.replace('''case '*':
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if i+1 < len(p) && p[i+1] == '*' {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> b.add(`.*`, 2)
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> i++
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> } else {''','''case '*':
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if i+1 < len(p) && p[i+1] == '*' {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> b.add(`.*`, 2)
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> i++
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> } else {''')
+[?2004l[?2004h> # Handle the complete /**/ token in the slash case, creating the numbered
+[?2004l[?2004h> # capture required by the C core's range-validation behavior.
+[?2004l[?2004h> s=s.replace('''
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> s=s.replace('''case '/':
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> b.add(`\\/`, 2)''','''case '/':
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if i+3 < len(p) && p[i+1] == '*' && p[i+2] == '*' && p[i+3] == '/' {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> b.add(`(\\/.*\\/|\\/)`, 11)
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> i += 3
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> } else {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> b.add(`\\/`, 2)
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> }''')
+[?2004l[?2004h> p.write_text(s)
+[?2004l[?2004h> 
+[?2004l[?2004h> p=Path('internal/glob/brackets.go')
+[?2004l[?2004h> s=p.read_text().replace('''if i+1 < len(p) && p[i+1] == '^' {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return "[^", i + 1, true, false
+[?2004l[?2004h> }
+[?2004l[?2004h> return "[", i, true, false''','''if i+1 < len(p) && p[i+1] == '!' {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return "[^", i + 1, true, false
+[?2004l[?2004h> }
+[?2004l[?2004h> if i+1 < len(p) && p[i+1] == '^' {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return `[\\^`, i + 1, true, false
+[?2004l[?2004h> }
+[?2004l[?2004h> return "[", i, true, false''')
+[?2004l[?2004h> p.write_text(s)
+[?2004l[?2004h> 
+[?2004l[?2004h> p=Path('internal/glob/ranges.go')
+[?2004l[?2004h> s=p.read_text().replace('''if text == "" || text[0] == '0' {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return false
+[?2004l[?2004h> }''','''if text == "" {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return false
+[?2004l[?2004h> }
+[?2004l[?2004h> digits := text
+[?2004l[?2004h> if digits[0] == '+' || digits[0] == '-' {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> digits = digits[1:]
+[?2004l[?2004h> }
+[?2004l[?2004h> if digits == "" || digits[0] == '0' {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return false
+[?2004l[?2004h> }''')
+[?2004l[?2004h> p.write_text(s)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@aeaec0505fac:/app# 
+[?2004l[?2004hroot@aeaec0505fac:/app# cat > internal/resolve/section_test.go <<'EOF'
+[?2004l[?2004h> package resolve
+[?2004l[?2004h> 
+[?2004l[?2004h> import (
+[?2004l[?2004h> "testing"
+[?2004l[?2004h> "quire/internal/glob"
+[?2004l[?2004h> )
+[?2004l[?2004h> 
+[?2004l[?2004h> func TestSectionPatternSlashRulesAndEscapedDirectory(t *testing.T) {
+[?2004l[?2004h> if p := sectionPattern("/repo", "scripts/**"); p != "/repo/scripts/**" {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> t.Fatalf("pattern = %q", p)
+[?2004l[?2004h> }
+[?2004l[?2004h> if glob.Match(sectionPattern("/repo", "scripts/**"), "/repo/tools/scripts/x") {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> t.Fatal("slash-containing header matched at a deeper level")
+[?2004l[?2004h> }
+[?2004l[?2004h> p := sectionPattern("/srv/work/[wip] shop", "*.go")
+[?2004l[?2004h> if !glob.Match(p, "/srv/work/[wip] shop/x.go") {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> t.Fatalf("escaped directory pattern %q did not match", p)
+[?2004l[?2004h> }
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@aeaec0505fac:/app# 
+[?2004l[?2004hroot@aeaec0505fac:/app# cat > internal/props/store_test.go <<'EOF'
+[?2004l[?2004h> package props
+[?2004l[?2004h> 
+[?2004l[?2004h> import (
+[?2004l[?2004h> "reflect"
+[?2004l[?2004h> "testing"
+[?2004l[?2004h> "quire/internal/version"
+[?2004l[?2004h> )
+[?2004l[?2004h> 
+[?2004l[?2004h> func TestReplacementKeepsPositionAndValueFolding(t *testing.T) {
+[?2004l[?2004h> var s Store
+[?2004l[?2004h> s.Set("A", "one")
+[?2004l[?2004h> s.Set("tab_width", "X")
+[?2004l[?2004h> s.Set("a", "two")
+[?2004l[?2004h> want := []Pair{{"a", "two"}, {"tab_width", "X"}}
+[?2004l[?2004h> if !reflect.DeepEqual(s.Pairs(), want) { t.Fatalf("got %#v", s.Pairs()) }
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> func TestTabIndentDerivation(t *testing.T) {
+[?2004l[?2004h> var s Store
+[?2004l[?2004h> s.Set("indent_style", "TAB")
+[?2004l[?2004h> Derive(&s, version.Current)
+[?2004l[?2004h> want := []Pair{{"indent_style", "tab"}, {"indent_size", "tab"}}
+[?2004l[?2004h> if !reflect.DeepEqual(s.Pairs(), want) { t.Fatalf("got %#v", s.Pairs()) }
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@aeaec0505fac:/app# 
+[?2004l[?2004hroot@aeaec0505fac:/app# cat >> internal/ini/parser_test.go <<'EOF'
+[?2004l[?2004h> 
+[?2004l[?2004h> func TestInlineCommentsRequirePrecedingWhitespace(t *testing.T) {
+[?2004l[?2004h> got, line := parse(t, "[*.txt] ; note\ncolor = #ff0000\nlist = a;b\ncut = a ;gone\nsemi = ;x\n")
+[?2004l[?2004h> want := []prop{{"*.txt", "color", "#ff0000"}, {"*.txt", "list", "a;b"}, {"*.txt", "cut", "a"}, {"*.txt", "semi", ";x"}}
+[?2004l[?2004h> if line != 0 || !reflect.DeepEqual(got, want) { t.Fatalf("got %v line %d", got, line) }
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@aeaec0505fac:/app# 
+[?2004l[?2004hroot@aeaec0505fac:/app# cat >> internal/glob/compile_test.go <<'EOF'
+[?2004l[?2004h> 
+[?2004l[?2004h> func TestDoubleStarDirectoriesAndBracketRules(t *testing.T) {
+[?2004l[?2004h> for _, name := range []string{"/p/a.go", "/p/x/a.go", "/p/x/y/a.go"} {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if !Match("/p/**/*.go", name) { t.Errorf("did not match %q", name) }
+[?2004l[?2004h> }
+[?2004l[?2004h> if !Match("/[!ab]", "/c") || Match("/[!ab]", "/a") { t.Error("negated class") }
+[?2004l[?2004h> if !Match("/[^a]", "/^") || !Match("/[^a]", "/a") || Match("/[^a]", "/b") { t.Error("literal caret class") }
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@aeaec0505fac:/app# 
+[?2004l[?2004hroot@aeaec0505fac:/app# find /usr /usr/local /opt -type f -name go -perm -111 2>/dev/null | head -20
+[?2004l/usr/local/go/bin/go
+/usr/local/go/bin/go
+[?2004hroot@aeaec0505fac:/app# export PATH=/usr/local/go/bin:$PATH
+[?2004l[?2004hroot@aeaec0505fac:/app# gofmt -w cmd internal
+[?2004l[?2004hroot@aeaec0505fac:/app# 
+[?2004l[?2004hroot@aeaec0505fac:/app# go test ./...
+[?2004l# quire/internal/version
+internal/version/version.go:65:22: undefined: strings
+go build -o /tmp/quire ./cmd/quire
+FAIL	quire/cmd/quire [build failed]
+FAIL	quire/internal/cli [build failed]
+ok  	quire/internal/ctext	0.007s
+--- FAIL: TestDoubleStarDirectoriesAndBracketRules (0.00s)
+    compile_test.go:44: did not match "/p/a.go"
+    compile_test.go:48: negated class
+    compile_test.go:51: literal caret class
+FAIL
+FAIL	quire/internal/glob	0.012s
+--- FAIL: TestParseFirstErrorLine (0.00s)
+panic: runtime error: index out of range [-1] [recovered]
+	panic: runtime error: index out of range [-1]
+
+goroutine 18 [running]:
+testing.tRunner.func1.2({0x56d5c0, 0xc0000be018})
+	/usr/local/go/src/testing/testing.go:1734 +0x21c
+testing.tRunner.func1()
+	/usr/local/go/src/testing/testing.go:1737 +0x35e
+panic({0x56d5c0?, 0xc0000be018?})
+	/usr/local/go/src/runtime/panic.go:792 +0x132
+quire/internal/ini.Parse({0x5b7ab8, 0xc0000bc020?}, 0xc000054700)
+	/app/internal/ini/parser.go:55 +0x3a5
+quire/internal/ini.parse(0x69a400?, {0x585c45, 0x27})
+	/app/internal/ini/parser_test.go:14 +0xaa
+quire/internal/ini.TestParseFirstErrorLine(0xc00008a8c0)
+	/app/internal/ini/parser_test.go:29 +0x25
+testing.tRunner(0xc00008a8c0, 0x58a3e8)
+	/usr/local/go/src/testing/testing.go:1792 +0xf4
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:1851 +0x413
+FAIL	quire/internal/ini	0.005s
+FAIL	quire/internal/props [build failed]
+FAIL	quire/internal/resolve [build failed]
+FAIL	quire/internal/version [build failed]
+FAIL
+[?2004hroot@aeaec0505fac:/app# go build -o /tmp/quire ./cmd/quire
+[?2004l# quire/internal/version
+internal/version/version.go:65:22: undefined: strings
+[?2004hroot@aeaec0505fac:/app# python3 - <<'PY'
+[?2004l[?2004h> from pathlib import Path
+[?2004l[?2004h> p=Path('internal/version/version.go')
+[?2004l[?2004h> s=p.read_text().replace('import (\n\t"fmt"', 'import (\n\t"fmt"\n\t"strings"')
+[?2004l[?2004h> p.write_text(s)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@aeaec0505fac:/app# gofmt -w internal/version/version.go
+[?2004l[?2004hroot@aeaec0505fac:/app# go test ./...
+[?2004l?   	quire/cmd/quire	[no test files]
+?   	quire/internal/cli	[no test files]
+ok  	quire/internal/ctext	(cached)
+--- FAIL: TestDoubleStarDirectoriesAndBracketRules (0.00s)
+    compile_test.go:44: did not match "/p/a.go"
+    compile_test.go:48: negated class
+    compile_test.go:51: literal caret class
+FAIL
+FAIL	quire/internal/glob	0.015s
+--- FAIL: TestParseFirstErrorLine (0.00s)
+panic: runtime error: index out of range [-1] [recovered]
+	panic: runtime error: index out of range [-1]
+
+goroutine 20 [running]:
+testing.tRunner.func1.2({0x56d5c0, 0xc0000be018})
+	/usr/local/go/src/testing/testing.go:1734 +0x21c
+testing.tRunner.func1()
+	/usr/local/go/src/testing/testing.go:1737 +0x35e
+panic({0x56d5c0?, 0xc0000be018?})
+	/usr/local/go/src/runtime/panic.go:792 +0x132
+quire/internal/ini.Parse({0x5b7ab8, 0xc0000a0040?}, 0xc000055700)
+	/app/internal/ini/parser.go:55 +0x3a5
+quire/internal/ini.parse(0x69a400?, {0x585c45, 0x27})
+	/app/internal/ini/parser_test.go:14 +0xaa
+quire/internal/ini.TestParseFirstErrorLine(0xc00008ac40)
+	/app/internal/ini/parser_test.go:29 +0x25
+testing.tRunner(0xc00008ac40, 0x58a3e8)
+	/usr/local/go/src/testing/testing.go:1792 +0xf4
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:1851 +0x413
+FAIL	quire/internal/ini	0.008s
+--- FAIL: TestReplacementKeepsPositionAndValueFolding (0.00s)
+    store_test.go:16: got []props.Pair{props.Pair{Name:"tab_width", Value:"X"}, props.Pair{Name:"a", Value:"two"}}
+FAIL
+FAIL	quire/internal/props	0.057s
+--- FAIL: TestSectionPatternSlashRulesAndEscapedDirectory (0.00s)
+    section_test.go:10: pattern = "/repo**/scripts/**"
+FAIL
+FAIL	quire/internal/resolve	0.006s
+?   	quire/internal/version	[no test files]
+FAIL
+[?2004hroot@aeaec0505fac:/app# go build -o /tmp/quire ./cmd/quire
+[?2004l[?2004hroot@aeaec0505fac:/app# sed -n '35,80p' internal/ini/parser.go; sed -n '1,100p' internal/props/store.go; cat internal/resolve/section.go; cat internal/glob/brackets.go; sed -n '55,155p' internal/glob/compile.go
+[?2004l// Parse calls h for every property in r and returns the number of the first
+// line with a syntax error, or 0. Parsing continues after an error.
+func Parse(r io.Reader, h Handler) int {
+	lr := newLineReader(r)
+	section := ""
+	errLine := 0
+	for lineno := 1; ; lineno++ {
+		line, ok := lr.next()
+		if !ok {
+			break
+		}
+		if lineno == 1 {
+			line = strings.TrimPrefix(line, "\xef\xbb\xbf")
+		}
+		start := ctext.TrimLeft(ctext.TrimRight(line))
+		switch {
+		case start == "", start[0] == ';', start[0] == '#':
+		case start[0] == '[':
+			body := start[1:]
+			end := lastIndexBeforeComment(body, ']')
+			if end >= len(body) || body[end] != ']' {
+				if errLine == 0 {
+					errLine = lineno
+				}
+				continue
+			}
+			if end > MaxSectionName {
+				continue
+			}
+			section = body[:end]
+		default:
+			end := indexOrComment(start, '=')
+			if end == len(start) || start[end] != '=' {
+				end = indexOrComment(start, ':')
+			}
+			if end == len(start) || (start[end] != '=' && start[end] != ':') {
+				if errLine == 0 {
+					errLine = lineno
+				}
+				continue
+			}
+			name := ctext.TrimRight(start[:end])
+			value := ctext.TrimRight(stripComment(ctext.TrimLeft(start[end+1:])))
+			if len(name) > MaxPropertyName || len(value) > MaxPropertyValue {
+				continue
+			}
+// Package props keeps the properties collected for one file.
+package props
+
+import "quire/internal/ctext"
+
+// Pair is one property as printed.
+type Pair struct {
+	Name, Value string
+}
+
+// Store is an ordered set of properties keyed by lowercased name.
+type Store struct {
+	pairs []Pair
+}
+
+// Set records a property. Names are case-insensitive and stored lowercased;
+// values of the properties listed in folded are lowercased too. The last
+// value set for a name wins.
+func (s *Store) Set(name, value string) {
+	name = ctext.Lower(name)
+	value = foldValue(name, value)
+	for i := range s.pairs {
+		if s.pairs[i].Name == name {
+			s.pairs = append(s.pairs[:i], s.pairs[i+1:]...)
+			break
+		}
+	}
+	s.pairs = append(s.pairs, Pair{name, value})
+}
+
+// Get returns the value stored for a lowercased name.
+func (s *Store) Get(name string) (string, bool) {
+	for _, p := range s.pairs {
+		if p.Name == name {
+			return p.Value, true
+		}
+	}
+	return "", false
+}
+
+// Reset forgets every property.
+func (s *Store) Reset() {
+	s.pairs = nil
+}
+
+// Pairs returns the properties in output order.
+func (s *Store) Pairs() []Pair {
+	return s.pairs
+}
+package resolve
+
+import (
+	"strings"
+
+	"quire/internal/glob"
+)
+
+// sectionPattern builds the glob a file path is matched against for a
+// section header found in the EditorConfig file in dir. A header starting
+// with '/' is matched from dir itself; any other header can match in dir or
+// in any directory below it. The directory part is escaped so it only
+// matches itself.
+func sectionPattern(dir, header string) string {
+	base := glob.EscapeDir(dir)
+	if strings.HasPrefix(header, "/") {
+		return base + header
+	}
+	return base + "**/" + header
+}
+package glob
+
+import "bytes"
+
+// openBracket translates the '[' at p[i], outside any class. A bracket
+// expression containing '/' is taken literally up to its first ']'. It
+// returns the regexp text, the index of the last byte consumed, whether a
+// character class is now open, and whether the text is a literal copy.
+func openBracket(p []byte, i int) (text string, last int, inClass, literal bool) {
+	if bracketHasSlash(p, i) {
+		end := bytes.IndexByte(p[i:], ']')
+		if end < 0 {
+			return `\` + string(p[i:]), len(p) - 1, false, true
+		}
+		end += i
+		return `\` + string(p[i:end]) + `\]`, end, false, true
+	}
+	if i+1 < len(p) && p[i+1] == '^' {
+		return "[^", i + 1, true, false
+	}
+	return "[", i, true, false
+}
+
+// bracketHasSlash reports whether a '/' occurs between p[i] and the next
+// unescaped ']'.
+func bracketHasSlash(p []byte, i int) bool {
+	for j := i; j < len(p) && p[j] != ']'; j++ {
+		if p[j] == '\\' && j+1 < len(p) {
+			j++
+			continue
+		}
+		if p[j] == '/' {
+			return true
+		}
+	}
+	return false
+}
+			return false
+		}
+	}
+	return true
+}
+
+type builder struct {
+	out  strings.Builder
+	size int
+	ok   bool
+}
+
+// add appends text whose length in the C core's buffer is size.
+func (b *builder) add(text string, size int) {
+	if b.size+size >= maxRegexp {
+		b.ok = false
+	}
+	b.out.WriteString(text)
+	b.size += size
+}
+
+func translate(p []byte) (string, []numRange, bool) {
+	paired := bracesPaired(p)
+	b := &builder{size: 1, ok: true}
+	b.out.WriteString("^")
+	var ranges []numRange
+	depth := 0
+	inClass := false
+	for i := 0; i < len(p) && b.ok; i++ {
+		c := p[i]
+		switch c {
+		case '\\':
+			if i+1 < len(p) {
+				i++
+				b.add(escapedPair(p[i]), 2)
+			} else {
+				b.add(`\\`, 2)
+			}
+		case '?':
+			b.add(`[^/]`, 4)
+		case '*':
+			if i+1 < len(p) && p[i+1] == '*' {
+				b.add(`.*`, 2)
+				i++
+			} else {
+				b.add(`[^\/]*`, 6)
+			}
+		case '[':
+			if inClass {
+				b.add(`\[`, 2)
+				break
+			}
+			text, last, cls, literal := openBracket(p, i)
+			if literal {
+				b.out.WriteString(text)
+				b.size += len(text)
+			} else {
+				b.add(text, len(text))
+			}
+			i, inClass = last, cls
+		case ']':
+			inClass = false
+			b.add("]", 1)
+		case '-':
+			if inClass {
+				b.add("-", 1)
+			} else {
+				b.add(`\-`, 2)
+			}
+		case '{':
+			if !paired {
+				b.add(`\{`, 2)
+				break
+			}
+			if end, single := singleBrace(p, i); single {
+				if r, ok := parseRange(string(p[i : end+1])); ok {
+					ranges = append(ranges, r)
+					b.add(numberPattern, len(numberPattern))
+					i = end
+					break
+				}
+				b.add(`\{`, 2)
+				p = insertByte(p, end, '\\')
+				break
+			}
+			depth++
+			b.add(`(?:`, 3)
+		case '}':
+			if !paired {
+				b.add(`\}`, 2)
+				break
+			}
+			depth--
+			b.add(")", 1)
+		case ',':
+			if depth > 0 {
+				b.add("|", 1)
+			} else {
+				b.add(`\,`, 2)
+			}
+		case '/':
+[?2004hroot@aeaec0505fac:/app# cat > internal/props/store.go <<'EOF'
+[?2004l[?2004h> // Package props keeps the properties collected for one file.
+[?2004l[?2004h> package props
+[?2004l[?2004h> 
+[?2004l[?2004h> import "quire/internal/ctext"
+[?2004l[?2004h> 
+[?2004l[?2004h> // Pair is one property as printed.
+[?2004l[?2004h> type Pair struct { Name, Value string }
+[?2004l[?2004h> 
+[?2004l[?2004h> // Store is an ordered set of properties keyed by lowercased name.
+[?2004l[?2004h> type Store struct { pairs []Pair }
+[?2004l[?2004h> 
+[?2004l[?2004h> // Set records a property. Replacing a property preserves its first position.
+[?2004l[?2004h> func (s *Store) Set(name, value string) {
+[?2004l[?2004h> name = ctext.Lower(name)
+[?2004l[?2004h> value = foldValue(name, value)
+[?2004l[?2004h> for i := range s.pairs {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if s.pairs[i].Name == name {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> s.pairs[i].Value = value
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> }
+[?2004l[?2004h> }
+[?2004l[?2004h> s.pairs = append(s.pairs, Pair{name, value})
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> func (s *Store) Get(name string) (string, bool) {
+[?2004l[?2004h> for _, p := range s.pairs {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if p.Name == name { return p.Value, true }
+[?2004l[?2004h> }
+[?2004l[?2004h> return "", false
+[?2004l[?2004h> }
+[?2004l[?2004h> func (s *Store) Reset() { s.pairs = nil }
+[?2004l[?2004h> func (s *Store) Pairs() []Pair { return s.pairs }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@aeaec0505fac:/app# 
+[?2004l[?2004hroot@aeaec0505fac:/app# cat > internal/resolve/section.go <<'EOF'
+[?2004l[?2004h> package resolve
+[?2004l[?2004h> 
+[?2004l[?2004h> import (
+[?2004l[?2004h> "strings"
+[?2004l[?2004h> "quire/internal/glob"
+[?2004l[?2004h> )
+[?2004l[?2004h> 
+[?2004l[?2004h> func sectionPattern(dir, header string) string {
+[?2004l[?2004h> base := glob.EscapeDir(dir)
+[?2004l[?2004h> if strings.HasPrefix(header, "/") {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return base + header
+[?2004l[?2004h> }
+[?2004l[?2004h> if strings.Contains(header, "/") {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return base + "/" + header
+[?2004l[?2004h> }
+[?2004l[?2004h> return base + "/**/" + header
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@aeaec0505fac:/app# 
+[?2004l[?2004hroot@aeaec0505fac:/app# cat > internal/glob/brackets.go <<'EOF'
+[?2004l[?2004h> package glob
+[?2004l[?2004h> 
+[?2004l[?2004h> import "bytes"
+[?2004l[?2004h> 
+[?2004l[?2004h> func openBracket(p []byte, i int) (text string, last int, inClass, literal bool) {
+[?2004l[?2004h> if bracketHasSlash(p, i) {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> end := bytes.IndexByte(p[i:], ']')
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if end < 0 { return `\` + string(p[i:]), len(p)-1, false, true }
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> end += i
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return `\` + string(p[i:end]) + `\]`, end, false, true
+[?2004l[?2004h> }
+[?2004l[?2004h> if i+1 < len(p) && p[i+1] == '!' {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return "[^", i+1, true, false
+[?2004l[?2004h> }
+[?2004l[?2004h> if i+1 < len(p) && p[i+1] == '^' {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return `[\^`, i+1, true, false
+[?2004l[?2004h> }
+[?2004l[?2004h> return "[", i, true, false
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> func bracketHasSlash(p []byte, i int) bool {
+[?2004l[?2004h> for j := i; j < len(p) && p[j] != ']'; j++ {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if p[j] == '\\' && j+1 < len(p) { j++; continue }
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if p[j] == '/' { return true }
+[?2004l[?2004h> }
+[?2004l[?2004h> return false
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@aeaec0505fac:/app# 
+[?2004l[?2004hroot@aeaec0505fac:/app# python3 - <<'PY'
+[?2004l[?2004h> from pathlib import Path
+[?2004l[?2004h> p=Path('internal/ini/parser.go')
+[?2004l[?2004h> s=p.read_text().replace("if end < 0 || body[end] != ']' {", "if end < 0 {")
+[?2004l[?2004h> p.write_text(s)
+[?2004l[?2004h> 
+[?2004l[?2004h> p=Path('internal/glob/compile.go')
+[?2004l[?2004h> s=p.read_text()
+[?2004l[?2004h> old='''\t\tcase '/':
+[?2004l[?2004h> \t\t\tb.add(`\\/`, 2)'''
+[?2004l[?2004h> new='''\t\tcase '/':
+[?2004l[?2004h> \t\t\tif i+3 < len(p) && p[i+1] == '*' && p[i+2] == '*' && p[i+3] == '/' {
+[?2004l[?2004h> \t\t\t\t// / ** / (without spaces) is one numbered capture and also
+[?2004l[?2004h> \t\t\t\t// matches a single slash, i.e. zero intervening directories.
+[?2004l[?2004h> \t\t\t\tb.add(`(\\/.*\\/|\\/)`, 11)
+[?2004l[?2004h> \t\t\t\ti += 3
+[?2004l[?2004h> \t\t\t} else {
+[?2004l[?2004h> \t\t\t\tb.add(`\\/`, 2)
+[?2004l[?2004h> \t\t\t}'''
+[?2004l[?2004h> if old not in s:
+[?2004l[?2004h>     raise SystemExit('slash case not found')
+[?2004l[?2004h> s=s.replace(old,new)
+[?2004l[?2004h> p.write_text(s)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@aeaec0505fac:/app# 
+[?2004l[?2004hroot@aeaec0505fac:/app# gofmt -w internal
+[?2004l[?2004hroot@aeaec0505fac:/app# go test ./...
+[?2004l?   	quire/cmd/quire	[no test files]
+?   	quire/internal/cli	[no test files]
+ok  	quire/internal/ctext	(cached)
+ok  	quire/internal/glob	0.003s
+--- FAIL: TestParseFirstErrorLine (0.00s)
+panic: runtime error: index out of range [-1] [recovered]
+	panic: runtime error: index out of range [-1]
+
+goroutine 34 [running]:
+testing.tRunner.func1.2({0x56d5c0, 0xc00012a018})
+	/usr/local/go/src/testing/testing.go:1734 +0x21c
+testing.tRunner.func1()
+	/usr/local/go/src/testing/testing.go:1737 +0x35e
+panic({0x56d5c0?, 0xc00012a018?})
+	/usr/local/go/src/runtime/panic.go:792 +0x132
+quire/internal/ini.Parse({0x5b7ab8, 0xc000128020?}, 0xc000054700)
+	/app/internal/ini/parser.go:55 +0x3a5
+quire/internal/ini.parse(0x69a400?, {0x585c45, 0x27})
+	/app/internal/ini/parser_test.go:14 +0xaa
+quire/internal/ini.TestParseFirstErrorLine(0xc00011c540)
+	/app/internal/ini/parser_test.go:29 +0x25
+testing.tRunner(0xc00011c540, 0x58a3e8)
+	/usr/local/go/src/testing/testing.go:1792 +0xf4
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:1851 +0x413
+FAIL	quire/internal/ini	0.006s
+ok  	quire/internal/props	0.002s
+ok  	quire/internal/resolve	0.002s
+?   	quire/internal/version	[no test files]
+FAIL
+[?2004hroot@aeaec0505fac:/app# nl -ba internal/ini/parser.go | sed -n '45,65p'
+[?2004l    45			}
+    46			if lineno == 1 {
+    47				line = strings.TrimPrefix(line, "\xef\xbb\xbf")
+    48			}
+    49			start := ctext.TrimLeft(ctext.TrimRight(line))
+    50			switch {
+    51			case start == "", start[0] == ';', start[0] == '#':
+    52			case start[0] == '[':
+    53				body := start[1:]
+    54				end := lastIndexBeforeComment(body, ']')
+    55				if end >= len(body) || body[end] != ']' {
+    56					if errLine == 0 {
+    57						errLine = lineno
+    58					}
+    59					continue
+    60				}
+    61				if end > MaxSectionName {
+    62					continue
+    63				}
+    64				section = body[:end]
+    65			default:
+[?2004hroot@aeaec0505fac:/app# python3 - <<'PY'
+[?2004l[?2004h> from pathlib import Path
+[?2004l[?2004h> p=Path('internal/ini/parser.go')
+[?2004l[?2004h> s=p.read_text()
+[?2004l[?2004h> s=s.replace("if end >= len(body) || body[end] != ']' {", "if end < 0 {")
+[?2004l[?2004h> s=s.replace("if end < 0 || body[end] != ']' {", "if end < 0 {")
+[?2004l[?2004h> p.write_text(s)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@aeaec0505fac:/app# gofmt -w internal/ini/parser.go
+[?2004l[?2004hroot@aeaec0505fac:/app# go test ./...
+[?2004l?   	quire/cmd/quire	[no test files]
+?   	quire/internal/cli	[no test files]
+ok  	quire/internal/ctext	(cached)
+ok  	quire/internal/glob	(cached)
+ok  	quire/internal/ini	0.002s
+ok  	quire/internal/props	(cached)
+ok  	quire/internal/resolve	(cached)
+?   	quire/internal/version	[no test files]
+[?2004hroot@aeaec0505fac:/app# go build -o /tmp/quire ./cmd/quire
+[?2004l[?2004hroot@aeaec0505fac:/app# rm -rf '/tmp/qcase' '/tmp/[wip] shop'; mkdir -p /tmp/qcase/scripts /tmp/qcase/tools/scripts '/tmp/[wip] shop'
+[?2004l[?2004hroot@aeaec0505fac:/app# cat > /tmp/qcase/.editorconfig <<'EOF'
+[?2004l[?2004h> root = true
+[?2004l[?2004h> [scripts/**]
+[?2004l[?2004h> scope = direct
+[?2004l[?2004h> [*.sh]
+[?2004l[?2004h> indent_style = tab
+[?2004l[?2004h> first = old
+[?2004l[?2004h> second = KeepCase
+[?2004l[?2004h> first = new
+[?2004l[?2004h> [root.txt]
+[?2004l[?2004h> root = section-value
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@aeaec0505fac:/app# cat > '/tmp/[wip] shop/.editorconfig' <<'EOF'
+[?2004l[?2004h> root=true
+[?2004l[?2004h> [*]
+[?2004l[?2004h> space = yes
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@aeaec0505fac:/app# printf '%s\n' '--- direct ---'; /tmp/quire /tmp/qcase/scripts/deploy.sh
+[?2004l--- direct ---
+scope=direct
+indent_style=tab
+first=new
+second=KeepCase
+indent_size=tab
+[?2004hroot@aeaec0505fac:/app# printf '%s\n' '--- nested ---'; /tmp/quire /tmp/qcase/tools/scripts/deploy.sh
+[?2004l--- nested ---
+indent_style=tab
+first=new
+second=KeepCase
+indent_size=tab
+[?2004hroot@aeaec0505fac:/app# printf '%s\n' '--- escaped dir ---'; /tmp/quire '/tmp/[wip] shop/a.txt'
+[?2004l--- escaped dir ---
+space=yes
+[?2004hroot@aeaec0505fac:/app# printf '%s\n' '--- stdin header ---'; printf ' /tmp/qcase/scripts/deploy.sh \n' | /tmp/quire -
+[?2004l--- stdin header ---
+scope=direct
+indent_style=tab
+first=new
+second=KeepCase
+indent_size=tab
+[?2004hroot@aeaec0505fac:/app# printf '%s\n' '--- section root ---'; /tmp/quire /tmp/qcase/root.txt
+[?2004l--- section root ---
+root=section-value
+[?2004hroot@aeaec0505fac:/app# printf '%s\n' '--- versions ---'; /tmp/quire -b 0.8 /tmp/qcase/scripts/deploy.sh; /tmp/quire -b 0.13 /tmp/qcase/scripts/deploy.sh >/tmp/new.out 2>/tmp/new.err; printf 'status=%s stderr=' "$?"; cat /tmp/new.err
+[?2004l--- versions ---
+scope=direct
+indent_style=tab
+first=new
+second=KeepCase
+status=1 stderr=Required version is greater than the current version.
+[?2004hroot@aeaec0505fac:/app# grep -R -n 'if headers' internal/cli/run.go; go test ./...
+[?2004l29:		if headers {
+?   	quire/cmd/quire	[no test files]
+?   	quire/internal/cli	[no test files]
+ok  	quire/internal/ctext	(cached)
+ok  	quire/internal/glob	(cached)
+ok  	quire/internal/ini	(cached)
+ok  	quire/internal/props	(cached)
+ok  	quire/internal/resolve	(cached)
+?   	quire/internal/version	[no test files]
+[?2004hroot@aeaec0505fac:/app# python3 - <<'PY'
+[?2004l[?2004h> from pathlib import Path
+[?2004l[?2004h> p=Path('internal/cli/run.go')
+[?2004l[?2004h> s=p.read_text().replace('if headers {', 'if headers || f.fromStdin {')
+[?2004l[?2004h> p.write_text(s)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@aeaec0505fac:/app# cat > internal/cli/run_test.go <<'EOF'
+[?2004l[?2004h> package cli
+[?2004l[?2004h> 
+[?2004l[?2004h> import (
+[?2004l[?2004h> "bytes"
+[?2004l[?2004h> "strings"
+[?2004l[?2004h> "testing"
+[?2004l[?2004h> )
+[?2004l[?2004h> 
+[?2004l[?2004h> func TestStdinPathAlwaysHasHeader(t *testing.T) {
+[?2004l[?2004h> var out, err bytes.Buffer
+[?2004l[?2004h> code := Main([]string{"quire", "-"}, strings.NewReader("/definitely/no/config/file.txt\n"), &out, &err)
+[?2004l[?2004h> if code != 0 || err.Len() != 0 || out.String() != "[/definitely/no/config/file.txt]\n" {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> t.Fatalf("code=%d out=%q err=%q", code, out.String(), err.String())
+[?2004l[?2004h> }
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@aeaec0505fac:/app# python3 - <<'PY'
+[?2004l[?2004h> from pathlib import Path
+[?2004l[?2004h> p=Path('internal/glob/brackets.go')
+[?2004l[?2004h> s=p.read_text()
+[?2004l[?2004h> old='''\tif bracketHasSlash(p, i) {
+[?2004l[?2004h> \t\tend := bytes.IndexByte(p[i:], ']')
+[?2004l[?2004h> \t\tif end < 0 {
+[?2004l[?2004h> \t\t\treturn `\\` + string(p[i:]), len(p) - 1, false, true
+[?2004l[?2004h> \t\t}
+[?2004l[?2004h> \t\tend += i
+[?2004l[?2004h> \t\treturn `\\` + string(p[i:end]) + `\\]`, end, false, true
+[?2004l[?2004h> \t}'''
+[?2004l[?2004h> new='''\tif bracketHasSlash(p, i) {
+[?2004l[?2004h> \t\tend := bytes.IndexByte(p[i:], ']')
+[?2004l[?2004h> \t\tif end < 0 {
+[?2004l[?2004h> \t\t\treturn `\\` + string(p[i:]), len(p) - 1, false, true
+[?2004l[?2004h> \t\t}
+[?2004l[?2004h> \t\tend += i
+[?2004l[?2004h> \t\tvar text string
+[?2004l[?2004h> \t\tfor _, c := range p[i : end+1] {
+[?2004l[?2004h> \t\t\ttext += quoteByte(c)
+[?2004l[?2004h> \t\t}
+[?2004l[?2004h> \t\treturn text, end, false, true
+[?2004l[?2004h> \t}'''
+[?2004l[?2004h> if old not in s:
+[?2004l[?2004h>     raise SystemExit('bracket block not found')
+[?2004l[?2004h> p.write_text(s)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@aeaec0505fac:/app# cat >> internal/glob/compile_test.go <<'EOF'
+[?2004l[?2004h> 
+[?2004l[?2004h> func TestBracketContainingSlashIsEntirelyLiteral(t *testing.T) {
+[?2004l[?2004h> if !Match(`/p/[a./b]`, `/p/[a./b]`) || Match(`/p/[a./b]`, `/p/[axb]`) {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> t.Error("slash bracket was not literal")
+[?2004l[?2004h> }
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@aeaec0505fac:/app# gofmt -w internal
+[?2004l[?2004hroot@aeaec0505fac:/app# go test ./...
+[?2004l?   	quire/cmd/quire	[no test files]
+ok  	quire/internal/cli	0.002s
+ok  	quire/internal/ctext	(cached)
+ok  	quire/internal/glob	0.003s
+ok  	quire/internal/ini	(cached)
+ok  	quire/internal/props	(cached)
+ok  	quire/internal/resolve	(cached)
+?   	quire/internal/version	[no test files]
+[?2004hroot@aeaec0505fac:/app# go build -o /tmp/quire ./cmd/quire
+[?2004l[?2004hroot@aeaec0505fac:/app# printf '/tmp/qcase/scripts/deploy.sh\n' | /tmp/quire -
+[?2004l[/tmp/qcase/scripts/deploy.sh]
+scope=direct
+indent_style=tab
+first=new
+second=KeepCase
+indent_size=tab
+[?2004hroot@aeaec0505fac:/app# git diff --check 2>/dev/null || true; git status --short 2>/dev/null || true
+[?2004l[?2004hroot@aeaec0505fac:/app# python3 - <<'PY'
+[?2004l[?2004h> from pathlib import Path
+[?2004l[?2004h> p=Path('internal/glob/literal.go')
+[?2004l[?2004h> s=p.read_text()
+[?2004l[?2004h> start=s.index('// escapedPair returns')
+[?2004l[?2004h> s=s[:start] + '''// escapedPair returns regexp text matching the character after a glob
+[?2004l[?2004h> // backslash literally.
+[?2004l[?2004h> func escapedPair(c byte) string {
+[?2004l[?2004h> return quoteByte(c)
+[?2004l[?2004h> }
+[?2004l[?2004h> '''
+[?2004l[?2004h> p.write_text(s)
+[?2004l[?2004h> 
+[?2004l[?2004h> p=Path('internal/glob/brackets.go')
+[?2004l[?2004h> s=p.read_text()
+[?2004l[?2004h> old='''func openBracket(p []byte, i int) (text string, last int, inClass, literal bool) {
+[?2004l[?2004h> if bracketHasSlash(p, i) {'''
+[?2004l[?2004h> new='''func openBracket(p []byte, i int) (text string, last int, inClass, literal bool) {
+[?2004l[?2004h> // An unclosed bracket makes the translated regexp invalid, including when
+[?2004l[?2004h> // the would-be expression contains a slash.
+[?2004l[?2004h> if bytes.IndexByte(p[i:], ']') < 0 {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return "[", len(p) - 1, true, false
+[?2004l[?2004h> }
+[?2004l[?2004h> if bracketHasSlash(p, i) {'''
+[?2004l[?2004h> if old not in s: raise SystemExit('openBracket start not found')
+[?2004l[?2004h> s=s.replace(old,new)
+[?2004l[?2004h> p.write_text(s)
+[?2004l[?2004h> 
+[?2004l[?2004h> p=Path('internal/glob/braces.go')
+[?2004l[?2004h> s=p.read_text()
+[?2004l[?2004h> start=s.index('func singleBrace(')
+[?2004l[?2004h> end=s.index('\n}\n', start)+3
+[?2004l[?2004h> replacement='''func singleBrace(p []byte, i int) (int, bool) {
+[?2004l[?2004h> depth := 1
+[?2004l[?2004h> topComma := false
+[?2004l[?2004h> for j := i + 1; j < len(p); j++ {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if p[j] == '\\\\' && j+1 < len(p) {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> j++
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> continue
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> }
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> switch p[j] {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> case '{':
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> depth++
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> case '}':
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> depth--
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if depth == 0 {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return j, !topComma
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> }
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> case ',':
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> if depth == 1 {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> topComma = true
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> }
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> }
+[?2004l[?2004h> }
+[?2004l[?2004h> return len(p), false
+[?2004l[?2004h> }
+[?2004l[?2004h> '''
+[?2004l[?2004h> s=s[:start]+replacement+s[end:]
+[?2004l[?2004h> p.write_text(s)
+[?2004l[?2004h> PY
+[?2004lopenBracket start not found
+[?2004hroot@aeaec0505fac:/app# cat >> internal/glob/compile_test.go <<'EOF'
+[?2004l[?2004h> 
+[?2004l[?2004h> func TestBackslashAlwaysQuotesAndUnclosedSlashBracketFails(t *testing.T) {
+[?2004l[?2004h> if !Match(`/p/\d`, `/p/d`) || Match(`/p/\d`, `/p/5`) {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> t.Error("backslash did not quote letter literally")
+[?2004l[?2004h> }
+[?2004l[?2004h> if Match(`/p/[a/b`, `/p/[a/b`) {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> t.Error("unclosed slash bracket matched")
+[?2004l[?2004h> }
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> func TestNestedSingleBraceGroupsAreLiteral(t *testing.T) {
+[?2004l[?2004h> if !Match(`/p/{a{b}c}`, `/p/{a{b}c}`) {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> t.Error("nested brace groups without alternatives were not literal")
+[?2004l[?2004h> }
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@aeaec0505fac:/app# gofmt -w internal
+[?2004l[?2004hroot@aeaec0505fac:/app# go test ./...
+[?2004l?   	quire/cmd/quire	[no test files]
+ok  	quire/internal/cli	0.003s
+ok  	quire/internal/ctext	(cached)
+--- FAIL: TestBackslashAlwaysQuotesAndUnclosedSlashBracketFails (0.00s)
+    compile_test.go:66: unclosed slash bracket matched
+FAIL
+FAIL	quire/internal/glob	0.006s
+ok  	quire/internal/ini	(cached)
+ok  	quire/internal/props	(cached)
+ok  	quire/internal/resolve	0.004s
+?   	quire/internal/version	[no test files]
+FAIL
+[?2004hroot@aeaec0505fac:/app# go build ./cmd/quire
+[?2004l[?2004hroot@aeaec0505fac:/app# printf '/tmp/qcase/scripts/deploy.sh\n' | ./quire -
+[?2004l[/tmp/qcase/scripts/deploy.sh]
+scope=direct
+indent_style=tab
+first=new
+second=KeepCase
+indent_size=tab
+[?2004hroot@aeaec0505fac:/app# ./quire -b 0.8 /tmp/qcase/scripts/deploy.sh >/tmp/q-old.out
+[?2004l[?2004hroot@aeaec0505fac:/app# ./quire -b 0.13 /tmp/qcase/scripts/deploy.sh >/tmp/q-new.out 2>/tmp/q-new.err; test $? -eq 1 && grep -Fx 'Required version is greater than the current version.' /tmp/q-new.err
+[?2004lRequired version is greater than the current version.
+[?2004hroot@aeaec0505fac:/app# git diff --check 2>/dev/null || true
+[?2004l[?2004hroot@aeaec0505fac:/app# python3 - <<'PY'
+[?2004l[?2004h> from pathlib import Path
+[?2004l[?2004h> p=Path('internal/glob/brackets.go')
+[?2004l[?2004h> s=p.read_text().replace('return "[", len(p) - 1, true, false', 'return "(?", len(p) - 1, false, false')
+[?2004l[?2004h> p.write_text(s)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@aeaec0505fac:/app# gofmt -w internal/glob/brackets.go
+[?2004l[?2004hroot@aeaec0505fac:/app# go test ./...
+[?2004l?   	quire/cmd/quire	[no test files]
+ok  	quire/internal/cli	(cached)
+ok  	quire/internal/ctext	(cached)
+--- FAIL: TestBackslashAlwaysQuotesAndUnclosedSlashBracketFails (0.00s)
+    compile_test.go:66: unclosed slash bracket matched
+FAIL
+FAIL	quire/internal/glob	0.002s
+ok  	quire/internal/ini	(cached)
+ok  	quire/internal/props	(cached)
+ok  	quire/internal/resolve	(cached)
+?   	quire/internal/version	[no test files]
+FAIL
+[?2004hroot@aeaec0505fac:/app# go build ./cmd/quire
+[?2004l[?2004hroot@aeaec0505fac:/app# set -e
+[?2004l[?2004hroot@aeaec0505fac:/app# out=$(printf '/tmp/qcase/scripts/deploy.sh\n' | ./quire -)
+[?2004l[?2004hroot@aeaec0505fac:/app# printf '%s\n' "$out" | grep -Fx '[/tmp/qcase/scripts/deploy.sh]'
+[?2004l[/tmp/qcase/scripts/deploy.sh]
+[?2004hroot@aeaec0505fac:/app# printf '%s\n' "$out" | grep -Fx 'indent_size=tab'
+[?2004lindent_size=tab
+[?2004hroot@aeaec0505fac:/app# ! ./quire /tmp/qcase/tools/scripts/deploy.sh | grep -q '^scope='
+[?2004l[?2004hroot@aeaec0505fac:/app# ./quire '/tmp/[wip] shop/a.txt' | grep -Fx 'space=yes'
+[?2004lspace=yes
+[?2004hroot@aeaec0505fac:/app# ./quire -b 0.8 /tmp/qcase/scripts/deploy.sh | grep -Fx 'indent_style=tab'
+[?2004lindent_style=tab
+[?2004hroot@aeaec0505fac:/app# if ./quire -b 0.13 /tmp/qcase/scripts/deploy.sh >/dev/null 2>/tmp/quire.err; then exit 1; fi
+[?2004l[?2004hroot@aeaec0505fac:/app# grep -Fx 'Required version is greater than the current version.' /tmp/quire.err
+[?2004lRequired version is greater than the current version.
+[?2004hroot@aeaec0505fac:/app# nl -ba internal/glob/brackets.go; cat > /tmp/debugglob.go <<'EOF'
+[?2004l[?2004h> package main
+[?2004l[?2004h> EOF
+[?2004l     1	package glob
+     2	
+     3	import "bytes"
+     4	
+     5	func openBracket(p []byte, i int) (text string, last int, inClass, literal bool) {
+     6		if bracketHasSlash(p, i) {
+     7			end := bytes.IndexByte(p[i:], ']')
+     8			if end < 0 {
+     9				return `\` + string(p[i:]), len(p) - 1, false, true
+    10			}
+    11			end += i
+    12			return `\` + string(p[i:end]) + `\]`, end, false, true
+    13		}
+    14		if i+1 < len(p) && p[i+1] == '!' {
+    15			return "[^", i + 1, true, false
+    16		}
+    17		if i+1 < len(p) && p[i+1] == '^' {
+    18			return `[\^`, i + 1, true, false
+    19		}
+    20		return "[", i, true, false
+    21	}
+    22	
+    23	func bracketHasSlash(p []byte, i int) bool {
+    24		for j := i; j < len(p) && p[j] != ']'; j++ {
+    25			if p[j] == '\\' && j+1 < len(p) {
+    26				j++
+    27				continue
+    28			}
+    29			if p[j] == '/' {
+    30				return true
+    31			}
+    32		}
+    33		return false
+    34	}
+[?2004hroot@aeaec0505fac:/app# grep -R -n 'openBracket\|return.*len(p)' internal/glob
+[?2004linternal/glob/compile.go:107:			text, last, cls, literal := openBracket(p, i)
+internal/glob/brackets.go:5:func openBracket(p []byte, i int) (text string, last int, inClass, literal bool) {
+internal/glob/brackets.go:9:			return `\` + string(p[i:]), len(p) - 1, false, true
+[?2004hroot@aeaec0505fac:/app# python3 - <<'PY'
+[?2004l[?2004h> from pathlib import Path
+[?2004l[?2004h> p=Path('internal/glob/brackets.go')
+[?2004l[?2004h> s=p.read_text()
+[?2004l[?2004h> start=s.index('func openBracket(')
+[?2004l[?2004h> end=s.index('\n}\n\nfunc bracketHasSlash', start)+2
+[?2004l[?2004h> fn=r'''func openBracket(p []byte, i int) (text string, last int, inClass, literal bool) {
+[?2004l[?2004h> // Signal an unclosed class with an invalid RE2 construct so Compile fails.
+[?2004l[?2004h> if bytes.IndexByte(p[i:], ']') < 0 {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return `(?P<`, len(p) - 1, false, false
+[?2004l[?2004h> }
+[?2004l[?2004h> if bracketHasSlash(p, i) {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> end := bytes.IndexByte(p[i:], ']') + i
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> var text string
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> for _, c := range p[i : end+1] {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> text += quoteByte(c)
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> }
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return text, end, false, true
+[?2004l[?2004h> }
+[?2004l[?2004h> if i+1 < len(p) && p[i+1] == '!' {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return "[^", i + 1, true, false
+[?2004l[?2004h> }
+[?2004l[?2004h> if i+1 < len(p) && p[i+1] == '^' {
+[?2004l[?2004h> 
+README.md  cmd/       docs/      go.mod     internal/  quire      
+> return `[\^`, i + 1, true, false
+[?2004l[?2004h> }
+[?2004l[?2004h> return "[", i, true, false
+[?2004l[?2004h> }'''
+[?2004l[?2004h> p.write_text(s[:start]+fn+s[end:])
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@aeaec0505fac:/app# gofmt -w internal/glob/brackets.go
+[?2004l[?2004hroot@aeaec0505fac:/app# go test ./...
+[?2004l?   	quire/cmd/quire	[no test files]
+ok  	quire/internal/cli	0.003s
+ok  	quire/internal/ctext	(cached)
+ok  	quire/internal/glob	0.003s
+ok  	quire/internal/ini	(cached)
+ok  	quire/internal/props	(cached)
+ok  	quire/internal/resolve	0.002s
+?   	quire/internal/version	[no test files]
+[?2004hroot@aeaec0505fac:/app# go build ./cmd/quire
+[?2004l[?2004hroot@aeaec0505fac:/app# 

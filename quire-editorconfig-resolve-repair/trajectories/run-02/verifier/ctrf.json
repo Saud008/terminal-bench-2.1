@@ -1,0 +1,113 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 10,
+            "passed": 9,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790481724.828209,
+            "stop": 1790481734.2730265
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_section_anchoring",
+                "status": "passed",
+                "duration": 9.267909486003191,
+                "start": 1790481724.851578,
+                "stop": 1790481734.1198165,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_tab_indentation",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.023270160003448837,
+                "start": 1790481734.1200604,
+                "stop": 1790481734.1559508,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "quire = '/tmp/quire-verify/quire'\n\n    def test_tab_indentation(quire):\n        \"\"\"indent_size / tab_width derivation, with and without -b.\"\"\"\n>       _check_group(quire, \"tab_indentation\")\n\n/tests/test_outputs.py:107: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/quire-verify/quire', group = 'tab_indentation'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            rc, out, err = _run_case(binary, case)\n            if (rc, out, err) != (case[\"rc\"], case[\"stdout\"], case[\"stderr\"]):\n                failures.append(\n                    f\"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\\n\"\n                    f\"expected rc={case['rc']} stderr={case['stderr']!r}\\n{case['stdout']}\"\n                    f\"got rc={rc} stderr={err!r}\\n{out}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 1 of 12 cases differ:\nE         --- tab_indentation-09 args=['-b', '0.13', '{root}/a.go', '{root}/b.go'] stdin=None\nE         expected rc=1 stderr='Required version is greater than the current version.\\n'\nE         [/srv/qc/tab_indentation-09/a.go]\nE         got rc=1 stderr='Required version is greater than the current version.\\n'\nE         \nE       assert not [\"--- tab_indentation-09 args=['-b', '0.13', '{root}/a.go', '{root}/b.go'] stdin=None\\nexpected rc=1 stderr='Required ...\\\\n'\\n[/srv/qc/tab_indentation-09/a.go]\\ngot rc=1 stderr='Required version is greater than the current version.\\\\n'\\n\"]\n\n/tests/test_outputs.py:97: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_bracketed_directories",
+                "status": "passed",
+                "duration": 0.01471139800560195,
+                "start": 1790481734.1561873,
+                "stop": 1790481734.1711507,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_stdin_paths",
+                "status": "passed",
+                "duration": 0.016595516997767845,
+                "start": 1790481734.1713965,
+                "stop": 1790481734.1882281,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_globstar_segments",
+                "status": "passed",
+                "duration": 0.015234641999995802,
+                "start": 1790481734.188637,
+                "stop": 1790481734.204128,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_negated_classes",
+                "status": "passed",
+                "duration": 0.014756001000932883,
+                "start": 1790481734.204508,
+                "stop": 1790481734.2195652,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_inline_comments",
+                "status": "passed",
+                "duration": 0.016477686000143876,
+                "start": 1790481734.219877,
+                "stop": 1790481734.2365644,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_root_declarations",
+                "status": "passed",
+                "duration": 0.014185575000738027,
+                "start": 1790481734.2367964,
+                "stop": 1790481734.2512038,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_value_case",
+                "status": "passed",
+                "duration": 0.009703305000584805,
+                "start": 1790481734.251391,
+                "stop": 1790481734.2612796,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_property_order",
+                "status": "passed",
+                "duration": 0.011201867000636412,
+                "start": 1790481734.2614706,
+                "stop": 1790481734.272859,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

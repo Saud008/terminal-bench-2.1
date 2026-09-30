@@ -1,0 +1,124 @@
+{
+ "groups": {
+  "default_path": [
+   {
+    "transcript": "at 1767225600\nset https://docs.example.com/guide/intro/page lang=en\nset https://docs.example.com/guide/intro/page theme=dark; Path=guide\nset https://docs.example.com/top root=1\nset https://docs.example.com/a?next=/x/y/z w=1\nset https://docs.example.com/guide/intro/ idx=1\nget https://docs.example.com/guide/intro\nget https://docs.example.com/guide/intro/\nget https://docs.example.com/guide/intropage\nget https://docs.example.com/guide\ndump\n",
+    "stdout": "https://docs.example.com/guide/intro\tlang=en; theme=dark; idx=1; root=1; w=1\nhttps://docs.example.com/guide/intro/\tlang=en; theme=dark; idx=1; root=1; w=1\nhttps://docs.example.com/guide/intropage\troot=1; w=1\nhttps://docs.example.com/guide\troot=1; w=1\n-- jar @1767225600: 5 cookie(s)\ndocs.example.com\t/\troot=1\thost-only\tsession\t1767225600\t1767225600\ndocs.example.com\t/\tw=1\thost-only\tsession\t1767225600\t1767225600\ndocs.example.com\t/guide/intro\tidx=1\thost-only\tsession\t1767225600\t1767225600\ndocs.example.com\t/guide/intro\tlang=en\thost-only\tsession\t1767225600\t1767225600\ndocs.example.com\t/guide/intro\ttheme=dark\thost-only\tsession\t1767225600\t1767225600\n"
+   },
+   {
+    "transcript": "at 1767225600\nset http://files.example.net/pub/releases/v2/notes.txt seen=1\nset http://files.example.net/pub/releases/v2/notes.txt dl=7; Path=\nget http://files.example.net/pub/releases/v2\nget http://files.example.net/pub/releases/v2/\nget http://files.example.net/pub/releases\nget http://files.example.net/pub/releases/v20/x\ndump\n",
+    "stdout": "http://files.example.net/pub/releases/v2\tseen=1; dl=7\nhttp://files.example.net/pub/releases/v2/\tseen=1; dl=7\nhttp://files.example.net/pub/releases\t\nhttp://files.example.net/pub/releases/v20/x\t\n-- jar @1767225600: 2 cookie(s)\nfiles.example.net\t/pub/releases/v2\tdl=7\thost-only\tsession\t1767225600\t1767225600\nfiles.example.net\t/pub/releases/v2\tseen=1\thost-only\tsession\t1767225600\t1767225600\n"
+   }
+  ],
+  "path_boundary": [
+   {
+    "transcript": "at 1767225600\nset https://shop.example.com/cart/ c=1; Path=/cart\nset https://shop.example.com/ all=1; Path=/\nset https://shop.example.com/ api=1; Path=/api/\nget https://shop.example.com/cart\nget https://shop.example.com/cart/items\nget https://shop.example.com/cartography\nget https://shop.example.com/api\nget https://shop.example.com/api/v2\nget https://shop.example.com/apiary\n",
+    "stdout": "https://shop.example.com/cart\tc=1; all=1\nhttps://shop.example.com/cart/items\tc=1; all=1\nhttps://shop.example.com/cartography\tall=1\nhttps://shop.example.com/api\tall=1\nhttps://shop.example.com/api/v2\tapi=1; all=1\nhttps://shop.example.com/apiary\tall=1\n"
+   },
+   {
+    "transcript": "at 1767225600\nset https://wiki.example.org/ ns=1; Path=/wiki/Talk\nset https://wiki.example.org/ ro=1; Path=/w\nget https://wiki.example.org/wiki/Talk:Main\nget https://wiki.example.org/wiki/Talk/Archive\nget https://wiki.example.org/wiki/Talk\nget https://wiki.example.org/wiki\nget https://wiki.example.org/w/index.php\nget https://wiki.example.org/wx\n",
+    "stdout": "https://wiki.example.org/wiki/Talk:Main\t\nhttps://wiki.example.org/wiki/Talk/Archive\tns=1\nhttps://wiki.example.org/wiki/Talk\tns=1\nhttps://wiki.example.org/wiki\t\nhttps://wiki.example.org/w/index.php\tro=1\nhttps://wiki.example.org/wx\t\n"
+   }
+  ],
+  "host_only": [
+   {
+    "transcript": "at 1767225600\nset https://example.com/login sid=abc; Path=/\nset https://example.com/ pref=1; Domain=example.com\nset https://example.com/ dot=1; Domain=.Example.COM\nget https://example.com/\nget https://api.example.com/\nget https://deep.api.example.com/x\nset https://api.example.com/ inner=1\nget https://example.com/\nget https://api.example.com/\ndump\n",
+    "stdout": "https://example.com/\tsid=abc; pref=1; dot=1\nhttps://api.example.com/\tpref=1; dot=1\nhttps://deep.api.example.com/x\tpref=1; dot=1\nhttps://example.com/\tsid=abc; pref=1; dot=1\nhttps://api.example.com/\tpref=1; dot=1; inner=1\n-- jar @1767225600: 4 cookie(s)\napi.example.com\t/\tinner=1\thost-only\tsession\t1767225600\t1767225600\nexample.com\t/\tdot=1\t-\tsession\t1767225600\t1767225600\nexample.com\t/\tpref=1\t-\tsession\t1767225600\t1767225600\nexample.com\t/\tsid=abc\thost-only\tsession\t1767225600\t1767225600\n"
+   },
+   {
+    "transcript": "at 1767225600\nset https://portal.example.co.uk/ s=1\nset https://portal.example.co.uk/ t=1; Domain=\nget https://eu.portal.example.co.uk/\nget https://portal.example.co.uk/\ndump\n",
+    "stdout": "https://eu.portal.example.co.uk/\t\nhttps://portal.example.co.uk/\ts=1; t=1\n-- jar @1767225600: 2 cookie(s)\nportal.example.co.uk\t/\ts=1\thost-only\tsession\t1767225600\t1767225600\nportal.example.co.uk\t/\tt=1\thost-only\tsession\t1767225600\t1767225600\n"
+   }
+  ],
+  "ip_hosts": [
+   {
+    "transcript": "at 1767225600\nset http://10.1.2.3/ a=1; Domain=1.2.3\nset http://10.1.2.3/ b=1; Domain=10.1.2.3\nset http://10.1.2.3/ c=1\nget http://10.1.2.3/\nget http://99.1.2.3/\nget http://1.2.3/\ndump\n",
+    "stdout": "http://10.1.2.3/\tb=1; c=1\nhttp://99.1.2.3/\t\nhttp://1.2.3/\t\n-- jar @1767225600: 2 cookie(s)\n10.1.2.3\t/\tb=1\t-\tsession\t1767225600\t1767225600\n10.1.2.3\t/\tc=1\thost-only\tsession\t1767225600\t1767225600\n"
+   },
+   {
+    "transcript": "at 1767225600\nset http://192.168.40.7:8080/admin/ tok=1; Domain=168.40.7; Path=/\nset http://192.168.40.7:8080/admin/ keep=1; Path=/\nset https://www.123.example.com/ num=1; Domain=123.example.com\nget http://192.168.40.7/\nget http://10.168.40.7/\nget https://x.123.example.com/\ndump\n",
+    "stdout": "http://192.168.40.7/\tkeep=1\nhttp://10.168.40.7/\t\nhttps://x.123.example.com/\tnum=1\n-- jar @1767225600: 2 cookie(s)\n123.example.com\t/\tnum=1\t-\tsession\t1767225600\t1767225600\n192.168.40.7\t/\tkeep=1\thost-only\tsession\t1767225600\t1767225600\n"
+   }
+  ],
+  "max_age_precedence": [
+   {
+    "transcript": "at 1767225600\nset https://news.example.org/ a=1; Max-Age=3600; Expires=Wed, 01 Jan 2031 00:00:00 GMT\nset https://news.example.org/ b=1; Expires=Wed, 01 Jan 2031 00:00:00 GMT; Max-Age=60\nset https://news.example.org/ c=1; Max-Age=soon; Expires=Wed, 01 Jan 2031 00:00:00 GMT\nset https://news.example.org/ d=1; Expires=Wed, 01 Jan 2031 00:00:00 GMT; Max-Age=0\nset https://news.example.org/ e=1; Max-Age=+60\nset https://news.example.org/ f=1; Max-Age=-1\nset https://news.example.org/ g=1; Max-Age=0; Expires=Wed, 01 Jan 2031 00:00:00 GMT\ndump\nat 1767225700\nget https://news.example.org/\nat 1767229300\nget https://news.example.org/\ndump\n",
+    "stdout": "-- jar @1767225600: 4 cookie(s)\nnews.example.org\t/\ta=1\thost-only\t1767229200\t1767225600\t1767225600\nnews.example.org\t/\tb=1\thost-only\t1767225660\t1767225600\t1767225600\nnews.example.org\t/\tc=1\thost-only\t1924992000\t1767225600\t1767225600\nnews.example.org\t/\te=1\thost-only\tsession\t1767225600\t1767225600\nhttps://news.example.org/\ta=1; c=1; e=1\nhttps://news.example.org/\tc=1; e=1\n-- jar @1767229300: 2 cookie(s)\nnews.example.org\t/\tc=1\thost-only\t1924992000\t1767225600\t1767229300\nnews.example.org\t/\te=1\thost-only\tsession\t1767225600\t1767229300\n"
+   },
+   {
+    "transcript": "at 1767225600\nset https://id.example.net/ remember=1; Expires=Fri, 01 Jan 2027 00:00:00 GMT\nset https://id.example.net/ remember=2; Max-Age=120; Expires=Sat, 01 Jan 2028 00:00:00 GMT; Max-Age=30\nget https://id.example.net/\nat 1767225660\nget https://id.example.net/\ndump\n",
+    "stdout": "https://id.example.net/\tremember=2\nhttps://id.example.net/\t\n-- jar @1767225660: 0 cookie(s)\n"
+   }
+  ],
+  "two_digit_years": [
+   {
+    "transcript": "at 1767225600\nset https://app.example.net/ y61=1; Expires=Wed, 09-Jun-61 10:18:14 GMT\nset https://app.example.net/ y55=1; Expires=Tue, 01-Jan-55 00:00:00 GMT\nset https://app.example.net/ y99=1; Expires=Fri, 31-Dec-99 23:59:59 GMT\nset https://app.example.net/ y70=1; Expires=Thu, 01-Jan-70 00:00:01 GMT\nset https://app.example.net/ y37=1; Expires=Thu, 01-Jan-37 00:00:00 GMT\nset https://app.example.net/ y4d=1; Expires=Mon, 01 Jan 2052 00:00:00 GMT\nget https://app.example.net/\ndump\n",
+    "stdout": "https://app.example.net/\ty61=1; y55=1; y37=1; y4d=1\n-- jar @1767225600: 4 cookie(s)\napp.example.net\t/\ty37=1\thost-only\t2114380800\t1767225600\t1767225600\napp.example.net\t/\ty4d=1\thost-only\t2587680000\t1767225600\t1767225600\napp.example.net\t/\ty55=1\thost-only\t2682374400\t1767225600\t1767225600\napp.example.net\t/\ty61=1\thost-only\t2885537894\t1767225600\t1767225600\n"
+   },
+   {
+    "transcript": "at 1767225600\nset https://cdn.example.org/ keep=1\nset https://cdn.example.org/ keep=2; Expires=Sun, 06-Nov-94 08:49:37 GMT\nset https://cdn.example.org/ late=1; expires=06 nov 68 08:49:37\nget https://cdn.example.org/\ndump\n",
+    "stdout": "https://cdn.example.org/\tlate=1\n-- jar @1767225600: 1 cookie(s)\ncdn.example.org\t/\tlate=1\thost-only\t3119417377\t1767225600\t1767225600\n"
+   }
+  ],
+  "invalid_dates": [
+   {
+    "transcript": "at 1767225600\nset https://pay.example.com/ a=1; Expires=Mon, 29 Feb 2100 12:00:00 GMT\nset https://pay.example.com/ b=1; Expires=Tue, 29 Feb 2400 12:00:00 GMT\nset https://pay.example.com/ c=1; Expires=Tue, 29 Feb 2028 12:00:00 GMT\nset https://pay.example.com/ d=1; Expires=Fri, 31 Apr 2027 00:00:00 GMT\nset https://pay.example.com/ f=1; Expires=Sun, 29 Feb 2032 25:00:00 GMT\ndump\n",
+    "stdout": "-- jar @1767225600: 5 cookie(s)\npay.example.com\t/\ta=1\thost-only\tsession\t1767225600\t1767225600\npay.example.com\t/\tb=1\thost-only\t13574606400\t1767225600\t1767225600\npay.example.com\t/\tc=1\thost-only\t1835438400\t1767225600\t1767225600\npay.example.com\t/\td=1\thost-only\tsession\t1767225600\t1767225600\npay.example.com\t/\tf=1\thost-only\tsession\t1767225600\t1767225600\n"
+   },
+   {
+    "transcript": "at 1767225600\nset https://pay.example.com/ e=1\nset https://pay.example.com/ e=2; Expires=Tue, 29 Feb 2000 00:00:00 GMT\nset https://pay.example.com/ h=1; Expires=2200-02-29 00:00:00 feb\nget https://pay.example.com/\ndump\n",
+    "stdout": "https://pay.example.com/\th=1\n-- jar @1767225600: 1 cookie(s)\npay.example.com\t/\th=1\thost-only\t7260883200\t1767225600\t1767225600\n"
+   }
+  ],
+  "replacement": [
+   {
+    "transcript": "at 1767225600\nset https://mail.example.com/ z=1\nat 1767225660\nset https://mail.example.com/ b=1\nat 1767225720\nset https://mail.example.com/ z=2\nget https://mail.example.com/\nset https://mail.example.com/ z=3; Path=/inbox\nget https://mail.example.com/inbox\ndump\n",
+    "stdout": "https://mail.example.com/\tz=2; b=1\nhttps://mail.example.com/inbox\tz=3; z=2; b=1\n-- jar @1767225720: 3 cookie(s)\nmail.example.com\t/\tb=1\thost-only\tsession\t1767225660\t1767225720\nmail.example.com\t/\tz=2\thost-only\tsession\t1767225600\t1767225720\nmail.example.com\t/inbox\tz=3\thost-only\tsession\t1767225720\t1767225720\n"
+   },
+   {
+    "transcript": "at 1767225600\nset https://mail.example.com/ s=1\nat 1767225605\nset https://mail.example.com/ r=1\nat 1767225610\nset https://mail.example.com/ s=2; Domain=mail.example.com\nget https://x.mail.example.com/\nget https://mail.example.com/\ndump\n",
+    "stdout": "https://x.mail.example.com/\ts=2\nhttps://mail.example.com/\ts=2; r=1\n-- jar @1767225610: 2 cookie(s)\nmail.example.com\t/\tr=1\thost-only\tsession\t1767225605\t1767225610\nmail.example.com\t/\ts=2\t-\tsession\t1767225600\t1767225610\n"
+   }
+  ],
+  "header_order": [
+   {
+    "transcript": "at 1767225600\nset https://www.example.com/a/b/c m=1; Path=/a\nset https://www.example.com/ z=1; Path=/a/b\nset https://www.example.com/ k=1; Path=/\nset https://www.example.com/ b=1; Path=/a\nset https://www.example.com/ a=1; Domain=example.com; Path=/\nset https://www.example.com/ y=1; Path=/a/b\nget https://www.example.com/a/b/c\nget https://www.example.com/a\n",
+    "stdout": "https://www.example.com/a/b/c\tz=1; y=1; m=1; b=1; k=1; a=1\nhttps://www.example.com/a\tm=1; b=1; k=1; a=1\n"
+   },
+   {
+    "transcript": "at 1767225600\nset https://beta.example.io/ zeta=1\nset https://beta.example.io/ alpha=1; Domain=example.io\nset https://beta.example.io/ mid=1\nget https://beta.example.io/\n",
+    "stdout": "https://beta.example.io/\tzeta=1; alpha=1; mid=1\n"
+   }
+  ],
+  "public_suffix": [
+   {
+    "transcript": "at 1767225600\nset https://github.io/ gh=1; Domain=github.io\nset https://alice.github.io/ steal=1; Domain=github.io\nset https://alice.github.io/ own=1; Domain=alice.github.io\nget https://github.io/\nget https://alice.github.io/\nget https://bob.github.io/\ndump\n",
+    "stdout": "https://github.io/\tgh=1\nhttps://alice.github.io/\town=1\nhttps://bob.github.io/\t\n-- jar @1767225600: 2 cookie(s)\nalice.github.io\t/\town=1\t-\tsession\t1767225600\t1767225600\ngithub.io\t/\tgh=1\thost-only\tsession\t1767225600\t1767225600\n"
+   },
+   {
+    "transcript": "at 1767225600\nset https://www.example.co.uk/ wide=1; Domain=co.uk\nset https://www.example.co.uk/ site=1; Domain=example.co.uk\nset https://co.uk/ odd=1; Domain=CO.UK\nget https://www.example.co.uk/\nget https://co.uk/\nget https://x.co.uk/\ndump\n",
+    "stdout": "https://www.example.co.uk/\tsite=1\nhttps://co.uk/\todd=1\nhttps://x.co.uk/\t\n-- jar @1767225600: 2 cookie(s)\nco.uk\t/\todd=1\thost-only\tsession\t1767225600\t1767225600\nexample.co.uk\t/\tsite=1\t-\tsession\t1767225600\t1767225600\n"
+   }
+  ],
+  "site_limit": [
+   {
+    "transcript": "at 1767225600\nset https://api.example.com/ c1=1\nat 1767225601\nset https://api.example.com/ c2=1\nat 1767225602\nset https://www.example.com/ c3=1\nat 1767225603\nset https://www.example.com/ c4=1; Domain=example.com\nat 1767225604\nset https://example.com/ c5=1\nat 1767225605\nset https://example.com/ c6=1; Max-Age=12\nat 1767225606\nset https://example.org/ o1=1\nat 1767225610\nget https://api.example.com/\nat 1767225620\nset https://www.example.com/ c7=1\nat 1767225621\nset https://example.com/ c8=1\nat 1767225622\nset https://api.example.com/ c2=2\nat 1767225623\nset https://www.example.com/ c9=1\nget https://www.example.com/\nget https://api.example.com/\ndump\n",
+    "stdout": "https://api.example.com/\tc1=1; c2=1; c4=1\nhttps://www.example.com/\tc4=1; c7=1; c9=1\nhttps://api.example.com/\tc1=1; c2=2; c4=1\n-- jar @1767225623: 7 cookie(s)\napi.example.com\t/\tc1=1\thost-only\tsession\t1767225600\t1767225623\napi.example.com\t/\tc2=2\thost-only\tsession\t1767225601\t1767225623\nexample.com\t/\tc4=1\t-\tsession\t1767225603\t1767225623\nexample.com\t/\tc8=1\thost-only\tsession\t1767225621\t1767225621\nexample.org\t/\to1=1\thost-only\tsession\t1767225606\t1767225606\nwww.example.com\t/\tc7=1\thost-only\tsession\t1767225620\t1767225623\nwww.example.com\t/\tc9=1\thost-only\tsession\t1767225623\t1767225623\n"
+   },
+   {
+    "transcript": "at 1767225600\nset https://a.shop.example.co.uk/ p1=1\nset https://b.shop.example.co.uk/ p2=1\nset https://shop.example.co.uk/ p3=1\nset https://other.co.uk/ q1=1\nset https://shop.example.co.uk/ p4=1\nset https://shop.example.co.uk/ p5=1\nat 1767225630\nget https://a.shop.example.co.uk/\nget https://shop.example.co.uk/\nat 1767225640\nset https://b.shop.example.co.uk/ p6=1\nset https://b.shop.example.co.uk/ p7=1\nset https://c.shop.example.co.uk/ p8=1\ndump\n",
+    "stdout": "https://a.shop.example.co.uk/\tp1=1\nhttps://shop.example.co.uk/\tp3=1; p4=1; p5=1\n-- jar @1767225640: 7 cookie(s)\nb.shop.example.co.uk\t/\tp6=1\thost-only\tsession\t1767225640\t1767225640\nb.shop.example.co.uk\t/\tp7=1\thost-only\tsession\t1767225640\t1767225640\nc.shop.example.co.uk\t/\tp8=1\thost-only\tsession\t1767225640\t1767225640\nother.co.uk\t/\tq1=1\thost-only\tsession\t1767225600\t1767225600\nshop.example.co.uk\t/\tp3=1\thost-only\tsession\t1767225600\t1767225630\nshop.example.co.uk\t/\tp4=1\thost-only\tsession\t1767225600\t1767225630\nshop.example.co.uk\t/\tp5=1\thost-only\tsession\t1767225600\t1767225630\n"
+   }
+  ],
+  "name_value_pair": [
+   {
+    "transcript": "at 1767225600\nset https://cdn.example.com/ token\nset https://cdn.example.com/ =abc\nset https://cdn.example.com/  ; Path=/\nset https://cdn.example.com/ ok=1\nset https://cdn.example.com/ spaced = two words ; Path=/\nset https://cdn.example.com/ empty=\nget https://cdn.example.com/\ndump\n",
+    "stdout": "https://cdn.example.com/\tok=1; spaced=two words; empty=\n-- jar @1767225600: 3 cookie(s)\ncdn.example.com\t/\tempty=\thost-only\tsession\t1767225600\t1767225600\ncdn.example.com\t/\tok=1\thost-only\tsession\t1767225600\t1767225600\ncdn.example.com\t/\tspaced=two words\thost-only\tsession\t1767225600\t1767225600\n"
+   },
+   {
+    "transcript": "at 1767225600\nset https://login.example.org/ flag; Secure\nset https://login.example.org/ sid=\"a=b\"; Secure\nset https://login.example.org/ \t=tabbed\nget https://login.example.org/\ndump\n",
+    "stdout": "https://login.example.org/\tsid=\"a=b\"\n-- jar @1767225600: 1 cookie(s)\nlogin.example.org\t/\tsid=\"a=b\"\thost-only,secure\tsession\t1767225600\t1767225600\n"
+   }
+  ]
+ }
+}

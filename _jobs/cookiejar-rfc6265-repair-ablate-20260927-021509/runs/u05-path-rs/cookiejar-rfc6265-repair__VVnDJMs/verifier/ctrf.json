@@ -1,0 +1,134 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 12,
+            "passed": 10,
+            "failed": 2,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790455737.3507657,
+            "stop": 1790455738.754842
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_default_path",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 1.3210156529996766,
+                "start": 1790455737.3665242,
+                "stop": 1790455738.7025201,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "crumbjar = '/tmp/crumbjar-verify-target/release/crumbjar'\n\n    def test_default_path(crumbjar):\n        \"\"\"Cookies without a usable Path attribute get the directory of the request path as their path.\"\"\"\n>       _check_group(crumbjar, \"default_path\")\n\n/tests/test_outputs.py:81: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/crumbjar-verify-target/release/crumbjar', group = 'default_path'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            p = subprocess.run(\n                [binary, \"replay\", \"-\"],\n                input=case[\"transcript\"], capture_output=True, text=True, timeout=60,\n                env={\"PATH\": \"/usr/local/bin:/usr/bin:/bin\", \"LC_ALL\": \"C\"},\n            )\n            if p.returncode != 0 or p.stdout != case[\"stdout\"]:\n                failures.append(\n                    f\"--- transcript\\n{case['transcript']}\"\n                    f\"--- expected (exit 0)\\n{case['stdout']}\"\n                    f\"--- got (exit {p.returncode})\\n{p.stdout}{p.stderr[-500:]}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} transcripts differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 2 of 2 transcripts differ:\nE         --- transcript\nE         at 1767225600\nE         set https://docs.example.com/guide/intro/page lang=en\nE         set https://docs.example.com/guide/intro/page theme=dark; Path=guide\nE         set https://docs.example.com/top root=1\nE         set https://docs.example.com/a?next=/x/y/z w=1\nE         set https://docs.example.com/guide/intro/ idx=1\nE         get https://docs.example.com/guide/intro\nE         get https://docs.example.com/guide/intro/\nE         get https://docs.example.com/guide/intropage\nE         get https://docs.example.com/guide\nE         dump\nE         --- expected (exit 0)\nE         https://docs.example.com/guide/intro\tlang=en; theme=dark; idx=1; root=1; w=1\nE         https://docs.example.com/guide/intro/\tlang=en; theme=dark; idx=1; root=1; w=1\nE         https://docs.example.com/guide/intropage\troot=1; w=1\nE         https://docs.example.com/guide\troot=1; w=1\nE         -- jar @1767225600: 5 cookie(s)\nE         docs.example.com\t/\troot=1\thost-only\tsession\t1767225600\t1767225600\nE         docs.example.com\t/\tw=1\thost-only\tsession\t1767225600\t1767225600\nE         docs.example.com\t/guide/intro\tidx=1\thost-only\tsession\t1767225600\t1767225600\nE         docs.example.com\t/guide/intro\tlang=en\thost-only\tsession\t1767225600\t1767225600\nE         docs.example.com\t/guide/intro\ttheme=dark\thost-only\tsession\t1767225600\t1767225600\nE         --- got (exit 0)\nE         https://docs.example.com/guide/intro\troot=1; w=1\nE         https://docs.example.com/guide/intro/\tlang=en; theme=dark; idx=1; root=1; w=1\nE         https://docs.example.com/guide/intropage\troot=1; w=1\nE         https://docs.example.com/guide\troot=1; w=1\nE         -- jar @1767225600: 5 cookie(s)\nE         docs.example.com\t/\troot=1\thost-only\tsession\t1767225600\t1767225600\nE         docs.example.com\t/\tw=1\thost-only\tsession\t1767225600\t1767225600\nE         docs.example.com\t/guide/intro/\tidx=1\thost-only\tsession\t1767225600\t1767225600\nE         docs.example.com\t/guide/intro/\tlang=en\thost-only\tsession\t1767225600\t1767225600\nE         docs.example.com\t/guide/intro/\ttheme=dark\thost-only\tsession\t1767225600\t1767225600\nE         \nE         --- transcript\nE         at 1767225600\nE         set http://files.example.net/pub/releases/v2/notes.txt seen=1\nE         set http://files.example.net/pub/releases/v2/notes.txt dl=7; Path=\nE         get http://files.example.net/pub/releases/v2\nE         get http://files.example.net/pub/releases/v2/\nE         get http://files.example.net/pub/releases\nE         get http://files.example.net/pub/releases/v20/x\nE         dump\nE         --- expected (exit 0)\nE         http://files.example.net/pub/releases/v2\tseen=1; dl=7\nE         http://files.example.net/pub/releases/v2/\tseen=1; dl=7\nE         http://files.example.net/pub/releases\t\nE         http://files.example.net/pub/releases/v20/x\t\nE         -- jar @1767225600: 2 cookie(s)\nE         files.example.net\t/pub/releases/v2\tdl=7\thost-only\tsession\t1767225600\t1767225600\nE         files.example.net\t/pub/releases/v2\tseen=1\thost-only\tsession\t1767225600\t1767225600\nE         --- got (exit 0)\nE         http://files.example.net/pub/releases/v2\t\nE         http://files.example.net/pub/releases/v2/\tseen=1; dl=7\nE         http://files.example.net/pub/releases\t\nE         http://files.example.net/pub/releases/v20/x\t\nE         -- jar @1767225600: 2 cookie(s)\nE         files.example.net\t/pub/releases/v2/\tdl=7\thost-only\tsession\t1767225600\t1767225600\nE         files.example.net\t/pub/releases/v2/\tseen=1\thost-only\tsession\t1767225600\t1767225600\nE         \nE       assert not ['--- transcript\\nat 1767225600\\nset https://docs.example.com/guide/intro/page lang=en\\nset https://docs.example.com/g...n\\t1767225600\\t1767225600\\nfiles.example.net\\t/pub/releases/v2/\\tseen=1\\thost-only\\tsession\\t1767225600\\t1767225600\\n']\n\n/tests/test_outputs.py:76: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_path_boundary",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.0027184799998849485,
+                "start": 1790455738.7028925,
+                "stop": 1790455738.7112231,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "crumbjar = '/tmp/crumbjar-verify-target/release/crumbjar'\n\n    def test_path_boundary(crumbjar):\n        \"\"\"A cookie path only matches request paths that continue it at a '/' boundary.\"\"\"\n>       _check_group(crumbjar, \"path_boundary\")\n\n/tests/test_outputs.py:86: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/crumbjar-verify-target/release/crumbjar', group = 'path_boundary'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            p = subprocess.run(\n                [binary, \"replay\", \"-\"],\n                input=case[\"transcript\"], capture_output=True, text=True, timeout=60,\n                env={\"PATH\": \"/usr/local/bin:/usr/bin:/bin\", \"LC_ALL\": \"C\"},\n            )\n            if p.returncode != 0 or p.stdout != case[\"stdout\"]:\n                failures.append(\n                    f\"--- transcript\\n{case['transcript']}\"\n                    f\"--- expected (exit 0)\\n{case['stdout']}\"\n                    f\"--- got (exit {p.returncode})\\n{p.stdout}{p.stderr[-500:]}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} transcripts differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 2 of 2 transcripts differ:\nE         --- transcript\nE         at 1767225600\nE         set https://shop.example.com/cart/ c=1; Path=/cart\nE         set https://shop.example.com/ all=1; Path=/\nE         set https://shop.example.com/ api=1; Path=/api/\nE         get https://shop.example.com/cart\nE         get https://shop.example.com/cart/items\nE         get https://shop.example.com/cartography\nE         get https://shop.example.com/api\nE         get https://shop.example.com/api/v2\nE         get https://shop.example.com/apiary\nE         --- expected (exit 0)\nE         https://shop.example.com/cart\tc=1; all=1\nE         https://shop.example.com/cart/items\tc=1; all=1\nE         https://shop.example.com/cartography\tall=1\nE         https://shop.example.com/api\tall=1\nE         https://shop.example.com/api/v2\tapi=1; all=1\nE         https://shop.example.com/apiary\tall=1\nE         --- got (exit 0)\nE         https://shop.example.com/cart\tc=1; all=1\nE         https://shop.example.com/cart/items\tc=1; all=1\nE         https://shop.example.com/cartography\tc=1; all=1\nE         https://shop.example.com/api\tall=1\nE         https://shop.example.com/api/v2\tapi=1; all=1\nE         https://shop.example.com/apiary\tall=1\nE         \nE         --- transcript\nE         at 1767225600\nE         set https://wiki.example.org/ ns=1; Path=/wiki/Talk\nE         set https://wiki.example.org/ ro=1; Path=/w\nE         get https://wiki.example.org/wiki/Talk:Main\nE         get https://wiki.example.org/wiki/Talk/Archive\nE         get https://wiki.example.org/wiki/Talk\nE         get https://wiki.example.org/wiki\nE         get https://wiki.example.org/w/index.php\nE         get https://wiki.example.org/wx\nE         --- expected (exit 0)\nE         https://wiki.example.org/wiki/Talk:Main\t\nE         https://wiki.example.org/wiki/Talk/Archive\tns=1\nE         https://wiki.example.org/wiki/Talk\tns=1\nE         https://wiki.example.org/wiki\t\nE         https://wiki.example.org/w/index.php\tro=1\nE         https://wiki.example.org/wx\t\nE         --- got (exit 0)\nE         https://wiki.example.org/wiki/Talk:Main\tns=1; ro=1\nE         https://wiki.example.org/wiki/Talk/Archive\tns=1; ro=1\nE         https://wiki.example.org/wiki/Talk\tns=1; ro=1\nE         https://wiki.example.org/wiki\tro=1\nE         https://wiki.example.org/w/index.php\tro=1\nE         https://wiki.example.org/wx\tro=1\nE         \nE       assert not ['--- transcript\\nat 1767225600\\nset https://shop.example.com/cart/ c=1; Path=/cart\\nset https://shop.example.com/ all...nhttps://wiki.example.org/wiki\\tro=1\\nhttps://wiki.example.org/w/index.php\\tro=1\\nhttps://wiki.example.org/wx\\tro=1\\n']\n\n/tests/test_outputs.py:76: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_host_only",
+                "status": "passed",
+                "duration": 0.0026565500004380738,
+                "start": 1790455738.7114766,
+                "stop": 1790455738.7155244,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_ip_hosts",
+                "status": "passed",
+                "duration": 0.00221928700011631,
+                "start": 1790455738.7157953,
+                "stop": 1790455738.719015,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_max_age_precedence",
+                "status": "passed",
+                "duration": 0.0026235529999212304,
+                "start": 1790455738.719239,
+                "stop": 1790455738.723334,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_two_digit_years",
+                "status": "passed",
+                "duration": 0.002452729999959047,
+                "start": 1790455738.7236009,
+                "stop": 1790455738.7270763,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_invalid_dates",
+                "status": "passed",
+                "duration": 0.003266156000108822,
+                "start": 1790455738.7273073,
+                "stop": 1790455738.7318068,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_replacement",
+                "status": "passed",
+                "duration": 0.0026508429998557403,
+                "start": 1790455738.7320921,
+                "stop": 1790455738.736126,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_header_order",
+                "status": "passed",
+                "duration": 0.0026296400001228903,
+                "start": 1790455738.7363892,
+                "stop": 1790455738.740017,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_public_suffix",
+                "status": "passed",
+                "duration": 0.002954135999971186,
+                "start": 1790455738.7403114,
+                "stop": 1790455738.7443898,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_site_limit",
+                "status": "passed",
+                "duration": 0.0029791890001433785,
+                "start": 1790455738.7448375,
+                "stop": 1790455738.74898,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_name_value_pair",
+                "status": "passed",
+                "duration": 0.003405274999977337,
+                "start": 1790455738.749243,
+                "stop": 1790455738.7536845,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

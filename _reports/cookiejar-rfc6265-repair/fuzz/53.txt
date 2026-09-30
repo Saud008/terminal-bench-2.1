@@ -1,0 +1,20 @@
+at 1767225600
+set https://foo.test/x/y?q=/z z=0
+get https://1.2.3/a/
+set http://api.example.com/ z=3; Path=/a
+set https://github.io/a/bc/d a=5; Path=/; SameSite=Lax
+get https://co.uk
+dump
+get http://192.168.0.1/
+set https://a.b.example.com/ab b=2
+at 1767225600
+get http://192.168.0.1
+get https://example.org/a/b
+at 1767225700
+set http://a.b.example.com/x/y?q=/z sid=3; Path=ab; Max-Age=3600; Path=/a/b
+set https://www.example.com/a/bc/d z=1; Path=; Max-Age=+5
+get http://foo.test/a/b/c
+set https://x.co.uk/a/bc/d b=8; Path=/ab; Path=/a/
+dump
+set https://foo.test/a a=3; Domain=b.example.com; HttpOnly; Secure; SameSite=Lax
+dump

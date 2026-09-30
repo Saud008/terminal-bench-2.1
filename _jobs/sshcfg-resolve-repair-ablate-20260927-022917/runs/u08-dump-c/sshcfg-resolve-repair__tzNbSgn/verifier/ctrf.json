@@ -1,0 +1,125 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 11,
+            "passed": 9,
+            "failed": 2,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790456618.327015,
+            "stop": 1790456619.4841094
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_host_line_patterns",
+                "status": "passed",
+                "duration": 0.9821820110000772,
+                "start": 1790456618.340463,
+                "stop": 1790456619.3237662,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_match_criteria",
+                "status": "passed",
+                "duration": 0.011148889999731182,
+                "start": 1790456619.3240101,
+                "stop": 1790456619.3362684,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_final_pass",
+                "status": "passed",
+                "duration": 0.009398345000136032,
+                "start": 1790456619.3365223,
+                "stop": 1790456619.3479807,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_include_scoping",
+                "status": "passed",
+                "duration": 0.018699056999594177,
+                "start": 1790456619.3482785,
+                "stop": 1790456619.3679323,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_include_paths",
+                "status": "passed",
+                "duration": 0.009098353999888786,
+                "start": 1790456619.3683138,
+                "stop": 1790456619.3784268,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_precedence_and_lists",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.010391281999545754,
+                "start": 1790456619.3786552,
+                "stop": 1790456619.4020717,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "hopcfg = '/tmp/hopcfg-verify-vxz902ym/hopcfg'\n\n    def test_precedence_and_lists(hopcfg):\n        \"\"\"First obtained value wins across -o/-l/-p/destination/config; list keywords accumulate and dedupe like ssh.\"\"\"\n>       _check(hopcfg, \"first_value_wins\", \"list_keywords\")\n\n/tests/test_outputs.py:145: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/hopcfg-verify-vxz902ym/hopcfg'\ngroups = ('first_value_wins', 'list_keywords')\nfailures = [\"[first_value_wins] args=['-F', '/root/.ssh/config', '-o', 'LogLevel=QUIET', 'box'] expected rc=0 got rc=0\\n--- ssh -...+ hopcfg\\n@@ -10,3 +10,3 @@\\n serveraliveinterval 0\\n-loglevel SILENT\\n+loglevel QUIET\\n identityfile ~/.ssh/id_rsa\\n\"]\ntotal = 10, group = 'list_keywords'\n\n    def _check(binary, *groups):\n        failures = []\n        total = 0\n        for group in groups:\n            for case in GROUPS[group]:\n                total += 1\n                rc, out = _run(binary, case)\n                if (rc, out) == (case[\"rc\"], case[\"stdout\"]):\n                    continue\n                diff = \"\".join(difflib.unified_diff(\n                    case[\"stdout\"].splitlines(True), out.splitlines(True),\n                    \"ssh -G\", \"hopcfg\", n=1))\n                failures.append(f\"[{group}] args={case['args']} expected rc={case['rc']} \"\n                                f\"got rc={rc}\\n{diff}\")\n        assert total > 0\n>       assert not failures, (f\"{len(failures)}/{total} cases differ from ssh -G:\\n\"\n                              + \"\\n\".join(failures[:4]))\nE       AssertionError: 1/10 cases differ from ssh -G:\nE         [first_value_wins] args=['-F', '/root/.ssh/config', '-o', 'LogLevel=QUIET', 'box'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -10,3 +10,3 @@\nE          serveraliveinterval 0\nE         -loglevel SILENT\nE         +loglevel QUIET\nE          identityfile ~/.ssh/id_rsa\nE         \nE       assert not [\"[first_value_wins] args=['-F', '/root/.ssh/config', '-o', 'LogLevel=QUIET', 'box'] expected rc=0 got rc=0\\n--- ssh -...+ hopcfg\\n@@ -10,3 +10,3 @@\\n serveraliveinterval 0\\n-loglevel SILENT\\n+loglevel QUIET\\n identityfile ~/.ssh/id_rsa\\n\"]\n\n/tests/test_outputs.py:114: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_sendenv_setenv",
+                "status": "passed",
+                "duration": 0.009830804000102944,
+                "start": 1790456619.4023972,
+                "stop": 1790456619.4134684,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_time_values",
+                "status": "passed",
+                "duration": 0.008668628999657813,
+                "start": 1790456619.413716,
+                "stop": 1790456619.423292,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_proxy_settings",
+                "status": "passed",
+                "duration": 0.011384955000266928,
+                "start": 1790456619.4235172,
+                "stop": 1790456619.436053,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_token_expansion",
+                "status": "passed",
+                "duration": 0.008494669999436155,
+                "start": 1790456619.4363062,
+                "stop": 1790456619.4458702,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_syntax_and_rejections",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.030208970000330737,
+                "start": 1790456619.4461064,
+                "stop": 1790456619.483114,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "hopcfg = '/tmp/hopcfg-verify-vxz902ym/hopcfg'\n\n    def test_syntax_and_rejections(hopcfg):\n        \"\"\"Keyword/value spelling variants print like ssh, and invalid configs or destinations exit 255 with no output.\"\"\"\n>       _check(hopcfg, \"value_formats\", \"rejected_configs\")\n\n/tests/test_outputs.py:170: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/hopcfg-verify-vxz902ym/hopcfg'\ngroups = ('value_formats', 'rejected_configs')\nfailures = [\"[value_formats] args=['-F', '/root/.ssh/config', 'fmt4'] expected rc=0 got rc=0\\n--- ssh -G\\n+++ hopcfg\\n@@ -10,3 +1...+ hopcfg\\n@@ -10,3 +10,3 @@\\n serveraliveinterval 0\\n-loglevel SILENT\\n+loglevel QUIET\\n identityfile ~/.ssh/id_rsa\\n\"]\ntotal = 26, group = 'rejected_configs'\n\n    def _check(binary, *groups):\n        failures = []\n        total = 0\n        for group in groups:\n            for case in GROUPS[group]:\n                total += 1\n                rc, out = _run(binary, case)\n                if (rc, out) == (case[\"rc\"], case[\"stdout\"]):\n                    continue\n                diff = \"\".join(difflib.unified_diff(\n                    case[\"stdout\"].splitlines(True), out.splitlines(True),\n                    \"ssh -G\", \"hopcfg\", n=1))\n                failures.append(f\"[{group}] args={case['args']} expected rc={case['rc']} \"\n                                f\"got rc={rc}\\n{diff}\")\n        assert total > 0\n>       assert not failures, (f\"{len(failures)}/{total} cases differ from ssh -G:\\n\"\n                              + \"\\n\".join(failures[:4]))\nE       AssertionError: 2/26 cases differ from ssh -G:\nE         [value_formats] args=['-F', '/root/.ssh/config', 'fmt4'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -10,3 +10,3 @@\nE          serveraliveinterval 0\nE         -loglevel SILENT\nE         +loglevel QUIET\nE          identityfile ~/.ssh/id_rsa\nE         \nE         [value_formats] args=['-F', '/root/.ssh/config', 'fmt5'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -10,3 +10,3 @@\nE          serveraliveinterval 0\nE         -loglevel SILENT\nE         +loglevel QUIET\nE          identityfile ~/.ssh/id_rsa\nE         \nE       assert not [\"[value_formats] args=['-F', '/root/.ssh/config', 'fmt4'] expected rc=0 got rc=0\\n--- ssh -G\\n+++ hopcfg\\n@@ -10,3 +1...+ hopcfg\\n@@ -10,3 +10,3 @@\\n serveraliveinterval 0\\n-loglevel SILENT\\n+loglevel QUIET\\n identityfile ~/.ssh/id_rsa\\n\"]\n\n/tests/test_outputs.py:114: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            }
+        ]
+    }
+}

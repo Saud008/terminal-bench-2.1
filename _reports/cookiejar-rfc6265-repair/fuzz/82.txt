@@ -1,0 +1,16 @@
+at 1767225600
+get https://localhost/a/
+get https://api.example.com/
+set http://a.b.example.com/a/b/c b=1; Domain=10.1.2.3; Expires=01-Jan-70 00:00:00; SameSite=Lax
+set https://api.example.com/ sid=0; Expires=2030 12:00:00 5 mar; SameSite=Lax; HttpOnly; SameSite=Lax
+set https://example.org/a/bc/d sid=0; Expires=Thu, 01 Jan 2032 00:00:00 GMT; HttpOnly
+dump
+set http://192.168.0.1/ a=9; Domain=example.co.uk; HttpOnly
+get http://example.org/ab
+get http://10.1.2.3/a
+get https://co.uk/
+at 1767225700
+get https://www.example.com/ab
+at 1767225800
+get https://co.uk/ab
+dump

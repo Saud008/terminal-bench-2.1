@@ -1,0 +1,51 @@
+---
+description: TB 4.0 instruction.md — human prompt, what-not-how, absolute paths in backticks, no tooling words, no canary (checks 0-11)
+globs: **/instruction.md
+alwaysApply: false
+---
+
+# TB 4.0 — instruction.md (checks 0–11)
+
+Give the agent the **what** (requirements), never the **how** (answers / hints). It must read like a real engineer typing into Claude Code / Cursor, written by you without AI assistance — and every task should sound different from the last one (vary voice: terse, casual, structured; typos are fine).
+
+## Rules
+
+- **Human-written** (check 0). Avoid "You are an expert…", "Your goal is to…", politeness padding, headings-per-endpoint doc style, emojis.
+- **Length** (check 0): around 2 short paragraphs or up to ~20 bullets is the guide. More room is fine when the problem's own complexity needs it — what gets flagged is length from step lists or restated requirements, not length itself.
+- **Absolute paths in backticks** everywhere (`/app/data.csv`, never `data.csv`) and **name every output file** the tests read (check 0).
+- **Coverage both ways**: every stated requirement is exercised by a test that does not pass under NOP (check 1 — a requirement whose only possible test would be NOP-passable may stay untested); every requirement a test enforces is stated or clearly implied (check 2 — an unstated graded rule is a BLOCKER).
+- **No implementation steps** (check 3): no prescribed algorithm, data structure, variable name, code order or literal replacement line. **Exception** (check 4): paths, CLI flags/arguments, exit codes, output format/schema and other interface contracts the tests assert directly.
+- **No tooling words** (check 5): never "the grader", "test suite", "the verifier", "pytest", `/tests`, `/opt/verifier`. Anti-reward-hacking language ("hardcoded outputs will not pass", "must handle inputs it hasn't seen") is fine.
+- **Constants byte-exact** with tests (check 6) — tolerances, thresholds, formats; grep, don't eyeball.
+- **Every path it names exists** at exactly that path in the built agent image (check 7), or is an output the agent creates.
+- **Schema exactness** (check 8): if prose says "exactly these keys", tests enforce absence of extras (set equality) and the reference honors it.
+- **No self-contradiction** (check 9): two defensible readings of one rule = an undocumented requirement.
+- **No defect narration** (check 10): describe symptoms and desired outcome, never the planted mechanism or the literal fix. Saying a naive approach exists is fine; explaining *why* it fails is a hint.
+- **No canary / GUID** anywhere (check 11) — do **not** use `harbor tasks init --include-canary-strings`.
+- **No difficulty/tier/pass-rate language** (check 62), no mention of specific tools unless verifiable.
+- **Task name/slug never in the body** (Major; `tb40_check.py` errors on it).
+- Network claims must match `network_mode`: with `public` never say "offline"; with a justified `no-network` saying so is fine (check 64). Don't add upstream's "You have N seconds…" suffix.
+- **Degenerate inputs documented** — empty field, zero-width interval, missing optional value: say what each means (the highest-yield QC gap). For every enum/multi-value output, state the condition that picks each value. Any byte-exact format the tests check is stated explicitly, not described qualitatively. A flag passed on every invocation is not "optional".
+- Every numeric limit identical across instruction.md, tests and rubric.txt.
+
+## Five ways instructions leak the answer (all reject-level)
+
+1. Step-by-step walkthrough with solution-value constants ("set SO_RCVBUF to 262144 bytes").
+2. A "Detection Guidance" section describing what to look for.
+3. Markdown so heavy it reads like API docs, not a request from a person.
+4. Function signatures / build recipes so exact nothing is left to design.
+5. **Bold** spotlighting the one number or field that matters (`tb40_check.py` warns on any bold).
+
+Voice: plain human tone, minimal markdown, no emojis, no decorative unicode, no em dashes as filler; vary style task to task — prompts are screened for AI-generated text.
+
+## Spec-file loophole
+
+Environment docs (`spec.md`, `README.md`, architecture docs) are **requirements** in TB 4.0 (check 22): anything a doc says the agent will treat as a rule, so it must be tested — and must not contradict instruction.md if instruction.md names it as authoritative (check 21). Docs define contracts like a real API spec or RFC — no step-by-step, no procedural hints, no hidden goals.
+
+## Style contrast
+
+| Synthetic (reject) | Human (want) |
+|--------------------|--------------|
+| "You are an expert programmer. Your goal is to…" | "We need to migrate the existing SQLite schema to…" |
+| 500+ words restating every edge case | 2 short paragraphs of actionable info |
+| "First, use `ls` to see files, then…" | "Source data is in `/data`. Put the result in `/app/out.json`." |

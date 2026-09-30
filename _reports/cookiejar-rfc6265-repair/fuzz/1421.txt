@@ -1,0 +1,10 @@
+at 1767225600
+set http://example.org/a/b A=4; HttpOnly
+set https://a.b.example.com/a sid=8; HttpOnly; Path=/a/b; SameSite=Lax; Max-Age=60
+dump
+get https://10.1.2.3/a/b/
+set https://a.b.example.com/a/b z=0; Max-Age=999999999999999999999; Expires=12:00:00 1 jan 1600; HttpOnly; Max-Age=999999999999999999999
+set https://example.org/a/b z=4; HttpOnly; Expires=05 Mar 2030 12:00:00abc; Path=/a/b; SameSite=Lax
+get http://github.io/a
+set https://localhost/x/y?q=/z sid=3; Path=/a/b; Expires=1 jan 9999 23:59:59
+dump

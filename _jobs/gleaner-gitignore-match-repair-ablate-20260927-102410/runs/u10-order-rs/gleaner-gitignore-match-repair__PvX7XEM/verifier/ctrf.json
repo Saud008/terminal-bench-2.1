@@ -1,0 +1,164 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 15,
+            "passed": 12,
+            "failed": 3,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790485289.1368902,
+            "stop": 1790485290.7848327
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_file_encodings",
+                "status": "passed",
+                "duration": 1.220349401999556,
+                "start": 1790485289.1599917,
+                "stop": 1790485290.381643,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_trailing_spaces",
+                "status": "passed",
+                "duration": 0.011480162000225391,
+                "start": 1790485290.381925,
+                "stop": 1790485290.3945,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_escaped_leading_characters",
+                "status": "passed",
+                "duration": 0.012077203999069752,
+                "start": 1790485290.394786,
+                "stop": 1790485290.4081511,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_directory_only_patterns",
+                "status": "passed",
+                "duration": 0.015650835000997176,
+                "start": 1790485290.4084404,
+                "stop": 1790485290.4255638,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_anchoring",
+                "status": "passed",
+                "duration": 0.018334926000534324,
+                "start": 1790485290.4258807,
+                "stop": 1790485290.4453912,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_double_star",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.02458351299719652,
+                "start": 1790485290.4456573,
+                "stop": 1790485290.487536,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "gleaner = '/tmp/gleaner-verify-target/release/gleaner'\n\n    def test_double_star(gleaner):\n        \"\"\"`**` as a whole component matches zero or more directories; any other run of stars acts like `*`.\"\"\"\n>       _check_group(gleaner, \"double_star\")\n\n/tests/test_outputs.py:151: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/gleaner-verify-target/release/gleaner', group = 'double_star'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            _materialize(case)\n            rc, out, err = _run(binary, case, [\"list\"])\n            if (rc, out) != (0, case[\"list\"]):\n                failures.append(f\"--- {case['name']}: list\\nexpected rc=0\\n{case['list']}got rc={rc} {err}\\n{out}\")\n            rc, out, err = _run(binary, case, [\"check\", \"--\", *case[\"checks\"]])\n            if (rc, out) != (case[\"check_rc\"], case[\"check\"]):\n                failures.append(\n                    f\"--- {case['name']}: check {case['checks']}\\n\"\n                    f\"expected rc={case['check_rc']}\\n{case['check']}got rc={rc} {err}\\n{out}\"\n                )\n>       assert not failures, f\"{len(failures)} mismatches in {len(CASES[group])} trees:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 1 mismatches in 4 trees:\nE         --- star_star_inside_a_component: list\nE         expected rc=0\nE         .gitignore\nE         logs/2024-old/x/raw\nE         logs/2024/jan/raw\nE         w/.gitignore\nE         w/data/a1/b/c.csv\nE         got rc=0 \nE         .gitignore\nE         logs/2024/jan/raw\nE         logs/2024-old/x/raw\nE         w/.gitignore\nE         w/data/a1/b/c.csv\nE         \nE       assert not ['--- star_star_inside_a_component: list\\nexpected rc=0\\n.gitignore\\nlogs/2024-old/x/raw\\nlogs/2024/jan/raw\\nw/.gitignore\\nw/data/a1/b/c.csv\\ngot rc=0 \\n.gitignore\\nlogs/2024/jan/raw\\nlogs/2024-old/x/raw\\nw/.gitignore\\nw/data/a1/b/c.csv\\n']\n\n/tests/test_outputs.py:121: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_bracket_expressions",
+                "status": "passed",
+                "duration": 0.013529786996514304,
+                "start": 1790485290.4880524,
+                "stop": 1790485290.502735,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_reinclude_under_excluded_directory",
+                "status": "passed",
+                "duration": 0.013214519996836316,
+                "start": 1790485290.5030024,
+                "stop": 1790485290.5173347,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_per_directory_precedence",
+                "status": "passed",
+                "duration": 0.011379078001482412,
+                "start": 1790485290.5175934,
+                "stop": 1790485290.5301406,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_tree_wide_sources",
+                "status": "passed",
+                "duration": 0.010895382998569403,
+                "start": 1790485290.5304027,
+                "stop": 1790485290.542564,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_default_excludes_file",
+                "status": "passed",
+                "duration": 0.019577524999476736,
+                "start": 1790485290.54285,
+                "stop": 1790485290.5636833,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_config_spelling",
+                "status": "passed",
+                "duration": 0.011551231000339612,
+                "start": 1790485290.564315,
+                "stop": 1790485290.5770378,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_list_order",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.010819637001986848,
+                "start": 1790485290.577334,
+                "stop": 1790485290.594554,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "gleaner = '/tmp/gleaner-verify-target/release/gleaner'\n\n    def test_list_order(gleaner):\n        \"\"\"`list` sorts by the bytes of the whole path, so punctuation below `/` sorts ahead of a subdirectory.\"\"\"\n>       _check_group(gleaner, \"list_order\")\n\n/tests/test_outputs.py:186: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/gleaner-verify-target/release/gleaner', group = 'list_order'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            _materialize(case)\n            rc, out, err = _run(binary, case, [\"list\"])\n            if (rc, out) != (0, case[\"list\"]):\n                failures.append(f\"--- {case['name']}: list\\nexpected rc=0\\n{case['list']}got rc={rc} {err}\\n{out}\")\n            rc, out, err = _run(binary, case, [\"check\", \"--\", *case[\"checks\"]])\n            if (rc, out) != (case[\"check_rc\"], case[\"check\"]):\n                failures.append(\n                    f\"--- {case['name']}: check {case['checks']}\\n\"\n                    f\"expected rc={case['check_rc']}\\n{case['check']}got rc={rc} {err}\\n{out}\"\n                )\n>       assert not failures, f\"{len(failures)} mismatches in {len(CASES[group])} trees:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 2 mismatches in 2 trees:\nE         --- byte_order_of_whole_path: list\nE         expected rc=0\nE         .gitignore\nE         A\nE         a b\nE         a!\nE         a+/x\nE         a-b\nE         a.b/c\nE         a/b-c\nE         a/b.d\nE         a/b/c\nE         a0\nE         ab\nE         got rc=0 \nE         .gitignore\nE         A\nE         a/b/c\nE         a/b-c\nE         a/b.d\nE         a b\nE         a!\nE         a+/x\nE         a-b\nE         a.b/c\nE         a0\nE         ab\nE         \nE         --- order_across_nested_dirs: list\nE         expected rc=0\nE         .gitignore\nE         src-old/d\nE         src/lib-x/a\nE         src/lib.rs\nE         src/lib/b\nE         src/lib/sub/c\nE         src/lib_y\nE         got rc=0 \nE         .gitignore\nE         src/lib/b\nE         src/lib/sub/c\nE         src/lib-x/a\nE         src/lib.rs\nE         src/lib_y\nE         src-old/d\nE         \nE       assert not ['--- byte_order_of_whole_path: list\\nexpected rc=0\\n.gitignore\\nA\\na b\\na!\\na+/x\\na-b\\na.b/c\\na/b-c\\na/b.d\\na/b/c\\na0...ib/sub/c\\nsrc/lib_y\\ngot rc=0 \\n.gitignore\\nsrc/lib/b\\nsrc/lib/sub/c\\nsrc/lib-x/a\\nsrc/lib.rs\\nsrc/lib_y\\nsrc-old/d\\n']\n\n/tests/test_outputs.py:121: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_check_line_numbers",
+                "status": "passed",
+                "duration": 0.008038165000471054,
+                "start": 1790485290.594844,
+                "stop": 1790485290.6040623,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_mixed_trees",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.1712887790054083,
+                "start": 1790485290.60434,
+                "stop": 1790485290.7834704,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "gleaner = '/tmp/gleaner-verify-target/release/gleaner'\n\n    def test_mixed_trees(gleaner):\n        \"\"\"Randomly generated trees combining nested .gitignore files, info/exclude and excludes files.\"\"\"\n>       _check_group(gleaner, \"mixed_trees\")\n\n/tests/test_outputs.py:196: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/gleaner-verify-target/release/gleaner', group = 'mixed_trees'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            _materialize(case)\n            rc, out, err = _run(binary, case, [\"list\"])\n            if (rc, out) != (0, case[\"list\"]):\n                failures.append(f\"--- {case['name']}: list\\nexpected rc=0\\n{case['list']}got rc={rc} {err}\\n{out}\")\n            rc, out, err = _run(binary, case, [\"check\", \"--\", *case[\"checks\"]])\n            if (rc, out) != (case[\"check_rc\"], case[\"check\"]):\n                failures.append(\n                    f\"--- {case['name']}: check {case['checks']}\\n\"\n                    f\"expected rc={case['check_rc']}\\n{case['check']}got rc={rc} {err}\\n{out}\"\n                )\n>       assert not failures, f\"{len(failures)} mismatches in {len(CASES[group])} trees:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 5 mismatches in 30 trees:\nE         --- mixed_06: list\nE         expected rc=0\nE         .gitignore\nE         a-b\nE         ab/!n\nE         ab/.gitignore\nE         ab/doc/.gitignore\nE         ab/doc/a*b\nE         ab/doc/ba\nE         build\nE         deep/.gitignore\nE         deep/b\nE         deep/x.o\nE         foo/!n\nE         foo/a*b\nE         foo/build\nE         foo/log\nE         foo/x.o\nE         log/!n\nE         log/a*b\nE         log/a/.gitignore\nE         log/a/a \nE         log/a/a.b\nE         log/a/b.log\nE         log/a/x\nE         log/log\nE         got rc=0 \nE         .gitignore\nE         a-b\nE         ab/!n\nE         ab/.gitignore\nE         ab/doc/.gitignore\nE         ab/doc/a*b\nE         ab/doc/ba\nE         build\nE         deep/.gitignore\nE         deep/b\nE         deep/x.o\nE         foo/!n\nE         foo/a*b\nE         foo/build\nE         foo/log\nE         foo/x.o\nE         log/!n\nE         log/a/.gitignore\nE         log/a/a \nE         log/a/a.b\nE         log/a/b.log\nE         log/a/x\nE         log/a*b\nE         log/log\nE         \nE         --- mixed_08: list\nE         expected rc=0\nE         !n\nE         #c\nE         b/!n\nE         b/#c\nE         b/.gitignore\nE         b/a]b\nE         b/foo.txt\nE         b/x\nE         foo.txt\nE         foo/.gitignore\nE         foo/a0\nE         log\nE         x/.gitignore\nE         x/b\nE         x/x.o\nE         x/x/ab\nE         x/x/b\nE         x/x/foo\nE         got rc=0 \nE         !n\nE         #c\nE         b/!n\nE         b/#c\nE         b/.gitignore\nE         b/a]b\nE         b/foo.txt\nE         b/x\nE         foo/.gitignore\nE         foo/a0\nE         foo.txt\nE         log\nE         x/.gitignore\nE         x/b\nE         x/x/ab\nE         x/x/b\nE         x/x/foo\nE         x/x.o\nE         \nE         --- mixed_20: list\nE         expected rc=0\nE         .gitignore\nE         [x]\nE         a \nE         a b\nE         a-b/a.b\nE         a-b/b.log\nE         a/.gitignore\nE         a/a b\nE         a/abc\nE         a/build\nE         build\nE         doc/a \nE         doc/b.log\nE         doc/foo\nE         got rc=0 \nE         .gitignore\nE         [x]\nE         a/.gitignore\nE         a/a b\nE         a/abc\nE         a/build\nE         a \nE         a b\nE         a-b/a.b\nE         a-b/b.log\nE         build\nE         doc/a \nE         doc/b.log\nE         doc/foo\nE         \nE         --- mixed_23: list\nE         expected rc=0\nE         #c\nE         .gitignore\nE         ab/.gitignore\nE         ab/ab\nE         ba\nE         deep/.gitignore\nE         deep/a*b\nE         deep/a/!n\nE         deep/a/A\nE         deep/log/1\nE         deep/log/a*b\nE         deep/log/a0\nE         deep/log/bar\nE         deep/x\nE         z0\nE         got rc=0 \nE         #c\nE         .gitignore\nE         ab/.gitignore\nE         ab/ab\nE         ba\nE         deep/.gitignore\nE         deep/a/!n\nE         deep/a/A\nE         deep/a*b\nE         deep/log/1\nE         deep/log/a*b\nE         deep/log/a0\nE         deep/log/bar\nE         deep/x\nE         z0\nE         \nE         --- mixed_25: list\nE         expected rc=0\nE         #c\nE         .gitignore\nE         a b\nE         a/.gitignore\nE         a/a b\nE         ab/.gitignore\nE         ab/keep\nE         b.log\nE         got rc=0 \nE         #c\nE         .gitignore\nE         a/.gitignore\nE         a/a b\nE         a b\nE         ab/.gitignore\nE         ab/keep\nE         b.log\nE         \nE       assert not ['--- mixed_06: list\\nexpected rc=0\\n.gitignore\\na-b\\nab/!n\\nab/.gitignore\\nab/doc/.gitignore\\nab/doc/a*b\\nab/doc/ba\\n...\\nab/.gitignore\\nab/keep\\nb.log\\ngot rc=0 \\n#c\\n.gitignore\\na/.gitignore\\na/a b\\na b\\nab/.gitignore\\nab/keep\\nb.log\\n']\n\n/tests/test_outputs.py:121: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            }
+        ]
+    }
+}

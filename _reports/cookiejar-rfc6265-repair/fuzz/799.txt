@@ -1,0 +1,19 @@
+at 1767225600
+get https://x.co.uk/
+get https://example.com/a/
+at 1767225600
+set https://api.example.com a=9; SameSite=Lax; Secure; Domain=
+get https://1.2.3/
+at 1767225601
+get https://shop.example.co.uk/a/bc/d
+dump
+set https://example.org/ b=8; Secure; SameSite=Lax; Max-Age=20
+set https://x.co.uk/ A=9
+set https://1.2.3/a/bc/d b=4; Path=/; Max-Age=-5; Domain=10.1.2.3
+set https://x.co.uk sid=9; Secure; Path=/a/b
+set https://foo.test/a/ b=5; Domain=.; Expires=1 jan 9999 23:59:59; Expires=29 Feb 2400 00:00:00; SameSite=Lax
+dump
+get http://www.example.com/a/
+get http://co.uk/ab
+get https://github.io/a/
+dump

@@ -1,0 +1,73 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 10 items
+
+../tests/test_outputs.py .......F..                                      [100%]
+
+=================================== FAILURES ===================================
+____________________________ test_root_declarations ____________________________
+
+quire = '/tmp/quire-verify/quire'
+
+    def test_root_declarations(quire):
+        """root = true in a preamble; root inside a section."""
+>       _check_group(quire, "root_declarations")
+
+/tests/test_outputs.py:137: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/quire-verify/quire', group = 'root_declarations'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']!r}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err!r}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 2 of 7 cases differ:
+E         --- root_declarations-03 args=['{root}/p/x'] stdin=None
+E         expected rc=0 stderr=''
+E         a=outer
+E         root=true
+E         b=inner
+E         got rc=0 stderr=''
+E         b=inner
+E         
+E         --- root_declarations-05 args=['{root}/p/x.md', '{root}/p/x.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/root_declarations-05/p/x.md]
+E         a=outer
+E         root=true
+E         b=1
+E         [/srv/qc/root_declarations-05/p/x.txt]
+E         a=outer
+E         b=1
+E         got rc=0 stderr=''
+E         [/srv/qc/root_declarations-05/p/x.md]
+E         b=1
+E         [/srv/qc/root_declarations-05/p/x.txt]
+E         b=1
+E         
+E       assert not ["--- root_declarations-03 args=['{root}/p/x'] stdin=None\nexpected rc=0 stderr=''\na=outer\nroot=true\nb=inner\ngot r...r\nb=1\ngot rc=0 stderr=''\n[/srv/qc/root_declarations-05/p/x.md]\nb=1\n[/srv/qc/root_declarations-05/p/x.txt]\nb=1\n"]
+
+/tests/test_outputs.py:97: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_section_anchoring
+PASSED ../tests/test_outputs.py::test_tab_indentation
+PASSED ../tests/test_outputs.py::test_bracketed_directories
+PASSED ../tests/test_outputs.py::test_stdin_paths
+PASSED ../tests/test_outputs.py::test_globstar_segments
+PASSED ../tests/test_outputs.py::test_negated_classes
+PASSED ../tests/test_outputs.py::test_inline_comments
+PASSED ../tests/test_outputs.py::test_value_case
+PASSED ../tests/test_outputs.py::test_property_order
+FAILED ../tests/test_outputs.py::test_root_declarations - AssertionError: 2 o...
+========================= 1 failed, 9 passed in 7.25s ==========================

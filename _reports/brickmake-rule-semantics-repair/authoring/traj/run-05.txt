@@ -1,0 +1,674 @@
+### step 2 CMD:
+ls -la && find docs -maxdepth 2 -type f -print | sort
+
+### step 2 CMD:
+cat docs/cli.md; printf '\n--- other docs ---\n'; for f in docs/*; do [ "$f" = docs/cli.md ] || { echo "### $f"; cat "$f"; }; done
+
+### step 2 CMD:
+find . -name '*.go' -type f -print | sort && grep -RInE 'pattern|implicit|stem|specific|prereq' --include='*.go' . | head -300
+
+### step 2 CMD:
+go test ./...
+
+--- step 2 OUT:
+New Terminal Output:
+root@a86e67a4c16c:/app# ls -la && find docs -maxdepth 2 -type f -print | sort
+total 32
+drwxr-xr-x  1 root root 4096 Sep 25 20:04 .
+drwxr-xr-x  1 root root 4096 Sep 30 09:49 ..
+-rwxrwxrwx  1 root root 1649 Sep 30 08:42 README.md
+drwxrwxrwx  3 root root 4096 Sep 25 20:04 cmd
+drwxrwxrwx  2 root root 4096 Sep 25 20:04 docs
+drwxrwxrwx  3 root root 4096 Sep 25 20:04 examples
+-rwxrwxrwx  1 root root   26 Sep 30 08:19 go.mod
+drwxrwxr
+  [...33677 chars...]
+st pattern,replacement,text).
+./internal/text/words.go:74:func Patsubst(pattern, repl, s string) string {
+./internal/text/words.go:75:    pat := ParsePattern(pattern)
+./internal/text/words.go:78:            stem, ok := pat.Match(w)
+./internal/text/words.go:83:                    words[i] = Subst(repl, stem)
+./internal/text/words.go:131:// SplitOrder splits prerequisite words at the first "|" word; the words
+root@a86e67a4c16c:/app# go test ./...
+
+
+### step 3 CMD:
+{"keystrokes": "", "duration": 2.0}
+### step 3 CMD:
+sed -n '1,260p' internal/engine/implicit.go; sed -n '1,180p' internal/engine/scope.go; sed -n '1,190p' internal/db/db.go
+
+### step 3 CMD:
+sed -n '1,180p' internal/expand/define.go; sed -n '1,180p' internal/expand/expand.go; sed -n '1,150p' internal/vars/vars.go
+
+### step 3 CMD:
+sed -n '1,240p' internal/parse/rules.go; sed -n '130,220p' internal/parse/parser.go; grep -RIn 'findImplicit\|patternSet\|PatternVar' --include='*_test.go' .
+
+--- step 3 OUT:
+New Terminal Output:
+
+root@a86e67a4c16c:/app# go test ./...
+?       brickmake/cmd/brickmake [no test files]
+?       brickmake/internal/cli  [no test files]
+?       brickmake/internal/db   [no test files]
+?       brickmake/internal/diag [no test files]
+ok      brickmake/internal/engine       0.003s
+ok      brickmake/internal/expand       0.004s
+ok      brickmake/internal/parse        0.003s
+ok      brickmake/internal/text 0.003s
+?       brickmake/
+  [...32772 chars...]
+               f := p.DB.Enter(t)
+                p.X.DefineIn(f.Vars, name, op, value, pos)
+        }
+}
+./internal/parse/parse_test.go:102:func TestTargetAndPatternVars(t *testing.T) {
+./internal/parse/parse_test.go:107:     if len(d.PatternVars) != 1 || d.PatternVars[0].Pattern != "%.o" || d.PatternVars[0].Op != vars.OpAppend {
+./internal/parse/parse_test.go:108:             t.Errorf("pattern vars = %+v", d.PatternVars)
+root@a86e67a4c16c:/app#
+
+### step 4 CMD:
+sed -n '1,260p' internal/engine/recipe_test.go; sed -n '1,120p' internal/text/words.go; sed -n '1,180p' internal/engine/engine.go
+
+### step 4 CMD:
+python3 - <<'PY'
+p='internal/engine/scope.go'
+s=open(p).read()
+s=s.replace('import (\n', 'import (\n\t"sort"\n\n')
+s=s.replace('// file into one set. Definitions are applied in makefile order.', '// file into one set. Definitions are applied from the shortest pattern to\n// the longest; equal-length patterns retain makefile order.')
+s=s.replace('\tif len(hits) == 0 {\n\t\treturn nil\n\t}\n\tset := vars.NewSet()', '\tif len(hits) == 0 {\n\t\treturn nil\n\t}\n\tsort.SliceStable(hits, func(i, j int) bool {\n\t\treturn len(hits[i].Pattern) < len(hits[j].Pattern)\n\t})\n\tset := vars.NewSet()')
+open(p,'w').write(s)
+
+p='internal/engine/implicit.go'
+s=open(p).read()
+s=s.replace('return len(cs[i].stem) < len(cs[j].stem)', 'return len(cs[i].fullStem()) < len(cs[j].fullStem())')
+s=s.replace('// directory-relative match is prepended to every prerequisite.', '// directory-relative match is prepended only to prerequisites containing %.')
+s=s.replace('\t\tfor i, w := range words {\n\t\t\tout[i] = c.dir + text.Subst(w, c.stem)\n\t\t}', '\t\tfor i, w := range words {\n\t\t\tpat := text.ParsePattern(w)\n\t\t\tout[i] = text.Subst(w, c.stem)\n\t\t\tif pat.Wild {\n\t\t\t\tout[i] = c.dir + out[i]\n\t\t\t}\n\t\t}')
+open(p,'w').write(s)
+PY
+gofmt -w internal/engine/scope.go internal/engine/implicit.go
+git diff -- internal/engine/scope.go internal/engine/implicit.go 2>/dev/null || diff -u /dev/null internal/engine/scope.go | head
+
+### step 4 CMD:
+cat > internal/engine/pattern_test.go <<'EOF'
+package engine
+
+import (
+	"reflect"
+	"testing"
+
+	"brickmake/internal/db"
+	"brickmake/internal/diag"
+	"brickmake/internal/expand"
+	"brickmake/internal/vars"
+)
+
+func patternEngine() *Engine {
+	g := vars.NewSet()
+	x := expand.New(g)
+	return &Engine{db: db.New(), x: x}
+}
+
+func TestPatternVarsAppliedShortestPatternFirst(t *testing.T) {
+	e := patternEngine()
+	e.x.DefineGlobal("CFLAGS", vars.OpRecursive, "-O2", vars.File, diag.Pos{})
+	// Put the specific definition first to ensure makefile order cannot hide
+	// the required least-specific-to-most-specific application order.
+	e.db.PatternVars = []*db.PatternVar{
+		{Pattern: "build/net/%.o", Name: "CFLAGS", Op: vars.OpAppend, Value: "-DNET"},
+		{Pattern: "build/%.o", Name: "CFLAGS", Op: vars.OpAppend, V
+  [...442 chars...]
+ules = []*db.PatternRule{relative, whole}
+	cs := e.candidates("lib/a.o", map[*db.PatternRule]bool{})
+	if len(cs) != 2 || cs[0].rule != whole {
+		t.Fatalf("candidate order = %#v", cs)
+	}
+}
+
+func TestDirectoryRelativePrerequisites(t *testing.T) {
+	e := patternEngine()
+	c := candidate{
+		rule: &db.PatternRule{Prereqs: db.Prereqs{
+			Normal:    []string{"%.c", "config.h"},
+			OrderOnly: []string{"generated/%"},
+		}},
+		dir: "net/", stem: "sock",
+	}
+	normal, order := e.prereqs(c, "net/sock.o", nil)
+	if !reflect.DeepEqual(normal, []string{"net/sock.c", "config.h"}) {
+		t.Fatalf("normal prerequisites = %#v", normal)
+	}
+	if !reflect.DeepEqual(order, []string{"net/generated/sock"}) {
+		t.Fatalf("order-only prerequisites = %#v", order)
+	}
+}
+EOF
+gofmt -w internal/engine/pattern_test.go
+go test ./...
+
+### step 4 CMD:
+go build -o /tmp/brickmake ./cmd/brickmake && d=$(mktemp -d) && mkdir -p "$d/build/net" && printf 'int x;\n' > "$d/build/net/sock.c" && touch "$d/config.h" && cat > "$d/Makefile" <<'EOF'
+CFLAGS = -O2
+build/net/%.o: CFLAGS += -DNET
+build/%.o: CFLAGS += -fPIC
+%.o: %.c config.h
+	@printf '%s\n' '$(CFLAGS)|$<|$*' > $@
+EOF
+(cd "$d" && /tmp/brickmake build/net/sock.o && cat build/net/sock.o); rc=$?; rm -rf "$d"; exit $rc
+
+--- step 4 OUT:
+Current Terminal Screen:
+        whole := &db.PatternRule{Targets: []string{"lib/%.o"}}
+        relative := &db.PatternRule{Targets: []string{"%.o"}}
+        // Reverse the desired order to exercise sorting rather than insertion.
+        e.db.PatternRules = []*db.PatternRule{relative, whole}
+        cs := e.candidates("lib/a.o", map[*db.PatternRule]bool{})
+        if len(cs) != 2 || cs[0].rule != whole {
+                t.Fatalf("candidate order 
+  [...781 chars...]
+_test.go
+go test ./...
+go build -o /tmp/brickmake ./cmd/brickmake && d=$(mktemp -d) && mkdir -p "$d/build/net" && printf 'int x;\n' > "$d/build/net/sock.c" && touch "$d/config.h" && c
+at > "$d/Makefile" <<'EOF'
+CFLAGS = -O2
+build/net/%.o: CFLAGS += -DNET
+build/%.o: CFLAGS += -fPIC
+%.o: %.c config.h
+        @printf '%s\n' '$(CFLAGS)|$<|$*' > $@
+EOF
+(cd "$d" && /tmp/brickmake build/net/sock.o && cat build/net/sock.o); rc=$?; rm -rf "$d"; exit $rc
+
+
+### step 5 CMD:
+{"keystrokes": "", "duration": 3.0}
+--- step 5 OUT:
+New Terminal Output:
+> $@
+EOF
+(cd "$d" && /tmp/brickmake build/net/sock.o && cat build/net/sock.o); rc=$?; rm -rf "$d"; exit $rc
+
+
+### step 6 CMD:
+C-c
+### step 6 CMD:
+git diff --stat 2>/dev/null || true; grep -n 'SliceStable\|fullStem\|pat.Wild' internal/engine/scope.go internal/engine/implicit.go; test -f internal/engine/pattern_test.go && tail -5 internal/engine/pattern_test.go
+
+### step 6 CMD:
+gofmt -w internal/engine/scope.go internal/engine/implicit.go internal/engine/pattern_test.go && go test ./...
+
+### step 6 CMD:
+go build -o /tmp/brickmake ./cmd/brickmake && d=$(mktemp -d) && mkdir -p "$d/build/net" && printf 'int x;\n' > "$d/build/net/sock.c" && touch "$d/config.h" && printf '%s\n' 'CFLAGS = -O2' 'build/net/%.o: CFLAGS += -DNET' 'build/%.o: CFLAGS += -fPIC' '%.o: %.c config.h' "	@printf '%s\\n' '\$(CFLAGS)|\$<|\$*' > \$@" > "$d/Makefile" && (cd "$d" && /tmp/brickmake build/net/sock.o && cat build/net/sock.o); rc=$?; rm -rf "$d"; exit $rc
+
+--- step 6 OUT:
+Previous response had warnings:
+WARNINGS: - Command 1: Missing duration field, using default 1.0
+- Command 1 should end with newline when followed by another command. Otherwise the two commands will be concatenated together on the same line.
+
+New Terminal Output:
+> $@
+EOF
+(cd "$d" && /tmp/brickmake build/net/sock.o && cat build/net/sock.o); rc=$?; rm -rf "$d"; exit $rc
+
+root@a86e67a4c16c:/app# git diff --stat 2>/dev/null || true; grep -n 'SliceSt
+  [...1094 chars...]
+p -d) && mkdir -p "$d/build/net" && printf 'int x;\n' > "$d/build/net/sock.c" &&
+touch "$d/config.h" && printf '%s\n' 'CFLAGS = -O2' 'build/net/%.o: CFLAGS += -DNET' 'build/%.o: CFLAGS += -fPIC' '%.o: %.c config.h' "@printf '%s\\n' '\$(CFLAG
+S)|\$<|\$*' > \$@" > "$d/Makefile" && (cd "$d" && /tmp/brickmake build/net/sock.o && cat build/net/sock.o); rc=$?; rm -rf "$d"; exit $rc
+Makefile:5: *** missing separator.  Stop.
+exit
+root@a86e67a4c16c:/app#
+
+### step 7 CMD:
+sed -n '35,90p' internal/text/words.go; sed -n '1,110p' internal/engine/scope.go; sed -n '55,105p' internal/engine/implicit.go
+
+### step 7 CMD:
+python3 - <<'PY'
+from pathlib import Path
+Path('internal/engine/pattern_test.go').write_text(r'''package engine
+
+import (
+    "reflect"
+    "testing"
+
+    "brickmake/internal/db"
+    "brickmake/internal/diag"
+    "brickmake/internal/expand"
+    "brickmake/internal/vars"
+)
+
+func patternEngine() *Engine {
+    g := vars.NewSet()
+    return &Engine{db: db.New(), x: expand.New(g), nodes: map[*db.File]*node{}}
+}
+
+func TestPatternVarsAppliedShortestPatternFirst(t *testing.T) {
+    e := patternEngine()
+    e.x.DefineGlobal("CFLAGS", vars.OpRecursive, "-O2", vars.File, diag.Pos{})
+    // Reverse the desired order so makefile order cannot hide the required
+    // least-specific-to-most-specific application order.
+    e.db.PatternVars = []*db.PatternVar{
+        {Pattern: "build/net/%.o", Name: "CFLA
+  [...648 chars...]
+whole {
+        t.Fatalf("candidate order = %#v", cs)
+    }
+}
+
+func TestDirectoryRelativePrerequisites(t *testing.T) {
+    e := patternEngine()
+    c := candidate{
+        rule: &db.PatternRule{Prereqs: db.Prereqs{
+            Normal: []string{"%.c", "config.h"},
+            OrderOnly: []string{"generated/%"},
+        }},
+        dir: "net/", stem: "sock",
+    }
+    normal, order := e.prereqs(c, "net/sock.o", nil)
+    if !reflect.DeepEqual(normal, []string{"net/sock.c", "config.h"}) {
+        t.Fatalf("normal prerequisites = %#v", normal)
+    }
+    if !reflect.DeepEqual(order, []string{"net/generated/sock"}) {
+        t.Fatalf("order-only prerequisites = %#v", order)
+    }
+}
+''')
+PY
+gofmt -w internal/engine/pattern_test.go internal/engine/scope.go internal/engine/implicit.go
+go test ./...
+
+### step 7 CMD:
+go build -o /tmp/brickmake ./cmd/brickmake && d=$(mktemp -d) && mkdir -p "$d/build/net" && printf 'int x;\n' > "$d/build/net/sock.c" && touch "$d/config.h" && { printf '%s\n' 'CFLAGS = -O2' 'build/net/%.o: CFLAGS += -DNET' 'build/%.o: CFLAGS += -fPIC' '%.o: %.c config.h'; printf '\t%s\n' "@printf '%s\\n' '\$(CFLAGS)|\$<|\$*' > \$@"; } > "$d/Makefile" && (cd "$d" && /tmp/brickmake build/net/sock.o && cat build/net/sock.o); rc=$?; rm -rf "$d"; exit $rc
+
+### step 7 CMD:
+git diff -- internal/engine/implicit.go internal/engine/scope.go internal/engine/pattern_test.go 2>/dev/null || true; go vet ./...
+
+--- step 7 OUT:
+Current Terminal Screen:
+>     }
+> }
+>
+> func TestDirectoryRelativePrerequisites(t *testing.T) {
+>     e := patternEngine()
+>     c := candidate{
+>         rule: &db.PatternRule{Prereqs: db.Prereqs{
+>             Normal: []string{"%.c", "config.h"},
+>             OrderOnly: []string{"generated/%"},
+>         }},
+>         dir: "net/", stem: "sock",
+>     }
+>     normal, order := e.prereqs(c, "net/sock.o", nil)
+>     if !reflect.DeepEqual(normal, 
+  [...1100 chars...]
+AGS += -fPIC' '%.o: %.c config.h'; printf '\t%s\n' "@print
+f '%s\\n' '\$(CFLAGS)|\$<|\$*' > \$@"; } > "$d/Makefile" && (cd "$d" && /tmp/brickmake build/net/sock.o && cat build/net/sock.o); rc=$?; rm -rf "$d"; exit $rc
+-O2 -fPIC -DNET|build/net/sock.c|build/net/sock
+exit
+root@a86e67a4c16c:/app# git diff -- internal/engine/implicit.go internal/engine/scope.go internal/engine/pattern_test.go 2>/dev/null || true; go vet ./...
+root@a86e67a4c16c:/app#
+
+### step 8 CMD:
+sed -n '1,95p' internal/text/words.go; sed -n '1,130p' internal/engine/node.go; grep -RIn 'db.Enter\|\.Enter(' internal/engine internal/parse | sort
+
+### step 8 CMD:
+python3 - <<'PY'
+p='internal/engine/implicit.go'
+s=open(p).read()
+s=s.replace('// oughtToExist reports whether a prerequisite exists or is a target in\n// the makefile.', '// oughtToExist reports whether a prerequisite exists or was entered in the\n// database by the makefile or an earlier implicit-rule search.')
+s=s.replace('if f := e.db.Lookup(name); f != nil && (len(f.Rules) > 0 || f.Phony) {', 'if e.db.Lookup(name) != nil {')
+open(p,'w').write(s)
+
+p='internal/engine/pattern_test.go'
+s=open(p).read()
+s += r'''
+
+func TestMentionedPrerequisiteOughtToExist(t *testing.T) {
+	e := patternEngine()
+	// A prerequisite mentioned by an explicit rule is entered in the database
+	// even when it has no rule of its own.
+	e.db.Enter("source.x")
+	r := &db.PatternRule{
+		Targets: []string{"%.out"},
+		Prereqs: db.Prereqs{Normal: []string{"source.x"}},
+	}
+	e.db.PatternRules = []*db.PatternRule{r}
+	m := e.findImplicit("result.out", nil, 0, map[*db.PatternRule]bool{})
+	if m == nil || m.rule != r {
+		t.Fatal("rule with mentioned prerequisite was not selected in pass one")
+	}
+}
+'''
+open(p,'w').write(s)
+PY
+gofmt -w internal/engine/implicit.go internal/engine/pattern_test.go
+go test ./...
+
+### step 8 CMD:
+go build -o /tmp/brickmake ./cmd/brickmake && d=$(mktemp -d) && { printf '%s\n' 'all: source.x' '%.out: source.x'; printf '\t%s\n' '@echo selected > $@'; printf '%s\n' '%.out: %.missing'; printf '\t%s\n' '@echo wrong > $@'; } > "$d/Makefile" && (cd "$d" && /tmp/brickmake result.out >/tmp/bm-out 2>/tmp/bm-err; rc=$?; printf 'rc=%s file=%s\n' "$rc" "$(cat result.out 2>/dev/null)"; cat /tmp/bm-out /tmp/bm-err; test "$rc" -eq 0 && test "$(cat result.out)" = selected); rc=$?; rm -rf "$d"; exit $rc
+
+--- step 8 OUT:
+Current Terminal Screen:
+> // even when it has no rule of its own.
+> e.db.Enter("source.x")
+> r := &db.PatternRule{
+>
+README.md  cmd/       docs/      examples/  go.mod     internal/
+> Targets: []string{"%.out"},
+>
+README.md  cmd/       docs/      examples/  go.mod     internal/
+> Prereqs: db.Prereqs{Normal: []string{"source.x"}},
+> }
+> e.db.PatternRules = []*db.PatternRule{r}
+> m := e.findImplicit("result.out", nil, 0, map[*db.PatternRule]bool{}
+  [...968 chars...]
+%.out: %.missing'; printf '\t%s\n' '@echo wrong > $@'; } > "$d/Makefile" && (cd "$d" && /tmp/brickmake result.out >/tmp/bm-out
+2>/tmp/bm-err; rc=$?; printf 'rc=%s file=%s\n' "$rc" "$(cat result.out 2>/dev/null)"; cat /tmp/bm-out /tmp/bm-err; test "$rc" -eq 0 && test "$(cat result.out)"
+= selected); rc=$?; rm -rf "$d"; exit $rc
+rc=2 file=
+brickmake: *** No rule to make target 'source.x', needed by 'result.out'.  Stop.
+exit
+root@a86e67a4c16c:/app#
+
+### step 9 CMD:
+python3 - <<'PY'
+p='internal/db/db.go'
+s=open(p).read()
+old='''func (d *DB) AddPatternRule(r *PatternRule) {
+	for i, old := range d.PatternRules {
+		if sameWords(old.Targets, r.Targets) && sameWords(old.Normal, r.Normal) && old.Text == r.Text {
+'''
+new='''func samePrereqs(a, b Prereqs) bool {
+	if a.Second != b.Second {
+		return false
+	}
+	if a.Second {
+		return a.Text == b.Text
+	}
+	return sameWords(a.Normal, b.Normal) && sameWords(a.OrderOnly, b.OrderOnly)
+}
+
+func (d *DB) AddPatternRule(r *PatternRule) {
+	for i, old := range d.PatternRules {
+		if sameWords(old.Targets, r.Targets) && samePrereqs(old.Prereqs, r.Prereqs) {
+'''
+if old not in s:
+    raise SystemExit('expected block not found')
+s=s.replace(old,new)
+open(p,'w').write(s)
+
+open('internal/db/db_test.go','w').write(r'''package db
+
+imp
+  [...795 chars...]
+Recipe: &Recipe{}}
+	d.AddPatternRule(a)
+	d.AddPatternRule(b)
+	if len(d.PatternRules) != 2 {
+		t.Fatalf("got %d pattern rules, want 2", len(d.PatternRules))
+	}
+}
+
+func TestIdenticalPatternRuleStillReplaces(t *testing.T) {
+	d := New()
+	a := &PatternRule{Targets: []string{"%.o"}, Prereqs: Prereqs{Normal: []string{"%.c"}, OrderOnly: []string{"dir"}}, Recipe: &Recipe{}}
+	b := &PatternRule{Targets: []string{"%.o"}, Prereqs: Prereqs{Normal: []string{"%.c"}, OrderOnly: []string{"dir"}}, Recipe: &Recipe{}}
+	d.AddPatternRule(a)
+	d.AddPatternRule(b)
+	if len(d.PatternRules) != 1 || d.PatternRules[0] != b {
+		t.Fatal("identical rule was not replaced")
+	}
+}
+''')
+PY
+gofmt -w internal/db/db.go internal/db/db_test.go internal/engine/implicit.go internal/engine/pattern_test.go
+go test ./... && go vet ./...
+
+### step 9 CMD:
+go build -o /tmp/brickmake ./cmd/brickmake && d=$(mktemp -d) && { printf '%s\n' 'all: source.x' '%.out: source.x'; printf '\t%s\n' '@echo selected > $@'; printf '%s\n' '%.out: %.missing'; printf '\t%s\n' '@echo wrong > $@'; } > "$d/Makefile" && (cd "$d" && /tmp/brickmake result.out >out 2>err; rc=$?; cat err; test "$rc" -eq 2 && grep -q "No rule to make target 'source.x', needed by 'result.out'" err); rc=$?; rm -rf "$d"; exit $rc
+
+### step 9 CMD:
+git status --short 2>/dev/null || find internal -name '*.go' -newermt '10 minutes ago' -print | sort; go test ./...
+
+--- step 9 OUT:
+New Terminal Output:
+
+root@a86e67a4c16c:/app# python3 - <<'PY'
+> p='internal/db/db.go'
+> s=open(p).read()
+> old='''func (d *DB) AddPatternRule(r *PatternRule) {
+> for i, old := range d.PatternRules {
+>
+README.md  cmd/       docs/      examples/  go.mod     internal/
+> if sameWords(old.Targets, r.Targets) && sameWords(old.Normal, r.Normal) && old.Text == r.Text {
+> '''
+> new='''func samePrereqs(a, b Prereqs) bool {
+> if a.Second != b.Second {
+>
+RE
+  [...3867 chars...]
+      brickmake/cmd/brickmake [no test files]
+?       brickmake/internal/cli  [no test files]
+?       brickmake/internal/db   [no test files]
+?       brickmake/internal/diag [no test files]
+ok      brickmake/internal/engine       (cached)
+ok      brickmake/internal/expand       (cached)
+ok      brickmake/internal/parse        (cached)
+ok      brickmake/internal/text (cached)
+?       brickmake/internal/vars [no test files]
+root@a86e67a4c16c:/app#
+
+### step 10 CMD:
+sed -n '90,150p' internal/db/db.go
+
+### step 10 CMD:
+python3 - <<'PY'
+from pathlib import Path
+p=Path('internal/db/db.go')
+s=p.read_text()
+start=s.index('func (d *DB) AddPatternRule')
+end=s.index('\n}', start)+2
+replacement='''func samePrereqs(a, b Prereqs) bool {
+	if a.Second != b.Second {
+		return false
+	}
+	if a.Second {
+		return a.Text == b.Text
+	}
+	return sameWords(a.Normal, b.Normal) && sameWords(a.OrderOnly, b.OrderOnly)
+}
+
+func (d *DB) AddPatternRule(r *PatternRule) {
+	for i, old := range d.PatternRules {
+		if sameWords(old.Targets, r.Targets) && samePrereqs(old.Prereqs, r.Prereqs) {
+			d.PatternRules = append(d.PatternRules[:i:i], d.PatternRules[i+1:]...)
+			break
+		}
+	}
+	if r.Recipe != nil {
+		d.PatternRules = append(d.PatternRules, r)
+	}
+}'''
+p.write_text(s[:start]+replacement+s[end:])
+
+Path('internal/db/db_test.go').write_text('''
+  [...778 chars...]
+ereqs{Second: true, Text: "x"}, Recipe: &Recipe{}}
+	d.AddPatternRule(a)
+	d.AddPatternRule(b)
+	if len(d.PatternRules) != 2 {
+		t.Fatalf("got %d pattern rules, want 2", len(d.PatternRules))
+	}
+}
+
+func TestIdenticalPatternRuleStillReplaces(t *testing.T) {
+	d := New()
+	a := &PatternRule{Targets: []string{"%.o"}, Prereqs: Prereqs{Normal: []string{"%.c"}, OrderOnly: []string{"dir"}}, Recipe: &Recipe{}}
+	b := &PatternRule{Targets: []string{"%.o"}, Prereqs: Prereqs{Normal: []string{"%.c"}, OrderOnly: []string{"dir"}}, Recipe: &Recipe{}}
+	d.AddPatternRule(a)
+	d.AddPatternRule(b)
+	if len(d.PatternRules) != 1 || d.PatternRules[0] != b {
+		t.Fatal("identical rule was not replaced")
+	}
+}
+''')
+PY
+gofmt -w internal/db/db.go internal/db/db_test.go
+go test ./... && go vet ./... && go build ./cmd/brickmake
+
+### step 10 CMD:
+git status --short 2>/dev/null || true; grep -RIn 'Definitions are applied\|oughtToExist reports' internal/engine; go test -count=1 ./...
+
+--- step 10 OUT:
+Current Terminal Screen:
+>
+> func TestIdenticalPatternRuleStillReplaces(t *testing.T) {
+> d := New()
+> a := &PatternRule{Targets: []string{"%.o"}, Prereqs: Prereqs{Normal: []string{"%.c"}, OrderOnly: []string{"dir"}}, Recipe: &Recipe{}}
+> b := &PatternRule{Targets: []string{"%.o"}, Prereqs: Prereqs{Normal: []string{"%.c"}, OrderOnly: []string{"dir"}}, Recipe: &Recipe{}}
+> d.AddPatternRule(a)
+> d.AddPatternRule(b)
+> if len(d.PatternRules) != 1 || 
+  [...1082 chars...]
+entered in the
+?       brickmake/cmd/brickmake [no test files]
+?       brickmake/internal/cli  [no test files]
+ok      brickmake/internal/db   0.002s
+?       brickmake/internal/diag [no test files]
+ok      brickmake/internal/engine       0.002s
+ok      brickmake/internal/expand       0.002s
+ok      brickmake/internal/parse        0.002s
+ok      brickmake/internal/text 0.001s
+?       brickmake/internal/vars [no test files]
+root@a86e67a4c16c:/app#
+
+### step 11 CMD:
+python3 - <<'PY'
+from pathlib import Path
+p=Path('internal/expand/define.go')
+s=p.read_text()
+s=s.replace('// DefinePattern applies one pattern-specific assignment while building a\n// file\'s pattern set. A command-line variable replaces the assigned text\n// but the operator is kept.', '// DefinePattern applies one pattern-specific assignment while building a\n// file\'s pattern set. A command-line variable replaces the assignment.')
+s=s.replace('''	if g := e.Global.Get(name); g != nil && g.Origin == vars.CommandLine {
+		value = g.Value
+	}
+	if op == vars.OpSimple {''', '''	if g := e.Global.Get(name); g != nil && g.Origin == vars.CommandLine {
+		set.Put(&vars.Var{Name: name, Value: g.Value, Flavor: g.Flavor, Origin: vars.CommandLine, Pos: g.Pos})
+		return
+	}
+	if op == vars.OpSimple {''')
+
+  [...201 chars...]
+ortest-pattern first;\n// definitions with equal-length patterns retain makefile order.')
+p.write_text(s)
+
+p=Path('internal/engine/pattern_test.go')
+s=p.read_text()+r'''
+
+func TestCommandLineVariableOverridesPatternAssignment(t *testing.T) {
+	e := patternEngine()
+	e.x.DefineGlobal("CFLAGS", vars.OpRecursive, "-DCMD", vars.CommandLine, diag.Pos{})
+	e.db.PatternVars = []*db.PatternVar{
+		{Pattern: "%.o", Name: "CFLAGS", Op: vars.OpAppend, Value: "-fPIC"},
+	}
+	n := e.node(e.db.Enter("file.o"))
+	if got := e.x.Value("CFLAGS", e.scope(n)); got != "-DCMD" {
+		t.Fatalf("CFLAGS = %q, want command-line value", got)
+	}
+}
+'''
+p.write_text(s)
+PY
+gofmt -w internal/expand/define.go internal/engine/scope.go internal/engine/pattern_test.go
+go test -count=1 ./... && go vet ./... && go build ./cmd/brickmake
+
+### step 11 CMD:
+grep -nA12 'func (e \*Expander) DefinePattern' internal/expand/define.go; grep -nA3 'func (e \*Engine) patternSet' internal/engine/scope.go; find internal -name '*_test.go' -newermt '30 minutes ago' -print | sort
+
+### step 11 CMD:
+{}
+--- step 11 OUT:
+Current terminal state:
+New Terminal Output:
+
+root@a86e67a4c16c:/app# python3 - <<'PY'
+> from pathlib import Path
+> p=Path('internal/expand/define.go')
+> s=p.read_text()
+> s=s.replace('// DefinePattern applies one pattern-specific assignment while building a\n// file\'s pattern set. A command-line variable replaces the assigned
+text\n// but the operator is kept.', '// DefinePattern applies one pattern-specific assignment while building a\n// file
+  [...3276 chars...]
+= &Scope{Sets: []*vars.Set{set}}
+15:func (e *Engine) patternSet(n *node) *vars.Set {
+16-     if n.patReady {
+17-             return n.patVars
+18-     }
+internal/db/db_test.go
+internal/engine/pattern_test.go
+root@a86e67a4c16c:/app#
+
+
+Are you sure you want to mark the task as complete? This will trigger your solution to be graded and you won't be able to make any further corrections. If so, include "task_complete": true in your JSON response again.
+### step 12 CMD:
+python3 - <<'PY'
+from pathlib import Path
+p = Path('internal/expand/define.go')
+s = p.read_text()
+start = s.index('func (e *Expander) DefinePattern(')
+end = s.index('\n}', start) + 2
+fn = '''func (e *Expander) DefinePattern(set *vars.Set, name string, op vars.Op, value string, pos diag.Pos) {
+	if g := e.Global.Get(name); g != nil && g.Origin == vars.CommandLine {
+		set.Put(&vars.Var{Name: name, Value: g.Value, Flavor: g.Flavor, Origin: vars.CommandLine, Pos: g.Pos})
+		return
+	}
+	if op == vars.OpSimple {
+		set.Put(&vars.Var{Name: name, Value: value, Flavor: vars.Simple, Origin: vars.File, Pos: pos})
+		return
+	}
+	e.defineIn(set, name, op, value, pos)
+}'''
+p.write_text(s[:start] + fn + s[end:])
+PY
+rm -f brickmake
+gofmt -w internal/expand/define.go internal/engine/scope.go internal/engine/pattern_test.go
+go test -count=1 ./... && go vet ./... && go build -o /tmp/brickmake-final ./cmd/brickmake
+
+### step 12 CMD:
+grep -nA12 'func (e \*Expander) DefinePattern' internal/expand/define.go; test ! -e brickmake; go test -count=1 ./...
+
+--- step 12 OUT:
+Current Terminal Screen:
+> e.defineIn(set, name, op, value, pos)
+> }'''
+> p.write_text(s[:start] + fn + s[end:])
+> PY
+root@a86e67a4c16c:/app# rm -f brickmake
+root@a86e67a4c16c:/app# gofmt -w internal/expand/define.go internal/engine/scope.go internal/engine/pattern_test.go
+root@a86e67a4c16c:/app# go test -count=1 ./... && go vet ./... && go build -o /tmp/brickmake-final ./cmd/brickmake
+?       brickmake/cmd/brickmake [no test files]
+?       brick
+  [...1147 chars...]
+os diag.Pos) {
+?       brickmake/cmd/brickmake [no test files]
+?       brickmake/internal/cli  [no test files]
+ok      brickmake/internal/db   0.003s
+?       brickmake/internal/diag [no test files]
+ok      brickmake/internal/engine       0.002s
+ok      brickmake/internal/expand       0.002s
+ok      brickmake/internal/parse        0.002s
+ok      brickmake/internal/text 0.002s
+?       brickmake/internal/vars [no test files]
+root@a86e67a4c16c:/app#
+
+### step 13 CMD:
+{}
+--- step 13 OUT:
+Current terminal state:
+New Terminal Output:
+]
+root@a86e67a4c16c:/app#
+
+
+Are you sure you want to mark the task as complete? This will trigger your solution to be graded and you won't be able to make any further corrections. If so, include "task_complete": true in your JSON response again.
+### step 14 CMD:
+{}
+--- step 14 OUT:
+New Terminal Output:
+]
+root@a86e67a4c16c:/app#

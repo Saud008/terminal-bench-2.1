@@ -1,0 +1,28 @@
+at 1767225600
+set http://192.168.0.1/a/b/ A=6; Path=/; Domain=10.1.2.3; Secure
+get https://localhost/a/b/c
+get https://example.com/
+at 1767225601
+dump
+dump
+get http://localhost/a/b/c
+get http://example.com/a/b/c
+get http://api.example.com
+at 1767229601
+get https://www.example.com/
+get https://shop.example.co.uk/a/b
+get https://1.2.3/a/b/c
+set https://example.org/a/b/ a=0; HttpOnly
+set https://api.example.com/a/ A=3; Secure; Expires=Wed, 09 Jun 2021 10:18:14 GMT; Max-Age=20
+get https://www.example.com/a/b/c
+at 1767229701
+set https://alice.github.io/ab z=4; Expires=12:00:00 1 jan 1600
+set http://shop.example.co.uk/ sid=3; Secure; Max-Age=3600
+get http://example.com/a/b
+at 1767229731
+set http://co.uk/x/y?q=/z a=9; Expires=24:00:00 1 jan 2030; Path=/a/b; Domain=; Max-Age=-5
+set https://github.io/a/b A=1; Path=/a/b; SameSite=Lax; Max-Age=3600; Expires=05 Mar 2030 12:00:00abc
+get https://x.co.uk/x/y?q=/z
+get http://alice.github.io/
+set https://1.2.3/a/b b=4; Secure; Domain=.; Path=/
+dump

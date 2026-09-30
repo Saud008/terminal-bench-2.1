@@ -1,0 +1,113 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 10,
+            "passed": 9,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790482726.2228334,
+            "stop": 1790482735.3949735
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_section_anchoring",
+                "status": "passed",
+                "duration": 8.939531129999523,
+                "start": 1790482726.2382567,
+                "stop": 1790482735.1797125,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_tab_indentation",
+                "status": "passed",
+                "duration": 0.03126224099469255,
+                "start": 1790482735.1805704,
+                "stop": 1790482735.216467,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_bracketed_directories",
+                "status": "passed",
+                "duration": 0.02284204700117698,
+                "start": 1790482735.2168376,
+                "stop": 1790482735.2411,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_stdin_paths",
+                "status": "passed",
+                "duration": 0.01866443000471918,
+                "start": 1790482735.2415187,
+                "stop": 1790482735.261377,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_globstar_segments",
+                "status": "passed",
+                "duration": 0.014287950994912535,
+                "start": 1790482735.2616625,
+                "stop": 1790482735.277225,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_negated_classes",
+                "status": "passed",
+                "duration": 0.019016078000277048,
+                "start": 1790482735.2775946,
+                "stop": 1790482735.2980955,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_inline_comments",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.02055126300183474,
+                "start": 1790482735.2984035,
+                "stop": 1790482735.3369477,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "quire = '/tmp/quire-verify/quire'\n\n    def test_inline_comments(quire):\n        \"\"\"Comment, header and property line syntax, limits and syntax errors.\"\"\"\n>       _check_group(quire, \"inline_comments\")\n\n/tests/test_outputs.py:132: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/quire-verify/quire', group = 'inline_comments'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            rc, out, err = _run_case(binary, case)\n            if (rc, out, err) != (case[\"rc\"], case[\"stdout\"], case[\"stderr\"]):\n                failures.append(\n                    f\"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\\n\"\n                    f\"expected rc={case['rc']} stderr={case['stderr']!r}\\n{case['stdout']}\"\n                    f\"got rc={rc} stderr={err!r}\\n{out}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 2 of 8 cases differ:\nE         --- inline_comments-01 args=['{root}/a.txt'] stdin=None\nE         expected rc=0 stderr=''\nE         color=#ff0000\nE         quote=a\nE         sep=a;b\nE         sep2=a\nE         lead=;x\nE         tabbed=x\nE         got rc=0 stderr=''\nE         color=\nE         quote=a\nE         sep=a\nE         sep2=a\nE         lead=\nE         tabbed=x\nE         \nE         --- inline_comments-03 args=['{root}/a.txt'] stdin=None\nE         expected rc=0 stderr=''\nE         url=http://example.test/#frag\nE         list=a;b;c\nE         path=C:\\x\nE         got rc=0 stderr=''\nE         url=http://example.test/\nE         list=a\nE         path=C:\\x\nE         \nE       assert not [\"--- inline_comments-01 args=['{root}/a.txt'] stdin=None\\nexpected rc=0 stderr=''\\ncolor=#ff0000\\nquote=a\\nsep=a;b\\ns...http://example.test/#frag\\nlist=a;b;c\\npath=C:\\\\x\\ngot rc=0 stderr=''\\nurl=http://example.test/\\nlist=a\\npath=C:\\\\x\\n\"]\n\n/tests/test_outputs.py:97: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_root_declarations",
+                "status": "passed",
+                "duration": 0.0214941420017567,
+                "start": 1790482735.3373685,
+                "stop": 1790482735.3601897,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_value_case",
+                "status": "passed",
+                "duration": 0.013336841002455913,
+                "start": 1790482735.360474,
+                "stop": 1790482735.3750317,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_property_order",
+                "status": "passed",
+                "duration": 0.01643001799675403,
+                "start": 1790482735.3752873,
+                "stop": 1790482735.39313,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

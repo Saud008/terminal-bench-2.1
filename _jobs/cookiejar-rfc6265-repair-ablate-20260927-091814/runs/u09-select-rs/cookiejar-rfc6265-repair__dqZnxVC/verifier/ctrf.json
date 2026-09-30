@@ -1,0 +1,140 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 12,
+            "passed": 8,
+            "failed": 4,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790481220.2084608,
+            "stop": 1790481221.3360558
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_default_path",
+                "status": "passed",
+                "duration": 1.0602191830002994,
+                "start": 1790481220.2196844,
+                "stop": 1790481221.2829733,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_path_boundary",
+                "status": "passed",
+                "duration": 0.002157347003958421,
+                "start": 1790481221.283256,
+                "stop": 1790481221.2863672,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_host_only",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.0020261120043869596,
+                "start": 1790481221.2865927,
+                "stop": 1790481221.2999158,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "crumbjar = '/tmp/crumbjar-verify-target/release/crumbjar'\n\n    def test_host_only(crumbjar):\n        \"\"\"Cookies set without a Domain attribute go back only to the exact host that set them.\"\"\"\n>       _check_group(crumbjar, \"host_only\")\n\n/tests/test_outputs.py:91: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/crumbjar-verify-target/release/crumbjar', group = 'host_only'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            p = subprocess.run(\n                [binary, \"replay\", \"-\"],\n                input=case[\"transcript\"], capture_output=True, text=True, timeout=60,\n                env={\"PATH\": \"/usr/local/bin:/usr/bin:/bin\", \"LC_ALL\": \"C\"},\n            )\n            if p.returncode != 0 or p.stdout != case[\"stdout\"]:\n                failures.append(\n                    f\"--- transcript\\n{case['transcript']}\"\n                    f\"--- expected (exit 0)\\n{case['stdout']}\"\n                    f\"--- got (exit {p.returncode})\\n{p.stdout}{p.stderr[-500:]}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} transcripts differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 2 of 2 transcripts differ:\nE         --- transcript\nE         at 1767225600\nE         set https://example.com/login sid=abc; Path=/\nE         set https://example.com/ pref=1; Domain=example.com\nE         set https://example.com/ dot=1; Domain=.Example.COM\nE         get https://example.com/\nE         get https://api.example.com/\nE         get https://deep.api.example.com/x\nE         set https://api.example.com/ inner=1\nE         get https://example.com/\nE         get https://api.example.com/\nE         dump\nE         --- expected (exit 0)\nE         https://example.com/\tsid=abc; pref=1; dot=1\nE         https://api.example.com/\tpref=1; dot=1\nE         https://deep.api.example.com/x\tpref=1; dot=1\nE         https://example.com/\tsid=abc; pref=1; dot=1\nE         https://api.example.com/\tpref=1; dot=1; inner=1\nE         -- jar @1767225600: 4 cookie(s)\nE         api.example.com\t/\tinner=1\thost-only\tsession\t1767225600\t1767225600\nE         example.com\t/\tdot=1\t-\tsession\t1767225600\t1767225600\nE         example.com\t/\tpref=1\t-\tsession\t1767225600\t1767225600\nE         example.com\t/\tsid=abc\thost-only\tsession\t1767225600\t1767225600\nE         --- got (exit 0)\nE         https://example.com/\tsid=abc; pref=1; dot=1\nE         https://api.example.com/\tsid=abc; pref=1; dot=1\nE         https://deep.api.example.com/x\tsid=abc; pref=1; dot=1\nE         https://example.com/\tsid=abc; pref=1; dot=1\nE         https://api.example.com/\tsid=abc; pref=1; dot=1; inner=1\nE         -- jar @1767225600: 4 cookie(s)\nE         api.example.com\t/\tinner=1\thost-only\tsession\t1767225600\t1767225600\nE         example.com\t/\tdot=1\t-\tsession\t1767225600\t1767225600\nE         example.com\t/\tpref=1\t-\tsession\t1767225600\t1767225600\nE         example.com\t/\tsid=abc\thost-only\tsession\t1767225600\t1767225600\nE         \nE         --- transcript\nE         at 1767225600\nE         set https://portal.example.co.uk/ s=1\nE         set https://portal.example.co.uk/ t=1; Domain=\nE         get https://eu.portal.example.co.uk/\nE         get https://portal.example.co.uk/\nE         dump\nE         --- expected (exit 0)\nE         https://eu.portal.example.co.uk/\t\nE         https://portal.example.co.uk/\ts=1; t=1\nE         -- jar @1767225600: 2 cookie(s)\nE         portal.example.co.uk\t/\ts=1\thost-only\tsession\t1767225600\t1767225600\nE         portal.example.co.uk\t/\tt=1\thost-only\tsession\t1767225600\t1767225600\nE         --- got (exit 0)\nE         https://eu.portal.example.co.uk/\ts=1; t=1\nE         https://portal.example.co.uk/\ts=1; t=1\nE         -- jar @1767225600: 2 cookie(s)\nE         portal.example.co.uk\t/\ts=1\thost-only\tsession\t1767225600\t1767225600\nE         portal.example.co.uk\t/\tt=1\thost-only\tsession\t1767225600\t1767225600\nE         \nE       assert not ['--- transcript\\nat 1767225600\\nset https://example.com/login sid=abc; Path=/\\nset https://example.com/ pref=1; Domai...ost-only\\tsession\\t1767225600\\t1767225600\\nportal.example.co.uk\\t/\\tt=1\\thost-only\\tsession\\t1767225600\\t1767225600\\n']\n\n/tests/test_outputs.py:76: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_ip_hosts",
+                "status": "passed",
+                "duration": 0.0022927409954718314,
+                "start": 1790481221.3001387,
+                "stop": 1790481221.3033724,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_max_age_precedence",
+                "status": "passed",
+                "duration": 0.001962845002708491,
+                "start": 1790481221.3035765,
+                "stop": 1790481221.3063045,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_two_digit_years",
+                "status": "passed",
+                "duration": 0.0016903510004340205,
+                "start": 1790481221.3064973,
+                "stop": 1790481221.3088953,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_invalid_dates",
+                "status": "passed",
+                "duration": 0.0016393099976994563,
+                "start": 1790481221.309064,
+                "stop": 1790481221.3113718,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_replacement",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.0018643720031832345,
+                "start": 1790481221.311549,
+                "stop": 1790481221.3174298,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "crumbjar = '/tmp/crumbjar-verify-target/release/crumbjar'\n\n    def test_replacement(crumbjar):\n        \"\"\"Replacing a cookie keeps the old creation-time, which shows in header order and the dump.\"\"\"\n>       _check_group(crumbjar, \"replacement\")\n\n/tests/test_outputs.py:116: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/crumbjar-verify-target/release/crumbjar', group = 'replacement'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            p = subprocess.run(\n                [binary, \"replay\", \"-\"],\n                input=case[\"transcript\"], capture_output=True, text=True, timeout=60,\n                env={\"PATH\": \"/usr/local/bin:/usr/bin:/bin\", \"LC_ALL\": \"C\"},\n            )\n            if p.returncode != 0 or p.stdout != case[\"stdout\"]:\n                failures.append(\n                    f\"--- transcript\\n{case['transcript']}\"\n                    f\"--- expected (exit 0)\\n{case['stdout']}\"\n                    f\"--- got (exit {p.returncode})\\n{p.stdout}{p.stderr[-500:]}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} transcripts differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 1 of 2 transcripts differ:\nE         --- transcript\nE         at 1767225600\nE         set https://mail.example.com/ s=1\nE         at 1767225605\nE         set https://mail.example.com/ r=1\nE         at 1767225610\nE         set https://mail.example.com/ s=2; Domain=mail.example.com\nE         get https://x.mail.example.com/\nE         get https://mail.example.com/\nE         dump\nE         --- expected (exit 0)\nE         https://x.mail.example.com/\ts=2\nE         https://mail.example.com/\ts=2; r=1\nE         -- jar @1767225610: 2 cookie(s)\nE         mail.example.com\t/\tr=1\thost-only\tsession\t1767225605\t1767225610\nE         mail.example.com\t/\ts=2\t-\tsession\t1767225600\t1767225610\nE         --- got (exit 0)\nE         https://x.mail.example.com/\ts=2; r=1\nE         https://mail.example.com/\ts=2; r=1\nE         -- jar @1767225610: 2 cookie(s)\nE         mail.example.com\t/\tr=1\thost-only\tsession\t1767225605\t1767225610\nE         mail.example.com\t/\ts=2\t-\tsession\t1767225600\t1767225610\nE         \nE       assert not ['--- transcript\\nat 1767225600\\nset https://mail.example.com/ s=1\\nat 1767225605\\nset https://mail.example.com/ r=1\\n...m\\t/\\tr=1\\thost-only\\tsession\\t1767225605\\t1767225610\\nmail.example.com\\t/\\ts=2\\t-\\tsession\\t1767225600\\t1767225610\\n']\n\n/tests/test_outputs.py:76: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_header_order",
+                "status": "passed",
+                "duration": 0.001961464004125446,
+                "start": 1790481221.317612,
+                "stop": 1790481221.3206496,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_public_suffix",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.0019961860016337596,
+                "start": 1790481221.3208752,
+                "stop": 1790481221.3267639,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "crumbjar = '/tmp/crumbjar-verify-target/release/crumbjar'\n\n    def test_public_suffix(crumbjar):\n        \"\"\"Domain attributes naming a public suffix are refused, except when it is the request host itself.\"\"\"\n>       _check_group(crumbjar, \"public_suffix\")\n\n/tests/test_outputs.py:126: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/crumbjar-verify-target/release/crumbjar', group = 'public_suffix'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            p = subprocess.run(\n                [binary, \"replay\", \"-\"],\n                input=case[\"transcript\"], capture_output=True, text=True, timeout=60,\n                env={\"PATH\": \"/usr/local/bin:/usr/bin:/bin\", \"LC_ALL\": \"C\"},\n            )\n            if p.returncode != 0 or p.stdout != case[\"stdout\"]:\n                failures.append(\n                    f\"--- transcript\\n{case['transcript']}\"\n                    f\"--- expected (exit 0)\\n{case['stdout']}\"\n                    f\"--- got (exit {p.returncode})\\n{p.stdout}{p.stderr[-500:]}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} transcripts differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 2 of 2 transcripts differ:\nE         --- transcript\nE         at 1767225600\nE         set https://github.io/ gh=1; Domain=github.io\nE         set https://alice.github.io/ steal=1; Domain=github.io\nE         set https://alice.github.io/ own=1; Domain=alice.github.io\nE         get https://github.io/\nE         get https://alice.github.io/\nE         get https://bob.github.io/\nE         dump\nE         --- expected (exit 0)\nE         https://github.io/\tgh=1\nE         https://alice.github.io/\town=1\nE         https://bob.github.io/\t\nE         -- jar @1767225600: 2 cookie(s)\nE         alice.github.io\t/\town=1\t-\tsession\t1767225600\t1767225600\nE         github.io\t/\tgh=1\thost-only\tsession\t1767225600\t1767225600\nE         --- got (exit 0)\nE         https://github.io/\tgh=1\nE         https://alice.github.io/\tgh=1; own=1\nE         https://bob.github.io/\tgh=1\nE         -- jar @1767225600: 2 cookie(s)\nE         alice.github.io\t/\town=1\t-\tsession\t1767225600\t1767225600\nE         github.io\t/\tgh=1\thost-only\tsession\t1767225600\t1767225600\nE         \nE         --- transcript\nE         at 1767225600\nE         set https://www.example.co.uk/ wide=1; Domain=co.uk\nE         set https://www.example.co.uk/ site=1; Domain=example.co.uk\nE         set https://co.uk/ odd=1; Domain=CO.UK\nE         get https://www.example.co.uk/\nE         get https://co.uk/\nE         get https://x.co.uk/\nE         dump\nE         --- expected (exit 0)\nE         https://www.example.co.uk/\tsite=1\nE         https://co.uk/\todd=1\nE         https://x.co.uk/\t\nE         -- jar @1767225600: 2 cookie(s)\nE         co.uk\t/\todd=1\thost-only\tsession\t1767225600\t1767225600\nE         example.co.uk\t/\tsite=1\t-\tsession\t1767225600\t1767225600\nE         --- got (exit 0)\nE         https://www.example.co.uk/\tsite=1; odd=1\nE         https://co.uk/\todd=1\nE         https://x.co.uk/\todd=1\nE         -- jar @1767225600: 2 cookie(s)\nE         co.uk\t/\todd=1\thost-only\tsession\t1767225600\t1767225600\nE         example.co.uk\t/\tsite=1\t-\tsession\t1767225600\t1767225600\nE         \nE       assert not ['--- transcript\\nat 1767225600\\nset https://github.io/ gh=1; Domain=github.io\\nset https://alice.github.io/ steal=1; ...t/\\todd=1\\thost-only\\tsession\\t1767225600\\t1767225600\\nexample.co.uk\\t/\\tsite=1\\t-\\tsession\\t1767225600\\t1767225600\\n']\n\n/tests/test_outputs.py:76: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_site_limit",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.0017838759995356668,
+                "start": 1790481221.3269138,
+                "stop": 1790481221.332461,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "crumbjar = '/tmp/crumbjar-verify-target/release/crumbjar'\n\n    def test_site_limit(crumbjar):\n        \"\"\"Per-site limit of docs/POLICY.md evicts the least recently accessed cookie of the site.\"\"\"\n>       _check_group(crumbjar, \"site_limit\")\n\n/tests/test_outputs.py:131: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/crumbjar-verify-target/release/crumbjar', group = 'site_limit'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            p = subprocess.run(\n                [binary, \"replay\", \"-\"],\n                input=case[\"transcript\"], capture_output=True, text=True, timeout=60,\n                env={\"PATH\": \"/usr/local/bin:/usr/bin:/bin\", \"LC_ALL\": \"C\"},\n            )\n            if p.returncode != 0 or p.stdout != case[\"stdout\"]:\n                failures.append(\n                    f\"--- transcript\\n{case['transcript']}\"\n                    f\"--- expected (exit 0)\\n{case['stdout']}\"\n                    f\"--- got (exit {p.returncode})\\n{p.stdout}{p.stderr[-500:]}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} transcripts differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 2 of 2 transcripts differ:\nE         --- transcript\nE         at 1767225600\nE         set https://api.example.com/ c1=1\nE         at 1767225601\nE         set https://api.example.com/ c2=1\nE         at 1767225602\nE         set https://www.example.com/ c3=1\nE         at 1767225603\nE         set https://www.example.com/ c4=1; Domain=example.com\nE         at 1767225604\nE         set https://example.com/ c5=1\nE         at 1767225605\nE         set https://example.com/ c6=1; Max-Age=12\nE         at 1767225606\nE         set https://example.org/ o1=1\nE         at 1767225610\nE         get https://api.example.com/\nE         at 1767225620\nE         set https://www.example.com/ c7=1\nE         at 1767225621\nE         set https://example.com/ c8=1\nE         at 1767225622\nE         set https://api.example.com/ c2=2\nE         at 1767225623\nE         set https://www.example.com/ c9=1\nE         get https://www.example.com/\nE         get https://api.example.com/\nE         dump\nE         --- expected (exit 0)\nE         https://api.example.com/\tc1=1; c2=1; c4=1\nE         https://www.example.com/\tc4=1; c7=1; c9=1\nE         https://api.example.com/\tc1=1; c2=2; c4=1\nE         -- jar @1767225623: 7 cookie(s)\nE         api.example.com\t/\tc1=1\thost-only\tsession\t1767225600\t1767225623\nE         api.example.com\t/\tc2=2\thost-only\tsession\t1767225601\t1767225623\nE         example.com\t/\tc4=1\t-\tsession\t1767225603\t1767225623\nE         example.com\t/\tc8=1\thost-only\tsession\t1767225621\t1767225621\nE         example.org\t/\to1=1\thost-only\tsession\t1767225606\t1767225606\nE         www.example.com\t/\tc7=1\thost-only\tsession\t1767225620\t1767225623\nE         www.example.com\t/\tc9=1\thost-only\tsession\t1767225623\t1767225623\nE         --- got (exit 0)\nE         https://api.example.com/\tc1=1; c2=1; c4=1; c5=1; c6=1\nE         https://www.example.com/\tc4=1; c5=1; c7=1; c8=1; c9=1\nE         https://api.example.com/\tc2=2; c4=1; c5=1; c8=1\nE         -- jar @1767225623: 7 cookie(s)\nE         api.example.com\t/\tc2=2\thost-only\tsession\t1767225601\t1767225623\nE         example.com\t/\tc4=1\t-\tsession\t1767225603\t1767225623\nE         example.com\t/\tc5=1\thost-only\tsession\t1767225604\t1767225623\nE         example.com\t/\tc8=1\thost-only\tsession\t1767225621\t1767225623\nE         example.org\t/\to1=1\thost-only\tsession\t1767225606\t1767225606\nE         www.example.com\t/\tc7=1\thost-only\tsession\t1767225620\t1767225623\nE         www.example.com\t/\tc9=1\thost-only\tsession\t1767225623\t1767225623\nE         \nE         --- transcript\nE         at 1767225600\nE         set https://a.shop.example.co.uk/ p1=1\nE         set https://b.shop.example.co.uk/ p2=1\nE         set https://shop.example.co.uk/ p3=1\nE         set https://other.co.uk/ q1=1\nE         set https://shop.example.co.uk/ p4=1\nE         set https://shop.example.co.uk/ p5=1\nE         at 1767225630\nE         get https://a.shop.example.co.uk/\nE         get https://shop.example.co.uk/\nE         at 1767225640\nE         set https://b.shop.example.co.uk/ p6=1\nE         set https://b.shop.example.co.uk/ p7=1\nE         set https://c.shop.example.co.uk/ p8=1\nE         dump\nE         --- expected (exit 0)\nE         https://a.shop.example.co.uk/\tp1=1\nE         https://shop.example.co.uk/\tp3=1; p4=1; p5=1\nE         -- jar @1767225640: 7 cookie(s)\nE         b.shop.example.co.uk\t/\tp6=1\thost-only\tsession\t1767225640\t1767225640\nE         b.shop.example.co.uk\t/\tp7=1\thost-only\tsession\t1767225640\t1767225640\nE         c.shop.example.co.uk\t/\tp8=1\thost-only\tsession\t1767225640\t1767225640\nE         other.co.uk\t/\tq1=1\thost-only\tsession\t1767225600\t1767225600\nE         shop.example.co.uk\t/\tp3=1\thost-only\tsession\t1767225600\t1767225630\nE         shop.example.co.uk\t/\tp4=1\thost-only\tsession\t1767225600\t1767225630\nE         shop.example.co.uk\t/\tp5=1\thost-only\tsession\t1767225600\t1767225630\nE         --- got (exit 0)\nE         https://a.shop.example.co.uk/\tp1=1; p3=1; p4=1; p5=1\nE         https://shop.example.co.uk/\tp3=1; p4=1; p5=1\nE         -- jar @1767225640: 7 cookie(s)\nE         b.shop.example.co.uk\t/\tp6=1\thost-only\tsession\t1767225640\t1767225640\nE         b.shop.example.co.uk\t/\tp7=1\thost-only\tsession\t1767225640\t1767225640\nE         c.shop.example.co.uk\t/\tp8=1\thost-only\tsession\t1767225640\t1767225640\nE         other.co.uk\t/\tq1=1\thost-only\tsession\t1767225600\t1767225600\nE         shop.example.co.uk\t/\tp3=1\thost-only\tsession\t1767225600\t1767225630\nE         shop.example.co.uk\t/\tp4=1\thost-only\tsession\t1767225600\t1767225630\nE         shop.example.co.uk\t/\tp5=1\thost-only\tsession\t1767225600\t1767225630\nE         \nE       assert not ['--- transcript\\nat 1767225600\\nset https://api.example.com/ c1=1\\nat 1767225601\\nset https://api.example.com/ c2=1\\n...host-only\\tsession\\t1767225600\\t1767225630\\nshop.example.co.uk\\t/\\tp5=1\\thost-only\\tsession\\t1767225600\\t1767225630\\n']\n\n/tests/test_outputs.py:76: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_name_value_pair",
+                "status": "passed",
+                "duration": 0.0016089549972093664,
+                "start": 1790481221.3326092,
+                "stop": 1790481221.3349628,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

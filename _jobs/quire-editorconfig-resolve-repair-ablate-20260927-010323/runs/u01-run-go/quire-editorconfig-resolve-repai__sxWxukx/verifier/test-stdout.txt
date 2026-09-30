@@ -1,0 +1,99 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 10 items
+
+../tests/test_outputs.py ...F......                                      [100%]
+
+=================================== FAILURES ===================================
+_______________________________ test_stdin_paths _______________________________
+
+quire = '/tmp/quire-verify/quire'
+
+    def test_stdin_paths(quire):
+        """File paths read from standard input."""
+>       _check_group(quire, "stdin_paths")
+
+/tests/test_outputs.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/quire-verify/quire', group = 'stdin_paths'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']!r}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err!r}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 4 of 7 cases differ:
+E         --- stdin_paths-01 args=['-'] stdin='{root}/app.py\n'
+E         expected rc=0 stderr=''
+E         [/srv/qc/stdin_paths-01/app.py]
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         got rc=0 stderr=''
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         
+E         --- stdin_paths-02 args=['-'] stdin='  {root}/app.py  \n\n\t\n{root}/Makefile\n{root}/notes.txt'
+E         expected rc=0 stderr=''
+E         [/srv/qc/stdin_paths-02/app.py]
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         [/srv/qc/stdin_paths-02/Makefile]
+E         indent_style=tab
+E         indent_size=tab
+E         [/srv/qc/stdin_paths-02/notes.txt]
+E         indent_style=space
+E         got rc=0 stderr=''
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         indent_style=tab
+E         indent_size=tab
+E         indent_style=space
+E         
+E         --- stdin_paths-06 args=['-'] stdin='{root}/app.py\nrelative/app.py\n{root}/Makefile\n'
+E         expected rc=1 stderr='Input file must be a full path name.\n'
+E         [/srv/qc/stdin_paths-06/app.py]
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         [relative/app.py]
+E         got rc=1 stderr='Input file must be a full path name.\n'
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         
+E         --- stdin_paths-07 args=['-b', '0.8', '-'] stdin='{root}/Makefile\n'
+E         expected rc=0 stderr=''
+E         [/srv/qc/stdin_paths-07/Makefile]
+E         indent_style=tab
+E         got rc=0 stderr=''
+E         indent_style=tab
+E         
+E       assert not ["--- stdin_paths-01 args=['-'] stdin='{root}/app.py\\n'\nexpected rc=0 stderr=''\n[/srv/qc/stdin_paths-01/app.py]\nin...nexpected rc=0 stderr=''\n[/srv/qc/stdin_paths-07/Makefile]\nindent_style=tab\ngot rc=0 stderr=''\nindent_style=tab\n"]
+
+/tests/test_outputs.py:97: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_section_anchoring
+PASSED ../tests/test_outputs.py::test_tab_indentation
+PASSED ../tests/test_outputs.py::test_bracketed_directories
+PASSED ../tests/test_outputs.py::test_globstar_segments
+PASSED ../tests/test_outputs.py::test_negated_classes
+PASSED ../tests/test_outputs.py::test_inline_comments
+PASSED ../tests/test_outputs.py::test_root_declarations
+PASSED ../tests/test_outputs.py::test_value_case
+PASSED ../tests/test_outputs.py::test_property_order
+FAILED ../tests/test_outputs.py::test_stdin_paths - AssertionError: 4 of 7 ca...
+========================= 1 failed, 9 passed in 7.48s ==========================

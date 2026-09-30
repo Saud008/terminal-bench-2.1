@@ -1,0 +1,252 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 15 items
+
+../tests/test_outputs.py ......F.......F                                 [100%]
+
+=================================== FAILURES ===================================
+___________________________ test_bracket_expressions ___________________________
+
+gleaner = '/tmp/gleaner-verify-target/release/gleaner'
+
+    def test_bracket_expressions(gleaner):
+        """Bracket sets: `^` and `!` negation, a leading `]` member, ranges and POSIX classes."""
+>       _check_group(gleaner, "bracket_expressions")
+
+/tests/test_outputs.py:156: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/gleaner-verify-target/release/gleaner'
+group = 'bracket_expressions'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            _materialize(case)
+            rc, out, err = _run(binary, case, ["list"])
+            if (rc, out) != (0, case["list"]):
+                failures.append(f"--- {case['name']}: list\nexpected rc=0\n{case['list']}got rc={rc} {err}\n{out}")
+            rc, out, err = _run(binary, case, ["check", "--", *case["checks"]])
+            if (rc, out) != (case["check_rc"], case["check"]):
+                failures.append(
+                    f"--- {case['name']}: check {case['checks']}\n"
+                    f"expected rc={case['check_rc']}\n{case['check']}got rc={rc} {err}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} mismatches in {len(CASES[group])} trees:\n" + "\n".join(failures)
+E       AssertionError: 6 mismatches in 3 trees:
+E         --- caret_negation_and_leading_bracket: list
+E         expected rc=0
+E         .gitignore
+E         a.log
+E         ab
+E         zz
+E         got rc=0 
+E         .gitignore
+E         ]b
+E         ]y
+E         ab
+E         b.log
+E         cb
+E         x1
+E         zz
+E         
+E         --- caret_negation_and_leading_bracket: check ['a.log', 'b.log', '^.log', 'x1', ']y', 'zz', 'cb', 'ab', ']b']
+E         expected rc=0
+E         ::	a.log
+E         .gitignore:1:[^a].log	b.log
+E         .gitignore:1:[^a].log	^.log
+E         .gitignore:2:[]x]*	x1
+E         .gitignore:2:[]x]*	]y
+E         ::	zz
+E         .gitignore:3:[!]a]b	cb
+E         ::	ab
+E         .gitignore:2:[]x]*	]b
+E         got rc=0 
+E         .gitignore:1:[^a].log	a.log
+E         ::	b.log
+E         .gitignore:1:[^a].log	^.log
+E         ::	x1
+E         ::	]y
+E         ::	zz
+E         ::	cb
+E         ::	ab
+E         ::	]b
+E         
+E         --- posix_classes_and_ranges: list
+E         expected rc=0
+E         .gitignore
+E         a1
+E         ax
+E         b
+E         c
+E         vx.bin
+E         got rc=0 
+E         .gitignore
+E         a1
+E         ax
+E         b
+E         c
+E         v2.bin
+E         
+E         --- posix_classes_and_ranges: check ['1a', 'a1', 'Ax', 'ax', '-', 'b', 'v2.bin', 'vx.bin']
+E         expected rc=0
+E         .gitignore:1:[[:digit:]]*	1a
+E         ::	a1
+E         .gitignore:2:[[:upper:]]x	Ax
+E         ::	ax
+E         .gitignore:3:[a-]	-
+E         ::	b
+E         .gitignore:4:v[^[:alpha:]].bin	v2.bin
+E         ::	vx.bin
+E         got rc=0 
+E         .gitignore:1:[[:digit:]]*	1a
+E         ::	a1
+E         .gitignore:2:[[:upper:]]x	Ax
+E         ::	ax
+E         .gitignore:3:[a-]	-
+E         ::	b
+E         ::	v2.bin
+E         .gitignore:4:v[^[:alpha:]].bin	vx.bin
+E         
+E         --- brackets_in_pathname_patterns: list
+E         expected rc=0
+E         .gitignore
+E         src/a/y
+E         src/a1/x
+E         got rc=0 
+E         .gitignore
+E         src/]/y
+E         src/a/y
+E         src/b1/x
+E         
+E         --- brackets_in_pathname_patterns: check ['src/a1/x', 'src/^1/x', 'src/b1', 'src/b1/x', 'src/]/y', 'src/a/y']
+E         expected rc=0
+E         ::	src/a1/x
+E         .gitignore:1:src/[^a]1/	src/^1/x
+E         .gitignore:1:src/[^a]1/	src/b1
+E         .gitignore:1:src/[^a]1/	src/b1/x
+E         .gitignore:2:src/[]]/y	src/]/y
+E         ::	src/a/y
+E         got rc=0 
+E         .gitignore:1:src/[^a]1/	src/a1/x
+E         .gitignore:1:src/[^a]1/	src/^1/x
+E         ::	src/b1
+E         ::	src/b1/x
+E         ::	src/]/y
+E         ::	src/a/y
+E         
+E       assert not ['--- caret_negation_and_leading_bracket: list\nexpected rc=0\n.gitignore\na.log\nab\nzz\ngot rc=0 \n.gitignore\n]b\n]...gnore:1:src/[^a]1/\tsrc/a1/x\n.gitignore:1:src/[^a]1/\tsrc/^1/x\n::\tsrc/b1\n::\tsrc/b1/x\n::\tsrc/]/y\n::\tsrc/a/y\n"]
+
+/tests/test_outputs.py:121: AssertionError
+_______________________________ test_mixed_trees _______________________________
+
+gleaner = '/tmp/gleaner-verify-target/release/gleaner'
+
+    def test_mixed_trees(gleaner):
+        """Randomly generated trees combining nested .gitignore files, info/exclude and excludes files."""
+>       _check_group(gleaner, "mixed_trees")
+
+/tests/test_outputs.py:196: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/gleaner-verify-target/release/gleaner', group = 'mixed_trees'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            _materialize(case)
+            rc, out, err = _run(binary, case, ["list"])
+            if (rc, out) != (0, case["list"]):
+                failures.append(f"--- {case['name']}: list\nexpected rc=0\n{case['list']}got rc={rc} {err}\n{out}")
+            rc, out, err = _run(binary, case, ["check", "--", *case["checks"]])
+            if (rc, out) != (case["check_rc"], case["check"]):
+                failures.append(
+                    f"--- {case['name']}: check {case['checks']}\n"
+                    f"expected rc={case['check_rc']}\n{case['check']}got rc={rc} {err}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} mismatches in {len(CASES[group])} trees:\n" + "\n".join(failures)
+E       AssertionError: 2 mismatches in 30 trees:
+E         --- mixed_20: list
+E         expected rc=0
+E         .gitignore
+E         [x]
+E         a 
+E         a b
+E         a-b/a.b
+E         a-b/b.log
+E         a/.gitignore
+E         a/a b
+E         a/abc
+E         a/build
+E         build
+E         doc/a 
+E         doc/b.log
+E         doc/foo
+E         got rc=0 
+E         -
+E         .gitignore
+E         [x]
+E         a 
+E         a b
+E         a-b/a.b
+E         a-b/b.log
+E         build
+E         doc/a 
+E         doc/b.log
+E         doc/foo
+E         
+E         --- mixed_20: check ['a/a', 'a/b/log', 'a ', 'a', 'a b', '[x]', 'a/-', 'a/a b', 'build', 'a-b', 'doc/a ', 'a/abc', 'a/b/b', 'a-b/b.log']
+E         expected rc=0
+E         a/.gitignore:6:?	a/a
+E         a/.gitignore:6:?	a/b/log
+E         ::	a 
+E         ::	a
+E         ::	a b
+E         ::	[x]
+E         a/.gitignore:6:?	a/-
+E         ::	a/a b
+E         ::	build
+E         ::	a-b
+E         ::	doc/a 
+E         ::	a/abc
+E         a/.gitignore:6:?	a/b/b
+E         ::	a-b/b.log
+E         got rc=0 
+E         .gitignore:4:**/[^a]	a/a
+E         .gitignore:4:**/[^a]	a/b/log
+E         ::	a 
+E         .gitignore:4:**/[^a]	a
+E         ::	a b
+E         ::	[x]
+E         .gitignore:4:**/[^a]	a/-
+E         .gitignore:4:**/[^a]	a/a b
+E         ::	build
+E         ::	a-b
+E         ::	doc/a 
+E         .gitignore:4:**/[^a]	a/abc
+E         .gitignore:4:**/[^a]	a/b/b
+E         ::	a-b/b.log
+E         
+E       assert not ['--- mixed_20: list\nexpected rc=0\n.gitignore\n[x]\na \na b\na-b/a.b\na-b/b.log\na/.gitignore\na/a b\na/abc\na/build...^a]\ta/a b\n::\tbuild\n::\ta-b\n::\tdoc/a \n.gitignore:4:**/[^a]\ta/abc\n.gitignore:4:**/[^a]\ta/b/b\n::\ta-b/b.log\n"]
+
+/tests/test_outputs.py:121: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_file_encodings
+PASSED ../tests/test_outputs.py::test_trailing_spaces
+PASSED ../tests/test_outputs.py::test_escaped_leading_characters
+PASSED ../tests/test_outputs.py::test_directory_only_patterns
+PASSED ../tests/test_outputs.py::test_anchoring
+PASSED ../tests/test_outputs.py::test_double_star
+PASSED ../tests/test_outputs.py::test_reinclude_under_excluded_directory
+PASSED ../tests/test_outputs.py::test_per_directory_precedence
+PASSED ../tests/test_outputs.py::test_tree_wide_sources
+PASSED ../tests/test_outputs.py::test_default_excludes_file
+PASSED ../tests/test_outputs.py::test_config_spelling
+PASSED ../tests/test_outputs.py::test_list_order
+PASSED ../tests/test_outputs.py::test_check_line_numbers
+FAILED ../tests/test_outputs.py::test_bracket_expressions - AssertionError: 6...
+FAILED ../tests/test_outputs.py::test_mixed_trees - AssertionError: 2 mismatc...
+========================= 2 failed, 13 passed in 1.99s =========================

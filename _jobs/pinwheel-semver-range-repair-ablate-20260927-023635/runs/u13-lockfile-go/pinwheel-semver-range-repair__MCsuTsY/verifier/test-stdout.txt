@@ -1,0 +1,457 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 15 items
+
+../tests/test_outputs.py .........FFFFFF                                 [100%]
+
+=================================== FAILURES ===================================
+_________________ test_lock_drops_packages_no_longer_required __________________
+
+pinwheel = '/tmp/pinwheel-verify/pinwheel'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_drops_packages_no_lo0')
+
+    def test_lock_drops_packages_no_longer_required(pinwheel, tmp_path):
+        """Packages no longer required after a later round downgrades a release are dropped from the lock."""
+>       _check_lock(pinwheel, "prune", tmp_path)
+
+/tests/test_outputs.py:177: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/pinwheel-verify/pinwheel', name = 'prune'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_drops_packages_no_lo0')
+
+    def _check_lock(binary, name, tmp_path):
+        expected = (FIXTURES / "expected" / f"{name}.lock").read_text(encoding="utf-8")
+        count = len(json.loads(expected)["packages"])
+        rc, out, err, lock = _resolve(binary, name, tmp_path)
+        assert rc == 0, f"resolve {name}: exit {rc}, stderr: {err.strip()}"
+        assert out == f"resolved {count} packages\n", f"resolve {name}: stdout {out!r}"
+        assert lock.is_file(), f"resolve {name}: no pin.lock written"
+        actual = lock.read_text(encoding="utf-8")
+        diff = "".join(difflib.unified_diff(
+            expected.splitlines(True), actual.splitlines(True), "expected pin.lock", "actual pin.lock"))
+>       assert actual == expected, f"resolve {name}: lock differs\n{diff}"
+E       AssertionError: resolve prune: lock differs
+E         --- expected pin.lock
+E         +++ actual pin.lock
+E         @@ -12,7 +12,7 @@
+E              "hollow-db": {
+E                "version": "3.2.0",
+E                "requiredBy": [
+E         -        "<root>",
+E         +        "\u003croot\u003e",
+E                  "loom-sched"
+E                ],
+E                "dependencies": {
+E         @@ -22,10 +22,10 @@
+E              "loom-sched": {
+E                "version": "2.4.3",
+E                "requiredBy": [
+E         -        "<root>"
+E         +        "\u003croot\u003e"
+E                ],
+E                "dependencies": {
+E         -        "hollow-db": "<3.3",
+E         +        "hollow-db": "\u003c3.3",
+E                  "moss-trace": "1.x"
+E                }
+E              },
+E         
+E       assert '{\n  "lockfi...  }\n  }\n}\n' == '{\n  "lockfi...  }\n  }\n}\n'
+E         
+E         Skipping 258 identical leading characters in diff, use -v to show
+E           
+E         -         "<root>",
+E         +         "\u003croot\u003e",
+E                   "loom-sched"
+E                 ],...
+E         
+E         ...Full output truncated (27 lines hidden), use '-vv' to show
+
+/tests/test_outputs.py:107: AssertionError
+_________________________ test_lock_applies_overrides __________________________
+
+pinwheel = '/tmp/pinwheel-verify/pinwheel'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_applies_overrides0')
+
+    def test_lock_applies_overrides(pinwheel, tmp_path):
+        """An override replaces the dependents' ranges and never adds a package by itself."""
+>       _check_lock(pinwheel, "overrides", tmp_path)
+
+/tests/test_outputs.py:182: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/pinwheel-verify/pinwheel', name = 'overrides'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_applies_overrides0')
+
+    def _check_lock(binary, name, tmp_path):
+        expected = (FIXTURES / "expected" / f"{name}.lock").read_text(encoding="utf-8")
+        count = len(json.loads(expected)["packages"])
+        rc, out, err, lock = _resolve(binary, name, tmp_path)
+        assert rc == 0, f"resolve {name}: exit {rc}, stderr: {err.strip()}"
+        assert out == f"resolved {count} packages\n", f"resolve {name}: stdout {out!r}"
+        assert lock.is_file(), f"resolve {name}: no pin.lock written"
+        actual = lock.read_text(encoding="utf-8")
+        diff = "".join(difflib.unified_diff(
+            expected.splitlines(True), actual.splitlines(True), "expected pin.lock", "actual pin.lock"))
+>       assert actual == expected, f"resolve {name}: lock differs\n{diff}"
+E       AssertionError: resolve overrides: lock differs
+E         --- expected pin.lock
+E         +++ actual pin.lock
+E         @@ -20,7 +20,7 @@
+E              "jade-cli": {
+E                "version": "1.3.0",
+E                "requiredBy": [
+E         -        "<root>"
+E         +        "\u003croot\u003e"
+E                ],
+E                "dependencies": {
+E                  "gale-queue": "^1.4.0"
+E         @@ -29,11 +29,11 @@
+E              "kelp-cache": {
+E                "version": "2.2.0",
+E                "requiredBy": [
+E         -        "<root>"
+E         +        "\u003croot\u003e"
+E                ],
+E                "dependencies": {
+E                  "brook-io": "^1.0.0",
+E         -        "gale-queue": ">=1.0.0 <3"
+E         +        "gale-queue": "\u003e=1.0.0 \u003c3"
+E                }
+E              }
+E            }
+E         
+E       assert '{\n  "lockfi...  }\n  }\n}\n' == '{\n  "lockfi...  }\n  }\n}\n'
+E         
+E         Skipping 411 identical leading characters in diff, use -v to show
+E           
+E         -         "<root>"
+E         +         "\u003croot\u003e"
+E                 ],
+E                 "dependencies": {...
+E         
+E         ...Full output truncated (19 lines hidden), use '-vv' to show
+
+/tests/test_outputs.py:107: AssertionError
+__________________________ test_lock_yanked_releases ___________________________
+
+pinwheel = '/tmp/pinwheel-verify/pinwheel'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_yanked_releases0')
+
+    def test_lock_yanked_releases(pinwheel, tmp_path):
+        """Yanked releases are skipped unless an exact pin (bare or '=') names them."""
+>       _check_lock(pinwheel, "yanked", tmp_path)
+
+/tests/test_outputs.py:187: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/pinwheel-verify/pinwheel', name = 'yanked'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_yanked_releases0')
+
+    def _check_lock(binary, name, tmp_path):
+        expected = (FIXTURES / "expected" / f"{name}.lock").read_text(encoding="utf-8")
+        count = len(json.loads(expected)["packages"])
+        rc, out, err, lock = _resolve(binary, name, tmp_path)
+        assert rc == 0, f"resolve {name}: exit {rc}, stderr: {err.strip()}"
+        assert out == f"resolved {count} packages\n", f"resolve {name}: stdout {out!r}"
+        assert lock.is_file(), f"resolve {name}: no pin.lock written"
+        actual = lock.read_text(encoding="utf-8")
+        diff = "".join(difflib.unified_diff(
+            expected.splitlines(True), actual.splitlines(True), "expected pin.lock", "actual pin.lock"))
+>       assert actual == expected, f"resolve {name}: lock differs\n{diff}"
+E       AssertionError: resolve yanked: lock differs
+E         --- expected pin.lock
+E         +++ actual pin.lock
+E         @@ -19,7 +19,7 @@
+E              "nettle-crypto": {
+E                "version": "3.2.1",
+E                "requiredBy": [
+E         -        "<root>",
+E         +        "\u003croot\u003e",
+E                  "opal-ui"
+E                ],
+E                "dependencies": {}
+E         @@ -27,7 +27,7 @@
+E              "opal-ui": {
+E                "version": "4.1.0",
+E                "requiredBy": [
+E         -        "<root>"
+E         +        "\u003croot\u003e"
+E                ],
+E                "dependencies": {
+E                  "elm-signal": "=0.9.3",
+E         
+E       assert '{\n  "lockfi...  }\n  }\n}\n' == '{\n  "lockfi...  }\n  }\n}\n'
+E         
+E         Skipping 397 identical leading characters in diff, use -v to show
+E           
+E         -         "<root>",
+E         +         "\u003croot\u003e",
+E                   "opal-ui"
+E                 ],...
+E         
+E         ...Full output truncated (16 lines hidden), use '-vv' to show
+
+/tests/test_outputs.py:107: AssertionError
+_______________________ test_lock_prefer_lowest_and_ties _______________________
+
+pinwheel = '/tmp/pinwheel-verify/pinwheel'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_prefer_lowest_and_ti0')
+
+    def test_lock_prefer_lowest_and_ties(pinwheel, tmp_path):
+        """prefer=lowest picks lowest releases; equal-precedence ties go to latest published, then file order."""
+>       _check_lock(pinwheel, "lowest", tmp_path)
+
+/tests/test_outputs.py:192: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/pinwheel-verify/pinwheel', name = 'lowest'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_prefer_lowest_and_ti0')
+
+    def _check_lock(binary, name, tmp_path):
+        expected = (FIXTURES / "expected" / f"{name}.lock").read_text(encoding="utf-8")
+        count = len(json.loads(expected)["packages"])
+        rc, out, err, lock = _resolve(binary, name, tmp_path)
+        assert rc == 0, f"resolve {name}: exit {rc}, stderr: {err.strip()}"
+        assert out == f"resolved {count} packages\n", f"resolve {name}: stdout {out!r}"
+        assert lock.is_file(), f"resolve {name}: no pin.lock written"
+        actual = lock.read_text(encoding="utf-8")
+        diff = "".join(difflib.unified_diff(
+            expected.splitlines(True), actual.splitlines(True), "expected pin.lock", "actual pin.lock"))
+>       assert actual == expected, f"resolve {name}: lock differs\n{diff}"
+E       AssertionError: resolve lowest: lock differs
+E         --- expected pin.lock
+E         +++ actual pin.lock
+E         @@ -12,7 +12,7 @@
+E              "dune-parse": {
+E                "version": "1.0.0+build.2",
+E                "requiredBy": [
+E         -        "<root>"
+E         +        "\u003croot\u003e"
+E                ],
+E                "dependencies": {}
+E              },
+E         @@ -26,18 +26,18 @@
+E              "iris-fmt": {
+E                "version": "0.3.0+r2",
+E                "requiredBy": [
+E         -        "<root>"
+E         +        "\u003croot\u003e"
+E                ],
+E                "dependencies": {}
+E              },
+E              "kelp-cache": {
+E                "version": "2.2.0",
+E                "requiredBy": [
+E         -        "<root>"
+E         +        "\u003croot\u003e"
+E                ],
+E                "dependencies": {
+E                  "brook-io": "^1.0.0",
+E         -        "gale-queue": ">=1.0.0 <3"
+E         +        "gale-queue": "\u003e=1.0.0 \u003c3"
+E                }
+E              }
+E            }
+E         
+E       assert '{\n  "lockfi...  }\n  }\n}\n' == '{\n  "lockfi...  }\n  }\n}\n'
+E         
+E         Skipping 269 identical leading characters in diff, use -v to show
+E           
+E         -         "<root>"
+E         +         "\u003croot\u003e"
+E                 ],
+E                 "dependencies": {}...
+E         
+E         ...Full output truncated (32 lines hidden), use '-vv' to show
+
+/tests/test_outputs.py:107: AssertionError
+_________________________ test_lock_mixed_range_forms __________________________
+
+pinwheel = '/tmp/pinwheel-verify/pinwheel'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_mixed_range_forms0')
+
+    def test_lock_mixed_range_forms(pinwheel, tmp_path):
+        """A project using caret, tilde, hyphen, partial, union, prerelease and build-metadata ranges locks correctly."""
+>       _check_lock(pinwheel, "mixed", tmp_path)
+
+/tests/test_outputs.py:197: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/pinwheel-verify/pinwheel', name = 'mixed'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_mixed_range_forms0')
+
+    def _check_lock(binary, name, tmp_path):
+        expected = (FIXTURES / "expected" / f"{name}.lock").read_text(encoding="utf-8")
+        count = len(json.loads(expected)["packages"])
+        rc, out, err, lock = _resolve(binary, name, tmp_path)
+        assert rc == 0, f"resolve {name}: exit {rc}, stderr: {err.strip()}"
+        assert out == f"resolved {count} packages\n", f"resolve {name}: stdout {out!r}"
+        assert lock.is_file(), f"resolve {name}: no pin.lock written"
+        actual = lock.read_text(encoding="utf-8")
+        diff = "".join(difflib.unified_diff(
+            expected.splitlines(True), actual.splitlines(True), "expected pin.lock", "actual pin.lock"))
+>       assert actual == expected, f"resolve {name}: lock differs\n{diff}"
+E       AssertionError: resolve mixed: lock differs
+E         --- expected pin.lock
+E         +++ actual pin.lock
+E         @@ -5,14 +5,14 @@
+E              "dune-parse": {
+E                "version": "1.0.0+build.2",
+E                "requiredBy": [
+E         -        "<root>"
+E         +        "\u003croot\u003e"
+E                ],
+E                "dependencies": {}
+E              },
+E              "quartz-http": {
+E                "version": "0.4.6",
+E                "requiredBy": [
+E         -        "<root>"
+E         +        "\u003croot\u003e"
+E                ],
+E                "dependencies": {
+E                  "sable-log": "^1.3.0"
+E         @@ -21,14 +21,14 @@
+E              "rune-cli": {
+E                "version": "1.9.1",
+E                "requiredBy": [
+E         -        "<root>"
+E         +        "\u003croot\u003e"
+E                ],
+E                "dependencies": {}
+E              },
+E              "sable-log": {
+E                "version": "1.4.7",
+E                "requiredBy": [
+E         -        "<root>",
+E         +        "\u003croot\u003e",
+E                  "quartz-http"
+E                ],
+E                "dependencies": {}
+E         @@ -36,28 +36,28 @@
+E              "tarn-db": {
+E                "version": "2.3.4",
+E                "requiredBy": [
+E         -        "<root>"
+E         +        "\u003croot\u003e"
+E                ],
+E                "dependencies": {}
+E              },
+E              "umber-ui": {
+E                "version": "3.1.0",
+E                "requiredBy": [
+E         -        "<root>"
+E         +        "\u003croot\u003e"
+E                ],
+E                "dependencies": {}
+E              },
+E              "vale-core": {
+E                "version": "1.3.0-beta.11",
+E                "requiredBy": [
+E         -        "<root>"
+E         +        "\u003croot\u003e"
+E                ],
+E                "dependencies": {}
+E              },
+E              "wisp-io": {
+E                "version": "1.0.0+linux",
+E                "requiredBy": [
+E         -        "<root>"
+E         +        "\u003croot\u003e"
+E                ],
+E                "dependencies": {}
+E              }
+E         
+E       assert '{\n  "lockfi...  }\n  }\n}\n' == '{\n  "lockfi...  }\n  }\n}\n'
+E         
+E         Skipping 140 identical leading characters in diff, use -v to show
+E           
+E         -         "<root>"
+E         +         "\u003croot\u003e"
+E                 ],
+E                 "dependencies": {}...
+E         
+E         ...Full output truncated (62 lines hidden), use '-vv' to show
+
+/tests/test_outputs.py:107: AssertionError
+___________________________ test_resolution_failures ___________________________
+
+pinwheel = '/tmp/pinwheel-verify/pinwheel'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_resolution_failures0')
+
+    def test_resolution_failures(pinwheel, tmp_path):
+        """Unsatisfiable and unknown packages exit 3 with the documented message and leave pin.lock alone."""
+>       _check_lock(pinwheel, "small", tmp_path)
+
+/tests/test_outputs.py:202: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/pinwheel-verify/pinwheel', name = 'small'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_resolution_failures0')
+
+    def _check_lock(binary, name, tmp_path):
+        expected = (FIXTURES / "expected" / f"{name}.lock").read_text(encoding="utf-8")
+        count = len(json.loads(expected)["packages"])
+        rc, out, err, lock = _resolve(binary, name, tmp_path)
+        assert rc == 0, f"resolve {name}: exit {rc}, stderr: {err.strip()}"
+        assert out == f"resolved {count} packages\n", f"resolve {name}: stdout {out!r}"
+        assert lock.is_file(), f"resolve {name}: no pin.lock written"
+        actual = lock.read_text(encoding="utf-8")
+        diff = "".join(difflib.unified_diff(
+            expected.splitlines(True), actual.splitlines(True), "expected pin.lock", "actual pin.lock"))
+>       assert actual == expected, f"resolve {name}: lock differs\n{diff}"
+E       AssertionError: resolve small: lock differs
+E         --- expected pin.lock
+E         +++ actual pin.lock
+E         @@ -5,14 +5,14 @@
+E              "moss-trace": {
+E                "version": "1.3.0",
+E                "requiredBy": [
+E         -        "<root>"
+E         +        "\u003croot\u003e"
+E                ],
+E                "dependencies": {}
+E              },
+E              "rune-cli": {
+E                "version": "1.9.1",
+E                "requiredBy": [
+E         -        "<root>"
+E         +        "\u003croot\u003e"
+E                ],
+E                "dependencies": {}
+E              }
+E         
+E       assert '{\n  "lockfi...  }\n  }\n}\n' == '{\n  "lockfi...  }\n  }\n}\n'
+E         
+E         Skipping 132 identical leading characters in diff, use -v to show
+E           
+E         -         "<root>"
+E         +         "\u003croot\u003e"
+E                 ],
+E                 "dependencies": {}...
+E         
+E         ...Full output truncated (11 lines hidden), use '-vv' to show
+
+/tests/test_outputs.py:107: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_caret_ranges
+PASSED ../tests/test_outputs.py::test_tilde_ranges
+PASSED ../tests/test_outputs.py::test_partial_version_comparators
+PASSED ../tests/test_outputs.py::test_hyphen_ranges
+PASSED ../tests/test_outputs.py::test_prerelease_admission
+PASSED ../tests/test_outputs.py::test_union_and_operator_spacing
+PASSED ../tests/test_outputs.py::test_build_metadata_ignored
+PASSED ../tests/test_outputs.py::test_prerelease_precedence
+PASSED ../tests/test_outputs.py::test_invalid_input_rejected
+FAILED ../tests/test_outputs.py::test_lock_drops_packages_no_longer_required
+FAILED ../tests/test_outputs.py::test_lock_applies_overrides - AssertionError...
+FAILED ../tests/test_outputs.py::test_lock_yanked_releases - AssertionError: ...
+FAILED ../tests/test_outputs.py::test_lock_prefer_lowest_and_ties - Assertion...
+FAILED ../tests/test_outputs.py::test_lock_mixed_range_forms - AssertionError...
+FAILED ../tests/test_outputs.py::test_resolution_failures - AssertionError: r...
+========================= 6 failed, 9 passed in 7.47s ==========================

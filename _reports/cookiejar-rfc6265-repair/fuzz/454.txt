@@ -1,0 +1,26 @@
+at 1767225600
+set https://1.2.3/a/b/c b=5; SameSite=Lax; Path=/a/
+get https://192.168.0.1/ab
+get http://a.b.example.com/a/
+set http://10.1.2.3 b=8; HttpOnly
+get https://foo.test/a/bc/d
+get http://localhost/a/bc/d
+get https://api.example.com/a/b/c
+dump
+dump
+set https://a.b.example.com/a/b/ A=0; Path=/a/; Secure
+at 1767225600
+get https://192.168.0.1/
+get https://x.co.uk/a/b
+get http://github.io/
+get http://www.example.com/a/
+set https://localhost A=1; HttpOnly; Domain=test; Secure
+get http://x.co.uk/a
+get https://api.example.com/ab
+get https://1.2.3/a
+set https://example.com z=3; Secure; SameSite=Lax; HttpOnly; Secure
+set http://localhost/a/b/ z=8; Path=/a/; HttpOnly; SameSite=Lax; Max-Age=-5
+set https://example.com/a a=4; Domain=.; Max-Age=; Expires=junk; Path=/a/
+at 1767229600
+at 1767233600
+dump

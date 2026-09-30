@@ -1,0 +1,91 @@
+---
+description: TB 2.1 evaluation — local setup (WSL/Docker/harbor), oracle & NOP baselines, stb evaluation kit (run_k.sh), difficulty evidence
+alwaysApply: false
+---
+
+# TB 2.1 — evaluation & evidence
+
+All commands run inside **WSL Ubuntu** (Docker Desktop with WSL2 engine + Ubuntu integration). Prereqs: Docker ≥ 24, Python 3.12/3.13, ~10 GB free.
+
+## One-time setup
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv tool install harbor --python 3.13          # harbor --version
+uv tool install snorkelai-stb --upgrade       # need >= 2.4.15 (stb --version)
+stb login --env prod                          # interactive, real terminal
+python3 patch_stb_harbor.py                   # from the kit → "ok True True"
+python3 patch_stb_harbor.py --check           # exit 1 if anything is off
+```
+
+Any `stb` reinstall/upgrade silently reverts the patch → re-run `patch_stb_harbor.py` + `--check`.
+
+## Baselines (no model access needed)
+
+```bash
+harbor run -a oracle -p ./<task>     # must PASS — evidence: 3 runs, every test passing
+harbor run -a nop -p ./<task>        # must FAIL — evidence: 2 runs, every test failing on genuine assertions
+harbor tasks start-env -p ./<task> -i   # interactive debugging
+harbor tasks check ./<task> -m openai/gpt-5.6   # CI + LLMaJ locally
+```
+
+NOP failures must be real assertion mismatches, not import/infra crashes. Oracle/NOP evidence must postdate every graded file.
+
+## Difficulty evidence (only this counts)
+
+```bash
+KIT="DELIVERY_PREP_KIT_v1/DELIVERY_PREP_KIT_v1"   # run_k.sh, patch_stb_harbor.py, check_trajectory.py, delivery_prep.py
+bash $KIT/run_k.sh /path/to/<task> 2
+bash $KIT/run_k.sh /path/to/<task> 3  # always — pool requires k=5 (2 + 3) for delivery
+```
+
+**Never run `stb keys refresh` by hand** — `run_k.sh` runs `stb keys verify` and refreshes once only if that fails; each refresh mints a new capped slice of the shared budget and discards what was left on the old key. Setup: `stb` ≥ 2.4.15 (2.4.17 bundles Harbor 0.23.0; patch `r3` supports 0.22/0.23); after any stb install/upgrade re-run `python3 $KIT/patch_stb_harbor.py` then `--check` (all PASS). `--check-agent` needs the workspace `scripts/` package and is not required by `run_k.sh`. Docker Desktop → Resources → WSL integration must be ON for Ubuntu (a Windows `docker.exe` on the WSL PATH cannot bind-mount Linux paths). Standalone Harbor ≥ 0.22 requires `[task] name = "org/<slug>"`.
+
+Locked by `run_k.sh` (never override, never call the runtime by hand): `@openai/gpt-5.6`, `xhigh`, 100 MB observation cap, message store, `agent/api-calls.jsonl`, `agent/recording.cast`, console log + sha-bound `SOURCE.txt`. Output: `$OUT` (default `./runs`)/`<slug>-<label>-<stamp>/`.
+
+Last line: `SUMMARY <job>: x/k solved; fidelity PASS`. `fidelity FAIL` → rename job `_void-<name>`, fix cause, rerun; never quote its numbers.
+
+## Reading results
+
+| k=5 solved | Verdict |
+|-----------|---------|
+| 0 | CHALLENGE — needs written justification (real capability gap, not missing info / unstated convention / brittle trick) |
+| 1 | Hard ✅ |
+| 2–3 | Medium ✅ (Python-primary: not accepted) |
+| 4 | Easy ❌ blocked |
+| 5 | CONTROL — doesn't count |
+
+- A failure counts only if the trajectory shows the model saw everything needed and still broke a stated rule. Truncation, expired keys, harness crashes are not task failures.
+- Identical wrong answers across independent runs = underspecified rule → fix instruction, don't claim difficulty.
+- Local solvability approximation: `harbor run -a openai/gpt-5.6 -p ./<task> -k 3` (each test should pass at least once across runs).
+
+## Delivery evidence (pool layout — Master Ship Checklist G/H)
+
+```
+<slug>/oracle-nop-evidence/{oracle-1,oracle-2,oracle-3,nop-1,nop-2}/{ctrf.json,reward.txt,test-stdout.txt}   # nothing else
+<slug>/trajectories/SUMMARY.txt
+<slug>/trajectories/run-01 … run-05/
+    agent/{api-calls.jsonl, recording.cast, terminus_2.pane (or equivalent), trajectory.json}
+    verifier/{ctrf.json, reward.txt, test-stdout.txt}
+    config.json  result.json  rubric_score.txt  [trial.log]
+```
+
+- Oracle/NOP: copy each harbor trial's `verifier/` files into the matching folder. Oracle runs genuinely independent (distinct ctrf start timestamps); oracle every test passed; NOP every test status `failed` from real assertion mismatches (not import/crash).
+- Trajectories: the 5 trials from the run_k.sh job(s) (both invocations together = k=5), renamed `run-01..run-05` in order. **Do not hand-edit `result.json`** (raw `openai/@openai/gpt-5.6` model names are normal).
+- `SUMMARY.txt` = exactly 2 lines: `<slug> <sha16> <model> <reasoning_effort>` then the 5-run reward array (e.g. `[0, 1, 0, 0, 0]`). No prose.
+- Sha = `find instruction.md tests environment solution task.toml -type f -print0 | sort -z | xargs -0 shasum -a 256 | shasum -a 256 | cut -c1-16` run inside `<slug>/<slug>/` (run it in WSL for the canonical value).
+- `config.json`: `task.path` and `trials_dir` → `/terminal-bench2.1/<slug>`; any `trial_uri` → `file:///terminal-bench2.1/<slug>`.
+- Scrub everything (incl. trajectories): no `/Users/`, `/private/tmp/`, `/home/<name>` (except in-container like `/home/agent`), no word-boundary case-sensitive `stb`.
+- Mtimes: every evidence dir/ctrf newer than every graded file. Any graded edit → regenerate oracle/NOP + k=5 + SUMMARY + all rubric_score.txt + difficulty/time estimates + sha + scrub, together (check 82).
+- No `SOURCE.txt` inside the delivery zip.
+- `py -3 tb21/run_baselines.py <slug> [--ablate|--all]` runs the oracle/NOP baselines (and per-fix ablation) through harbor and refreshes `oracle-nop-evidence/` only on a clean result.
+- `py -3 tb21/master_check.py <slug>` automates the mechanical checks and flags rubric_score quotes missing from the run's own files (72/73), unnamed failing tests (70) and agent commands touching grading paths (81); confirming the verdicts stays a signed-off manual step.
+
+## Troubleshooting
+
+- `verifier_did_not_run` everywhere → missing `tmux`/`asciinema` in image.
+- `reward.txt not found` → blocking entrypoint, `set -e` in test.sh, or missing `mkdir -p /logs/verifier`.
+- Docker network errors → `docker network prune`. Socket permission → restart Docker Desktop / WSL.
+- `INVALID_MODEL_NOT_ALLOWED` → wrong model string (`openai/gpt-5.6`).
+- `typos` flagging `source "$HOME/.local/bin/env"` → known false positive, ignore.
+- LLMaJ `NOT_APPLICABLE` with empty summary → agents never started (usually tmux); report task UUID in Slack.

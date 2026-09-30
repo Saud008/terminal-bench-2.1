@@ -1,0 +1,439 @@
+[step 2] find . -maxdepth 3 -type f -print | sort
+[step 2] printf '%s\n' '--- Cargo.toml ---'; cat Cargo.toml; printf '%s\n' '--- docs ---'; for f in docs/*; do echo "### $f"; cat "$f"; done
+[step 2] printf '%s\n' '--- source ---'; for f in src/*.rs; do echo "### $f"; sed -n '1,260p' "$f"; done
+[step 2] cargo test
+[step 3] for f in README.md $(find src -type f -name '*.rs' | sort); do echo "===== $f ====="; cat "$f"; done
+[step 3] printf 'PATH=%s\n' "$PATH"; command -v cargo || true; command -v rustc || true; find /root /usr/local /opt -type f \( -name cargo -o -name rustc \) 2>/dev/null | head -30
+[step 3] find . -maxdepth 4 -type f \( -path '*/test*' -o -name '*test*' \) -print; grep -RInE 'TODO|FIXME|unimplemented!|todo!' src || true
+[step 4] cat > src/ignore/lines.rs <<'EOF'
+//! Splitting a pattern file into candidate lines.
+
+#[derive(Debug, Clone)]
+pub struct RawLine {
+    pub number: usize,
+    pub text: Vec<u8>,
+}
+
+pub fn split(buf: &[u8]) -> Vec<RawLine> {
+    let buf = buf.strip_prefix(&[0xef, 0xbb, 0xbf]).unwrap_or(buf);
+    let mut out = Vec::new();
+    for (index, raw) in buf.split(|&b| b == b'\n').enumerate() {
+        let line = raw.strip_suffix(&[b'\r']).unwrap_or(raw);
+        if line.is_empty() || line[0] == b'#' {
+            continue;
+        }
+        out.push(RawLine { number: index + 1, text: line.to_vec() });
+    }
+    out
+}
+EOF
+cat > src/ignore/parse.rs <<'EOF'
+//! Turning one line of a pattern file into a pattern.
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Parsed {
+    pub text: Vec<u8>,
+    pub body: Vec<u8>,
+    pub negative: bool,
+    pub dir_only: bool,
+    pub basename_only: bool,
+}
+
+/// Remove trailing spaces unless escaped by an odd run of backslashes.
+pub fn trim_trailing_spaces(line: &[u8]) -> &[u8] {
+    let mut end = line.len();
+    while end > 0 && line[end - 1] == b' ' {
+        let mut slashes = 0;
+        let mut i = end - 1;
+        while i > 0 && line[i - 1] == b'\\' {
+            slashes += 1;
+            i -= 1;
+        }
+        if slashes % 2 == 1 {
+            break;
+        }
+        end -= 1;
+    }
+    &line[..end]
+}
+
+pub fn parse_line(line: &[u8]) -> Option<Parsed> {
+    let text = trim_trailing_spaces(line);
+    if text.is_empty() {
+        return None;
+    }
+    let mut body = text;
+    let escaped_leader = body.len() > 1 && body[0] == b'\\' && matches!(body[1], b'!' | b'#');
+    let negative = !escaped_leader && body.first() == Some(&b'!');
+    if negative {
+        body = &body[1..];
+    }
+    if body.is_empty() {
+        return None;
+    }
+    let dir_only = body.last() == Some(&b'/') && !is_escaped(body, body.len() - 1);
+    if dir_only {
+        body = &body[..body.len() - 1];
+    }
+    if body.is_empty() {
+        return None;
+    }
+    let basename_only = !body.contains(&b'/');
+    Some(Parsed { text: text.to_vec(), body: body.to_vec(), negative, dir_only, basename_only })
+}
+
+fn is_escaped(s: &[u8], at: usize) -> bool {
+    let mut n = 0;
+    let mut i = at;
+    while i > 0 && s[i - 1] == b'\\' { n += 1; i -= 1; }
+    n % 2 == 1
+}
+EOF
+[step 4] python3 - <<'PY'
+p='src/ignore/pattern.rs'
+s=open(p).read()
+s=s.replace('''    pub fn last_match(&self, path: &str, basename: &str, is_dir: bool) -> Option<&Pattern> {
+        self.patterns.iter().rev().find(|pat| {
+            if pat.dir_only && !is_dir {
+                return false;
+            }
+            if pat.basename_only {
+                wildmatch(&pat.body, basename.as_bytes(), false)
+            } else {
+                match_pathname(path, &pat.body)
+            }
+        })
+    }''','''    pub fn last_match(&self, path: &str, _basename: &str, is_dir: bool) -> Option<&Pattern> {
+        let relative = if self.base.is_empty() {
+            path
+        } else {
+            path.strip_prefix(&self.base)
+                .and_then(|rest| rest.strip_prefix('/'))?
+        };
+        let basename = relative.rsplit('/').next().unwrap_or(relative);
+        self.patterns.iter().rev().find(|pat| {
+            if pat.dir_only && !is_dir {
+                return false;
+            }
+            if pat.basename_only {
+                wildmatch(&pat.body, basename.as_bytes(), false)
+            } else {
+                match_pathname(relative, &pat.body)
+            }
+        })
+    }''')
+open(p,'w').write(s)
+
+p='src/ignore/sources.rs'; s=open(p).read()
+s=s.replace('''        if let Some(name) = &self.excludes_file {
+            let path = resolve(root, name);
+            if let Some(list) = read_optional(&path, name)? {
+                lists.push(list);
+            }
+        }
+        if let Some(list) = read_optional(&root.join(INFO_EXCLUDE), INFO_EXCLUDE)? {
+            lists.push(list);
+        }''','''        if let Some(list) = read_optional(&root.join(INFO_EXCLUDE), INFO_EXCLUDE)? {
+            lists.push(list);
+        }
+        if let Some(name) = &self.excludes_file {
+            let path = resolve(root, name);
+            if let Some(list) = read_optional(&path, name)? {
+                lists.push(list);
+            }
+        }''')
+open(p,'w').write(s)
+
+p='src/ignore/stack.rs'; s=open(p).read()
+s=s.replace('''    match own {
+        Some(h) if h.negative => Some(h),
+        own => inherited.or(own),
+    }''','''    inherited.or(own)''')
+s=s.replace('''        stack
+            .iter()
+            .chain(self.globals.iter())''','''        stack
+            .iter()
+            .rev()
+            .chain(self.globals.iter())''')
+# Do not load or consult files beneath an excluded parent.
+old='''            let own = self.classify(&stack, &prefix, tru...[+1254 chars]
+[step 4] cat > src/ignore/charclass.rs <<'EOF'
+//! Bracket expressions: `[abc]`, `[a-z]`, `[!x]`, `[[:digit:]]`.
+
+pub(super) fn bracket(pat: &[u8], mut p: usize, tc: u8) -> Option<(bool, usize)> {
+    let mut negated = false;
+    if matches!(pat.get(p), Some(b'!') | Some(b'^')) { negated = true; p += 1; }
+    let mut matched = false;
+    let mut first = true;
+    let mut previous: Option<u8> = None;
+    loop {
+        let c = *pat.get(p)?;
+        if c == b']' && !first { return Some((matched != negated, p)); }
+        first = false;
+
+        if c == b'[' && pat.get(p + 1) == Some(&b':') {
+            let start = p + 2;
+            let mut end = start;
+            while end + 1 < pat.len() && !(pat[end] == b':' && pat[end + 1] == b']') { end += 1; }
+            if end + 1 >= pat.len() { return None; }
+            if class(&pat[start..end], tc)? { matched = true; }
+            previous = None;
+            p = end + 2;
+            continue;
+        }
+
+        let (value, next) = atom(pat, p)?;
+        if value == b'-' && previous.is_some() && pat.get(next) != Some(&b']') {
+            let (end, after) = atom(pat, next)?;
+            let start = previous.unwrap();
+            if start <= tc && tc <= end { matched = true; }
+            previous = None;
+            p = after;
+        } else {
+            if value == tc { matched = true; }
+            previous = Some(value);
+            p = next;
+        }
+    }
+}
+
+fn atom(pat: &[u8], p: usize) -> Option<(u8, usize)> {
+    let c = *pat.get(p)?;
+    if c == b'\\' { Some((*pat.get(p + 1)?, p + 2)) } else { Some((c, p + 1)) }
+}
+
+fn class(name: &[u8], c: u8) -> Option<bool> {
+    Some(match name {
+        b"alnum" => c.is_ascii_alphanumeric(), b"alpha" => c.is_ascii_alphabetic(),
+        b"blank" => c == b' ' || c == b'\t', b"cntrl" => c.is_ascii_control(),
+        b"digit" => c.is_ascii_digit(), b"graph" => c.is_ascii_graphic(),
+        b"lower" => c.is_ascii_lowercase(), b"print" => c.is_ascii_graphic() || c == b' ',
+        b"punct" => c.is_ascii_punctuation(), b"space" => c.is_ascii_whitespace(),
+        b"upper" => c.is_ascii_uppercase(), b"xdigit" => c.is_ascii_hexdigit(),
+        _ => return None,
+    })
+}
+EOF
+cat > src/ignore/wildmatch.rs <<'EOF'
+//! Git-style byte-oriented wildmatch.
+
+use std::collections::HashMap;
+use super::charclass;
+
+pub fn wildmatch(pattern: &[u8], text: &[u8], pathname: bool) -> bool {
+    fn go(pat: &[u8], text: &[u8], pathname: bool, p: usize, t: usize,
+          memo: &mut HashMap<(usize, u...[+2275 chars]
+[step 4] python3 - <<'PY'
+p='src/config/paths.rs'; s=open(p).read()
+s=s.replace('''pub fn default_excludes_file() -> Option<String> {
+    home().map(|h| format!("{h}/.config/git/ignore"))
+}''','''pub fn default_excludes_file() -> Option<String> {
+    match env::var("XDG_CONFIG_HOME") {
+        Ok(xdg) if !xdg.is_empty() => Some(format!("{xdg}/git/ignore")),
+        _ => home().map(|h| format!("{h}/.config/git/ignore")),
+    }
+}''')
+open(p,'w').write(s)
+p='src/config/gitconfig.rs'; s=open(p).read()
+s=s.replace('key: key.to_string(),', 'key: key.to_ascii_lowercase(),')
+s=s.replace('&& e.key == key)', '&& e.key.eq_ignore_ascii_case(key))')
+open(p,'w').write(s)
+PY
+export PATH=/usr/local/rustup/toolchains/1.85.1-x86_64-unknown-linux-gnu/bin:$PATH
+cargo build --release
+[step 4] rm -rf /tmp/gt && mkdir -p /tmp/gt/{sub/build,build,ignored,deep/x,.git/info}; touch /tmp/gt/{root.txt,a.tmp,build/a,sub/build/b,sub/keep.tmp,sub/drop.tmp,ignored/rescue,deep/x/z}; printf 'build/\n*.tmp\nignored/\n!ignored/rescue\n' > /tmp/gt/.gitignore; printf '!keep.tmp\n' > /tmp/gt/sub/.gitignore; target/release/gleaner --root /tmp/gt list; echo LIST=$?; target/release/gleaner --root /tmp/gt check build/a sub/build/b sub/keep.tmp sub/drop.tmp ignored/rescue; echo CHECK=$?
+printf '\357\273\277# first\r\n\r\nwin/\r\n' > /tmp/gt/.gitignore; mkdir -p /tmp/gt/win; touch /tmp/gt/win/a; target/release/gleaner --root /tmp/gt check win win/a
+[step 5] command -v git || true; git --version 2>/dev/null || true
+[step 5] cat >> src/ignore/wildmatch.rs <<'EOF'
+
+#[cfg(test)]
+mod tests {
+    use super::wildmatch;
+    fn m(p: &str, s: &str) -> bool { wildmatch(p.as_bytes(), s.as_bytes(), true) }
+
+    #[test]
+    fn ordinary_globs_do_not_cross_slashes() {
+        assert!(m("a/*/c", "a/b/c"));
+        assert!(!m("a/*/c", "a/b/x/c"));
+        assert!(m("logs/202?**/raw", "logs/2024xx/raw"));
+        assert!(!m("logs/202?**/raw", "logs/2024/x/raw"));
+    }
+
+    #[test]
+    fn globstar_components_cross_directories() {
+        for s in ["a/b", "a/x/b", "a/x/y/b"] { assert!(m("a/**/b", s), "{s}"); }
+        for s in ["b", "x/b", "x/y/b"] { assert!(m("**/b", s), "{s}"); }
+        assert!(m("a/**", "a/x/y"));
+        assert!(!m("a/**", "a"));
+        assert!(!m("**z/q", "x/y/z/q"));
+    }
+
+    #[test]
+    fn bracket_forms() {
+        assert!(m("[a-c]", "b"));
+        assert!(m("[!a-c]", "z"));
+        assert!(m("[^a-c]", "z"));
+        assert!(m("[]a]", "]"));
+        assert!(m("[-a]", "-"));
+        assert!(m("[a-]", "-"));
+        assert!(m("[[:digit:]]", "7"));
+        assert!(!m("[[:bogus:]]", "x"));
+        assert!(!m("[abc", "a"));
+    }
+}
+EOF
+cat >> src/ignore/parse.rs <<'EOF'
+
+#[cfg(test)]
+mod tests {
+    use super::{parse_line, trim_trailing_spaces};
+    #[test]
+    fn spaces_and_markers() {
+        assert_eq!(trim_trailing_spaces(b"foo  "), b"foo");
+        assert_eq!(trim_trailing_spaces(b"foo\\ "), b"foo\\ ");
+        assert_eq!(trim_trailing_spaces(b"foo\\  "), b"foo\\ ");
+        assert!(parse_line(b"!x").unwrap().negative);
+        assert!(!parse_line(b"\\!x").unwrap().negative);
+        assert_eq!(parse_line(b"x/").unwrap().body, b"x");
+        assert!(parse_line(b"x/").unwrap().dir_only);
+    }
+}
+EOF
+cargo test
+[step 5] python3 - <<'PY'
+p='src/config/gitconfig.rs'
+s=open(p).read()
+start=s.index('fn logical_lines(')
+end=s.index('\nfn parse_header', start)
+replacement=r'''fn logical_lines(text: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut current = String::new();
+    for raw in text.split('\n') {
+        let raw = raw.strip_suffix('\r').unwrap_or(raw);
+        let trailing = raw.as_bytes().iter().rev().take_while(|&&b| b == b'\\').count();
+        if trailing % 2 == 1 {
+            current.push_str(&raw[..raw.len() - 1]);
+        } else {
+            current.push_str(raw);
+            out.push(std::mem::take(&mut current));
+        }
+    }
+    if !current.is_empty() {
+        out.push(current);
+    }
+    out
+}
+'''
+s=s[:start]+replacement+s[end:]
+open(p,'w').write(s)
+PY
+cargo test
+cargo build --release
+[step 5] rm -rf /tmp/conf && mkdir -p /tmp/conf/.git/info /tmp/conf/{a/x/y,logs/2024/x,logs/2024xx,sub}; touch /tmp/conf/{a/b,a/x/b,a/x/y/b,logs/2024/x/raw,logs/2024xx/raw,sub/n7,sub/na}; cat > /tmp/conf/.gitignore <<'EOF'
+a/**/b
+logs/202?**/raw
+sub/n[[:digit:]]
+EOF
+target/release/gleaner --root /tmp/conf list
+printf '\n--- checks ---\n'; target/release/gleaner --root /tmp/conf check a/b a/x/b a/x/y/b logs/2024/x/raw logs/2024xx/raw sub/n7 sub/na; true
+[step 6] python3 - <<'PY'
+p='src/ignore/sources.rs'
+s=open(p).read()
+start=s.index('pub fn read_optional(')
+replacement='''pub fn read_optional(path: &Path, source: &str) -> Result<Option<PatternList>> {
+    match fs::symlink_metadata(path) {
+        Ok(meta) if !meta.file_type().is_file() => return Ok(None),
+        Ok(_) => {}
+        Err(e)
+            if matches!(
+                e.kind(),
+                io::ErrorKind::NotFound | io::ErrorKind::NotADirectory
+            ) => return Ok(None),
+        Err(e) => return Err(Error::io(path, e)),
+    }
+    match fs::read(path) {
+        Ok(buf) => Ok(Some(PatternList::from_bytes(source, "", &buf))),
+        Err(e)
+            if matches!(
+                e.kind(),
+                io::ErrorKind::NotFound | io::ErrorKind::IsADirectory | io::ErrorKind::NotADirectory
+            ) => Ok(None),
+        Err(e) => Err(Error::io(path, e)),
+    }
+}
+'''
+s=s[:start]+replacement
+open(p,'w').write(s)
+PY
+cargo fmt --all
+cargo test
+cargo build --release
+[step 6] rm -rf /tmp/prec /tmp/xdg && mkdir -p /tmp/prec/.git/info /tmp/prec/sub /tmp/xdg/git; touch /tmp/prec/{global.tmp,info.tmp,sub/deep.tmp,sub/other.tmp}; printf '*.tmp\n' > /tmp/xdg/git/ignore; printf '!info.tmp\n' > /tmp/prec/.git/info/exclude; printf '!other.tmp\n' > /tmp/prec/sub/.gitignore; XDG_CONFIG_HOME=/tmp/xdg HOME=/nonexistent target/release/gleaner --root /tmp/prec check global.tmp info.tmp sub/deep.tmp sub/other.tmp; echo status=$?; XDG_CONFIG_HOME=/tmp/xdg HOME=/nonexistent target/release/gleaner --root /tmp/prec list
+[step 6] rm -rf /tmp/cfg && mkdir -p /tmp/cfg/.git /tmp/cfg/rules; touch /tmp/cfg/{a.foo,b.bar,c.txt}; printf '*.foo\n*.bar\n' > '/tmp/cfg/rules/my ignore'; cat > /tmp/cfg/.git/config <<'EOF'
+[Core]
+    ExcludesFile = "rules/my\
+ ignore"
+EOF
+target/release/gleaner --root /tmp/cfg check a.foo b.bar c.txt; echo status=$?
+target/release/gleaner --root /tmp/cfg list
+[step 6] grep -RIn 'unsafe\|Command::new\|extern crate' src Cargo.toml || true; cat Cargo.toml
+[step 7] {}
+[step 8] python3 - <<'PY'
+p = 'src/ignore/charclass.rs'
+s = open(p).read()
+s = s.replace('''        let (value, next) = atom(pat, p)?;
+        if value == b'-' && previous.is_some() && pat.get(next) != Some(&b']') {
+            let (end, after) = atom(pat, next)?;''', '''        let (value, next, escaped) = atom(pat, p)?;
+        if value == b'-' && !escaped && previous.is_some() && pat.get(next) != Some(&b']') {
+            let (end, after, _) = atom(pat, next)?;''')
+s = s.replace('''fn atom(pat: &[u8], p: usize) -> Option<(u8, usize)> {
+    let c = *pat.get(p)?;
+    if c == b'\\\\' {
+        Some((*pat.get(p + 1)?, p + 2))
+    } else {
+        Some((c, p + 1))
+    }
+}''', '''fn atom(pat: &[u8], p: usize) -> Option<(u8, usize, bool)> {
+    let c = *pat.get(p)?;
+    if c == b'\\\\' {
+        Some((*pat.get(p + 1)?, p + 2, true))
+    } else {
+        Some((c, p + 1, false))
+    }
+}''')
+open(p, 'w').write(s)
+
+p = 'src/ignore/wildmatch.rs'
+s = open(p).read()
+needle = '''        assert!(m("[a-]", "-"));
+        assert!(m("[[:digit:]]", "7"));'''
+replacement = '''        assert!(m("[a-]", "-"));
+        assert!(m(r"[a\\-z]", "-"));
+        assert!(!m(r"[a\\-z]", "b"));
+        assert!(m("[[:digit:]]", "7"));'''
+if needle not in s:
+    raise SystemExit('test insertion point not found')
+s = s.replace(needle, replacement)
+open(p, 'w').write(s)
+PY
+cargo test && cargo build --release
+[step 9] sed -n '1,100p' src/ignore/charclass.rs
+[step 9] python3 - <<'PY'
+p='src/ignore/charclass.rs'
+s=open(p).read()
+start=s.index('fn atom(')
+end=s.index('\nfn class(', start)
+s=s[:start]+'''fn atom(pat: &[u8], p: usize) -> Option<(u8, usize, bool)> {
+    let c = *pat.get(p)?;
+    if c == b'\\\\' {
+        Some((*pat.get(p + 1)?, p + 2, true))
+    } else {
+        Some((c, p + 1, false))
+    }
+}
+'''+s[end:]
+open(p,'w').write(s)
+PY
+cargo test && cargo build --release
+[step 10] {}
+[step 11] {}

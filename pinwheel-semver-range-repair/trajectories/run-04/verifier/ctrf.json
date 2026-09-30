@@ -1,0 +1,158 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 15,
+            "passed": 14,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790481751.2061954,
+            "stop": 1790481761.7000978
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_caret_ranges",
+                "status": "passed",
+                "duration": 10.209790212000371,
+                "start": 1790481751.2270195,
+                "stop": 1790481761.4373622,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_tilde_ranges",
+                "status": "passed",
+                "duration": 0.024872351001249626,
+                "start": 1790481761.4376438,
+                "stop": 1790481761.4627202,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_partial_version_comparators",
+                "status": "passed",
+                "duration": 0.03415828899596818,
+                "start": 1790481761.462958,
+                "stop": 1790481761.4973395,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_hyphen_ranges",
+                "status": "passed",
+                "duration": 0.02462380699944333,
+                "start": 1790481761.4975603,
+                "stop": 1790481761.522464,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_prerelease_admission",
+                "status": "passed",
+                "duration": 0.027316885996697238,
+                "start": 1790481761.5227103,
+                "stop": 1790481761.5502446,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_union_and_operator_spacing",
+                "status": "passed",
+                "duration": 0.018317503003345337,
+                "start": 1790481761.5505533,
+                "stop": 1790481761.5690868,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_build_metadata_ignored",
+                "status": "passed",
+                "duration": 0.013511747001757612,
+                "start": 1790481761.5692916,
+                "stop": 1790481761.5829937,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_prerelease_precedence",
+                "status": "passed",
+                "duration": 0.02054242700251052,
+                "start": 1790481761.5831962,
+                "stop": 1790481761.6039236,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_invalid_input_rejected",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.04493536500012851,
+                "start": 1790481761.604104,
+                "stop": 1790481761.6650789,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\n\n    def test_invalid_input_rejected(pinwheel):\n        \"\"\"Strictly invalid versions and ranges exit 2 with the documented message; valid ones are accepted.\"\"\"\n        inv = CASES[\"invalid\"]\n        failures = []\n        for v in inv[\"versions\"]:\n            for args in ([\"satisfies\", v, \"*\"], [\"compare\", v, \"1.0.0\"]):\n                rc, out, err = _run(pinwheel, *args)\n                if rc != 2 or out or not err.startswith(f'pinwheel: invalid version \"{v}\"'):\n                    failures.append(f\"{args}: expected exit 2 invalid version, got rc={rc} stdout={out!r} stderr={err.strip()!r}\")\n        for r in inv[\"ranges\"]:\n            rc, out, err = _run(pinwheel, \"satisfies\", \"1.0.0\", r)\n            if rc != 2 or out or not err.startswith(f'pinwheel: invalid range \"{r}\"'):\n                failures.append(f\"satisfies 1.0.0 {r!r}: expected exit 2 invalid range, got rc={rc} stdout={out!r} stderr={err.strip()!r}\")\n        for v in inv[\"valid_versions\"]:\n            rc, out, err = _run(pinwheel, \"satisfies\", v, \"*\")\n            if rc != 0 or out not in (\"true\\n\", \"false\\n\"):\n                failures.append(f\"satisfies {v!r} '*': valid version rejected, rc={rc} stderr={err.strip()!r}\")\n        for r in inv[\"valid_ranges\"]:\n            rc, out, err = _run(pinwheel, \"satisfies\", \"1.0.0\", r)\n            if rc != 0 or out not in (\"true\\n\", \"false\\n\"):\n                failures.append(f\"satisfies 1.0.0 {r!r}: valid range rejected, rc={rc} stderr={err.strip()!r}\")\n>       assert not failures, \"\\n\".join(failures)\nE       AssertionError: ['satisfies', '1.2.3-01', '*']: expected exit 2 invalid version, got rc=0 stdout='false\\n' stderr=''\nE         ['compare', '1.2.3-01', '1.0.0']: expected exit 2 invalid version, got rc=0 stdout='1\\n' stderr=''\nE         ['satisfies', '1.2.3-beta.007', '*']: expected exit 2 invalid version, got rc=0 stdout='false\\n' stderr=''\nE         ['compare', '1.2.3-beta.007', '1.0.0']: expected exit 2 invalid version, got rc=0 stdout='1\\n' stderr=''\nE         satisfies 1.0.0 '>=1.2.3-01': expected exit 2 invalid range, got rc=0 stdout='false\\n' stderr=''\nE       assert not [\"['satisfies', '1.2.3-01', '*']: expected exit 2 invalid version, got rc=0 stdout='false\\\\n' stderr=''\", \"['compare',...'1\\\\n' stderr=''\", \"satisfies 1.0.0 '>=1.2.3-01': expected exit 2 invalid range, got rc=0 stdout='false\\\\n' stderr=''\"]\n\n/tests/test_outputs.py:172: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_lock_drops_packages_no_longer_required",
+                "status": "passed",
+                "duration": 0.007657320998987416,
+                "start": 1790481761.6653621,
+                "stop": 1790481761.6735003,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_lock_applies_overrides",
+                "status": "passed",
+                "duration": 0.004463212997507071,
+                "start": 1790481761.6737,
+                "stop": 1790481761.678352,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_lock_yanked_releases",
+                "status": "passed",
+                "duration": 0.0040119990007951856,
+                "start": 1790481761.678558,
+                "stop": 1790481761.6827707,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_lock_prefer_lowest_and_ties",
+                "status": "passed",
+                "duration": 0.004287398998712888,
+                "start": 1790481761.6829576,
+                "stop": 1790481761.687428,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_lock_mixed_range_forms",
+                "status": "passed",
+                "duration": 0.004093013994861394,
+                "start": 1790481761.687591,
+                "stop": 1790481761.6918879,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_resolution_failures",
+                "status": "passed",
+                "duration": 0.007721366004261654,
+                "start": 1790481761.692057,
+                "stop": 1790481761.6999495,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

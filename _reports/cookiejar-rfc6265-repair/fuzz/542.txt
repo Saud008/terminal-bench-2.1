@@ -1,0 +1,37 @@
+at 1767225600
+set https://a.b.example.com/a/ sid=2; Path=/ab; Domain=test
+get http://example.com/a/
+set http://localhost/ab z=6; Secure; SameSite=Lax; Max-Age=0
+at 1767225700
+at 1767225730
+set http://example.org/a/ b=3
+dump
+set https://a.b.example.com/ sid=6
+get http://example.com/a/b
+get http://example.org/a/b/c
+get http://co.uk/x/y?q=/z
+get http://x.co.uk/a/b
+get http://alice.github.io/a/b/
+set https://github.io/a/b/ noequals
+get http://foo.test/
+at 1767225731
+set https://example.com/ab a=7; Expires=05 Mar 2030 12:00:00abc; Path=/; HttpOnly; Path=/a
+get https://alice.github.io
+at 1767225831
+get https://alice.github.io/a
+get http://example.com
+set https://shop.example.co.uk/x/y?q=/z A=9; SameSite=Lax
+set https://api.example.com/ab sid=7; Expires=Thu, 01 Jan 2032 00:00:00 GMT
+set https://api.example.com/a/b/c z=1; Expires=29 Feb 2400 00:00:00
+get https://www.example.com/
+get http://a.b.example.com/a/
+set https://10.1.2.3 z=3
+at 1767225831
+set https://example.com/a/ b=4; Path=
+set https://example.org/a/ b=7; Domain=example.co.uk; Path=/ab
+get http://1.2.3/
+set https://co.uk/a/bc/d a=5
+get http://192.168.0.1/x/y?q=/z
+dump
+get http://www.example.com/a/
+dump

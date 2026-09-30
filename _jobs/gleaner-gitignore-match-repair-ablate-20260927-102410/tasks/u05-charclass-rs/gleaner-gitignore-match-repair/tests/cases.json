@@ -1,0 +1,2395 @@
+{
+ "groups": {
+  "file_encodings": [
+   {
+    "name": "bom_and_crlf_root",
+    "files": {
+     "a.log": "x\n",
+     "keep.log": "x\n",
+     "notes.txt": "x\n",
+     "build/out.bin": "x\n",
+     "src/build/x.c": "x\n",
+     "src/c.log": "x\n",
+     "src/main.c": "x\n",
+     ".gitignore": "\ufeff*.log\r\n!keep.log\r\nbuild/\r\n"
+    },
+    "checks": [
+     "a.log",
+     "keep.log",
+     "build",
+     "build/out.bin",
+     "src/c.log",
+     "src/main.c",
+     "notes.txt"
+    ],
+    "list": ".gitignore\nkeep.log\nnotes.txt\nsrc/main.c\n",
+    "check": ".gitignore:1:*.log\ta.log\n.gitignore:2:!keep.log\tkeep.log\n.gitignore:3:build/\tbuild\n.gitignore:3:build/\tbuild/out.bin\n.gitignore:1:*.log\tsrc/c.log\n::\tsrc/main.c\n::\tnotes.txt\n",
+    "check_rc": 0
+   },
+   {
+    "name": "crlf_in_subdir_last_line_unterminated",
+    "files": {
+     "pkg/a.tmp": "x\n",
+     "pkg/b.o": "x\n",
+     "pkg/c.txt": "x\n",
+     "pkg/deep/d.tmp": "x\n",
+     "top.tmp": "x\n",
+     "pkg/cache/e": "x\n",
+     "pkg/.gitignore": "# generated\r\n\r\n*.tmp\r\ncache/\r\n*.o\r"
+    },
+    "checks": [
+     "pkg/a.tmp",
+     "pkg/b.o",
+     "pkg/deep/d.tmp",
+     "pkg/cache",
+     "pkg/cache/e",
+     "top.tmp",
+     "pkg/c.txt"
+    ],
+    "list": "pkg/.gitignore\npkg/c.txt\ntop.tmp\n",
+    "check": "pkg/.gitignore:3:*.tmp\tpkg/a.tmp\npkg/.gitignore:5:*.o\tpkg/b.o\npkg/.gitignore:3:*.tmp\tpkg/deep/d.tmp\npkg/.gitignore:4:cache/\tpkg/cache\npkg/.gitignore:4:cache/\tpkg/cache/e\n::\ttop.tmp\n::\tpkg/c.txt\n",
+    "check_rc": 0
+   },
+   {
+    "name": "bom_in_info_exclude_and_excludes_file",
+    "files": {
+     "x.bak": "x\n",
+     "y.swp": "x\n",
+     "z.txt": "x\n",
+     "d/w.bak": "x\n",
+     ".gitignore": "z.txt\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\texcludesFile = ~/global-ignore\n",
+    "exclude": "\ufeff*.bak\n",
+    "home": {
+     "global-ignore": "\ufeff*.swp\r\n"
+    },
+    "checks": [
+     "x.bak",
+     "y.swp",
+     "d/w.bak",
+     "z.txt"
+    ],
+    "list": ".gitignore\n",
+    "check": ".git/info/exclude:1:*.bak\tx.bak\n/tmp/gleaner-case/user/global-ignore:1:*.swp\ty.swp\n.git/info/exclude:1:*.bak\td/w.bak\n.gitignore:1:z.txt\tz.txt\n",
+    "check_rc": 0
+   },
+   {
+    "name": "crlf_negation_and_anchor",
+    "files": {
+     "out/a.js": "x\n",
+     "out/keep/b.js": "x\n",
+     "lib/out/c.js": "x\n",
+     "readme.md": "x\n",
+     "docs/readme.md": "x\n",
+     ".gitignore": "/out/*\r\n!/out/keep/\r\n/readme.md\r\n"
+    },
+    "checks": [
+     "out/a.js",
+     "out/keep",
+     "out/keep/b.js",
+     "lib/out/c.js",
+     "readme.md",
+     "docs/readme.md"
+    ],
+    "list": ".gitignore\ndocs/readme.md\nlib/out/c.js\nout/keep/b.js\n",
+    "check": ".gitignore:1:/out/*\tout/a.js\n.gitignore:2:!/out/keep/\tout/keep\n::\tout/keep/b.js\n::\tlib/out/c.js\n.gitignore:3:/readme.md\treadme.md\n::\tdocs/readme.md\n",
+    "check_rc": 0
+   }
+  ],
+  "trailing_spaces": [
+   {
+    "name": "spaces_tabs_and_escapes",
+    "files": {
+     "trail": "x\n",
+     "trail ": "x\n",
+     "sp ": "x\n",
+     "sp": "x\n",
+     "tab": "x\n",
+     "two ": "x\n",
+     "two": "x\n",
+     "plain": "x\n",
+     "end": "x\n",
+     ".gitignore": "trail   \nsp\\ \ntab\t\ntwo\\  \nend\\\n"
+    },
+    "checks": [
+     "trail",
+     "trail ",
+     "sp ",
+     "sp",
+     "tab",
+     "two ",
+     "two",
+     "end",
+     "plain"
+    ],
+    "list": ".gitignore\nend\nplain\nsp\ntab\ntrail \ntwo\n",
+    "check": ".gitignore:1:trail\ttrail\n::\ttrail \n.gitignore:2:sp\\ \tsp \n::\tsp\n::\ttab\n.gitignore:4:two\\ \ttwo \n::\ttwo\n::\tend\n::\tplain\n",
+    "check_rc": 0
+   },
+   {
+    "name": "escaped_space_in_directory_pattern",
+    "files": {
+     "my dir /a": "x\n",
+     "my dir/b": "x\n",
+     "cache/c": "x\n",
+     "sub/cache/d": "x\n",
+     "logs /e": "x\n",
+     "logs/f": "x\n",
+     ".gitignore": "cache/   \nlogs\\ /\nmy\\ dir\\ /\n"
+    },
+    "checks": [
+     "my dir /a",
+     "my dir/b",
+     "cache/c",
+     "sub/cache/d",
+     "logs /e",
+     "logs/f"
+    ],
+    "list": ".gitignore\nlogs/f\nmy dir/b\n",
+    "check": ".gitignore:3:my\\ dir\\ /\tmy dir /a\n::\tmy dir/b\n.gitignore:1:cache/\tcache/c\n.gitignore:1:cache/\tsub/cache/d\n.gitignore:2:logs\\ /\tlogs /e\n::\tlogs/f\n",
+    "check_rc": 0
+   },
+   {
+    "name": "tab_kept_in_subdir_file",
+    "files": {
+     "w/k": "x\n",
+     "w/k2": "x\n",
+     "w/m": "x\n",
+     "k": "x\n",
+     "w/.gitignore": "k\t\nk2 \t \nm \\\t\n"
+    },
+    "checks": [
+     "w/k",
+     "w/k2",
+     "w/m",
+     "k"
+    ],
+    "list": "k\nw/.gitignore\nw/k\nw/k2\nw/m\n",
+    "check": "::\tw/k\n::\tw/k2\n::\tw/m\n::\tk\n",
+    "check_rc": 1
+   }
+  ],
+  "escaped_leading_characters": [
+   {
+    "name": "literal_bang_and_hash",
+    "files": {
+     "!important.txt": "x\n",
+     "important.txt": "x\n",
+     "#notes": "x\n",
+     "notes": "x\n",
+     "keep": "x\n",
+     ".gitignore": "\\!important.txt\n\\#notes\n#keep\n"
+    },
+    "checks": [
+     "!important.txt",
+     "important.txt",
+     "#notes",
+     "notes",
+     "keep"
+    ],
+    "list": ".gitignore\nimportant.txt\nkeep\nnotes\n",
+    "check": ".gitignore:1:\\!important.txt\t!important.txt\n::\timportant.txt\n.gitignore:2:\\#notes\t#notes\n::\tnotes\n::\tkeep\n",
+    "check_rc": 0
+   },
+   {
+    "name": "escaped_bang_after_glob",
+    "files": {
+     "secret-a": "x\n",
+     "secret-keep": "x\n",
+     "!secret-keep": "x\n",
+     "other": "x\n",
+     ".gitignore": "secret*\n\\!secret-keep\n"
+    },
+    "checks": [
+     "secret-a",
+     "secret-keep",
+     "!secret-keep",
+     "other"
+    ],
+    "list": ".gitignore\nother\n",
+    "check": ".gitignore:1:secret*\tsecret-a\n.gitignore:1:secret*\tsecret-keep\n.gitignore:2:\\!secret-keep\t!secret-keep\n::\tother\n",
+    "check_rc": 0
+   },
+   {
+    "name": "escaped_bang_in_subdir_and_real_negation",
+    "files": {
+     "d/!x": "x\n",
+     "d/x": "x\n",
+     "d/y": "x\n",
+     "e/!x": "x\n",
+     "e/x": "x\n",
+     "d/.gitignore": "*\n!.gitignore\n\\!x\n!x\n",
+     "e/.gitignore": "\\!x\n"
+    },
+    "checks": [
+     "d/!x",
+     "d/x",
+     "d/y",
+     "d/.gitignore",
+     "e/!x",
+     "e/x"
+    ],
+    "list": "d/.gitignore\nd/x\ne/.gitignore\ne/x\n",
+    "check": "d/.gitignore:3:\\!x\td/!x\nd/.gitignore:4:!x\td/x\nd/.gitignore:1:*\td/y\nd/.gitignore:2:!.gitignore\td/.gitignore\ne/.gitignore:1:\\!x\te/!x\n::\te/x\n",
+    "check_rc": 0
+   }
+  ],
+  "directory_only_patterns": [
+   {
+    "name": "trailing_slash_matches_at_any_depth",
+    "files": {
+     "build/a": "x\n",
+     "src/build/b": "x\n",
+     "src/lib/build": "x\n",
+     "docs/logs/x": "x\n",
+     "logs": "x\n",
+     "tmp/y": "x\n",
+     ".gitignore": "build/\nlogs/\n"
+    },
+    "checks": [
+     "build",
+     "build/a",
+     "src/build",
+     "src/build/b",
+     "src/lib/build",
+     "docs/logs",
+     "docs/logs/x",
+     "logs"
+    ],
+    "list": ".gitignore\nlogs\nsrc/lib/build\ntmp/y\n",
+    "check": ".gitignore:1:build/\tbuild\n.gitignore:1:build/\tbuild/a\n.gitignore:1:build/\tsrc/build\n.gitignore:1:build/\tsrc/build/b\n::\tsrc/lib/build\n.gitignore:2:logs/\tdocs/logs\n.gitignore:2:logs/\tdocs/logs/x\n::\tlogs\n",
+    "check_rc": 0
+   },
+   {
+    "name": "dir_only_in_subdir_file",
+    "files": {
+     "sub/a/tmp/z": "x\n",
+     "sub/tmp": "x\n",
+     "sub/b/tmp/q": "x\n",
+     "tmp/r": "x\n",
+     "other/tmp/s": "x\n",
+     "sub/.gitignore": "tmp/\n"
+    },
+    "checks": [
+     "sub/a/tmp",
+     "sub/a/tmp/z",
+     "sub/tmp",
+     "sub/b/tmp",
+     "tmp",
+     "tmp/r",
+     "other/tmp/s"
+    ],
+    "list": "other/tmp/s\nsub/.gitignore\nsub/tmp\ntmp/r\n",
+    "check": "sub/.gitignore:1:tmp/\tsub/a/tmp\nsub/.gitignore:1:tmp/\tsub/a/tmp/z\n::\tsub/tmp\nsub/.gitignore:1:tmp/\tsub/b/tmp\n::\ttmp\n::\ttmp/r\n::\tother/tmp/s\n",
+    "check_rc": 0
+   },
+   {
+    "name": "negated_dir_only",
+    "files": {
+     "out/a": "x\n",
+     "x/out/b": "x\n",
+     "y/cache/c": "x\n",
+     "y/cache2/d": "x\n",
+     ".gitignore": "*/\n!x/\n!out/\n!y/\ncache/\n"
+    },
+    "checks": [
+     "out",
+     "out/a",
+     "x",
+     "x/out",
+     "y",
+     "y/cache",
+     "y/cache2",
+     "y/cache2/d"
+    ],
+    "list": ".gitignore\nout/a\nx/out/b\n",
+    "check": ".gitignore:3:!out/\tout\n::\tout/a\n.gitignore:2:!x/\tx\n.gitignore:3:!out/\tx/out\n.gitignore:4:!y/\ty\n.gitignore:5:cache/\ty/cache\n.gitignore:1:*/\ty/cache2\n.gitignore:1:*/\ty/cache2/d\n",
+    "check_rc": 0
+   }
+  ],
+  "anchoring": [
+   {
+    "name": "middle_slash_anchors_to_file_directory",
+    "files": {
+     "doc/frotz": "x\n",
+     "a/doc/frotz": "x\n",
+     "root-only": "x\n",
+     "x/root-only": "x\n",
+     "a/b.o": "x\n",
+     "doc/frotz.txt": "x\n",
+     ".gitignore": "doc/frotz\n/root-only\n*.o\n"
+    },
+    "checks": [
+     "doc/frotz",
+     "a/doc/frotz",
+     "root-only",
+     "x/root-only",
+     "a/b.o",
+     "doc/frotz.txt"
+    ],
+    "list": ".gitignore\na/doc/frotz\ndoc/frotz.txt\nx/root-only\n",
+    "check": ".gitignore:1:doc/frotz\tdoc/frotz\n::\ta/doc/frotz\n.gitignore:2:/root-only\troot-only\n::\tx/root-only\n.gitignore:3:*.o\ta/b.o\n::\tdoc/frotz.txt\n",
+    "check_rc": 0
+   },
+   {
+    "name": "subdir_file_relative_paths",
+    "files": {
+     "sub/gen/out.txt": "x\n",
+     "sub/x/gen/out.txt": "x\n",
+     "gen/out.txt": "x\n",
+     "sub/gen/other.txt": "x\n",
+     "sub/.gitignore": "gen/out.txt\n"
+    },
+    "checks": [
+     "sub/gen/out.txt",
+     "sub/x/gen/out.txt",
+     "gen/out.txt",
+     "sub/gen/other.txt"
+    ],
+    "list": "gen/out.txt\nsub/.gitignore\nsub/gen/other.txt\nsub/x/gen/out.txt\n",
+    "check": "sub/.gitignore:1:gen/out.txt\tsub/gen/out.txt\n::\tsub/x/gen/out.txt\n::\tgen/out.txt\n::\tsub/gen/other.txt\n",
+    "check_rc": 0
+   },
+   {
+    "name": "leading_slash_in_subdir_file",
+    "files": {
+     "pkg/top": "x\n",
+     "pkg/x/top": "x\n",
+     "top": "x\n",
+     "pkg/dist/a": "x\n",
+     "pkg/src/dist/b": "x\n",
+     "dist/c": "x\n",
+     "pkg/.gitignore": "/top\n/dist/\n"
+    },
+    "checks": [
+     "pkg/top",
+     "pkg/x/top",
+     "top",
+     "pkg/dist",
+     "pkg/dist/a",
+     "pkg/src/dist/b",
+     "dist/c"
+    ],
+    "list": "dist/c\npkg/.gitignore\npkg/src/dist/b\npkg/x/top\ntop\n",
+    "check": "pkg/.gitignore:1:/top\tpkg/top\n::\tpkg/x/top\n::\ttop\npkg/.gitignore:2:/dist/\tpkg/dist\npkg/.gitignore:2:/dist/\tpkg/dist/a\n::\tpkg/src/dist/b\n::\tdist/c\n",
+    "check_rc": 0
+   },
+   {
+    "name": "single_star_stays_in_one_component",
+    "files": {
+     "a/b/c": "x\n",
+     "a/b/x/c": "x\n",
+     "z/a/b/c": "x\n",
+     "a/bb/c": "x\n",
+     "lib/v1/x.map": "x\n",
+     "src/lib/v1/y.map": "x\n",
+     ".gitignore": "a/*/c\nlib/*/*.map\n"
+    },
+    "checks": [
+     "a/b/c",
+     "a/b/x/c",
+     "z/a/b/c",
+     "a/bb/c",
+     "lib/v1/x.map",
+     "src/lib/v1/y.map"
+    ],
+    "list": ".gitignore\na/b/x/c\nsrc/lib/v1/y.map\nz/a/b/c\n",
+    "check": ".gitignore:1:a/*/c\ta/b/c\n::\ta/b/x/c\n::\tz/a/b/c\n.gitignore:1:a/*/c\ta/bb/c\n.gitignore:2:lib/*/*.map\tlib/v1/x.map\n::\tsrc/lib/v1/y.map\n",
+    "check_rc": 0
+   }
+  ],
+  "double_star": [
+   {
+    "name": "star_star_inside_a_component",
+    "files": {
+     "logs/2024/jan/raw": "x\n",
+     "logs/2024-old/x/raw": "x\n",
+     "logs/2024x/raw": "x\n",
+     "w/data/a1/b/c.csv": "x\n",
+     "w/data/a1/c.csv": "x\n",
+     ".gitignore": "logs/202?**/raw\n",
+     "w/.gitignore": "data/[a]**/*.csv\n"
+    },
+    "checks": [
+     "logs/2024/jan/raw",
+     "logs/2024-old/x/raw",
+     "logs/2024x/raw",
+     "w/data/a1/b/c.csv",
+     "w/data/a1/c.csv"
+    ],
+    "list": ".gitignore\nlogs/2024-old/x/raw\nlogs/2024/jan/raw\nw/.gitignore\nw/data/a1/b/c.csv\n",
+    "check": "::\tlogs/2024/jan/raw\n::\tlogs/2024-old/x/raw\n.gitignore:1:logs/202?**/raw\tlogs/2024x/raw\n::\tw/data/a1/b/c.csv\nw/.gitignore:1:data/[a]**/*.csv\tw/data/a1/c.csv\n",
+    "check_rc": 0
+   },
+   {
+    "name": "zero_or_more_directories",
+    "files": {
+     "a/b": "x\n",
+     "a/x/b": "x\n",
+     "a/x/y/b": "x\n",
+     "a/xb": "x\n",
+     "b/a/b": "x\n",
+     "logs": "x\n",
+     "x/logs": "x\n",
+     "x/y/logs/z": "x\n",
+     ".gitignore": "a/**/b\n**/logs\n"
+    },
+    "checks": [
+     "a/b",
+     "a/x/b",
+     "a/x/y/b",
+     "a/xb",
+     "b/a/b",
+     "logs",
+     "x/logs",
+     "x/y/logs",
+     "x/y/logs/z"
+    ],
+    "list": ".gitignore\na/xb\nb/a/b\n",
+    "check": ".gitignore:1:a/**/b\ta/b\n.gitignore:1:a/**/b\ta/x/b\n.gitignore:1:a/**/b\ta/x/y/b\n::\ta/xb\n::\tb/a/b\n.gitignore:2:**/logs\tlogs\n.gitignore:2:**/logs\tx/logs\n.gitignore:2:**/logs\tx/y/logs\n.gitignore:2:**/logs\tx/y/logs/z\n",
+    "check_rc": 0
+   },
+   {
+    "name": "star_star_not_a_whole_component",
+    "files": {
+     "foo/bar": "x\n",
+     "foo/x/bar": "x\n",
+     "fooz/bar": "x\n",
+     "a/bz/q": "x\n",
+     "bz/q": "x\n",
+     "a/b/z/q": "x\n",
+     ".gitignore": "?oo**/bar\n**z/q\n"
+    },
+    "checks": [
+     "foo/bar",
+     "foo/x/bar",
+     "fooz/bar",
+     "a/bz/q",
+     "bz/q",
+     "a/b/z/q"
+    ],
+    "list": ".gitignore\na/b/z/q\na/bz/q\nfoo/x/bar\n",
+    "check": ".gitignore:1:?oo**/bar\tfoo/bar\n::\tfoo/x/bar\n.gitignore:1:?oo**/bar\tfooz/bar\n::\ta/bz/q\n.gitignore:2:**z/q\tbz/q\n::\ta/b/z/q\n",
+    "check_rc": 0
+   },
+   {
+    "name": "trailing_and_triple_star",
+    "files": {
+     "cache/a": "x\n",
+     "cache/d/e": "x\n",
+     "k/cache/f": "x\n",
+     "m/n/o/p": "x\n",
+     "m/p": "x\n",
+     "q/r/s": "x\n",
+     ".gitignore": "/cache/**\nm/***/p\nq/**/\n"
+    },
+    "checks": [
+     "cache/a",
+     "cache/d",
+     "cache/d/e",
+     "k/cache/f",
+     "m/n/o/p",
+     "m/p",
+     "q/r",
+     "q/r/s"
+    ],
+    "list": ".gitignore\nk/cache/f\n",
+    "check": ".gitignore:1:/cache/**\tcache/a\n.gitignore:1:/cache/**\tcache/d\n.gitignore:1:/cache/**\tcache/d/e\n::\tk/cache/f\n.gitignore:2:m/***/p\tm/n/o/p\n.gitignore:2:m/***/p\tm/p\n.gitignore:3:q/**/\tq/r\n.gitignore:3:q/**/\tq/r/s\n",
+    "check_rc": 0
+   }
+  ],
+  "bracket_expressions": [
+   {
+    "name": "caret_negation_and_leading_bracket",
+    "files": {
+     "a.log": "x\n",
+     "b.log": "x\n",
+     "^.log": "x\n",
+     "x1": "x\n",
+     "]y": "x\n",
+     "zz": "x\n",
+     "cb": "x\n",
+     "ab": "x\n",
+     "]b": "x\n",
+     ".gitignore": "[^a].log\n[]x]*\n[!]a]b\n"
+    },
+    "checks": [
+     "a.log",
+     "b.log",
+     "^.log",
+     "x1",
+     "]y",
+     "zz",
+     "cb",
+     "ab",
+     "]b"
+    ],
+    "list": ".gitignore\na.log\nab\nzz\n",
+    "check": "::\ta.log\n.gitignore:1:[^a].log\tb.log\n.gitignore:1:[^a].log\t^.log\n.gitignore:2:[]x]*\tx1\n.gitignore:2:[]x]*\t]y\n::\tzz\n.gitignore:3:[!]a]b\tcb\n::\tab\n.gitignore:2:[]x]*\t]b\n",
+    "check_rc": 0
+   },
+   {
+    "name": "posix_classes_and_ranges",
+    "files": {
+     "1a": "x\n",
+     "a1": "x\n",
+     "Ax": "x\n",
+     "ax": "x\n",
+     "-": "x\n",
+     "b": "x\n",
+     "c": "x\n",
+     "v2.bin": "x\n",
+     "vx.bin": "x\n",
+     ".gitignore": "[[:digit:]]*\n[[:upper:]]x\n[a-]\nv[^[:alpha:]].bin\n"
+    },
+    "checks": [
+     "1a",
+     "a1",
+     "Ax",
+     "ax",
+     "-",
+     "b",
+     "v2.bin",
+     "vx.bin"
+    ],
+    "list": ".gitignore\na1\nax\nb\nc\nvx.bin\n",
+    "check": ".gitignore:1:[[:digit:]]*\t1a\n::\ta1\n.gitignore:2:[[:upper:]]x\tAx\n::\tax\n.gitignore:3:[a-]\t-\n::\tb\n.gitignore:4:v[^[:alpha:]].bin\tv2.bin\n::\tvx.bin\n",
+    "check_rc": 0
+   },
+   {
+    "name": "brackets_in_pathname_patterns",
+    "files": {
+     "src/a1/x": "x\n",
+     "src/^1/x": "x\n",
+     "src/b1/x": "x\n",
+     "src/]/y": "x\n",
+     "src/a/y": "x\n",
+     ".gitignore": "src/[^a]1/\nsrc/[]]/y\n"
+    },
+    "checks": [
+     "src/a1/x",
+     "src/^1/x",
+     "src/b1",
+     "src/b1/x",
+     "src/]/y",
+     "src/a/y"
+    ],
+    "list": ".gitignore\nsrc/a/y\nsrc/a1/x\n",
+    "check": "::\tsrc/a1/x\n.gitignore:1:src/[^a]1/\tsrc/^1/x\n.gitignore:1:src/[^a]1/\tsrc/b1\n.gitignore:1:src/[^a]1/\tsrc/b1/x\n.gitignore:2:src/[]]/y\tsrc/]/y\n::\tsrc/a/y\n",
+    "check_rc": 0
+   }
+  ],
+  "reinclude_under_excluded_directory": [
+   {
+    "name": "negation_cannot_rescue_file_in_excluded_dir",
+    "files": {
+     "out/keep.txt": "x\n",
+     "out/x.o": "x\n",
+     "dist/keep.txt": "x\n",
+     "dist/y.o": "x\n",
+     ".gitignore": "/out/\n!/out/keep.txt\n/dist/*\n!/dist/keep.txt\n"
+    },
+    "checks": [
+     "out/keep.txt",
+     "out/x.o",
+     "dist/keep.txt",
+     "dist/y.o",
+     "out"
+    ],
+    "list": ".gitignore\ndist/keep.txt\n",
+    "check": ".gitignore:1:/out/\tout/keep.txt\n.gitignore:1:/out/\tout/x.o\n.gitignore:4:!/dist/keep.txt\tdist/keep.txt\n.gitignore:3:/dist/*\tdist/y.o\n.gitignore:1:/out/\tout\n",
+    "check_rc": 0
+   },
+   {
+    "name": "basename_excluded_dir_with_negated_subdir",
+    "files": {
+     "logs/important/a": "x\n",
+     "logs/b": "x\n",
+     "app/logs/important/c": "x\n",
+     "important/d": "x\n",
+     ".gitignore": "logs\n!logs/important/\n!important/\n"
+    },
+    "checks": [
+     "logs/important/a",
+     "logs/important",
+     "logs/b",
+     "app/logs/important/c",
+     "important/d"
+    ],
+    "list": ".gitignore\nimportant/d\n",
+    "check": ".gitignore:1:logs\tlogs/important/a\n.gitignore:1:logs\tlogs/important\n.gitignore:1:logs\tlogs/b\n.gitignore:1:logs\tapp/logs/important/c\n::\timportant/d\n",
+    "check_rc": 0
+   },
+   {
+    "name": "gitignore_inside_excluded_dir_is_not_read",
+    "files": {
+     "vendor/lib/a.c": "x\n",
+     "vendor/lib/b.h": "x\n",
+     "vendor/c": "x\n",
+     ".gitignore": "vendor/\n",
+     "vendor/.gitignore": "!*\n",
+     "vendor/lib/.gitignore": "!*.c\n"
+    },
+    "checks": [
+     "vendor/lib/a.c",
+     "vendor/lib/b.h",
+     "vendor/c",
+     "vendor/.gitignore"
+    ],
+    "list": ".gitignore\n",
+    "check": ".gitignore:1:vendor/\tvendor/lib/a.c\n.gitignore:1:vendor/\tvendor/lib/b.h\n.gitignore:1:vendor/\tvendor/c\n.gitignore:1:vendor/\tvendor/.gitignore\n",
+    "check_rc": 0
+   }
+  ],
+  "per_directory_precedence": [
+   {
+    "name": "deeper_negation_wins",
+    "files": {
+     "sub/keep.tmp": "x\n",
+     "sub/x.tmp": "x\n",
+     "keep.tmp": "x\n",
+     "sub/deeper/keep.tmp": "x\n",
+     ".gitignore": "*.tmp\n",
+     "sub/.gitignore": "!keep.tmp\n"
+    },
+    "checks": [
+     "sub/keep.tmp",
+     "sub/x.tmp",
+     "keep.tmp",
+     "sub/deeper/keep.tmp"
+    ],
+    "list": ".gitignore\nsub/.gitignore\nsub/deeper/keep.tmp\nsub/keep.tmp\n",
+    "check": "sub/.gitignore:1:!keep.tmp\tsub/keep.tmp\n.gitignore:1:*.tmp\tsub/x.tmp\n.gitignore:1:*.tmp\tkeep.tmp\nsub/.gitignore:1:!keep.tmp\tsub/deeper/keep.tmp\n",
+    "check_rc": 0
+   },
+   {
+    "name": "deeper_positive_beats_root_negation",
+    "files": {
+     "important.log": "x\n",
+     "sub/important.log": "x\n",
+     "sub/other.log": "x\n",
+     "other.log": "x\n",
+     ".gitignore": "*.log\n!important.log\n",
+     "sub/.gitignore": "important.log\n"
+    },
+    "checks": [
+     "important.log",
+     "sub/important.log",
+     "sub/other.log",
+     "other.log"
+    ],
+    "list": ".gitignore\nimportant.log\nsub/.gitignore\n",
+    "check": ".gitignore:2:!important.log\timportant.log\nsub/.gitignore:1:important.log\tsub/important.log\n.gitignore:1:*.log\tsub/other.log\n.gitignore:1:*.log\tother.log\n",
+    "check_rc": 0
+   },
+   {
+    "name": "three_levels",
+    "files": {
+     "a/b/c/f.gen": "x\n",
+     "a/b/f.gen": "x\n",
+     "a/f.gen": "x\n",
+     "f.gen": "x\n",
+     "a/b/c/g.gen": "x\n",
+     ".gitignore": "!f.gen\n",
+     "a/.gitignore": "*.gen\n",
+     "a/b/c/.gitignore": "!f.gen\n"
+    },
+    "checks": [
+     "a/b/c/f.gen",
+     "a/b/f.gen",
+     "a/f.gen",
+     "f.gen",
+     "a/b/c/g.gen"
+    ],
+    "list": ".gitignore\na/.gitignore\na/b/c/.gitignore\na/b/c/f.gen\nf.gen\n",
+    "check": "a/b/c/.gitignore:1:!f.gen\ta/b/c/f.gen\na/.gitignore:1:*.gen\ta/b/f.gen\na/.gitignore:1:*.gen\ta/f.gen\n.gitignore:1:!f.gen\tf.gen\na/.gitignore:1:*.gen\ta/b/c/g.gen\n",
+    "check_rc": 0
+   }
+  ],
+  "tree_wide_sources": [
+   {
+    "name": "info_exclude_beats_excludes_file",
+    "files": {
+     "a.bak": "x\n",
+     "b.bak": "x\n",
+     "c.txt": "x\n",
+     "d.cache": "x\n",
+     "x.cache": "x\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\texcludesFile = /tmp/gleaner-case/user/ignore-all\n",
+    "exclude": "!a.bak\n*.cache\n",
+    "home": {
+     "ignore-all": "*.bak\n!x.cache\n"
+    },
+    "checks": [
+     "a.bak",
+     "b.bak",
+     "c.txt",
+     "d.cache",
+     "x.cache"
+    ],
+    "list": "a.bak\nc.txt\n",
+    "check": ".git/info/exclude:1:!a.bak\ta.bak\n/tmp/gleaner-case/user/ignore-all:1:*.bak\tb.bak\n::\tc.txt\n.git/info/exclude:2:*.cache\td.cache\n.git/info/exclude:2:*.cache\tx.cache\n",
+    "check_rc": 0
+   },
+   {
+    "name": "gitignore_beats_both",
+    "files": {
+     "a.bak": "x\n",
+     "b.bak": "x\n",
+     "keep.cache": "x\n",
+     "z.cache": "x\n",
+     ".gitignore": "!b.bak\n!keep.cache\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\texcludesFile = ~/.ignore\n",
+    "exclude": "*.cache\n",
+    "home": {
+     ".ignore": "*.bak\n"
+    },
+    "checks": [
+     "a.bak",
+     "b.bak",
+     "keep.cache",
+     "z.cache"
+    ],
+    "list": ".gitignore\nb.bak\nkeep.cache\n",
+    "check": "/tmp/gleaner-case/user/.ignore:1:*.bak\ta.bak\n.gitignore:1:!b.bak\tb.bak\n.gitignore:2:!keep.cache\tkeep.cache\n.git/info/exclude:1:*.cache\tz.cache\n",
+    "check_rc": 0
+   },
+   {
+    "name": "relative_excludes_file",
+    "files": {
+     "x.o": "x\n",
+     "y.o": "x\n",
+     "z.c": "x\n",
+     ".gitignore": "!y.o\n",
+     "tools/ignore": "*.o\n*.c\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\texcludesFile = tools/ignore\n",
+    "exclude": "!x.o\n",
+    "checks": [
+     "x.o",
+     "y.o",
+     "z.c",
+     "tools/ignore"
+    ],
+    "list": ".gitignore\ntools/ignore\nx.o\ny.o\n",
+    "check": ".git/info/exclude:1:!x.o\tx.o\n.gitignore:1:!y.o\ty.o\ntools/ignore:2:*.c\tz.c\n::\ttools/ignore\n",
+    "check_rc": 0
+   }
+  ],
+  "default_excludes_file": [
+   {
+    "name": "xdg_config_home_wins",
+    "files": {
+     "a.swp": "x\n",
+     "b.orig": "x\n",
+     "c.txt": "x\n"
+    },
+    "home": {
+     ".config/git/ignore": "*.orig\n"
+    },
+    "xdg": {
+     "git/ignore": "*.swp\n"
+    },
+    "env": {
+     "XDG_CONFIG_HOME": "/tmp/gleaner-case/xdg"
+    },
+    "checks": [
+     "a.swp",
+     "b.orig",
+     "c.txt"
+    ],
+    "list": "b.orig\nc.txt\n",
+    "check": "/tmp/gleaner-case/xdg/git/ignore:1:*.swp\ta.swp\n::\tb.orig\n::\tc.txt\n",
+    "check_rc": 0
+   },
+   {
+    "name": "empty_xdg_falls_back_to_home",
+    "files": {
+     "a.swp": "x\n",
+     "b.orig": "x\n"
+    },
+    "home": {
+     ".config/git/ignore": "*.orig\n"
+    },
+    "xdg": {
+     "git/ignore": "*.swp\n"
+    },
+    "env": {
+     "XDG_CONFIG_HOME": ""
+    },
+    "checks": [
+     "a.swp",
+     "b.orig"
+    ],
+    "list": "a.swp\n",
+    "check": "::\ta.swp\n/tmp/gleaner-case/user/.config/git/ignore:1:*.orig\tb.orig\n",
+    "check_rc": 0
+   },
+   {
+    "name": "xdg_without_ignore_file",
+    "files": {
+     "a.swp": "x\n",
+     "b.orig": "x\n"
+    },
+    "home": {
+     ".config/git/ignore": "*.orig\n"
+    },
+    "xdg": {
+     "git/config-only": "\n"
+    },
+    "env": {
+     "XDG_CONFIG_HOME": "/tmp/gleaner-case/xdg"
+    },
+    "checks": [
+     "a.swp",
+     "b.orig"
+    ],
+    "list": "a.swp\nb.orig\n",
+    "check": "::\ta.swp\n::\tb.orig\n",
+    "check_rc": 1
+   },
+   {
+    "name": "configured_file_replaces_default",
+    "files": {
+     "a.swp": "x\n",
+     "b.orig": "x\n",
+     "c.rej": "x\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\texcludesFile = ~/mine\n",
+    "home": {
+     ".config/git/ignore": "*.orig\n",
+     "mine": "*.rej\n"
+    },
+    "xdg": {
+     "git/ignore": "*.swp\n"
+    },
+    "env": {
+     "XDG_CONFIG_HOME": "/tmp/gleaner-case/xdg"
+    },
+    "checks": [
+     "a.swp",
+     "b.orig",
+     "c.rej"
+    ],
+    "list": "a.swp\nb.orig\n",
+    "check": "::\ta.swp\n::\tb.orig\n/tmp/gleaner-case/user/mine:1:*.rej\tc.rej\n",
+    "check_rc": 0
+   }
+  ],
+  "config_spelling": [
+   {
+    "name": "lowercase_key",
+    "files": {
+     "a.log": "x\n",
+     "b.tmp": "x\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\texcludesfile = ~/.gitignore_global\n",
+    "home": {
+     ".gitignore_global": "*.log\n",
+     ".config/git/ignore": "*.tmp\n"
+    },
+    "checks": [
+     "a.log",
+     "b.tmp"
+    ],
+    "list": "b.tmp\n",
+    "check": "/tmp/gleaner-case/user/.gitignore_global:1:*.log\ta.log\n::\tb.tmp\n",
+    "check_rc": 0
+   },
+   {
+    "name": "mixed_case_section_and_quoted_value",
+    "files": {
+     "a.log": "x\n",
+     "b.tmp": "x\n",
+     "c.dat": "x\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n[Core]\n\tExcludesFile = \"~/ignore list\" ; user file\n",
+    "home": {
+     "ignore list": "*.dat\n",
+     ".config/git/ignore": "*.tmp\n"
+    },
+    "checks": [
+     "a.log",
+     "b.tmp",
+     "c.dat"
+    ],
+    "list": "a.log\nb.tmp\n",
+    "check": "::\ta.log\n::\tb.tmp\n/tmp/gleaner-case/user/ignore list:1:*.dat\tc.dat\n",
+    "check_rc": 0
+   },
+   {
+    "name": "last_assignment_wins",
+    "files": {
+     "a.log": "x\n",
+     "b.tmp": "x\n",
+     "c.dat": "x\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\texcludesFile = ~/first\n[user]\n\tname = x\n[core]\n\tEXCLUDESFILE = ~/second\n",
+    "home": {
+     "first": "*.log\n",
+     "second": "*.dat\n"
+    },
+    "checks": [
+     "a.log",
+     "b.tmp",
+     "c.dat"
+    ],
+    "list": "a.log\nb.tmp\n",
+    "check": "::\ta.log\n::\tb.tmp\n/tmp/gleaner-case/user/second:1:*.dat\tc.dat\n",
+    "check_rc": 0
+   }
+  ],
+  "list_order": [
+   {
+    "name": "byte_order_of_whole_path",
+    "files": {
+     "a-b": "x\n",
+     "a0": "x\n",
+     "a.b/c": "x\n",
+     "a b": "x\n",
+     "A": "x\n",
+     "a/b-c": "x\n",
+     "a/b/c": "x\n",
+     "a/b.d": "x\n",
+     "a+/x": "x\n",
+     "ab": "x\n",
+     "a!": "x\n",
+     "z.o": "x\n",
+     ".gitignore": "*.o\n"
+    },
+    "checks": [
+     "a/b",
+     "a-b"
+    ],
+    "list": ".gitignore\nA\na b\na!\na+/x\na-b\na.b/c\na/b-c\na/b.d\na/b/c\na0\nab\n",
+    "check": "::\ta/b\n::\ta-b\n",
+    "check_rc": 1
+   },
+   {
+    "name": "order_across_nested_dirs",
+    "files": {
+     "src/lib-x/a": "x\n",
+     "src/lib/b": "x\n",
+     "src/lib.rs": "x\n",
+     "src/lib/sub/c": "x\n",
+     "src/lib_y": "x\n",
+     "src-old/d": "x\n",
+     "src/e.tmp": "x\n",
+     ".gitignore": "*.tmp\n"
+    },
+    "checks": [
+     "src/e.tmp",
+     "src/lib"
+    ],
+    "list": ".gitignore\nsrc-old/d\nsrc/lib-x/a\nsrc/lib.rs\nsrc/lib/b\nsrc/lib/sub/c\nsrc/lib_y\n",
+    "check": ".gitignore:1:*.tmp\tsrc/e.tmp\n::\tsrc/lib\n",
+    "check_rc": 0
+   }
+  ],
+  "check_line_numbers": [
+   {
+    "name": "comments_and_blank_lines_count",
+    "files": {
+     "a.log": "x\n",
+     "b.tmp": "x\n",
+     "c.bak": "x\n",
+     "keep.log": "x\n",
+     "d/e.o": "x\n",
+     ".gitignore": "# logs\n\n*.log\n\n# temp files\n*.tmp\n   \n!keep.log\n",
+     "d/.gitignore": "\n\n# objects\n*.o\n"
+    },
+    "exclude": "# git ls-files --others --exclude-from=.git/info/exclude\n# Lines that start with '#' are comments.\n*.bak\n",
+    "checks": [
+     "a.log",
+     "b.tmp",
+     "c.bak",
+     "keep.log",
+     "d/e.o"
+    ],
+    "list": ".gitignore\nd/.gitignore\nkeep.log\n",
+    "check": ".gitignore:3:*.log\ta.log\n.gitignore:6:*.tmp\tb.tmp\n.git/info/exclude:3:*.bak\tc.bak\n.gitignore:8:!keep.log\tkeep.log\nd/.gitignore:4:*.o\td/e.o\n",
+    "check_rc": 0
+   },
+   {
+    "name": "line_numbers_in_excludes_file",
+    "files": {
+     "x.swp": "x\n",
+     "y.orig": "x\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\texcludesFile = ~/g\n",
+    "home": {
+     "g": "# editor\n\n\n*.swp\n# merge\n\n*.orig\n"
+    },
+    "checks": [
+     "x.swp",
+     "y.orig"
+    ],
+    "list": "",
+    "check": "/tmp/gleaner-case/user/g:4:*.swp\tx.swp\n/tmp/gleaner-case/user/g:7:*.orig\ty.orig\n",
+    "check_rc": 0
+   }
+  ],
+  "mixed_trees": [
+   {
+    "name": "mixed_00",
+    "files": {
+     "A": "x\n",
+     "keep": "x\n",
+     "a-b": "x\n",
+     "doc": "x\n",
+     "foo/x.o": "x\n",
+     "b/doc": "x\n",
+     "b/build": "x\n",
+     "b/a": "x\n",
+     "b/a.b": "x\n",
+     "x/x": "x\n",
+     "x/[x]": "x\n",
+     "x/ba": "x\n",
+     "b/.gitignore": "\ufeff!bar[a-c]txt\r\n!/x/[^a]b\r\n",
+     "x/.gitignore": "\n![!a]baro\n!b/\n/a b/\n!x.o\n"
+    },
+    "exclude": "\\#\n/\\!/deepdoc./[[:digit:]]\\ x  \n**/\\ ./[[:digit:]][a-c]\\*/-/**\n!doc\n![]a]sub/[a-]/[[:digit:]]foo*/\t",
+    "xdg": {
+     "git/ignore": "# b\r\n/*/*\\#\\*/doc\r\n**/a \r\ntxt/b.build/  \r\n!foo.txt/\r\n/\\ **sub/[:a][[:digit:]][!a]\r\n"
+    },
+    "env": {
+     "XDG_CONFIG_HOME": "/tmp/gleaner-case/xdg"
+    },
+    "checks": [
+     "x/x",
+     "b",
+     "x/[x]",
+     "x",
+     "b/a",
+     "b/.gitignore",
+     "doc",
+     "A",
+     "a-b",
+     "keep",
+     "foo/x.o",
+     "b/doc",
+     "b/build",
+     "foo"
+    ],
+    "list": "A\na-b\nb/.gitignore\nb/a.b\nb/build\nb/doc\ndoc\nfoo/x.o\nkeep\nx/.gitignore\nx/[x]\nx/ba\nx/x\n",
+    "check": "::\tx/x\n::\tb\n::\tx/[x]\n::\tx\n/tmp/gleaner-case/xdg/git/ignore:3:**/a\tb/a\n::\tb/.gitignore\n.git/info/exclude:4:!doc\tdoc\n::\tA\n::\ta-b\n::\tkeep\n::\tfoo/x.o\n.git/info/exclude:4:!doc\tb/doc\n::\tb/build\n::\tfoo\n",
+    "check_rc": 0
+   },
+   {
+    "name": "mixed_01",
+    "files": {
+     "doc": "x\n",
+     "a-b/a ": "x\n",
+     "A/!n": "x\n",
+     "A/-": "x\n",
+     "A/b": "x\n",
+     "A/[x]": "x\n",
+     "a-b/sub/a.b": "x\n",
+     "A/sub/a b": "x\n",
+     "A/sub/a]b": "x\n",
+     "A/sub/a0": "x\n",
+     "A/sub/b.log": "x\n",
+     "A/sub/bar": "x\n",
+     "sub/a.b": "x\n",
+     "sub/a*b": "x\n",
+     "sub/x": "x\n",
+     "A/sub/sub/a.b": "x\n",
+     "A/sub/sub/a": "x\n",
+     "A/sub/sub/foo.txt": "x\n",
+     "A/sub/sub/x": "x\n",
+     "A/.gitignore": "\ufeffdeepbar*/deep[^a]/***\n!/deep[[:digit:]][a-c]/o[]a][[:alpha:]]/\n!\\[x]\nba/\n!a-b\n!keep\n/b*\n",
+     "a-b/sub/.gitignore": "!b\n/a \n?doc/[]a]\\ /doc?  \n/x/\\ **\\[x]/\n",
+     "sub/.gitignore": "**/foo\n[!]a]/\nab/[!]a]b/*\\[x]keep\n\n\n!foo/\n**/**/[a-c][^a]  \n",
+     "A/sub/sub/.gitignore": "\nbar\nlog\n!\\!\\!\n# 1\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\texcludesFile = ~/gi\n",
+    "exclude": "foo[a-c]\\!/****/\n.***/-a/\n\\![[:alpha:]]/x[]a]sub\n??deep/sub\n**/[[:digit:]]?doc/\n",
+    "home": {
+     "gi": "\ufeff!**/docdeep[!]a]/deepabsub/foo**\\[x]\n!/**/[]a]/\\!\\ \n\\[x]/.[^a]*\n!\\!bar[[:digit:]]/buildtxt/x\\!/**"
+    },
+    "checks": [
+     "A/sub/a b",
+     "A/sub/sub/a",
+     "a-b/sub/a.b",
+     "a-b/a ",
+     "A",
+     "A/.gitignore",
+     "sub/a*b",
+     "doc",
+     "A/sub/a]b",
+     "A/sub/b.log",
+     "sub/.gitignore",
+     "sub/x",
+     "a-b/sub",
+     "sub"
+    ],
+    "list": "A/!n\nA/-\nA/.gitignore\nA/[x]\nA/sub/a b\nA/sub/a0\nA/sub/a]b\nA/sub/b.log\nA/sub/bar\nA/sub/sub/.gitignore\nA/sub/sub/a\nA/sub/sub/a.b\nA/sub/sub/foo.txt\nA/sub/sub/x\na-b/a \na-b/sub/.gitignore\na-b/sub/a.b\ndoc\nsub/.gitignore\nsub/a*b\nsub/a.b\nsub/x\n",
+    "check": "::\tA/sub/a b\n::\tA/sub/sub/a\n::\ta-b/sub/a.b\n::\ta-b/a \n::\tA\n::\tA/.gitignore\n::\tsub/a*b\n::\tdoc\n::\tA/sub/a]b\n::\tA/sub/b.log\n::\tsub/.gitignore\n::\tsub/x\n::\ta-b/sub\n::\tsub\n",
+    "check_rc": 1
+   },
+   {
+    "name": "mixed_02",
+    "files": {
+     "a-b": "x\n",
+     "x": "x\n",
+     "deep/bar": "x\n",
+     "deep/doc": "x\n",
+     "deep/keep": "x\n",
+     "deep/a ": "x\n",
+     "deep/ab/a0": "x\n",
+     "deep/ab/ab": "x\n",
+     "deep/ab/1": "x\n",
+     "deep/ab/bar": "x\n",
+     "ab/a ": "x\n",
+     "ab/z0": "x\n",
+     "ab/keep": "x\n",
+     "ab/log": "x\n",
+     "deep/ab/deep/foo": "x\n",
+     "deep/ab/deep/a]b": "x\n",
+     "deep/ab/deep/b.log": "x\n",
+     "ab/doc/doc": "x\n",
+     "ab/doc/a": "x\n",
+     "deep/ab/build/foo": "x\n",
+     "deep/ab/build/!n": "x\n",
+     "deep/ab/.gitignore": "\\*/keepbar/\nab/**  \n**foo/txt**/[[:digit:]]o\n**/[!]a]txt*\n!b/[:a]keep/**\n",
+     "deep/ab/deep/.gitignore": "a*b\ndoc[!a]\t\na*b\n\\ [a-]/[^a]keep/fooa.\n!build/\n# build\nb\n**/A/\n",
+     "ab/doc/.gitignore": "/bar\\!\n/log\n# ba\n/barab/-\n/a-b\n\\![]a]build\n**/a.b/\n**/*[:a]\\*/logbuildo/\\[x]?/",
+     "deep/ab/build/.gitignore": "xsub.//**  \nb\n/[[:digit:]]sub/xkeep\n**/[[:digit:]]txt[!]a]\n"
+    },
+    "exclude": "\\!buildsub  \n\\ /bar/doc\\[x]bar/\n!***[a-]/[[:digit:]][!]a]*/\n/[^a].\\!/txt[]a]/\na b/\n/b\n!!n\n[:a]bar/**dockeep\\ \n",
+    "xdg": {
+     "git/ignore": "!sub/\n\n# sub\n"
+    },
+    "env": {
+     "XDG_CONFIG_HOME": "/tmp/gleaner-case/xdg"
+    },
+    "checks": [
+     "deep/a ",
+     "ab/keep",
+     "ab/z0",
+     "ab/doc",
+     "deep/ab/build/.gitignore",
+     "ab/doc/.gitignore",
+     "ab/doc/doc",
+     "deep/ab/1",
+     "deep/ab/deep/b.log",
+     "deep/ab/ab",
+     "deep/ab/deep",
+     "deep/doc",
+     "x",
+     "deep/keep"
+    ],
+    "list": "a-b\nab/a \nab/doc/.gitignore\nab/doc/a\nab/doc/doc\nab/keep\nab/log\nab/z0\ndeep/a \ndeep/ab/.gitignore\ndeep/ab/1\ndeep/ab/a0\ndeep/ab/ab\ndeep/ab/bar\ndeep/ab/build/!n\ndeep/ab/build/.gitignore\ndeep/ab/build/foo\ndeep/ab/deep/.gitignore\ndeep/ab/deep/b.log\ndeep/ab/deep/foo\ndeep/bar\ndeep/doc\ndeep/keep\nx\n",
+    "check": "::\tdeep/a \n::\tab/keep\n::\tab/z0\n::\tab/doc\n::\tdeep/ab/build/.gitignore\n::\tab/doc/.gitignore\n::\tab/doc/doc\n::\tdeep/ab/1\n::\tdeep/ab/deep/b.log\n::\tdeep/ab/ab\n::\tdeep/ab/deep\n::\tdeep/doc\n::\tx\n::\tdeep/keep\n",
+    "check_rc": 1
+   },
+   {
+    "name": "mixed_03",
+    "files": {
+     "abc": "x\n",
+     "a ": "x\n",
+     "-": "x\n",
+     "foo.txt": "x\n",
+     "ab/z0": "x\n",
+     "a.b/A": "x\n",
+     "a.b/a0": "x\n",
+     "a.b/a]b": "x\n",
+     "ab/deep/a": "x\n",
+     "ab/deep/sub/ab": "x\n",
+     "ab/deep/sub/A": "x\n",
+     "ab/deep/sub/a ": "x\n",
+     "ab/deep/sub/b": "x\n",
+     "ab/deep/sub/foo.txt": "x\n",
+     "a.b/deep/z0": "x\n",
+     "a.b/deep/a": "x\n",
+     "a.b/deep/ab": "x\n",
+     "a.b/deep/log": "x\n",
+     "a.b/deep/A": "x\n",
+     "ab/deep/build/#c": "x\n",
+     "ab/.gitignore": "build/\nx.o\n!bar/\n!/\\*-a/deep/[[:digit:]][^a][a-c]\ndoc/\n",
+     "a.b/.gitignore": "/a*b\n/b.log\n!keep\\!/\n\\[x][!]a]/barx\n# 1\nab\ndoc/\n",
+     "a.b/deep/.gitignore": "!/[:a]/[^a][!]a]  \no***/.ab\\!/  \n!loglog/foobkeep/[a-c]/\n"
+    },
+    "checks": [
+     "a.b/deep/.gitignore",
+     "ab/deep/build",
+     "ab",
+     "ab/deep/sub/ab",
+     "ab/deep/sub/A",
+     "ab/z0",
+     "a.b/A",
+     "a.b/deep/z0",
+     "foo.txt",
+     "a.b/a]b",
+     "a.b/deep/ab",
+     "a ",
+     "ab/deep/sub",
+     "ab/deep/build/#c"
+    ],
+    "list": "-\na \na.b/.gitignore\na.b/A\na.b/a0\na.b/deep/.gitignore\na.b/deep/A\na.b/deep/a\na.b/deep/log\na.b/deep/z0\nab/.gitignore\nab/deep/a\nab/deep/sub/A\nab/deep/sub/a \nab/deep/sub/ab\nab/deep/sub/b\nab/deep/sub/foo.txt\nab/z0\nabc\nfoo.txt\n",
+    "check": "::\ta.b/deep/.gitignore\nab/.gitignore:1:build/\tab/deep/build\n::\tab\n::\tab/deep/sub/ab\n::\tab/deep/sub/A\n::\tab/z0\n::\ta.b/A\n::\ta.b/deep/z0\n::\tfoo.txt\na.b/.gitignore:1:/a*b\ta.b/a]b\na.b/.gitignore:6:ab\ta.b/deep/ab\n::\ta \n::\tab/deep/sub\nab/.gitignore:1:build/\tab/deep/build/#c\n",
+    "check_rc": 0
+   },
+   {
+    "name": "mixed_04",
+    "files": {
+     "log": "x\n",
+     "abc": "x\n",
+     "bar": "x\n",
+     "keep": "x\n",
+     "foo/A": "x\n",
+     "foo/!n": "x\n",
+     "foo/a": "x\n",
+     "x/log": "x\n",
+     "x/x": "x\n",
+     "x/#c": "x\n",
+     "x/a*b": "x\n",
+     "foo/deep/a": "x\n",
+     "foo/deep/a]b": "x\n",
+     "foo/deep/log": "x\n",
+     "foo/deep/1": "x\n",
+     "foo/.gitignore": "\ufeff.bar\t\n[[:alpha:]]-b\n!x.o/\n# ba\ndocdocsub/.***/**\no[a-]\n",
+     "foo/deep/.gitignore": "?[[:alpha:]]sub/[^a]/\nb[[:digit:]]***\\ \n!**/[:a]keep\nx\no/[]a]*/*sub-\t\n**/**[[:digit:]]/\\**\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\texcludesfile = ~/gi\n",
+    "exclude": "ab[^a]/\n\n# z0\n**/ab\n/\\ /keep/\na\n!txtsub/bar[[:alpha:]][!a]//**\n!a0/\n",
+    "home": {
+     "gi": "![!]a]\\[x]doc/txt[a-]  \nb/[]a][!]a]./\nb/\n# A\n"
+    },
+    "checks": [
+     "x/#c",
+     "x/log",
+     "foo/deep/1",
+     "x",
+     "foo/.gitignore",
+     "foo",
+     "foo/deep",
+     "x/a*b",
+     "keep",
+     "foo/deep/a",
+     "foo/a",
+     "foo/deep/log",
+     "log",
+     "foo/deep/a]b"
+    ],
+    "list": "abc\nbar\nfoo/!n\nfoo/.gitignore\nfoo/A\nfoo/deep/.gitignore\nfoo/deep/1\nfoo/deep/a]b\nfoo/deep/log\nkeep\nlog\nx/#c\nx/a*b\nx/log\nx/x\n",
+    "check": "::\tx/#c\n::\tx/log\n::\tfoo/deep/1\n::\tx\n::\tfoo/.gitignore\n::\tfoo\n::\tfoo/deep\n::\tx/a*b\n::\tkeep\n.git/info/exclude:6:a\tfoo/deep/a\n.git/info/exclude:6:a\tfoo/a\n::\tfoo/deep/log\n::\tlog\n::\tfoo/deep/a]b\n",
+    "check_rc": 0
+   },
+   {
+    "name": "mixed_05",
+    "files": {
+     "a0": "x\n",
+     "log/log": "x\n",
+     "log/ba": "x\n",
+     "log/sub/ab": "x\n",
+     "log/sub/x": "x\n",
+     "log/sub/.gitignore": "# log\n!a\\[x]\\#/[]a]deep\\!/build\na*b\n!deep\n!**/  \n"
+    },
+    "home": {
+     ".config/git/ignore": "**/build\r\n/[:a]***keep/a/\\ /  \r\n"
+    },
+    "checks": [
+     "log/ba",
+     "a0",
+     "log/sub/x",
+     "log",
+     "log/sub/.gitignore",
+     "log/sub/ab",
+     "log/sub",
+     "log/log"
+    ],
+    "list": "a0\nlog/ba\nlog/log\nlog/sub/.gitignore\nlog/sub/x\n",
+    "check": "::\tlog/ba\n::\ta0\n::\tlog/sub/x\n::\tlog\n::\tlog/sub/.gitignore\nlog/sub/.gitignore:3:a*b\tlog/sub/ab\n::\tlog/sub\n::\tlog/log\n",
+    "check_rc": 0
+   },
+   {
+    "name": "mixed_06",
+    "files": {
+     "a-b": "x\n",
+     "build": "x\n",
+     "foo/!n": "x\n",
+     "foo/x.o": "x\n",
+     "foo/log": "x\n",
+     "foo/build": "x\n",
+     "foo/a*b": "x\n",
+     "log/a*b": "x\n",
+     "log/!n": "x\n",
+     "log/log": "x\n",
+     "ab/!n": "x\n",
+     "ab/foo.txt": "x\n",
+     "deep/x.o": "x\n",
+     "deep/b": "x\n",
+     "deep/a b": "x\n",
+     "ab/doc/a*b": "x\n",
+     "ab/doc/ba": "x\n",
+     "ab/doc/a": "x\n",
+     "deep/A/bar": "x\n",
+     "deep/A/-": "x\n",
+     "deep/A/x": "x\n",
+     "deep/A/1": "x\n",
+     "log/a/a.b": "x\n",
+     "log/a/x": "x\n",
+     "log/a/a ": "x\n",
+     "log/a/b.log": "x\n",
+     ".gitignore": "b/[[:alpha:]]log.\r\n![^a][!]a]/keep/docdeep[]a]/\r\n",
+     "ab/.gitignore": "/\\#?\r\n/foo.txt\r\na \r\n./[a-c]a/deep[^a]*/**\r\nx.o\r\n[:a][[:alpha:]]/\r\n",
+     "deep/.gitignore": "\ufeff![[:alpha:]]\n**/a b\n",
+     "ab/doc/.gitignore": "/a\n[[:digit:]]//**\ndoca\ndoc*//**\\ ",
+     "deep/A/.gitignore": "!**/-deep/buildtxt\nbuild/\na-b\n**/?\\!/[!a]txt\\[x]/\nb.log\n/o/[!a]*txt/[a-c][!a]doc\n/A/\n***",
+     "log/a/.gitignore": "\\[x]\n!**/***\\!/[^a]/-[[:alpha:]]\\ \n!a.b/\n/x.o/\n?/\n\n**/\\!\n"
+    },
+    "home": {
+     ".config/git/ignore": "a b\n/*/*\\[x]sub\t\n**/keep\n/*/foolog[a-]/****build/\n# [x]\n\n"
+    },
+    "checks": [
+     "log/a/a ",
+     "deep/b",
+     "log/!n",
+     "ab/doc/a",
+     "deep/a b",
+     "ab/doc/ba",
+     "deep/A/x",
+     "log/a/b.log",
+     "ab/doc",
+     "ab/.gitignore",
+     "foo/!n",
+     "foo/x.o",
+     "ab",
+     "a-b"
+    ],
+    "list": ".gitignore\na-b\nab/!n\nab/.gitignore\nab/doc/.gitignore\nab/doc/a*b\nab/doc/ba\nbuild\ndeep/.gitignore\ndeep/b\ndeep/x.o\nfoo/!n\nfoo/a*b\nfoo/build\nfoo/log\nfoo/x.o\nlog/!n\nlog/a*b\nlog/a/.gitignore\nlog/a/a \nlog/a/a.b\nlog/a/b.log\nlog/a/x\nlog/log\n",
+    "check": "::\tlog/a/a \ndeep/.gitignore:1:![[:alpha:]]\tdeep/b\n::\tlog/!n\nab/doc/.gitignore:1:/a\tab/doc/a\ndeep/.gitignore:2:**/a b\tdeep/a b\n::\tab/doc/ba\ndeep/A/.gitignore:8:***\tdeep/A/x\n::\tlog/a/b.log\n::\tab/doc\n::\tab/.gitignore\n::\tfoo/!n\n::\tfoo/x.o\n::\tab\n::\ta-b\n",
+    "check_rc": 0
+   },
+   {
+    "name": "mixed_07",
+    "files": {
+     "b.log": "x\n",
+     "a-b/a-b": "x\n",
+     "deep/b.log": "x\n",
+     "a-b/A/doc": "x\n",
+     "a-b/foo/a.b": "x\n",
+     "a-b/foo/foo": "x\n",
+     "a-b/foo/a-b/bar": "x\n",
+     "a-b/foo/a-b/#c": "x\n",
+     "a-b/foo/a-b/a ": "x\n",
+     "a-b/foo/a-b/ba": "x\n",
+     "a-b/A/.gitignore": "x/\ndeep**[]a]/doc\\#/deepbuild\n**/foo\n!A\n**/[a-c]?x\nA/\n!xbuild*/\t\n"
+    },
+    "exclude": "# [x]\n\n# a\n**/-\n/x/\n!\\!/doc/[]a]/  ",
+    "xdg": {
+     "git/ignore": "\\ /[[:alpha:]]  \r\n-\r\n"
+    },
+    "env": {
+     "XDG_CONFIG_HOME": "/tmp/gleaner-case/xdg"
+    },
+    "checks": [
+     "a-b/A/.gitignore",
+     "a-b/foo/a-b/bar",
+     "deep",
+     "a-b/foo/a-b",
+     "a-b/foo/a-b/#c",
+     "a-b/a-b",
+     "deep/b.log",
+     "a-b/foo/a-b/a ",
+     "a-b",
+     "a-b/foo/foo",
+     "a-b/A",
+     "b.log",
+     "a-b/A/doc",
+     "a-b/foo/a.b"
+    ],
+    "list": "a-b/A/.gitignore\na-b/A/doc\na-b/a-b\na-b/foo/a-b/#c\na-b/foo/a-b/a \na-b/foo/a-b/ba\na-b/foo/a-b/bar\na-b/foo/a.b\na-b/foo/foo\nb.log\ndeep/b.log\n",
+    "check": "::\ta-b/A/.gitignore\n::\ta-b/foo/a-b/bar\n::\tdeep\n::\ta-b/foo/a-b\n::\ta-b/foo/a-b/#c\n::\ta-b/a-b\n::\tdeep/b.log\n::\ta-b/foo/a-b/a \n::\ta-b\n::\ta-b/foo/foo\n::\ta-b/A\n::\tb.log\n::\ta-b/A/doc\n::\ta-b/foo/a.b\n",
+    "check_rc": 1
+   },
+   {
+    "name": "mixed_08",
+    "files": {
+     "!n": "x\n",
+     "foo.txt": "x\n",
+     "log": "x\n",
+     "#c": "x\n",
+     "x/x.o": "x\n",
+     "x/build": "x\n",
+     "x/b": "x\n",
+     "foo/a0": "x\n",
+     "x/x/foo": "x\n",
+     "x/x/ab": "x\n",
+     "x/x/b": "x\n",
+     "b/x": "x\n",
+     "b/a]b": "x\n",
+     "b/!n": "x\n",
+     "b/#c": "x\n",
+     "b/foo.txt": "x\n",
+     "x/.gitignore": "/\\[x][[:digit:]][!a]/\\#/b\\ [^a]/\n# b\n**/b/\n# a\n!/\\[x]/***/deep*keep/\n",
+     "foo/.gitignore": "doc\n!/****\\*\n\n**[[:alpha:]][!a]/[a-c]\\!/[^a]\n",
+     "b/.gitignore": "/a \n**/b\n\n# bar\n!foo-\\[x]/\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\texcludesfile = ~/gi\n",
+    "exclude": "!log/\n!a.b/\na\\*/foo[!]a][!]a]/\n-[!a][a-c]/***\n",
+    "home": {
+     "gi": "build\n\n![[:digit:]]sub\n!**/doclog/[!a]\\#***\n[^a][!a]/b/[a-]/\t\nx\\*\n\n!!n/\n"
+    },
+    "checks": [
+     "x/build",
+     "x/x/b",
+     "x/.gitignore",
+     "foo/a0",
+     "!n",
+     "b/.gitignore",
+     "b/!n",
+     "x/x/ab",
+     "x/x",
+     "foo/.gitignore",
+     "x/x/foo",
+     "foo.txt",
+     "log",
+     "b/foo.txt"
+    ],
+    "list": "!n\n#c\nb/!n\nb/#c\nb/.gitignore\nb/a]b\nb/foo.txt\nb/x\nfoo.txt\nfoo/.gitignore\nfoo/a0\nlog\nx/.gitignore\nx/b\nx/x.o\nx/x/ab\nx/x/b\nx/x/foo\n",
+    "check": "/tmp/gleaner-case/user/gi:1:build\tx/build\n::\tx/x/b\n::\tx/.gitignore\n::\tfoo/a0\n::\t!n\n::\tb/.gitignore\n::\tb/!n\n::\tx/x/ab\n::\tx/x\n::\tfoo/.gitignore\n::\tx/x/foo\n::\tfoo.txt\n::\tlog\n::\tb/foo.txt\n",
+    "check_rc": 0
+   },
+   {
+    "name": "mixed_09",
+    "files": {
+     "keep": "x\n",
+     "build": "x\n",
+     "a]b": "x\n",
+     "log": "x\n",
+     "ab/1": "x\n",
+     "ab/a b": "x\n",
+     "ab/a0": "x\n",
+     "ab/foo/a]b": "x\n",
+     "ab/foo/a0": "x\n",
+     "foo/ba": "x\n",
+     ".gitignore": "a-b/\n*[[:digit:]]***/\n/a/\n![^a]/\\#\\*\n!\\!\\!/\\*\n/[a-c]x/build  \n\n/doc\n",
+     "ab/foo/.gitignore": "[[:digit:]]/txt/\\!\nx.o/\n!abc\n**/sub\n\na\n**/\\#\\#/x/ab/  ",
+     "foo/.gitignore": "!-/\r\nb\r\nsub[:a]\\ \r\n"
+    },
+    "exclude": "\n# a \n**/abc\n",
+    "xdg": {
+     "git/ignore": "deep/\\*[[:digit:]]\n/***\n/a b/\n!o[!a]\n**/A\ndeep/bar\n!\\ ./..build\n"
+    },
+    "env": {
+     "XDG_CONFIG_HOME": "/tmp/gleaner-case/xdg"
+    },
+    "checks": [
+     "ab/foo",
+     "a]b",
+     "ab/foo/a0",
+     "build",
+     "keep",
+     "ab/a0",
+     "ab/1",
+     "ab",
+     "foo/.gitignore",
+     "ab/foo/.gitignore",
+     "ab/a b",
+     "ab/foo/a]b",
+     "foo",
+     "log"
+    ],
+    "list": "",
+    "check": "/tmp/gleaner-case/xdg/git/ignore:2:/***\tab/foo\n/tmp/gleaner-case/xdg/git/ignore:2:/***\ta]b\n/tmp/gleaner-case/xdg/git/ignore:2:/***\tab/foo/a0\n/tmp/gleaner-case/xdg/git/ignore:2:/***\tbuild\n/tmp/gleaner-case/xdg/git/ignore:2:/***\tkeep\n/tmp/gleaner-case/xdg/git/ignore:2:/***\tab/a0\n/tmp/gleaner-case/xdg/git/ignore:2:/***\tab/1\n/tmp/gleaner-case/xdg/git/ignore:2:/***\tab\n/tmp/gleaner-case/xdg/git/ignore:2:/***\tfoo/.gitignore\n/tmp/gleaner-case/xdg/git/ignore:2:/***\tab/foo/.gitignore\n/tmp/gleaner-case/xdg/git/ignore:2:/***\tab/a b\n/tmp/gleaner-case/xdg/git/ignore:2:/***\tab/foo/a]b\n/tmp/gleaner-case/xdg/git/ignore:2:/***\tfoo\n/tmp/gleaner-case/xdg/git/ignore:2:/***\tlog\n",
+    "check_rc": 0
+   },
+   {
+    "name": "mixed_10",
+    "files": {
+     "abc": "x\n",
+     "build": "x\n",
+     "a-b": "x\n",
+     "foo": "x\n",
+     "b/a b": "x\n",
+     "b/A": "x\n",
+     "b/ab": "x\n",
+     "b/build/a-b": "x\n",
+     "b/a.b/[x]": "x\n",
+     "b/a.b/a-b": "x\n",
+     "b/x/A": "x\n",
+     "b/build/ab/!n": "x\n",
+     "deep/log": "x\n",
+     "deep/abc": "x\n",
+     "deep/!n": "x\n",
+     "b/build/build/b.log": "x\n",
+     "b/build/build/b": "x\n",
+     "b/build/build/a.b": "x\n",
+     "b/build/build/log": "x\n",
+     ".gitignore": "keep*/*/\n![[:digit:]]/[^a]*/\\[x]-\\!  \n\n!/doc/keep[[:digit:]][!]a]/\n!deep/[a-]/[[:alpha:]]deep\n\\#\n",
+     "b/.gitignore": "\\![!a]log[!]a]/[]a]/*\nsub\n",
+     "b/build/.gitignore": "-/[[:digit:]]\n!z0/\n/deep/\nbdeep/doc/keep\n/a]b/\n[^a]b/[^a][:a]/?\n\n/keep/",
+     "b/x/.gitignore": "# -\na-b\n",
+     "b/build/ab/.gitignore": "/[a-]a/fookeep\n!**/txt/[!]a]/*[!]a]\n**/logbuild\t\n!keep[]a]\\[x]\n!/*/\n\\!  \n",
+     "deep/.gitignore": "**\na*b\n\n",
+     "b/build/build/.gitignore": "**/1\n/***[[:digit:]]  \n*keep***/doc\n\n!abc\n"
+    },
+    "xdg": {
+     "git/ignore": "!\\#/./foo\\[x]  \nb[]a]/\\#ab  \n/[[:alpha:]][^a]ab/doc[[:digit:]][!a]\n"
+    },
+    "env": {
+     "XDG_CONFIG_HOME": "/tmp/gleaner-case/xdg"
+    },
+    "checks": [
+     "b/build/ab/.gitignore",
+     "b/build/build/.gitignore",
+     "build",
+     "b/a.b/[x]",
+     "b/x",
+     "b/build/a-b",
+     "b/build/build/b",
+     "b/a b",
+     "b/build",
+     "a-b",
+     "b/build/ab",
+     "b/.gitignore",
+     "b/build/build",
+     "abc"
+    ],
+    "list": ".gitignore\na-b\nabc\nb/.gitignore\nb/A\nb/a b\nb/a.b/[x]\nb/a.b/a-b\nb/ab\nb/build/.gitignore\nb/build/a-b\nb/build/ab/!n\nb/build/ab/.gitignore\nb/build/build/.gitignore\nb/build/build/a.b\nb/build/build/b\nb/build/build/b.log\nb/build/build/log\nb/x/.gitignore\nb/x/A\nbuild\nfoo\n",
+    "check": "::\tb/build/ab/.gitignore\n::\tb/build/build/.gitignore\n::\tbuild\n::\tb/a.b/[x]\n::\tb/x\n::\tb/build/a-b\n::\tb/build/build/b\n::\tb/a b\n::\tb/build\n::\ta-b\n::\tb/build/ab\n::\tb/.gitignore\n::\tb/build/build\n::\tabc\n",
+    "check_rc": 1
+   },
+   {
+    "name": "mixed_11",
+    "files": {
+     "build": "x\n",
+     "x": "x\n",
+     "b/bar": "x\n",
+     "b/A": "x\n",
+     "b/b": "x\n",
+     "b/doc/a ": "x\n",
+     "b/doc/a-b": "x\n",
+     "b/doc/x.o": "x\n",
+     "b/doc/b/build": "x\n",
+     "b/doc/b/ba": "x\n",
+     "b/.gitignore": "!deep[[:digit:]][!a]/sub\n!b\nfoo\n",
+     "b/doc/b/.gitignore": "/\\#[a-]/-***/*foo/\n# a\n!subax\n!sub/\n/a-b\n/sub\\#/a-log\n[:a]\\ */\\ \\ "
+    },
+    "checks": [
+     "b/bar",
+     "b",
+     "b/.gitignore",
+     "b/doc/a ",
+     "x",
+     "b/doc/b",
+     "b/doc",
+     "build",
+     "b/A",
+     "b/doc/a-b",
+     "b/doc/x.o",
+     "b/doc/b/.gitignore",
+     "b/b",
+     "b/doc/b/build"
+    ],
+    "list": "b/.gitignore\nb/A\nb/b\nb/bar\nb/doc/a \nb/doc/a-b\nb/doc/b/.gitignore\nb/doc/b/ba\nb/doc/b/build\nb/doc/x.o\nbuild\nx\n",
+    "check": "::\tb/bar\n::\tb\n::\tb/.gitignore\n::\tb/doc/a \n::\tx\nb/.gitignore:2:!b\tb/doc/b\n::\tb/doc\n::\tbuild\n::\tb/A\n::\tb/doc/a-b\n::\tb/doc/x.o\n::\tb/doc/b/.gitignore\nb/.gitignore:2:!b\tb/b\n::\tb/doc/b/build\n",
+    "check_rc": 1
+   },
+   {
+    "name": "mixed_12",
+    "files": {
+     "b": "x\n",
+     "-": "x\n",
+     "a.b": "x\n",
+     "x.o": "x\n",
+     "doc/!n": "x\n",
+     "doc/b.log": "x\n",
+     "doc/a-b": "x\n",
+     "foo/build": "x\n",
+     "foo/x": "x\n",
+     "foo/a.b": "x\n",
+     "doc/.gitignore": "!**/adoc/[:a]\n[!a][!]a]/[!]a]\\#/?barkeep/\n# a0\n**/b\n!b\ntxtlog/[[:alpha:]]o/\\#b\n\n\\ x[[:alpha:]]/[!]a]/build\\[x]\t\n",
+     "foo/.gitignore": "\\!**/*/**\n/#c/\n!a*b\n/a0\nz0\n!*\n[a-c]x[[:digit:]]/build[[:digit:]]foo/**\n\\#/[[:alpha:]]/[:a]keep/**\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\texcludesfile = ~/gi\n",
+    "home": {
+     "gi": "!**/[a-c]ab\n/doc\nfoo.txt"
+    },
+    "checks": [
+     "foo/x",
+     "doc/!n",
+     "foo/a.b",
+     "b",
+     "foo",
+     "foo/build",
+     "foo/.gitignore",
+     "doc/a-b",
+     "a.b",
+     "x.o",
+     "doc",
+     "-",
+     "doc/.gitignore",
+     "doc/b.log"
+    ],
+    "list": "-\na.b\nb\nfoo/.gitignore\nfoo/a.b\nfoo/build\nfoo/x\nx.o\n",
+    "check": "foo/.gitignore:6:!*\tfoo/x\n/tmp/gleaner-case/user/gi:2:/doc\tdoc/!n\nfoo/.gitignore:6:!*\tfoo/a.b\n::\tb\n::\tfoo\nfoo/.gitignore:6:!*\tfoo/build\nfoo/.gitignore:6:!*\tfoo/.gitignore\n/tmp/gleaner-case/user/gi:2:/doc\tdoc/a-b\n::\ta.b\n::\tx.o\n/tmp/gleaner-case/user/gi:2:/doc\tdoc\n::\t-\n/tmp/gleaner-case/user/gi:2:/doc\tdoc/.gitignore\n/tmp/gleaner-case/user/gi:2:/doc\tdoc/b.log\n",
+    "check_rc": 0
+   },
+   {
+    "name": "mixed_13",
+    "files": {
+     "doc": "x\n",
+     "log": "x\n",
+     "a0": "x\n",
+     "a-b/a]b": "x\n",
+     "a-b/a0": "x\n",
+     "a-b/a": "x\n",
+     "a-b/build/doc": "x\n",
+     "a-b/build/-": "x\n",
+     "a-b/build/a.b": "x\n",
+     "build/ab": "x\n",
+     "build/[x]": "x\n",
+     "build/abc": "x\n",
+     "a-b/ab/a-b": "x\n",
+     "a-b/ab/[x]": "x\n",
+     "a-b/a.b/a": "x\n",
+     "a-b/a.b/doc": "x\n",
+     "a-b/a.b/[x]": "x\n",
+     "a-b/a.b/x.o": "x\n",
+     ".gitignore": "!\\ /**[[:digit:]]deep\r\na-b/\r\n",
+     "a-b/.gitignore": "[!]a]bara/x[^a]\\ \t\n**/[[:digit:]]txt\n!foo\n!x[a-c][[:alpha:]]/?sub**\n",
+     "a-b/build/.gitignore": "A/\nkeep/b/aab\ndoc/*\\ \n!a /\n",
+     "build/.gitignore": "!#c\n/deep/o\t\nfoo/\n/txtbuild[!a]/",
+     "a-b/ab/.gitignore": "o/adoc/ab\n!a]b/\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\texcludesfile = ~/gi\n",
+    "exclude": "[[:alpha:]]/asubbuild/[^a]/**\n**/a\n",
+    "home": {
+     "gi": "\n**/bar\n\n# [x]\n!?*\n\\!doc\\#/[!a][!a]/[[:alpha:]]ab[:a]\n"
+    },
+    "checks": [
+     "a-b/ab/.gitignore",
+     "build/abc",
+     "a-b/a0",
+     "build/[x]",
+     "build",
+     "build/.gitignore",
+     "a-b/a.b/doc",
+     "a-b/build/doc",
+     "a-b/ab",
+     "a-b/build/.gitignore",
+     "a-b",
+     "a-b/a",
+     "log",
+     "a-b/a.b/a"
+    ],
+    "list": ".gitignore\na0\nbuild/.gitignore\nbuild/[x]\nbuild/ab\nbuild/abc\ndoc\nlog\n",
+    "check": ".gitignore:2:a-b/\ta-b/ab/.gitignore\n/tmp/gleaner-case/user/gi:5:!?*\tbuild/abc\n.gitignore:2:a-b/\ta-b/a0\n/tmp/gleaner-case/user/gi:5:!?*\tbuild/[x]\n/tmp/gleaner-case/user/gi:5:!?*\tbuild\n/tmp/gleaner-case/user/gi:5:!?*\tbuild/.gitignore\n.gitignore:2:a-b/\ta-b/a.b/doc\n.gitignore:2:a-b/\ta-b/build/doc\n.gitignore:2:a-b/\ta-b/ab\n.gitignore:2:a-b/\ta-b/build/.gitignore\n.gitignore:2:a-b/\ta-b\n.gitignore:2:a-b/\ta-b/a\n/tmp/gleaner-case/user/gi:5:!?*\tlog\n.gitignore:2:a-b/\ta-b/a.b/a\n",
+    "check_rc": 0
+   },
+   {
+    "name": "mixed_14",
+    "files": {
+     "a.b": "x\n",
+     "[x]": "x\n",
+     "x": "x\n",
+     "a0": "x\n",
+     "ab/bar": "x\n",
+     "ab/a*b": "x\n",
+     "ab/!n": "x\n",
+     "ab/log/b": "x\n",
+     "ab/log/foo.txt": "x\n",
+     "ab/log/a0": "x\n",
+     "ab/log/[x]": "x\n",
+     "log/-": "x\n",
+     "log/a0": "x\n",
+     "log/keep": "x\n",
+     "log/abc": "x\n",
+     "log/z0": "x\n",
+     ".gitignore": "foo.txt/\n**/#c\n!A\n/log/\n/.-/build[!a][a-c]\n/?",
+     "ab/.gitignore": "\\!/**[[:alpha:]][[:digit:]]/[[:digit:]]\\ */**\nsub/\\!/o[[:alpha:]]ab\n!/deep[]a]/\\#[a-]sub/**\n",
+     "ab/log/.gitignore": "\\#*[a-c]/  \n/A\n# build\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\texcludesFile = ~/gi\n",
+    "exclude": "# a0\n[!a][a-c]/[!a]ab  \n\\#[^a]\n!./**[^a]bar/foo[!a]build\n/[x]\n!build\n",
+    "home": {
+     "gi": "!sub\n**/foo\n**/a-b/\n/\\*-\nba[[:digit:]]\n"
+    },
+    "checks": [
+     "a.b",
+     "ab/log/a0",
+     "log/z0",
+     "ab/a*b",
+     "a0",
+     ".gitignore",
+     "log/abc",
+     "ab/.gitignore",
+     "ab/log/b",
+     "ab/log",
+     "log/keep",
+     "x",
+     "ab/log/foo.txt",
+     "ab/log/.gitignore"
+    ],
+    "list": ".gitignore\n[x]\na.b\na0\nab/!n\nab/.gitignore\nab/a*b\nab/bar\nab/log/.gitignore\nab/log/[x]\nab/log/a0\nab/log/b\nab/log/foo.txt\n",
+    "check": "::\ta.b\n::\tab/log/a0\n.gitignore:4:/log/\tlog/z0\n::\tab/a*b\n::\ta0\n::\t.gitignore\n.gitignore:4:/log/\tlog/abc\n::\tab/.gitignore\n::\tab/log/b\n::\tab/log\n.gitignore:4:/log/\tlog/keep\n.gitignore:6:/?\tx\n::\tab/log/foo.txt\n::\tab/log/.gitignore\n",
+    "check_rc": 0
+   },
+   {
+    "name": "mixed_15",
+    "files": {
+     "ab": "x\n",
+     "sub/-": "x\n",
+     "sub/a-b": "x\n",
+     "sub/a b": "x\n",
+     "a/!n": "x\n",
+     "a/ba": "x\n",
+     "a/a b": "x\n",
+     "a/sub/z0": "x\n",
+     "a/sub/-": "x\n",
+     "a/sub/#c": "x\n",
+     "a/sub/log": "x\n",
+     "a/sub/a.b": "x\n",
+     ".gitignore": "bar/[!]a]\\ \\[x]/./**\nb/\n!**/a/\nz0/\n/a\n**/sub/\n**/keep\n"
+    },
+    "exclude": "!b\\#[:a]/***\\[x][a-c]\n**/log\n",
+    "checks": [
+     "sub/a b",
+     "ab",
+     "a/sub/-",
+     "a/sub/z0",
+     "a/a b",
+     "a/sub",
+     "sub/-",
+     "sub/a-b",
+     "a/sub/#c",
+     "a/sub/a.b",
+     "a/ba",
+     "a",
+     "sub",
+     "a/!n"
+    ],
+    "list": ".gitignore\nab\n",
+    "check": ".gitignore:6:**/sub/\tsub/a b\n::\tab\n.gitignore:5:/a\ta/sub/-\n.gitignore:5:/a\ta/sub/z0\n.gitignore:5:/a\ta/a b\n.gitignore:5:/a\ta/sub\n.gitignore:6:**/sub/\tsub/-\n.gitignore:6:**/sub/\tsub/a-b\n.gitignore:5:/a\ta/sub/#c\n.gitignore:5:/a\ta/sub/a.b\n.gitignore:5:/a\ta/ba\n.gitignore:5:/a\ta\n.gitignore:6:**/sub/\tsub\n.gitignore:5:/a\ta/!n\n",
+    "check_rc": 0
+   },
+   {
+    "name": "mixed_16",
+    "files": {
+     "abc": "x\n",
+     "a-b/foo.txt": "x\n",
+     "a-b/a ": "x\n",
+     "a-b/ab": "x\n",
+     "b/keep": "x\n",
+     "b/b/foo.txt": "x\n",
+     "b/b/a-b/!n": "x\n",
+     "b/a-b/ba": "x\n",
+     "b/a-b/z0": "x\n",
+     "b/a-b/a*b": "x\n",
+     "b/a-b/abc": "x\n",
+     "b/a-b/.gitignore": "# ab\na0/\n**/keep/\n![[:digit:]]-/***deep\n/a\n/[[:alpha:]]keep/***?/\n/sub/\n[[:digit:]]/sub[[:digit:]]**/ab\n"
+    },
+    "exclude": "**/deep\n# [x]\ndocab[]a]/**\n!**a\\[x]\\ \n/bar/\nbuild/\n*/ab/[a-c]sub\\!\ndocdeep/\\[x]*  \n",
+    "checks": [
+     "a-b",
+     "b/a-b/a*b",
+     "b/a-b/abc",
+     "b/b/foo.txt",
+     "a-b/foo.txt",
+     "b",
+     "b/keep",
+     "a-b/ab",
+     "b/b/a-b/!n",
+     "b/a-b/z0",
+     "b/a-b",
+     "a-b/a ",
+     "abc",
+     "b/a-b/.gitignore"
+    ],
+    "list": "a-b/a \na-b/ab\na-b/foo.txt\nabc\nb/a-b/.gitignore\nb/a-b/a*b\nb/a-b/abc\nb/a-b/ba\nb/a-b/z0\nb/b/a-b/!n\nb/b/foo.txt\nb/keep\n",
+    "check": "::\ta-b\n::\tb/a-b/a*b\n::\tb/a-b/abc\n::\tb/b/foo.txt\n::\ta-b/foo.txt\n::\tb\n::\tb/keep\n::\ta-b/ab\n::\tb/b/a-b/!n\n::\tb/a-b/z0\n::\tb/a-b\n::\ta-b/a \n::\tabc\n::\tb/a-b/.gitignore\n",
+    "check_rc": 1
+   },
+   {
+    "name": "mixed_17",
+    "files": {
+     "doc": "x\n",
+     "foo": "x\n",
+     "a": "x\n",
+     "A/b.log": "x\n",
+     "A/a.b": "x\n",
+     "A/a0": "x\n",
+     "A/foo": "x\n",
+     "A/sub/x.o": "x\n",
+     "A/sub/bar": "x\n",
+     "A/sub/x": "x\n",
+     "a-b/a-b": "x\n",
+     "a-b/b": "x\n",
+     "a-b/a0": "x\n",
+     "a-b/a b": "x\n",
+     "A/sub/build/A": "x\n",
+     "A/sub/build/abc": "x\n",
+     "A/sub/build/#c": "x\n",
+     "A/deep/foo": "x\n",
+     "A/deep/foo.txt": "x\n",
+     "A/deep/a ": "x\n",
+     "A/sub/a-b/[x]": "x\n",
+     "A/sub/a-b/foo": "x\n",
+     "A/sub/a-b/!n": "x\n",
+     "A/sub/a-b/x.o": "x\n",
+     "A/sub/a-b/ab": "x\n",
+     "a-b/build/z0": "x\n",
+     "a-b/build/a": "x\n",
+     "a-b/.gitignore": "/x?a/[]a][^a][!]a]\n/o\\[x]/bar/.\na*b\n\n!abxbar/keep\\*/\n/*b/foo[a-c]log/\t\n/deep\n/txt[!]a]/  \n",
+     "A/sub/build/.gitignore": "\ufeff!doc\n/b.log/\n!/[:a]/-/\t\n[a-c]o\\[x]/sub**\\[x]/?\n# a \n# b\nx.o",
+     "A/deep/.gitignore": "\n[!a].\n/b\n!z0\n!abc\n\\![:a]ab/\nbuild[a-]/\t\ndoctxt[[:alpha:]]\n",
+     "A/sub/a-b/.gitignore": "\\!deep/x[[:digit:]]\n![!a]foo/\\[x]deep/x\n/\\*[a-c]*\n!z0/\nbkeep/[!]a]\n!*[^a]-/  \n"
+    },
+    "checks": [
+     "A/sub/a-b/ab",
+     "A/sub/a-b/[x]",
+     "A/deep/.gitignore",
+     "A/b.log",
+     "a-b/build/a",
+     "a-b",
+     "a-b/build",
+     "A/sub/a-b",
+     "A",
+     "a-b/a0",
+     "A/sub/x.o",
+     "A/foo",
+     "a",
+     "foo"
+    ],
+    "list": "A/a.b\nA/a0\nA/b.log\nA/deep/.gitignore\nA/deep/a \nA/deep/foo\nA/deep/foo.txt\nA/foo\nA/sub/a-b/!n\nA/sub/a-b/.gitignore\nA/sub/a-b/[x]\nA/sub/a-b/ab\nA/sub/a-b/foo\nA/sub/a-b/x.o\nA/sub/bar\nA/sub/build/#c\nA/sub/build/.gitignore\nA/sub/build/A\nA/sub/build/abc\nA/sub/x\nA/sub/x.o\na\na-b/.gitignore\na-b/a0\na-b/b\na-b/build/a\na-b/build/z0\ndoc\nfoo\n",
+    "check": "::\tA/sub/a-b/ab\n::\tA/sub/a-b/[x]\n::\tA/deep/.gitignore\n::\tA/b.log\n::\ta-b/build/a\n::\ta-b\n::\ta-b/build\n::\tA/sub/a-b\n::\tA\n::\ta-b/a0\n::\tA/sub/x.o\n::\tA/foo\n::\ta\n::\tfoo\n",
+    "check_rc": 1
+   },
+   {
+    "name": "mixed_18",
+    "files": {
+     "build": "x\n",
+     "a": "x\n",
+     "a0": "x\n",
+     "!n": "x\n",
+     "a.b/1": "x\n",
+     "a.b/x": "x\n",
+     "a.b/keep": "x\n",
+     "a.b/b.log": "x\n",
+     "log/ab": "x\n",
+     "log/a.b": "x\n",
+     "log/-": "x\n",
+     "log/foo.txt": "x\n",
+     "log/a-b/a ": "x\n",
+     "log/a-b/ab": "x\n",
+     "log/a-b/1": "x\n",
+     "log/a-b/A/x.o": "x\n",
+     "log/a-b/A/A": "x\n",
+     "log/a-b/A/a-b": "x\n",
+     "a.b/ab/build": "x\n",
+     "a.b/ab/a.b": "x\n",
+     "a.b/.gitignore": "!keepkeepfoo/keep*/**\\ \n\n\\[x][^a]\\[x]/txtbar\n**/log\n",
+     "log/.gitignore": "\ufeff-log\n**/-\n",
+     "log/a-b/.gitignore": "\n!/.keepab/*****[a-]/[]a]\\ /\n!.ab/txt\n\n[[:digit:]]/[!a]/\nab[[:alpha:]]/[[:alpha:]]foo/**[^a]\n[^a]/?txt\\*\n!**/[!a]/.\n",
+     "log/a-b/A/.gitignore": "[a-]\t\n!/\\!\n/b\na-b\n\ntxt/o\n/doc\n"
+    },
+    "home": {
+     ".config/git/ignore": "/\\#\\#build\n!abc/\n\\[x][a-]*/doc[a-c]/[[:digit:]]-//**\n# x.o\n"
+    },
+    "checks": [
+     "log/a-b/A/x.o",
+     "a.b",
+     "a.b/ab/build",
+     "build",
+     "a0",
+     "log/a-b/1",
+     "log/a-b/a ",
+     "log/ab",
+     "log/a-b/ab",
+     "log/a-b",
+     "a.b/keep",
+     "a.b/1",
+     "log/a-b/.gitignore",
+     "!n"
+    ],
+    "list": "!n\na\na.b/.gitignore\na.b/1\na.b/ab/a.b\na.b/ab/build\na.b/b.log\na.b/keep\na.b/x\na0\nbuild\nlog/.gitignore\nlog/a-b/.gitignore\nlog/a-b/1\nlog/a-b/A/.gitignore\nlog/a-b/A/A\nlog/a-b/A/x.o\nlog/a-b/a \nlog/a-b/ab\nlog/a.b\nlog/ab\nlog/foo.txt\n",
+    "check": "::\tlog/a-b/A/x.o\n::\ta.b\n::\ta.b/ab/build\n::\tbuild\n::\ta0\n::\tlog/a-b/1\n::\tlog/a-b/a \n::\tlog/ab\n::\tlog/a-b/ab\n::\tlog/a-b\n::\ta.b/keep\n::\ta.b/1\n::\tlog/a-b/.gitignore\n::\t!n\n",
+    "check_rc": 1
+   },
+   {
+    "name": "mixed_19",
+    "files": {
+     "a b": "x\n",
+     "z0": "x\n",
+     "a.b": "x\n",
+     "-": "x\n",
+     "ab/a.b": "x\n",
+     "ab/[x]": "x\n",
+     "ab/#c": "x\n",
+     "ab/z0": "x\n",
+     "foo/b": "x\n",
+     "foo/.gitignore": "# z0\na b\n# b.log\n**/[^a][a-]//**\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\texcludesFile = ~/gi\n",
+    "exclude": "# a]b\n/#c\n**/txtdoc[!a]\\ \n.*/\\[x]x/-sub\n\n**/[!a]\t\n/foo.txt\n",
+    "home": {
+     "gi": "/deep\r\n[:a]\\ ab/obartxt\r\n!/-/sub[^a]/docsub\r\n!b.log\r\n"
+    },
+    "checks": [
+     "ab/#c",
+     "foo/.gitignore",
+     "-",
+     "foo/b",
+     "ab",
+     "ab/[x]",
+     "z0",
+     "foo",
+     "ab/a.b",
+     "ab/z0",
+     "a b",
+     "a.b"
+    ],
+    "list": "-\na b\na.b\nab/#c\nab/[x]\nab/a.b\nab/z0\nfoo/.gitignore\nfoo/b\nz0\n",
+    "check": "::\tab/#c\n::\tfoo/.gitignore\n::\t-\n::\tfoo/b\n::\tab\n::\tab/[x]\n::\tz0\n::\tfoo\n::\tab/a.b\n::\tab/z0\n::\ta b\n::\ta.b\n",
+    "check_rc": 1
+   },
+   {
+    "name": "mixed_20",
+    "files": {
+     "-": "x\n",
+     "[x]": "x\n",
+     "a b": "x\n",
+     "a ": "x\n",
+     "build": "x\n",
+     "doc/foo": "x\n",
+     "doc/a ": "x\n",
+     "doc/b.log": "x\n",
+     "a/-": "x\n",
+     "a/a b": "x\n",
+     "a/build": "x\n",
+     "a/a": "x\n",
+     "a/abc": "x\n",
+     "a-b/a.b": "x\n",
+     "a-b/b.log": "x\n",
+     "a/b/a-b": "x\n",
+     "a/b/log": "x\n",
+     "a/b/b": "x\n",
+     "a/b/!n": "x\n",
+     ".gitignore": "![a-c]/[a-c]keepdoc/\n-ab*\n!abc/\n**/[^a]\nab\n\n!sub/\n",
+     "a/.gitignore": "b\\*/*deep[a-]/\\#\\ /\n/*sub[[:alpha:]]/?**/\n\n!x\n/a \n?\n/[a-]ab/-\\#/txt\\!\n-sub/.deepa\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\texcludesFile = ~/gi\n",
+    "exclude": "**/z0/\n# foo\n",
+    "home": {
+     "gi": "[[:alpha:]]txt/bar\n# a\n!??\\ /[a-c]\n"
+    },
+    "checks": [
+     "a/a",
+     "a/b/log",
+     "a ",
+     "a",
+     "a b",
+     "[x]",
+     "a/-",
+     "a/a b",
+     "build",
+     "a-b",
+     "doc/a ",
+     "a/abc",
+     "a/b/b",
+     "a-b/b.log"
+    ],
+    "list": ".gitignore\n[x]\na \na b\na-b/a.b\na-b/b.log\na/.gitignore\na/a b\na/abc\na/build\nbuild\ndoc/a \ndoc/b.log\ndoc/foo\n",
+    "check": "a/.gitignore:6:?\ta/a\na/.gitignore:6:?\ta/b/log\n::\ta \n::\ta\n::\ta b\n::\t[x]\na/.gitignore:6:?\ta/-\n::\ta/a b\n::\tbuild\n::\ta-b\n::\tdoc/a \n::\ta/abc\na/.gitignore:6:?\ta/b/b\n::\ta-b/b.log\n",
+    "check_rc": 0
+   },
+   {
+    "name": "mixed_21",
+    "files": {
+     "ba": "x\n",
+     "ab/abc": "x\n",
+     "ab/build": "x\n",
+     "ab/[x]": "x\n",
+     "ab/bar": "x\n",
+     "ab/a-b/x": "x\n",
+     "ab/a-b/ab": "x\n",
+     "ab/a-b/foo": "x\n",
+     "ab/a-b/foo.txt": "x\n",
+     "ab/a-b/a/a0": "x\n",
+     "ab/a-b/a/1": "x\n",
+     "ab/a-b/a/b": "x\n",
+     "ab/a-b/a/log": "x\n",
+     "ab/x/[x]": "x\n",
+     "ab/a-b/a.b/A": "x\n",
+     "A/foo.txt": "x\n",
+     "A/ba": "x\n",
+     "A/a0": "x\n",
+     "A/1": "x\n",
+     "A/x.o": "x\n",
+     "ab/a-b/.gitignore": "/ba\n!****\n!.\\ [[:digit:]]/\\ ***\n**/ab\n![!a]/txt***/\n/\\!/***x/[!a]*a/\t\n",
+     "ab/a-b/a/.gitignore": "# x\n1/\n./***/deepx/  ",
+     "ab/x/.gitignore": "\n**/a-b\n[^a]deep-/\\!/-/\n**buildo/\\!b/***foo/\ntxt[a-c]\n/-  \n/a.b\n[a-c]/",
+     "ab/a-b/a.b/.gitignore": "!\\ [!]a]/**  \n.bar/*/\\#\n# x\n/a \nab/[[:alpha:]]deep/\n\n[]a][a-]/.",
+     "A/.gitignore": "\\#/\\ build/log[[:alpha:]]/  \nfoo\n/!n\n# b.log\n!./\\ \n/foo.txt\n/log/\n"
+    },
+    "exclude": "[:a]xsub/[:a]bar/[^a]**\nfoo\n\\#\n/a.b\n!n/\n**/ab\n",
+    "home": {
+     ".config/git/ignore": "log/\n\nab/[:a]\n\nsub\\ \n!/**/***[!a]\n"
+    },
+    "checks": [
+     "ab/a-b/a.b/.gitignore",
+     "ab/x/[x]",
+     "A/ba",
+     "ab/a-b",
+     "A/x.o",
+     "A",
+     "ab/[x]",
+     "ab/abc",
+     "A/.gitignore",
+     "ab/a-b/a/.gitignore",
+     "ab/a-b/ab",
+     "ab/a-b/a.b",
+     "ab",
+     "ab/a-b/a/a0"
+    ],
+    "list": "A/.gitignore\nA/1\nA/a0\nA/ba\nA/x.o\nba\n",
+    "check": ".git/info/exclude:6:**/ab\tab/a-b/a.b/.gitignore\n.git/info/exclude:6:**/ab\tab/x/[x]\n::\tA/ba\n.git/info/exclude:6:**/ab\tab/a-b\n/tmp/gleaner-case/user/.config/git/ignore:6:!/**/***[!a]\tA/x.o\n/tmp/gleaner-case/user/.config/git/ignore:6:!/**/***[!a]\tA\n.git/info/exclude:6:**/ab\tab/[x]\n.git/info/exclude:6:**/ab\tab/abc\n/tmp/gleaner-case/user/.config/git/ignore:6:!/**/***[!a]\tA/.gitignore\n.git/info/exclude:6:**/ab\tab/a-b/a/.gitignore\n.git/info/exclude:6:**/ab\tab/a-b/ab\n.git/info/exclude:6:**/ab\tab/a-b/a.b\n.git/info/exclude:6:**/ab\tab\n.git/info/exclude:6:**/ab\tab/a-b/a/a0\n",
+    "check_rc": 0
+   },
+   {
+    "name": "mixed_22",
+    "files": {
+     "a.b": "x\n",
+     "abc": "x\n",
+     "foo/a-b": "x\n",
+     "foo/abc": "x\n",
+     "foo/a*b": "x\n",
+     "sub/a": "x\n",
+     "sub/!n": "x\n",
+     "sub/ab": "x\n",
+     "doc/#c": "x\n",
+     ".gitignore": "# b\n**/x/\n**/x\n# a0\n",
+     "foo/.gitignore": "\n\\ /\\[x]\\!/[[:alpha:]]/\n"
+    },
+    "exclude": "\ufeff**/doc/\n!-[!]a]/-.\t",
+    "checks": [
+     "foo",
+     ".gitignore",
+     "foo/abc",
+     "sub/ab",
+     "abc",
+     "sub",
+     "a.b",
+     "foo/.gitignore",
+     "foo/a*b",
+     "sub/!n",
+     "doc/#c",
+     "doc",
+     "foo/a-b",
+     "sub/a"
+    ],
+    "list": ".gitignore\na.b\nabc\nfoo/.gitignore\nfoo/a*b\nfoo/a-b\nfoo/abc\nsub/!n\nsub/a\nsub/ab\n",
+    "check": "::\tfoo\n::\t.gitignore\n::\tfoo/abc\n::\tsub/ab\n::\tabc\n::\tsub\n::\ta.b\n::\tfoo/.gitignore\n::\tfoo/a*b\n::\tsub/!n\n.git/info/exclude:1:**/doc/\tdoc/#c\n.git/info/exclude:1:**/doc/\tdoc\n::\tfoo/a-b\n::\tsub/a\n",
+    "check_rc": 0
+   },
+   {
+    "name": "mixed_23",
+    "files": {
+     "ba": "x\n",
+     "#c": "x\n",
+     "z0": "x\n",
+     "deep/x": "x\n",
+     "deep/a*b": "x\n",
+     "deep/a/A": "x\n",
+     "deep/a/!n": "x\n",
+     "b/a": "x\n",
+     "ab/ab": "x\n",
+     "b/build/[x]": "x\n",
+     "b/build/!n": "x\n",
+     "b/build/bar": "x\n",
+     "b/build/1": "x\n",
+     "deep/log/1": "x\n",
+     "deep/log/bar": "x\n",
+     "deep/log/a*b": "x\n",
+     "deep/log/a0": "x\n",
+     ".gitignore": "\n\n!/***o\\!/[a-]txt./[!a][[:alpha:]][]a]  \n**/[^a]subdoc/**subdeep/?x[[:alpha:]]/**\n?/**\n\n\\!/blogfoo  ",
+     "deep/.gitignore": "\nba\n!a b\n!/\\![!a]\\*/sub[!a]\\#",
+     "b/.gitignore": "/bardeep/txt/./\n",
+     "ab/.gitignore": "/build/\n/[!]a]?o/\no[[:alpha:]]doc/\nx/***\\ /*?/\n[x]/\n**/\n.log/[[:digit:]][[:alpha:]]*\n!x\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\texcludesFile = ~/gi\n",
+    "exclude": "\\*[a-c]\n\n/\\*",
+    "home": {
+     "gi": "# 1\n\n"
+    },
+    "checks": [
+     ".gitignore",
+     "deep/x",
+     "deep/a/A",
+     "deep/.gitignore",
+     "b/build/1",
+     "b/a",
+     "b",
+     "deep/a*b",
+     "ab/ab",
+     "b/build/[x]",
+     "deep/log/bar",
+     "deep",
+     "b/build",
+     "z0"
+    ],
+    "list": "#c\n.gitignore\nab/.gitignore\nab/ab\nba\ndeep/.gitignore\ndeep/a*b\ndeep/a/!n\ndeep/a/A\ndeep/log/1\ndeep/log/a*b\ndeep/log/a0\ndeep/log/bar\ndeep/x\nz0\n",
+    "check": "::\t.gitignore\n::\tdeep/x\n::\tdeep/a/A\n::\tdeep/.gitignore\n.gitignore:5:?/**\tb/build/1\n.gitignore:5:?/**\tb/a\n::\tb\n::\tdeep/a*b\n::\tab/ab\n.gitignore:5:?/**\tb/build/[x]\n::\tdeep/log/bar\n::\tdeep\n.gitignore:5:?/**\tb/build\n::\tz0\n",
+    "check_rc": 0
+   },
+   {
+    "name": "mixed_24",
+    "files": {
+     "a]b": "x\n",
+     "a-b/[x]": "x\n",
+     "a-b/abc": "x\n",
+     "a-b/z0": "x\n",
+     "a-b/x.o": "x\n",
+     "foo/ba": "x\n",
+     "foo/abc": "x\n",
+     "foo/a]b": "x\n",
+     "foo/#c": "x\n",
+     "foo/ab": "x\n",
+     "a.b/-": "x\n",
+     "a.b/b.log": "x\n",
+     "a.b/ba": "x\n",
+     "a.b/z0": "x\n",
+     "a.b/!n": "x\n",
+     "a-b/a.b/x": "x\n",
+     "a-b/a.b/foo.txt": "x\n",
+     ".gitignore": "# deep\n!/\\#/[]a]bartxt/[!]a]bar\n",
+     "a-b/.gitignore": "**/A\n*.-/[!a]/\\!\n\n/keepbuildsub/[a-c][a-]\\[x]/[!]a]\na[!]a]/\\ \\#/.[[:alpha:]]\n\\!ab[a-c]/o\n!ab/\n![x]",
+     "a-b/a.b/.gitignore": "\\*/[:a]b***\n/log/\\[x]o/**\n\\!/a/[]a]\n"
+    },
+    "home": {
+     ".config/git/ignore": "!txt[!a]/**\n**/[a-c]a/-/logbuild  \n!**/**/[^a]/\\*\nsub  \n**/a/\\#[]a]\n!foo/\n!log/***/[[:alpha:]]/**\n\n"
+    },
+    "checks": [
+     "a-b/a.b/x",
+     "a-b/.gitignore",
+     "a-b/z0",
+     "foo/ba",
+     "a.b/-",
+     "a-b/abc",
+     "a.b/!n",
+     "foo/abc",
+     ".gitignore",
+     "a.b",
+     "a-b/a.b/foo.txt",
+     "a-b",
+     "a.b/z0",
+     "a-b/[x]"
+    ],
+    "list": ".gitignore\na-b/.gitignore\na-b/[x]\na-b/a.b/.gitignore\na-b/a.b/foo.txt\na-b/a.b/x\na-b/abc\na-b/x.o\na-b/z0\na.b/!n\na.b/-\na.b/b.log\na.b/ba\na.b/z0\na]b\nfoo/#c\nfoo/a]b\nfoo/ab\nfoo/abc\nfoo/ba\n",
+    "check": "a-b/.gitignore:8:![x]\ta-b/a.b/x\n::\ta-b/.gitignore\n::\ta-b/z0\n::\tfoo/ba\n::\ta.b/-\n::\ta-b/abc\n::\ta.b/!n\n::\tfoo/abc\n::\t.gitignore\n::\ta.b\n::\ta-b/a.b/foo.txt\n::\ta-b\n::\ta.b/z0\n::\ta-b/[x]\n",
+    "check_rc": 1
+   },
+   {
+    "name": "mixed_25",
+    "files": {
+     "a b": "x\n",
+     "#c": "x\n",
+     "b.log": "x\n",
+     "ab/keep": "x\n",
+     "ab/a-b/a-b": "x\n",
+     "sub/b": "x\n",
+     "a/a b": "x\n",
+     ".gitignore": "\\[x]/\\ build\\*/[[:digit:]]\n**/bar/**\n**/build\n\n",
+     "ab/.gitignore": "a-b/\n![a-c]/o/**b*/\no/-[a-c]build/[!]a]/**\n!x/\n[:a]build/[^a]\\#**/\\ \n***-ab\n",
+     "ab/a-b/.gitignore": "!logbar  \n# ab\n/x\n![[:alpha:]]*/buildbuild*\nfoo/\n**/b\n",
+     "a/.gitignore": "# A\n!\\ /[a-c]*keep\\ \n.-b\na/\\#\n**/[x]\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\texcludesFile = ~/gi\n",
+    "exclude": "/.\\[x]x\t\n/a.b\n",
+    "home": {
+     "gi": "/-/\n# !n\n# deep\nsub\n!*/foo/**\n/b\n!foo\nbuild/\n"
+    },
+    "checks": [
+     "ab/a-b",
+     "#c",
+     "ab",
+     "sub/b",
+     "a/.gitignore",
+     "a/a b",
+     "ab/.gitignore",
+     "ab/a-b/.gitignore",
+     "sub",
+     ".gitignore",
+     "ab/keep",
+     "ab/a-b/a-b",
+     "a",
+     "b.log"
+    ],
+    "list": "#c\n.gitignore\na b\na/.gitignore\na/a b\nab/.gitignore\nab/keep\nb.log\n",
+    "check": "ab/.gitignore:1:a-b/\tab/a-b\n::\t#c\n::\tab\n/tmp/gleaner-case/user/gi:4:sub\tsub/b\n::\ta/.gitignore\n::\ta/a b\n::\tab/.gitignore\nab/.gitignore:1:a-b/\tab/a-b/.gitignore\n/tmp/gleaner-case/user/gi:4:sub\tsub\n::\t.gitignore\n::\tab/keep\nab/.gitignore:1:a-b/\tab/a-b/a-b\n::\ta\n::\tb.log\n",
+    "check_rc": 0
+   },
+   {
+    "name": "mixed_26",
+    "files": {
+     "keep": "x\n",
+     "a-b/abc": "x\n",
+     "a-b/a.b": "x\n",
+     "a-b/ba": "x\n",
+     "a.b/b": "x\n",
+     "a.b/#c": "x\n",
+     "a.b/doc": "x\n",
+     "a.b/a/foo.txt": "x\n",
+     "a.b/a/a/b": "x\n",
+     "a.b/a/a/A": "x\n",
+     "a-b/.gitignore": "***x?/\\#\n/subbar[[:alpha:]]/*log\nlog\nlog\\#/**",
+     "a.b/a/.gitignore": "# ba\nlog/[:a]buildtxt/\n"
+    },
+    "exclude": "\ufeff/sublog/./[[:alpha:]][!]a][a-c]\n!\\#.[a-]\n!1/\n",
+    "home": {
+     ".config/git/ignore": "![[:digit:]]log\\[x]\r\n\r\n[!]a]/\\*/[[:alpha:]]/**\r\n# a b\r\n"
+    },
+    "checks": [
+     "a.b/doc",
+     "a.b/a/a",
+     "a.b/a/foo.txt",
+     "a.b/b",
+     "a.b/#c",
+     "a.b/a/.gitignore",
+     "a-b/abc",
+     "a.b",
+     "a.b/a/a/b",
+     "keep",
+     "a-b",
+     "a.b/a/a/A",
+     "a-b/ba",
+     "a.b/a"
+    ],
+    "list": "a-b/.gitignore\na-b/a.b\na-b/abc\na-b/ba\na.b/#c\na.b/a/.gitignore\na.b/a/a/A\na.b/a/a/b\na.b/a/foo.txt\na.b/b\na.b/doc\nkeep\n",
+    "check": "::\ta.b/doc\n::\ta.b/a/a\n::\ta.b/a/foo.txt\n::\ta.b/b\n::\ta.b/#c\n::\ta.b/a/.gitignore\n::\ta-b/abc\n::\ta.b\n::\ta.b/a/a/b\n::\tkeep\n::\ta-b\n::\ta.b/a/a/A\n::\ta-b/ba\n::\ta.b/a\n",
+    "check_rc": 1
+   },
+   {
+    "name": "mixed_27",
+    "files": {
+     "abc": "x\n",
+     "a.b": "x\n",
+     "b": "x\n",
+     "z0": "x\n",
+     "b.log": "x\n",
+     "a-b/log": "x\n",
+     "a-b/z0": "x\n",
+     "a-b/a0": "x\n",
+     "a-b/foo": "x\n",
+     "a-b/build/doc": "x\n",
+     "a-b/build/z0": "x\n",
+     "a-b/.gitignore": "\n\\!/x\\*\\*/build.x/**\\ \nbar\n/[!a][a-][a-]/\\*[a-][^a]\n/\\*/foo[a-][]a]\n[:a]\nab\\*[]a]  \n!/build/[[:alpha:]]\n",
+     "a-b/build/.gitignore": "deep[^a]o/deep[!a]/\r\n!a0\r\n[[:alpha:]][!]a][:a]/*****keep/\\#  \r\n**/keep\r\nab\\ \\!/o/\r\n/ab*/**[!]a]a/buildbar\r\n![[:alpha:]]?b/build[!a]\r\n/x[^a]-/**[!]a]\\ /*\\#[:a]\r\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\texcludesfile = ~/gi\n",
+    "home": {
+     "gi": "!build/txtbar/[[:alpha:]]\ndocx/?***[a-]/x\n"
+    },
+    "checks": [
+     "b.log",
+     "abc",
+     "a-b/.gitignore",
+     "z0",
+     "b",
+     "a-b",
+     "a-b/build/doc",
+     "a.b",
+     "a-b/log",
+     "a-b/a0",
+     "a-b/build",
+     "a-b/foo",
+     "a-b/z0",
+     "a-b/build/z0"
+    ],
+    "list": "a-b/.gitignore\na-b/a0\na-b/build/.gitignore\na-b/build/doc\na-b/build/z0\na-b/foo\na-b/log\na-b/z0\na.b\nabc\nb\nb.log\nz0\n",
+    "check": "::\tb.log\n::\tabc\n::\ta-b/.gitignore\n::\tz0\n::\tb\n::\ta-b\n::\ta-b/build/doc\n::\ta.b\n::\ta-b/log\n::\ta-b/a0\n::\ta-b/build\n::\ta-b/foo\n::\ta-b/z0\n::\ta-b/build/z0\n",
+    "check_rc": 1
+   },
+   {
+    "name": "mixed_28",
+    "files": {
+     "foo.txt": "x\n",
+     "doc": "x\n",
+     "x.o": "x\n",
+     "!n": "x\n",
+     "ab/x": "x\n",
+     "ab/a ": "x\n",
+     "ab/build": "x\n",
+     "ab/b": "x\n",
+     "ab/A/1": "x\n",
+     "ab/A/#c": "x\n",
+     "ab/A/doc": "x\n",
+     "ab/A/a]b": "x\n",
+     "ab/A/.gitignore": "![[:alpha:]]/keepbuildb/logb?/\n**/build\nA\n!\\*[]a]sub/keep/\\#x\\#\t\n**/deep./[^a]x\n![x]/\n\n**/foo/\n"
+    },
+    "config": "[core]\n\trepositoryformatversion = 0\n\tfilemode = true\n\tbare = false\n\texcludesfile = ~/gi\n",
+    "exclude": "!*\ndoc/keep*/[^a]  \n**/[a-]log/sub[[:alpha:]][]a]  \n/-\n-\n# A\n/*keep/\n\n",
+    "home": {
+     "gi": "\ufeff![!a]***[!a]\n/a-b\n[^a]***/[!]a]o/\\#*/\n\n![[:digit:]]/[^a][[:alpha:]][a-]/ab[a-]\n#c\nbar*\n"
+    },
+    "checks": [
+     "ab/a ",
+     "ab/A/1",
+     "ab/b",
+     "x.o",
+     "ab/x",
+     "ab/A",
+     "ab/A/#c",
+     "ab/build",
+     "ab",
+     "ab/A/a]b",
+     "ab/A/doc",
+     "foo.txt",
+     "doc",
+     "ab/A/.gitignore"
+    ],
+    "list": "!n\nab/A/#c\nab/A/.gitignore\nab/A/1\nab/A/a]b\nab/A/doc\nab/a \nab/b\nab/build\nab/x\ndoc\nfoo.txt\nx.o\n",
+    "check": ".git/info/exclude:1:!*\tab/a \n.git/info/exclude:1:!*\tab/A/1\n.git/info/exclude:1:!*\tab/b\n.git/info/exclude:1:!*\tx.o\n.git/info/exclude:1:!*\tab/x\n.git/info/exclude:1:!*\tab/A\n.git/info/exclude:1:!*\tab/A/#c\n.git/info/exclude:1:!*\tab/build\n.git/info/exclude:1:!*\tab\n.git/info/exclude:1:!*\tab/A/a]b\n.git/info/exclude:1:!*\tab/A/doc\n.git/info/exclude:1:!*\tfoo.txt\n.git/info/exclude:1:!*\tdoc\n.git/info/exclude:1:!*\tab/A/.gitignore\n",
+    "check_rc": 1
+   },
+   {
+    "name": "mixed_29",
+    "files": {
+     "keep": "x\n",
+     "log": "x\n",
+     "!n": "x\n",
+     "a-b": "x\n",
+     "deep/keep": "x\n",
+     "deep/#c": "x\n",
+     "x/-": "x\n",
+     "x/build": "x\n",
+     "x/abc": "x\n",
+     "x/ba": "x\n",
+     "x/a-b/x": "x\n",
+     "x/a-b/-": "x\n",
+     "x/a-b/a-b": "x\n",
+     "x/a-b/a*b": "x\n",
+     "x/a-b/A": "x\n",
+     ".gitignore": "/foo\nba/a\n**/[!]a][[:alpha:]][:a]\n!foo.txt\n?/[]a]bb/doc\n--/sub**\n**/log[!]a]*/\\[x].?\n\n",
+     "deep/.gitignore": "z0\n[:a]abx/[a-]a/**\n!foo[[:alpha:]]/deep[!]a]build/*txt\n",
+     "x/.gitignore": "/a.b/\n\n# a0\n[a-][^a]x\n/a /\n# ba\n/abab\n"
+    },
+    "checks": [
+     "deep/#c",
+     "log",
+     "x/-",
+     "deep",
+     "x/abc",
+     "x/ba",
+     "x",
+     "a-b",
+     "x/a-b/-",
+     ".gitignore",
+     "x/a-b/a*b",
+     "x/a-b/x",
+     "x/a-b/a-b",
+     "deep/keep"
+    ],
+    "list": "!n\n.gitignore\na-b\ndeep/#c\ndeep/.gitignore\ndeep/keep\nkeep\nlog\nx/-\nx/.gitignore\nx/a-b/-\nx/a-b/A\nx/a-b/a*b\nx/a-b/a-b\nx/a-b/x\nx/abc\nx/ba\nx/build\n",
+    "check": "::\tdeep/#c\n::\tlog\n::\tx/-\n::\tdeep\n::\tx/abc\n::\tx/ba\n::\tx\n::\ta-b\n::\tx/a-b/-\n::\t.gitignore\n::\tx/a-b/a*b\n::\tx/a-b/x\n::\tx/a-b/a-b\n::\tdeep/keep\n",
+    "check_rc": 1
+   }
+  ]
+ }
+}

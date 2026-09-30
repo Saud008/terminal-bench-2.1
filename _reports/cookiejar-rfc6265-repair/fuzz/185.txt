@@ -1,0 +1,14 @@
+at 1767225600
+set https://localhost/a/b/ z=2
+dump
+get http://localhost/a/b/c
+set http://192.168.0.1/a/b z=4; Secure; Expires=24:00:00 1 jan 2030; HttpOnly; Path=
+set https://192.168.0.1/a/b/ b=2; SameSite=Lax; Domain=.; Max-Age=-0; SameSite=Lax
+set http://10.1.2.3/a/b z=5; Expires=29 Feb 2400 00:00:00; HttpOnly; HttpOnly
+set https://shop.example.co.uk/a/b a=8; SameSite=Lax; Expires=24:00:00 1 jan 2030; Expires=Wed, 09-Jun-61 10:18:14 GMT
+at 1767225600
+set http://1.2.3/a/ b=1; Secure
+get http://www.example.com/
+set http://api.example.com/a/b/ z=5; Path=ab; Path=/a/b
+set http://foo.test/a/bc/d sid=6; SameSite=Lax
+dump

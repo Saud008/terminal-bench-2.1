@@ -1,0 +1,17 @@
+at 1767225600
+set https://localhost/a/bc/d z=5
+get https://api.example.com/a/
+set http://localhost/a/bc/d A=4; Expires=1 jan 9999 23:59:59; Expires=05 Mar 2030 12:00:00abc
+dump
+set http://10.1.2.3/a/b/ A=8; Expires=24:00:00 1 jan 2030; Max-Age=999999999999999999999
+set http://api.example.com a=7; SameSite=Lax
+set http://1.2.3/a/ z=6; SameSite=Lax; SameSite=Lax
+at 1767229600
+get https://api.example.com
+get https://www.example.com/a/
+get http://alice.github.io/a/
+at 1767233600
+set https://1.2.3/a/b/c a=5; Path=/; SameSite=Lax
+set https://192.168.0.1/ A=0; SameSite=Lax; HttpOnly
+dump
+dump

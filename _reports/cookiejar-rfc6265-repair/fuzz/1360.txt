@@ -1,0 +1,20 @@
+at 1767225600
+set http://example.org/a A=1; Expires=01-Jan-70 00:00:00; HttpOnly
+get https://1.2.3/a/
+set https://example.org/ b=2; Domain=localhost; Secure; Domain=1.2.3; Expires=2030 12:00:00 5 mar
+at 1767225700
+get http://foo.test/a/b
+get http://10.1.2.3/
+get https://example.org/a
+get http://example.org
+set https://1.2.3/a/b A=8; SameSite=Lax; Expires=1 January 2031 10:00:00; Domain=.example.com
+get http://api.example.com/a/b/c
+get http://api.example.com
+get https://example.com/a
+get http://1.2.3/
+set https://a.b.example.com/a/b/ a=2; SameSite=Lax
+get https://localhost/ab
+get http://alice.github.io/a/b/
+set https://example.org/ab z=7; Path=/ab; SameSite=Lax; Max-Age=3600; Expires=2030 12:00:00 5 mar
+at 1767225800
+dump

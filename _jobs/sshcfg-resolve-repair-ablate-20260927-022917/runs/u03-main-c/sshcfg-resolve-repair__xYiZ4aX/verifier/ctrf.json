@@ -1,0 +1,125 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 11,
+            "passed": 9,
+            "failed": 2,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790456513.4683712,
+            "stop": 1790456514.6399179
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_host_line_patterns",
+                "status": "passed",
+                "duration": 0.9965066649997425,
+                "start": 1790456513.4817019,
+                "stop": 1790456514.479614,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_match_criteria",
+                "status": "passed",
+                "duration": 0.011149877000207198,
+                "start": 1790456514.4798827,
+                "stop": 1790456514.492136,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_final_pass",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.00792634900108169,
+                "start": 1790456514.4923723,
+                "stop": 1790456514.5121179,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "hopcfg = '/tmp/hopcfg-verify-02cpcqrg/hopcfg'\n\n    def test_final_pass(hopcfg):\n        \"\"\"Match final triggers a second pass that matches Host/Match against the resolved host name.\"\"\"\n>       _check(hopcfg, \"final_pass\")\n\n/tests/test_outputs.py:130: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/hopcfg-verify-02cpcqrg/hopcfg', groups = ('final_pass',)\nfailures = [\"[final_pass] args=['-F', '/root/.ssh/config', 'WEB1'] expected rc=0 got rc=0\\n--- ssh -G\\n+++ hopcfg\\n@@ -1,3 +1,3 @...3 +19,2 @@\\n userknownhostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2\\n-setenv STAGE=one\\n forwardagent no\\n\"]\ntotal = 7, group = 'final_pass'\n\n    def _check(binary, *groups):\n        failures = []\n        total = 0\n        for group in groups:\n            for case in GROUPS[group]:\n                total += 1\n                rc, out = _run(binary, case)\n                if (rc, out) == (case[\"rc\"], case[\"stdout\"]):\n                    continue\n                diff = \"\".join(difflib.unified_diff(\n                    case[\"stdout\"].splitlines(True), out.splitlines(True),\n                    \"ssh -G\", \"hopcfg\", n=1))\n                failures.append(f\"[{group}] args={case['args']} expected rc={case['rc']} \"\n                                f\"got rc={rc}\\n{diff}\")\n        assert total > 0\n>       assert not failures, (f\"{len(failures)}/{total} cases differ from ssh -G:\\n\"\n                              + \"\\n\".join(failures[:4]))\nE       AssertionError: 4/7 cases differ from ssh -G:\nE         [final_pass] args=['-F', '/root/.ssh/config', 'WEB1'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -1,3 +1,3 @@\nE          host WEB1\nE         -user alice\nE         +user root\nE          hostname web1\nE         @@ -14,3 +14,2 @@\nE          sendenv LANG\nE         -sendenv FOO_*\nE          sendenv LANG\nE         \nE         [final_pass] args=['-F', '/root/.ssh/config', 'app'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -1,3 +1,3 @@\nE          host app\nE         -user from-resolved\nE         +user root\nE          hostname app-01.int.example.com\nE         @@ -12,3 +12,2 @@\nE          localforward 5432 [db.int]:5432\nE         -identityfile ~/.ssh/resolved\nE          identityfile ~/.ssh/final\nE         \nE         [final_pass] args=['-F', '/root/.ssh/config', 'edge'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -1,3 +1,3 @@\nE          host edge\nE         -user by-address\nE         +user root\nE          hostname 10.20.30.40\nE         \nE         [final_pass] args=['-F', '/root/.ssh/config', 'EDGE'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -19,3 +19,2 @@\nE          userknownhostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2\nE         -setenv STAGE=one\nE          forwardagent no\nE         \nE       assert not [\"[final_pass] args=['-F', '/root/.ssh/config', 'WEB1'] expected rc=0 got rc=0\\n--- ssh -G\\n+++ hopcfg\\n@@ -1,3 +1,3 @...3 +19,2 @@\\n userknownhostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2\\n-setenv STAGE=one\\n forwardagent no\\n\"]\n\n/tests/test_outputs.py:114: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_include_scoping",
+                "status": "passed",
+                "duration": 0.01872740499993597,
+                "start": 1790456514.5123527,
+                "stop": 1790456514.5322316,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_include_paths",
+                "status": "passed",
+                "duration": 0.011794623999776377,
+                "start": 1790456514.5324743,
+                "stop": 1790456514.5454078,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_precedence_and_lists",
+                "status": "passed",
+                "duration": 0.009871317000033741,
+                "start": 1790456514.5456617,
+                "stop": 1790456514.556756,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_sendenv_setenv",
+                "status": "passed",
+                "duration": 0.009673937999650661,
+                "start": 1790456514.557003,
+                "stop": 1790456514.5678113,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_time_values",
+                "status": "passed",
+                "duration": 0.009734582999499253,
+                "start": 1790456514.5680761,
+                "stop": 1790456514.5790489,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_proxy_settings",
+                "status": "passed",
+                "duration": 0.010955098999602342,
+                "start": 1790456514.5793667,
+                "stop": 1790456514.59139,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_token_expansion",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.009988101000089955,
+                "start": 1790456514.5916343,
+                "stop": 1790456514.6082506,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "hopcfg = '/tmp/hopcfg-verify-02cpcqrg/hopcfg'\n\n    def test_token_expansion(hopcfg):\n        \"\"\"HostName %h expansion and normalisation plus %-token, ${ENV} and ~ expansion in path keywords.\"\"\"\n>       _check(hopcfg, \"token_expansion\")\n\n/tests/test_outputs.py:165: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/hopcfg-verify-02cpcqrg/hopcfg', groups = ('token_expansion',)\nfailures = [\"[token_expansion] args=['-F', '/root/.ssh/config', 'upper'] expected rc=0 got rc=0\\n--- ssh -G\\n+++ hopcfg\\n@@ -19,3...eet_known_hosts\\n+userknownhostsfile /root/.ssh/known_hosts.d/10.0.0.1 /etc/ssh/fleet_known_hosts\\n forwardagent no\\n\"]\ntotal = 7, group = 'token_expansion'\n\n    def _check(binary, *groups):\n        failures = []\n        total = 0\n        for group in groups:\n            for case in GROUPS[group]:\n                total += 1\n                rc, out = _run(binary, case)\n                if (rc, out) == (case[\"rc\"], case[\"stdout\"]):\n                    continue\n                diff = \"\".join(difflib.unified_diff(\n                    case[\"stdout\"].splitlines(True), out.splitlines(True),\n                    \"ssh -G\", \"hopcfg\", n=1))\n                failures.append(f\"[{group}] args={case['args']} expected rc={case['rc']} \"\n                                f\"got rc={rc}\\n{diff}\")\n        assert total > 0\n>       assert not failures, (f\"{len(failures)}/{total} cases differ from ssh -G:\\n\"\n                              + \"\\n\".join(failures[:4]))\nE       AssertionError: 3/7 cases differ from ssh -G:\nE         [token_expansion] args=['-F', '/root/.ssh/config', 'upper'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -19,3 +19,3 @@\nE          identityfile ~/.ssh/id_dsa\nE         -userknownhostsfile /root/.ssh/known_hosts.d/upper /etc/ssh/fleet_known_hosts\nE         +userknownhostsfile /root/.ssh/known_hosts.d/db.example.com /etc/ssh/fleet_known_hosts\nE          forwardagent no\nE         \nE         [token_expansion] args=['-F', '/root/.ssh/config', 'v6lit'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -19,3 +19,3 @@\nE          identityfile ~/.ssh/id_dsa\nE         -userknownhostsfile /root/.ssh/known_hosts.d/v6lit /etc/ssh/fleet_known_hosts\nE         +userknownhostsfile /root/.ssh/known_hosts.d/fe80::1 /etc/ssh/fleet_known_hosts\nE          forwardagent no\nE         \nE         [token_expansion] args=['-F', '/root/.ssh/config', 'shortip'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -19,3 +19,3 @@\nE          identityfile ~/.ssh/id_dsa\nE         -userknownhostsfile /root/.ssh/known_hosts.d/shortip /etc/ssh/fleet_known_hosts\nE         +userknownhostsfile /root/.ssh/known_hosts.d/10.0.0.1 /etc/ssh/fleet_known_hosts\nE          forwardagent no\nE         \nE       assert not [\"[token_expansion] args=['-F', '/root/.ssh/config', 'upper'] expected rc=0 got rc=0\\n--- ssh -G\\n+++ hopcfg\\n@@ -19,3...eet_known_hosts\\n+userknownhostsfile /root/.ssh/known_hosts.d/10.0.0.1 /etc/ssh/fleet_known_hosts\\n forwardagent no\\n\"]\n\n/tests/test_outputs.py:114: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_syntax_and_rejections",
+                "status": "passed",
+                "duration": 0.028837785000177973,
+                "start": 1790456514.6085088,
+                "stop": 1790456514.6386461,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

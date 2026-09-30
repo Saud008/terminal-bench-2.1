@@ -1,0 +1,125 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 11,
+            "passed": 9,
+            "failed": 2,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790456944.845735,
+            "stop": 1790456946.140674
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_host_line_patterns",
+                "status": "passed",
+                "duration": 1.0771802540002682,
+                "start": 1790456944.8671067,
+                "stop": 1790456945.945698,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_match_criteria",
+                "status": "passed",
+                "duration": 0.012353334999261278,
+                "start": 1790456945.9460268,
+                "stop": 1790456945.9600089,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_final_pass",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.01418909999938478,
+                "start": 1790456945.9604654,
+                "stop": 1790456945.9907854,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "hopcfg = '/tmp/hopcfg-verify-astd9g_k/hopcfg'\n\n    def test_final_pass(hopcfg):\n        \"\"\"Match final triggers a second pass that matches Host/Match against the resolved host name.\"\"\"\n>       _check(hopcfg, \"final_pass\")\n\n/tests/test_outputs.py:130: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/hopcfg-verify-astd9g_k/hopcfg', groups = ('final_pass',)\nfailures = [\"[final_pass] args=['-F', '/root/.ssh/config', 'srv'] expected rc=0 got rc=0\\n--- ssh -G\\n+++ hopcfg\\n@@ -19,5 +19,3 ...ostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2\\n-sendenv LC_*\\n sendenv TZ\\n-sendenv LC_*\\n sendenv LC_ALL\\n\"]\ntotal = 7, group = 'final_pass'\n\n    def _check(binary, *groups):\n        failures = []\n        total = 0\n        for group in groups:\n            for case in GROUPS[group]:\n                total += 1\n                rc, out = _run(binary, case)\n                if (rc, out) == (case[\"rc\"], case[\"stdout\"]):\n                    continue\n                diff = \"\".join(difflib.unified_diff(\n                    case[\"stdout\"].splitlines(True), out.splitlines(True),\n                    \"ssh -G\", \"hopcfg\", n=1))\n                failures.append(f\"[{group}] args={case['args']} expected rc={case['rc']} \"\n                                f\"got rc={rc}\\n{diff}\")\n        assert total > 0\n>       assert not failures, (f\"{len(failures)}/{total} cases differ from ssh -G:\\n\"\n                              + \"\\n\".join(failures[:4]))\nE       AssertionError: 1/7 cases differ from ssh -G:\nE         [final_pass] args=['-F', '/root/.ssh/config', 'srv'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -19,5 +19,3 @@\nE          userknownhostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2\nE         -sendenv LC_*\nE          sendenv TZ\nE         -sendenv LC_*\nE          sendenv LC_ALL\nE         \nE       assert not [\"[final_pass] args=['-F', '/root/.ssh/config', 'srv'] expected rc=0 got rc=0\\n--- ssh -G\\n+++ hopcfg\\n@@ -19,5 +19,3 ...ostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2\\n-sendenv LC_*\\n sendenv TZ\\n-sendenv LC_*\\n sendenv LC_ALL\\n\"]\n\n/tests/test_outputs.py:114: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_include_scoping",
+                "status": "passed",
+                "duration": 0.02168237699970632,
+                "start": 1790456945.9911366,
+                "stop": 1790456946.0141506,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_include_paths",
+                "status": "passed",
+                "duration": 0.0173201629995674,
+                "start": 1790456946.014757,
+                "stop": 1790456946.0334215,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_precedence_and_lists",
+                "status": "passed",
+                "duration": 0.014049004999833414,
+                "start": 1790456946.0337043,
+                "stop": 1790456946.048906,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_sendenv_setenv",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.010604574999888428,
+                "start": 1790456946.0492656,
+                "stop": 1790456946.065766,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "hopcfg = '/tmp/hopcfg-verify-astd9g_k/hopcfg'\n\n    def test_sendenv_setenv(hopcfg):\n        \"\"\"SendEnv accumulation and -pattern removal, SetEnv first-line-wins semantics.\"\"\"\n>       _check(hopcfg, \"sendenv_setenv\")\n\n/tests/test_outputs.py:150: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/hopcfg-verify-astd9g_k/hopcfg', groups = ('sendenv_setenv',)\nfailures = [\"[sendenv_setenv] args=['-F', '/root/.ssh/config', 'dev1'] expected rc=0 got rc=0\\n--- ssh -G\\n+++ hopcfg\\n@@ -20,2 +...+ hopcfg\\n@@ -20,2 +20,5 @@\\n sendenv LANG\\n+sendenv LC_ALL\\n+sendenv LC_CTYPE\\n+sendenv LC_MESSAGES\\n sendenv TERM\\n\"]\ntotal = 7, group = 'sendenv_setenv'\n\n    def _check(binary, *groups):\n        failures = []\n        total = 0\n        for group in groups:\n            for case in GROUPS[group]:\n                total += 1\n                rc, out = _run(binary, case)\n                if (rc, out) == (case[\"rc\"], case[\"stdout\"]):\n                    continue\n                diff = \"\".join(difflib.unified_diff(\n                    case[\"stdout\"].splitlines(True), out.splitlines(True),\n                    \"ssh -G\", \"hopcfg\", n=1))\n                failures.append(f\"[{group}] args={case['args']} expected rc={case['rc']} \"\n                                f\"got rc={rc}\\n{diff}\")\n        assert total > 0\n>       assert not failures, (f\"{len(failures)}/{total} cases differ from ssh -G:\\n\"\n                              + \"\\n\".join(failures[:4]))\nE       AssertionError: 2/7 cases differ from ssh -G:\nE         [sendenv_setenv] args=['-F', '/root/.ssh/config', 'dev1'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -20,2 +20,5 @@\nE          sendenv LANG\nE         +sendenv LC_ALL\nE         +sendenv LC_CTYPE\nE         +sendenv LC_MESSAGES\nE          sendenv TERM\nE         \nE         [sendenv_setenv] args=['-F', '/root/.ssh/config', 'dev-noisy'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -20,2 +20,5 @@\nE          sendenv LANG\nE         +sendenv LC_ALL\nE         +sendenv LC_CTYPE\nE         +sendenv LC_MESSAGES\nE          sendenv TERM\nE         \nE       assert not [\"[sendenv_setenv] args=['-F', '/root/.ssh/config', 'dev1'] expected rc=0 got rc=0\\n--- ssh -G\\n+++ hopcfg\\n@@ -20,2 +...+ hopcfg\\n@@ -20,2 +20,5 @@\\n sendenv LANG\\n+sendenv LC_ALL\\n+sendenv LC_CTYPE\\n+sendenv LC_MESSAGES\\n sendenv TERM\\n\"]\n\n/tests/test_outputs.py:114: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_time_values",
+                "status": "passed",
+                "duration": 0.012362356000267027,
+                "start": 1790456946.0660095,
+                "stop": 1790456946.0795398,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_proxy_settings",
+                "status": "passed",
+                "duration": 0.011596822000228713,
+                "start": 1790456946.0798194,
+                "stop": 1790456946.0925267,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_token_expansion",
+                "status": "passed",
+                "duration": 0.009266604000458756,
+                "start": 1790456946.0927777,
+                "stop": 1790456946.1029842,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_syntax_and_rejections",
+                "status": "passed",
+                "duration": 0.03497893399980967,
+                "start": 1790456946.1034217,
+                "stop": 1790456946.1394415,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

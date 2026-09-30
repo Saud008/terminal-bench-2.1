@@ -1,0 +1,19 @@
+at 1767225600
+set http://github.io/a z=3; HttpOnly; SameSite=Lax; Expires=1 jan 9999 23:59:59; Domain=localhost
+set http://foo.test a=1
+set https://alice.github.io/a/b/c b=1; HttpOnly; HttpOnly; Domain=alice.github.io; HttpOnly
+dump
+set https://api.example.com/a/ sid=1; Domain=localhost
+set https://10.1.2.3/a/b/c b=1; Expires=24:00:00 1 jan 2030; Secure
+set http://10.1.2.3/ab A=4; Max-Age=60; Secure; HttpOnly
+dump
+get https://example.com/x/y?q=/z
+get http://example.org/a/b/c
+get https://10.1.2.3/
+get https://localhost/a/
+get http://localhost/a/b/c
+set https://alice.github.io/a/b a=9; Max-Age=-5; Expires=29 Feb 2400 00:00:00; Max-Age=60; Domain=example.com
+get http://foo.test/ab
+get http://1.2.3
+get http://api.example.com/a
+dump

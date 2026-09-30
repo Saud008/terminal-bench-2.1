@@ -1,0 +1,50 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 6 items
+
+../tests/test_outputs.py ....F.                                          [100%]
+
+=================================== FAILURES ===================================
+_____________________ test_pattern_specific_variable_order _____________________
+
+    def test_pattern_specific_variable_order():
+        """Pattern-specific variables from all matching patterns apply from the shortest
+        pattern to the longest, equal lengths in definition order; command-line values win."""
+>       replay("patvars")
+
+/tests/test_outputs.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+group = 'patvars'
+
+    def replay(group):
+        binary = brickmake()
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], binary)
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: patvars/equal_length_patterns_later_wins result #0
+E           expected: {'stdout': 'lib/a.o OPT=[lib] V=[]\nb.o OPT=[generic] V=[]\nxay OPT=[] V=[ypat]\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'lib/a.o OPT=[lib] V=[]\nb.o OPT=[generic] V=[]\nxay OPT=[] V=[xpat]\n', 'stderr': '', 'code': 0}
+E       assert not ["patvars/equal_length_patterns_later_wins result #0\n  expected: {'stdout': 'lib/a.o OPT=[lib] V=[]\\nb.o OPT=[generi...al:   {'stdout': 'lib/a.o OPT=[lib] V=[]\\nb.o OPT=[generic] V=[]\\nxay OPT=[] V=[xpat]\\n', 'stderr': '', 'code': 0}"]
+
+/tests/test_outputs.py:35: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_cli_builds_and_rebuilds
+PASSED ../tests/test_outputs.py::test_shortest_stem_selection
+PASSED ../tests/test_outputs.py::test_directory_relative_prerequisites
+PASSED ../tests/test_outputs.py::test_mentioned_prerequisite_ought_to_exist
+PASSED ../tests/test_outputs.py::test_project_builds
+FAILED ../tests/test_outputs.py::test_pattern_specific_variable_order - Asser...
+========================= 1 failed, 5 passed in 3.45s ==========================

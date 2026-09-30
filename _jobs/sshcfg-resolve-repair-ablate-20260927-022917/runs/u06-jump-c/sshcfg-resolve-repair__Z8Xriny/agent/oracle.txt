@@ -1,0 +1,17 @@
+patching file src/readconf.c
+patching file src/matchcfg.c
+patching file src/main.c
+patching file src/convtime.c
+patching file src/strlist.c
+patching file src/options.c
+patching file src/dump.c
+rm -f hopcfg
+cc -std=c11 -O2 -Wall -Wextra -Wno-unused-parameter -o hopcfg src/convtime.c src/dump.c src/expand.c src/forward.c src/hostspec.c src/jump.c src/keywords.c src/log.c src/main.c src/match.c src/matchcfg.c src/options.c src/readconf.c src/strlist.c src/tokens.c src/xmalloc.c
+sh smoke/run.sh ./hopcfg
+ok   basic
+ok   forwards
+ok   jump
+ok   match
+ok   examples/fleet.conf
+ok   examples/workstation.conf
+ok   examples/ci-runner.conf

@@ -1,0 +1,63 @@
+---
+description: TB 4.0 task.toml — top-level name + artifacts, [metadata] write-ups + 29-subdomain taxonomy, separate verifier, 28800 timeouts, network_mode public (or justified no-network), 2 CPU / 8 GB / 10 GB, no difficulty/stale residue
+globs: **/task.toml
+alwaysApply: false
+---
+
+# TB 4.0 — task.toml (checks 37, 61–65)
+
+Verified against Harbor 0.23 (the one bundled in `stb`): this file parses with no warnings, resolves `environment_mode = separate`, both timeouts 28800, `network_mode = public`, and `artifacts`. Harbor ignores the top-level `name` (task name falls back to the directory name) — the pool requires it anyway.
+
+```toml
+name = "ledger-rollup-drift-repair"   # = slug; top-level keys MUST come before the first [table]
+artifacts = ["/app"]                  # every path the verifier needs from the agent's final container
+
+[metadata]
+author_name = "anonymous"
+author_email = "anonymous"
+category = "Software"                 # exactly one of the 7 domains
+subcategory = "Data engineering"      # exactly one of that domain's subdomains, exact spelling/case
+tags = [ "go", "ledger", "rounding", "csv" ]   # 3–6, task-specific
+languages = [ "go" ]                  # main language of the agent/oracle work (pytest tests don't make it Python)
+expert_time_estimate_hours = 3.0      # best-case hours for a focused domain expert
+difficulty_explanation = "Plain-language: what makes this hard for agents and humans. No tier, no rate, no pass count."
+solution_explanation = "High-level approach and key insight of the reference fix — not a line-by-line diff."
+verification_explanation = "What the tests execute and assert, how hidden cases differ from shipped ones, how tampering is ruled out."
+relevant_experience = "A sentence or two of real, relevant professional background (generic 'interested in AI' fails review)."
+
+[verifier]
+environment_mode = "separate"
+timeout_sec = 28800.0
+
+[agent]
+timeout_sec = 28800.0
+
+[environment]
+build_timeout_sec = 7200.0            # not governed by the checklist; also bounds the verifier image build
+cpus = 2                              # compute envelope ~2 cores / ~8 GB / ~10 GB, no GPU
+memory_mb = 8192
+storage_mb = 10240
+network_mode = "public"
+```
+
+## Field rules
+
+- **`artifacts` is top-level** (above `[metadata]`). Under `[verifier]` it is silently dropped and the verifier receives nothing (check 37/61). List every path the tests read from the agent's container — for repair tasks usually the whole project dir (`"/app"`), or narrower paths / `{ source = "/app", exclude = ["node_modules", ".git"] }`. Each entry is re-materialized at the **same absolute path** in the verifier; `tests/Dockerfile` must still pre-create every artifact's parent dir (check 37).
+- **`name`** = the slug, top-level. No `[task]` table, no `[[task.authors]]` (check 65).
+- **`category` / `subcategory`** — exactly one each, Title Case, verbatim from the pool taxonomy (**7 domains / 29 subdomains** — nothing else, e.g. no "Languages" or "Reverse engineering"). Classify by what the agent must *understand*: debugging a training loop is `ML` / `Training`, parsing mass spectra is `Science` / `Chemistry` — defaulting to Software because the task writes code is the most common mistake. If it spans two, pick the domain the agent cannot succeed without.
+  - **Science** (7): Biology, Chemistry, Physics, Earth, Robotics, Math, Linguistics
+  - **Software** (5): Algorithms, Systems, Databases, Data engineering, Frontend
+  - **ML** (4): Training, Inference, Evaluation, Kernels (no GPU: CPU-simulated kernels vs a CPU reference, or compile-only verification)
+  - **Operations** (6): Finance, Logistics, Supply chain, Claims, Compliance, Marketing
+  - **Security** (3): Cryptography, Forensics, AppSec
+  - **Hardware** (2): CAD, RTL
+  - **Media** (2): Music, Design
+- **`languages`** — primary implementation language(s) actually exercised, from: Python, C, C++, JavaScript, TypeScript, Java, Go, Rust, C#. Not domain tooling, not "python" because the tests are pytest.
+- **Four write-ups** present, substantive, accurate to the current task (not a stale draft), and free of tier/rate language (check 61/62). `difficulty_explanation` classifies the difficulty *source* in plain words (ties to check 97). `verification_explanation` must match what tests really do.
+- **Timeouts**: `[agent].timeout_sec` and `[verifier].timeout_sec` are both `28800.0` — deliberate, never "fix" down (check 63).
+- **`[verifier].environment_mode = "separate"`** (check 63). Do not add `[verifier.environment]` unless the verifier genuinely needs different resources; by default Harbor reuses `[environment]`'s resources and builds the image from `tests/`.
+- **`[environment].network_mode = "public"`** by default (check 64). `"no-network"` only when public internet would let the agent skip the actual work — sign off check 64 with that reason. `allow_internet` is removed (edition residue). The instruction's network claims (if any) must match the mode exactly; "offline only" with `public` is a finding.
+- **`[environment]` resources**: `cpus = 2`, `memory_mb = 8192`, `storage_mb = 10240` (all three required); never `gpus`.
+- **Forbidden residue** (check 62/65): `difficulty` (any value), any tier word (`easy`/`medium`/`hard`) or pass-count/percentage anywhere, `schema_version`, `version`, `[task]`, `[[task.authors]]`, `codebase_size`, `expert_time_estimate_min`, `junior_time_estimate_min`, milestone fields, `[reference_pattern]` or any generator bookkeeping, task ids, local machine paths.
+- **Multi-container**: only a genuinely multi-container task sets `[metadata].is_multi_container = true`; single-container tasks omit it entirely.
+- Optional upstream fields (`author_organization`, `author_github`, `referral`, `gpus`) — omit unless needed; never put real identity into an anonymous bundle.

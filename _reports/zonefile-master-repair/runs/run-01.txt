@@ -1,0 +1,70 @@
+T E         --- zonemd/digest_input_near_block_end (zonec -o example.org main.zone)
+T PASSED ../tests/test_outputs.py::test_owner_continuation
+T PASSED ../tests/test_outputs.py::test_default_ttl
+T PASSED ../tests/test_outputs.py::test_include_scope
+T PASSED ../tests/test_outputs.py::test_include_paths
+T PASSED ../tests/test_outputs.py::test_quoted_parentheses
+T PASSED ../tests/test_outputs.py::test_escaped_case
+T PASSED ../tests/test_outputs.py::test_escaped_label_length
+T PASSED ../tests/test_outputs.py::test_canonical_order
+T PASSED ../tests/test_outputs.py::test_rrset_ttl
+T PASSED ../tests/test_outputs.py::test_reference_zone
+T FAILED ../tests/test_outputs.py::test_zonemd - AssertionError: 1 of 4 cases d...
+001> find . -maxdepth 3 -type f -print | sort | 
+001> printf '\n--- Makefile ---\n'; sed -n '1,240p' Makefile; printf '\n--- docs ---\n'; for f in docs/*; do echo "===== $f ====="; sed -n '1,260p' "$f"; done | 
+001> printf '\n--- source files ---\n'; for f in *.c *.h; do [ -f "$f" ] || continue; echo "===== $f ====="; sed -n '1,320p' "$f"; done | 
+001> make clean && make && (make test || true) | 
+002> for f in src/*.h; do echo "===== $f ====="; cat "$f"; done | 
+002> for f in src/buf.c src/diag.c src/lexer.c src/parser.c src/directives.c src/main.c src/name.c src/ttl.c src/util.c; do echo "===== $f ====="; cat "$f"; done | 
+002> for f in src/rdata.c src/rr_*.c src/zone.c src/zonemd.c src/sha384.c; do echo "===== $f ====="; cat "$f"; done | 
+002> for f in examples/example.net.zone examples/office/hosts.inc examples/reverse/2.0.192.in-addr.arpa.zone README.md; do echo "===== $f ====="; cat "$f"; done; echo '--- example run ---'; ./build/zonec -o example.net examples/example.net.zone; echo status=$?; echo '--- reverse run ---'; ./build/zonec -o 2.0.192.in-addr.arpa examples/reverse/2.0.192.in-addr.arpa.zone; echo status=$? | 
+003> cat src/parser.h src/lexer.h src/zone.h src/name.h src/rdata.h src/ttl.h src/zonemd.h | 
+003> nl -ba src/lexer.c | sed -n '1,280p'; nl -ba src/parser.c | sed -n '1,340p'; nl -ba src/directives.c | sed -n '1,300p' | 
+003> nl -ba src/name.c | sed -n '1,340p'; nl -ba src/zone.c | sed -n '1,400p' | 
+003> nl -ba src/zonemd.c | sed -n '1,360p'; nl -ba src/rdata.c | sed -n '1,320p'; nl -ba src/main.c | sed -n '1,280p' | 
+004> nl -ba src/lexer.c | sed -n '1,360p' | 
+005> nl -ba src/lexer.c | sed -n '1,100p' | 
+005> nl -ba src/lexer.c | sed -n '101,190p' | 
+005> cat src/parser.h; cat src/lexer.h; nl -ba src/parser.c | sed -n '1,130p' | 
+006> nl -ba src/lexer.c | sed -n '1,100p' | 
+007> nl -ba src/lexer.c | sed -n '100,165p' | 
+008> nl -ba src/directives.c | sed -n '1,260p' | 
+009> nl -ba src/directives.c | sed -n '1,85p' | 
+010> cat src/parser.h src/ttl.h; nl -ba src/ttl.c | sed -n '1,240p' | 
+011> cat src/ttl.h; nl -ba src/ttl.c | 
+012> cat src/name.h; nl -ba src/name.c | sed -n '1,260p' | 
+013> cat src/zone.h; nl -ba src/zone.c | sed -n '1,190p' | 
+014> cat src/zone.h; nl -ba src/zone.c | sed -n '1,110p' | 
+015> cat src/zone.h | 
+015> nl -ba src/zone.c | sed -n '1,70p' | 
+016> cat src/zone.h | 
+017> nl -ba src/name.c | sed -n '1,175p' | 
+018> cat src/name.h; nl -ba src/name.c | sed -n '112,160p' | 
+019> nl -ba src/zonemd.c | sed -n '1,260p' | 
+020> nl -ba src/zone.c | sed -n '1,76p'; nl -ba src/rr_zonemd.c; nl -ba src/rr_soa.c | sed -n '1,240p' | 
+021> nl -ba src/zone.c | sed -n '1,38p' | 
+021> cat src/rr_zonemd.c | 
+022> python3 - <<'PY' | from pathlib import Path | p=Path('src/lexer.c') | s=p.read_text() | old='''            if (c == '(' || c == ')') { |                 if (intok) |                     push(ll, &cur, 0); |                 intok = 0; |                 if (c == '(') |                     depth++; |                 else if (--depth < 0) |                     fail_at(&pos, "unbalanced parentheses"); |                 continue; |             } |             if (inq) { | ''' | new='''            if (inq) { | ''' | assert old in s | s=s.replace(old,new) | needle='''                continue; |             } |             if (c == ';') | ''' | repl='''                continue; |             } |             if (c == '(' || c == ')') { |                 
+023> rm -rf /tmp/zcases && mkdir -p /tmp/zcases/z/sub/deeper | cat > /tmp/zcases/z/main.zone <<'EOF' | $ORIGIN example. | $TTL 100 | @ IN SOA ns hostmaster 42 1h 2h 3h 300 |   IN NS ns | $ORIGIN changed.example. |   IN TXT "owner stays apex" "ok :-)" | $ORIGIN example. | first 222 IN A 192.0.2.2 | $INCLUDE sub/one.inc |   IN TXT "owner restored" | a 400 IN A 192.0.2.9 | a 200 IN A 192.0.2.8 | a 500 IN A 192.0.2.9 | @ IN ZONEMD 999 1 1 00112233445566778899AABB | child IN ZONEMD 7 2 3 00112233445566778899AABB | EOF | cat > /tmp/zcases/z/sub/one.inc <<'EOF' | $ORIGIN included.example. | $TTL 700 | inside IN A 198.51.100.1 | $INCLUDE deeper/two.inc |   IN TXT "inside owner restored" | EOF | cat > /tmp/zcases/z/sub/deeper/two.inc <<'EOF' | deep 800 IN 
+023> python3 - <<'PY' | # Independently reconstruct wire RRs from zonec's supported output and verify apex ZONEMD. | import hashlib, ipaddress, struct | lines=open('/tmp/zcases/out').read().splitlines() | def name(s): |     assert s.endswith('.') |     out=b'' |     for lab in s[:-1].split('.') if s!='.' else []: |         b=lab.encode(); out+=bytes([len(b)])+b |     return out+b'\0' | def toks(s): |     import shlex |     return shlex.split(s) | def rdata(typ,text): |     t=toks(text) |     if typ=='A': return ipaddress.IPv4Address(t[0]).packed |     if typ=='NS': return name(t[0]) |     if typ=='SOA': return name(t[0])+name(t[1])+b''.join(struct.pack('!I',int(x)) for x in t[2:]) |     if typ=='TXT': return b''.join(bytes([len(x.e
+024> nl -ba src/parser.c | 
+025> nl -ba src/parser.c | sed -n '1,108p' | 
+026> nl -ba src/parser.c | sed -n '1,75p' | 
+026> nl -ba src/zone.c | sed -n '1,38p' | 
+027> for f in src/rdata.c src/rr_names.c src/rr_soa.c src/rr_srv.c src/rr_txt.c src/rr_caa.c src/rr_zonemd.c; do echo ==== $f; cat $f; done | 
+028> nl -ba src/name.c | sed -n '1,125p' | 
+029> nl -ba src/rr_addr.c | sed -n '1,300p' | 
+030> nl -ba src/rr_addr.c | sed -n '1,58p' | 
+030> cat src/rr_txt.c; cat src/rr_caa.c | 
+031> nl -ba src/rr_addr.c | sed -n '1,58p' | 
+032> grep -R -n "decode_string\|emit_string" src; nl -ba src/rdata.c | sed -n '1,240p'; nl -ba src/rr_txt.c | 
+033> python3 - <<'PY' | from pathlib import Path | p=Path('src/name.c'); s=p.read_text() | s=s.replace('''                      p += 4; |                   } else if (p[1]) { |                       c = fold(p[1]); | ''','''                      p += 4; |                       if (c >= 'A' && c <= 'Z') |                           c = c - 'A' + 'a'; |                   } else if (p[1]) { |                       c = fold(p[1]); | ''') | s=s.replace('if (p - start > LABEL_MAX) {','if (lablen > LABEL_MAX) {') | s=s.replace('''          const char *start = p; |  |           while''',''' |           while''') | p.write_text(s) | PY | make clean && make | 
+033> rm -rf /tmp/ztest && mkdir -p /tmp/ztest | python3 - <<'PY' | from pathlib import Path | D=Path('/tmp/ztest') | base='$ORIGIN example.\n@ 10 SOA ns host 1 2 3 4 5\n' | # 63 decoded a's represented by escapes, and escaped uppercase must canonicalize. | label='\\097'*63 | (D/'names.zone').write_text(base+f'{label} A 192.0.2.1\n\\065bc A 192.0.2.2\nabc A 192.0.2.2\ntext TXT "q\\034 \\040 \\255"\n') | # RRset first-input TTL and duplicate first occurrence. | (D/'ttl.zone').write_text('$ORIGIN example.\n$TTL 50\n@ SOA ns host 1 2 3 4 5\nx 900 A 192.0.2.2\nx 100 A 192.0.2.1\nx 800 A 192.0.2.2\n') | PY | ./build/zonec -o example /tmp/ztest/names.zone > /tmp/ztest/names.out && cat /tmp/ztest/names.out | ./build/zonec -o ex
+034> python3 - <<'PY' | from pathlib import Path | p=Path('src/name.c') | s=p.read_text() | s=s.replace('        const char *start = p;\n','') | needle='''            if (wl >= NAME_MAXWIRE - 1) { |                 *err = "name too long"; |                 return -1; |             } |             w[wl++] = (unsigned char)c; | ''' | repl='''            c = fold((char)c); |             if (wl >= NAME_MAXWIRE - 1) { |                 *err = "name too long"; |                 return -1; |             } |             w[wl++] = (unsigned char)c; | ''' | assert needle in s | p.write_text(s.replace(needle,repl)) | PY | make clean && make 2>&1 | tee /tmp/make.out; test ! -s <(grep -i warning /tmp/make.out) | ./build/zonec -o example /tmp/ztest/name
+035> rm -rf /tmp/asan && make BUILD=/tmp/asan CFLAGS='-O1 -g -Wall -Wextra -std=c11 -fsanitize=address,undefined -fno-omit-frame-pointer' >/tmp/asan-build.log && ASAN_OPTIONS=detect_leaks=0 /tmp/asan/zonec -o example.net examples/example.net.zone >/dev/null && ASAN_OPTIONS=detect_leaks=0 /tmp/asan/zonec -o example /tmp/zcases/z/main.zone >/dev/null && ASAN_OPTIONS=detect_leaks=0 /tmp/asan/zonec -o example /tmp/ztest/names.zone >/dev/null && echo sanitizer_runs_ok | 
+035> set +e | ./build/zonec -h >/tmp/h.out 2>/tmp/h.err; echo help_status=$? help_err_bytes=$(wc -c </tmp/h.err) | ./build/zonec >/tmp/bad.out 2>/tmp/bad.err; echo usage_status=$? usage_out_bytes=$(wc -c </tmp/bad.out); head -1 /tmp/bad.err | ./build/zonec -o example /tmp/no-such-zone >/tmp/no.out 2>/tmp/no.err; echo unreadable_status=$? unreadable_out_bytes=$(wc -c </tmp/no.out); cat /tmp/no.err | printf '$ORIGIN example.\n@ 10 SOA ns host 1 2 3 4 5\nbad TXT "unterminated\n' >/tmp/ztest/bad.zone | ./build/zonec -o example /tmp/ztest/bad.zone >/tmp/e.out 2>/tmp/e.err; echo zone_error_status=$? zone_error_out_bytes=$(wc -c </tmp/e.out); cat /tmp/e.err | set -e | 
+035> git diff -- src Makefile 2>/dev/null || diff -u /dev/null /dev/null; make clean && make | 
+036> nl -ba src/util.c | sed -n '1,220p'; nl -ba src/directives.c | sed -n '1,110p' | 
+037> cat src/util.h; grep -n -A70 -B5 'decode_string' src/util.c | 
+038> python3 - <<'PY' | from pathlib import Path | p=Path('src/directives.c'); s=p.read_text() | old='''    ttl_ctx_t saved_ttl = ctx->ttl; |     char *file; | ''' | new='''    ttl_ctx_t saved_ttl = ctx->ttl; |     unsigned char *decoded; |     size_t decoded_len; |     size_t name_len; |     char *file; | ''' | assert old in s; s=s.replace(old,new) | old='''    file = include_path(path, ll->v[1].text); |     ctx->depth++; | ''' | new='''    name_len = strlen(ll->v[1].text); |     decoded = xmalloc(name_len + 1); |     if (decode_string(ll->v[1].text, decoded, name_len + 1, &decoded_len) != DECODE_OK || |         memchr(decoded, '\\0', decoded_len) != NULL) |         fail_at(pos, "bad $INCLUDE file name"); |     decoded[decoded_len] = '\
+038> ./build/zonec -o example.net examples/example.net.zone >/tmp/final-example.out | ./build/zonec -o 2.0.192.in-addr.arpa examples/reverse/2.0.192.in-addr.arpa.zone >/tmp/final-reverse.out | (cd /tmp && /app/build/zonec -o example /tmp/zcases/z/main.zone >/tmp/final-zonemd.out) | cmp /tmp/final-zonemd.out /tmp/zcases/out && echo focused_output_stable | rm -rf /tmp/finalbuild && make BUILD=/tmp/finalbuild >/tmp/finalbuild.log && /tmp/finalbuild/zonec -h >/dev/null && echo final_checks_ok | 

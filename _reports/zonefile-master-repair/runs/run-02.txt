@@ -1,0 +1,123 @@
+T E         --- escaped_case/decimal_escapes_fold_case (zonec -o example.com main.zone)
+T E         --- escaped_label_length/sixty_three_octet_labels (zonec -o example.com main.zone)
+T E         --- escaped_label_length/sixty_four_octet_label (zonec -o example.com main.zone)
+T E         --- zonemd/digest_input_near_block_end (zonec -o example.org main.zone)
+T E         --- reference_zone/production_like_zone (zonec -o shop.example db/shop.example.zone)
+T PASSED ../tests/test_outputs.py::test_owner_continuation
+T PASSED ../tests/test_outputs.py::test_default_ttl
+T PASSED ../tests/test_outputs.py::test_include_scope
+T PASSED ../tests/test_outputs.py::test_include_paths
+T PASSED ../tests/test_outputs.py::test_quoted_parentheses
+T PASSED ../tests/test_outputs.py::test_canonical_order
+T PASSED ../tests/test_outputs.py::test_rrset_ttl
+T FAILED ../tests/test_outputs.py::test_escaped_case - AssertionError: 1 of 1 c...
+T FAILED ../tests/test_outputs.py::test_escaped_label_length - AssertionError: ...
+T FAILED ../tests/test_outputs.py::test_zonemd - AssertionError: 1 of 4 cases d...
+T FAILED ../tests/test_outputs.py::test_reference_zone - AssertionError: 1 of 1...
+001> find . -maxdepth 3 -type f -print | sort | 
+001> cat docs/zonec.1.md | 
+001> printf '\n--- Makefile ---\n'; cat Makefile; printf '\n--- README/docs ---\n'; find docs -maxdepth 1 -type f ! -name zonec.1.md -print -exec sh -c 'echo "--- $1"; cat "$1"' _ {} \; | 
+001> printf '\n--- source files ---\n'; find . -maxdepth 2 -type f \( -name '*.c' -o -name '*.h' \) -print -exec sh -c 'echo "--- $1"; sed -n "1,240p" "$1"' _ {} \; | 
+002> pwd; ls -la | 
+002> find docs -maxdepth 2 -type f -print | 
+002> sed -n '1,260p' docs/zonec.1.md | 
+002> cat Makefile | 
+002> find . -maxdepth 3 -type f \( -name '*.c' -o -name '*.h' -o -name '*test*' \) -print | sort | 
+003> wc -l docs/zonec.1.md src/*.[ch] | 
+003> nl -ba docs/zonec.1.md | sed -n '1,220p' | 
+003> nl -ba docs/zonec.1.md | sed -n '221,500p' | 
+003> for f in src/lexer.h src/parser.h src/name.h src/rdata.h src/zone.h src/zonemd.h; do echo ===$f; cat "$f"; done | 
+003> nl -ba src/lexer.c | sed -n '1,280p' | 
+003> nl -ba src/parser.c | sed -n '1,320p' | 
+004> cat docs/zonec.1.md | 
+005> for f in docs/*.md; do echo; echo '===== '"$f"' ====='; cat "$f"; done | 
+006> find docs -maxdepth 1 -type f -printf '%f\n' | sort | 
+007> cat docs/master-files.md | 
+008> cat docs/output.md | 
+009> cat docs/rdata.md | 
+010> cat src/lexer.h; nl -ba src/lexer.c | 
+011> nl -ba src/lexer.c | sed -n '1,105p' | 
+011> nl -ba src/lexer.c | sed -n '106,190p' | 
+011> nl -ba src/directives.c | 
+011> nl -ba src/parser.h; nl -ba src/parser.c | sed -n '1,180p' | 
+012> sed -n '1,125p' src/lexer.c | 
+013> cat src/directives.c | 
+014> sed -n '1,125p' src/directives.c | 
+015> cat src/parser.h src/ttl.h; cat src/zone.h; cat src/zone.c | 
+015> cat src/zonemd.c src/rr_zonemd.c | 
+015> cat src/name.c | 
+015> cat src/main.c; cat Makefile | 
+016> cat src/zone.h; nl -ba src/zone.c | 
+017> cat src/zone.h; sed -n '1,105p' src/zone.c | 
+017> cat src/zonemd.c; cat src/zonemd.h; cat src/rr_zonemd.c | 
+018> sed -n '1,105p' src/zone.c | 
+019> head -n 70 src/zone.c | 
+020> cat src/name.h; cat src/name.c | 
+020> cat src/zonemd.c | 
+020> cat src/zone.h; cat src/parser.h; cat src/ttl.h; cat src/ttl.c | 
+021> cat src/name.h; cat src/name.c | 
+022> cat src/zonemd.c | 
+023> cat src/zone.h; sed -n '1,150p' src/parser.c; cat src/rr_soa.c; grep -R "have_soa\|soa_serial\|ZONEMD" -n src | 
+024> python3 - <<'PY' | p='src/lexer.c' | s=open(p).read() | s=s.replace("            if (c == '(' || c == ')') {", "            if (!inq && (c == '(' || c == ')')) {") | open(p,'w').write(s) |  | p='src/directives.c' | s=open(p).read() | s=s.replace("slash = strchr(including, '/');", "slash = strrchr(including, '/');") | s=s.replace("    ctx->origin = origin;\n    ctx->owner = origin;\n    ctx->have_owner = 1;\n", "    ctx->origin = origin;\n") | s=s.replace("    int saved_have_owner = ctx->have_owner;\n    char *file;", "    int saved_have_owner = ctx->have_owner;\n    ttl_ctx_t saved_ttl = ctx->ttl;\n    char *file;") | s=s.replace("    ctx->have_owner = saved_have_owner;\n}", "    ctx->have_owner = saved_have_owne
+024> rm -rf /tmp/zonec-build && make BUILD=/tmp/zonec-build -j4 | 
+025> rm -rf /tmp/zcases && mkdir -p /tmp/zcases/sub/nested | cat > /tmp/zcases/main.zone <<'EOF' | $TTL 300 | @ IN SOA ns hostmaster 2026092701 1h 10m 1d 60 | @ IN NS ns | @ IN ZONEMD 1 1 1 000000000000000000000000 | old 111 IN A 192.0.2.9 | $ORIGIN branch.example. |   IN A 192.0.2.10 | $ORIGIN example. | smile IN TXT "ok :-)" | $INCLUDE sub/inc.zone |   IN TXT "after include" | x 500 IN A 192.0.2.2 | x 100 IN A 192.0.2.1 | x 20 IN A 192.0.2.2 | a IN A 192.0.2.3 | z.a IN A 192.0.2.4 | b IN A 192.0.2.5 | EOF | cat > /tmp/zcases/sub/inc.zone <<'EOF' | inc 222 IN A 192.0.2.20 | $TTL 444 | $INCLUDE nested/child.zone child.example. | EOF | cat > /tmp/zcases/sub/nested/child.zone <<'EOF' | @ IN A 192.0.2.30 | md IN ZONEMD 7 9 8 AAAAAAAAAAAAAAAAAAAAAAAA | EO
+026> cat src/parser.c; cat src/rdata.c; cat src/rdata.h | 
+026> cat src/rr_addr.c; cat src/rr_names.c; cat src/rr_soa.c | 
+026> cat src/rr_txt.c; cat src/rr_caa.c; cat src/rr_srv.c | 
+026> cat src/util.c; cat src/util.h; cat src/main.c; cat src/diag.c | 
+027> cat src/rdata.c | 
+028> cat src/util.c; cat src/util.h | 
+028> cat src/rr_addr.c | 
+029> cat src/util.c | 
+029> sed -n '1,180p' src/rr_addr.c | 
+029> cat src/rr_txt.c; cat src/rr_caa.c | 
+029> cat src/parser.c; cat src/main.c | 
+030> cat src/parser.c | 
+031> cat src/rr_txt.c | 
+031> cat src/rr_caa.c | 
+031> cat src/util.c | 
+031> sed -n '1,160p' src/rr_addr.c | 
+032> cat src/rr_txt.c | 
+033> cat src/util.c | 
+034> cat src/rr_caa.c | 
+034> sed -n '1,170p' src/rr_addr.c | 
+034> sed -n '1,190p' src/name.c | 
+034> cat src/ttl.c | 
+035> cat src/rr_caa.c | 
+035> sed -n '1,210p' src/name.c | 
+036> cat src/rr_caa.c | 
+036> head -n 150 src/name.c | 
+037> grep -n "name_cmp\|NAME_MAX" src/name.h; sed -n '1,125p' src/name.c; sed -n '125,180p' src/name.c | 
+037> cat src/rr_caa.c | 
+037> git diff -- src/lexer.c src/directives.c src/ttl.c src/zone.c src/zonemd.c | 
+038> cat src/name.h | 
+038> cat src/rr_caa.c | 
+039> python3 - <<'PY' | p='src/zone.c' | s=open(p).read() | a=s.index('/* RFC 4034 canonical name order') | b=s.index('/* Canonical order', a) | s=s[:a]+s[b:] | s=s.replace('int r = name_order(&a->owner, &b->owner);', 'int r = name_cmp_canonical(&a->owner, &b->owner);') | open(p,'w').write(s) | PY | make -j4 | 
+039> sed -n '1,145p' src/name.c | 
+039> sed -n '1,125p' src/rr_addr.c | 
+039> sed -n '1,100p' src/ttl.c; grep -R "TODO\|FIXME\|BUG\|strchr(including\|strcmp(.*owner\|type == TYPE_ZONEMD\|has_last" -n src | 
+040> cat src/sha384.c | 
+040> sed -n '1,120p' src/name.c | 
+040> sed -n '1,115p' src/rr_addr.c | 
+040> mkdir -p /tmp/escinc; cat > /tmp/escinc/main <<'EOF' | $TTL 1 | @ SOA ns hostmaster 1 1 1 1 1 | $INCLUDE child\ file | EOF | cat > '/tmp/escinc/child file' <<'EOF' | @ NS ns | EOF | build/zonec -o example /tmp/escinc/main >/tmp/escinc/out; printf 'status=%s\n' "$?"; cat /tmp/escinc/out | 
+041> python3 - <<'PY' | p='src/directives.c' | s=open(p).read() | s=s.replace('#include "util.h"', '#include "util.h"') | old='''    file = include_path(path, ll->v[1].text); |     ctx->depth++; |     parse_file(ctx, file, pos); |     ctx->depth--; |     free(file); | ''' | new='''    size_t rawlen = strlen(ll->v[1].text); |     unsigned char *decoded = xmalloc(rawlen + 1); |     size_t decoded_len = 0; |     int dec = decode_string(ll->v[1].text, decoded, rawlen, &decoded_len); |     if (dec != DECODE_OK || memchr(decoded, '\\0', decoded_len)) { |         free(decoded); |         fail_at(pos, "bad $INCLUDE file name"); |     } |     decoded[decoded_len] = '\\0'; |     file = include_path(path, (const char *)decoded); |     free(decode
+041> python3 - <<'PY' | import hashlib, re | lines=open('/tmp/zcases/out').read().splitlines() |  | def name(s): |     labels=s[:-1].split('.') if s != '.' else [] |     return b''.join(bytes([len(x)])+x.encode().lower() for x in labels)+b'\0' | def u16(n): return n.to_bytes(2,'big') | def u32(n): return n.to_bytes(4,'big') | def ipv4(s): return bytes(map(int,s.split('.'))) | def zonemd_rdata(s): |     a=s.split(); return u32(int(a[0]))+bytes(map(int,a[1:3]))+bytes.fromhex(a[3]) | def txt_rdata(s): |     vals=re.findall(r'"((?:\\.|[^"])*)"',s) |     out=b'' |     for v in vals: |         # Fixture strings contain no output escapes. |         b=v.encode(); out+=bytes([len(b)])+b |     return out | codes={'A':1,'NS':2,'SOA':6,'TXT':16,
+042> cat /tmp/escinc/out; sed -n '1,145p' src/name.c | 
+042> sed -n '1,135p' src/rr_addr.c; cat src/rr_names.c; cat src/rr_srv.c; cat src/rr_zonemd.c | 
+042> rm -rf /tmp/asan && make BUILD=/tmp/asan CFLAGS='-O1 -g -Wall -Wextra -std=c11 -fsanitize=address,undefined' -j4 | 
+042> /tmp/asan/zonec -o example. /tmp/zcases/main.zone >/tmp/asan.out && cmp /tmp/asan.out /tmp/zcases/out && echo 'sanitizer fixture passed' | 
+043> cat > /tmp/escaped-scalars.zone <<'EOF' | $TTL \049\048\048 | @ I\N S\O\A ns hostmaster 1 1 1 1 1 | @ IN N\S ns | v IN A 192\0460\0462\0461 | c IN CAA 0 i\115sue "ca.example" | EOF | build/zonec -o example /tmp/escaped-scalars.zone >/tmp/es.out 2>/tmp/es.err; echo status=$?; cat /tmp/es.err; cat /tmp/es.out | 
+043> cat src/rr_addr.c; cat src/rr_names.c; cat src/rr_srv.c; cat src/rr_soa.c | 
+043> cat src/zone.h; cat src/main.c | 
+044> echo status-output; cat /tmp/es.err; cat /tmp/es.out | 
+044> cat src/lexer.h; cat src/rdata.h; cat src/util.h | 
+045> cat /tmp/es.err | 
+046> cat src/rr_addr.c | 
+046> cat src/rr_zonemd.c; cat src/ttl.h | 
+047> head -n 100 src/rr_addr.c | 
+048> cat >> /dev/null <<'EOF' | EOF | python3 - <<'PY' | p='src/util.h'; s=open(p).read(); s=s.replace('int decode_string(const char *raw, unsigned char *out, size_t cap, size_t *len);', 'int decode_string(const char *raw, unsigned char *out, size_t cap, size_t *len);\n\n/* Decodes a token to an allocated C string. Fails for malformed escapes or\n * an embedded NUL. */\nint decode_cstring(const char *raw, char **out);'); open(p,'w').write(s) | p='src/util.c'; s=open(p).read(); marker='void emit_string(buf_t *b, const unsigned char *s, size_t n)\n'; impl='''int decode_cstring(const char *raw, char **out) | { |     size_t cap = strlen(raw), len = 0; |     unsigned char *s = xmalloc(cap + 1); |     int r = decode_s
+049> python3 - <<'PY' | # Directives: decoded keyword, TTL, and include filename. | p='src/directives.c'; s=open(p).read() | s=s.replace('''    uint32_t v; |  |     if (ll->n != 2 || ll->v[1].quoted || ttl_parse(ll->v[1].text, &v)) |         fail_at(pos, "$TTL needs one TTL value"); |     ttl_ctx_set_dollar(&ctx->ttl, v);''','''    uint32_t v; |     char *text = NULL; |  |     if (ll->n != 2 || ll->v[1].quoted || |         decode_cstring(ll->v[1].text, &text) || ttl_parse(text, &v)) { |         free(text); |         fail_at(pos, "$TTL needs one TTL value"); |     } |     free(text); |     ttl_ctx_set_dollar(&ctx->ttl, v);''') | old='''    size_t rawlen = strlen(ll->v[1].text); |     unsigned char *decoded = xmalloc(rawlen + 1); |    
+050> python3 - <<'PY' | # Address text. | p='src/rr_addr.c'; s=open(p).read(); s=s.replace('#include "rdata.h"', '#include "rdata.h"\n#include "util.h"') | s=s.replace('''    const char *p; |     int part = 0; |  |     rd_expect(cx, n, 1); |     p = tok[0].text; |     if (tok[0].quoted) |         goto bad;''','''    const char *p; |     char *text = NULL; |     int part = 0; |  |     rd_expect(cx, n, 1); |     if (tok[0].quoted || decode_cstring(tok[0].text, &text)) |         goto bad; |     p = text;''') | s=s.replace('''    buf_put(rd, addr, 4); |     return; | bad: |     fail_at(cx->pos, "bad IPv4 address \\"%s\\"", tok[0].text);''','''    buf_put(rd, addr, 4); |     free(text); |     return; | bad: |     free(text); |     fail_at(cx->pos, "b
+051> python3 - <<'PY' | p='src/zone.h'; s=open(p).read(); s=s.replace('void zone_init(zone_t *z, const dname_t *origin);', 'void zone_init(zone_t *z, const dname_t *origin);\nvoid zone_free(zone_t *z);'); open(p,'w').write(s) | p='src/zone.c'; s=open(p).read(); marker='void zone_add(zone_t *z, const dname_t *owner, uint16_t type, uint32_t ttl,\n'; impl='''void zone_free(zone_t *z) | { |     for (size_t i = 0; i < z->n; i++) { |         free(z->v[i].rd); |         free(z->v[i].owner_text); |     } |     free(z->v); |     memset(z, 0, sizeof *z); | } |  | '''; assert marker in s; s=s.replace(marker,impl+marker); open(p,'w').write(s) | p='src/main.c'; s=open(p).read(); old='''    fwrite(out.data, 1, out.len, stdout); |     buf
+051> rm -rf /tmp/asan && make BUILD=/tmp/asan CFLAGS='-O1 -g -Wall -Wextra -std=c11 -fsanitize=address,undefined' -j4 >/tmp/asan-build.log && ASAN_OPTIONS=detect_leaks=1 /tmp/asan/zonec -o example. /tmp/zcases/main.zone >/tmp/asan.out && cmp /tmp/asan.out /tmp/zcases/out && echo 'sanitizers passed' | 
+051> set -e | build/zonec -o example /tmp/escaped-scalars.zone >/tmp/es2.out | cmp /tmp/es.out /tmp/es2.out | build/zonec -o example /tmp/escinc/main >/tmp/escinc/out2 | cmp /tmp/escinc/out /tmp/escinc/out2 | build/zonec -o example. /tmp/zcases/main.zone >/tmp/zcases/out3 | cmp /tmp/zcases/out /tmp/zcases/out3 | for f in examples/*; do if [ -f "$f" ]; then build/zonec -o example. "$f" >/dev/null 2>/tmp/example.err || true; fi; done | # Zone errors are exit 1 and produce no stdout. | printf '$TTL 1\n@ A 999.1.1.1\n' >/tmp/bad.zone | set +e | build/zonec -o example /tmp/bad.zone >/tmp/bad.out 2>/tmp/bad.err | st=$? | set -e | test "$st" -eq 1 | test ! -s /tmp/bad.out | grep -q '^/tmp/bad.zone:2:' /tmp/bad.err | # CLI errors are exi

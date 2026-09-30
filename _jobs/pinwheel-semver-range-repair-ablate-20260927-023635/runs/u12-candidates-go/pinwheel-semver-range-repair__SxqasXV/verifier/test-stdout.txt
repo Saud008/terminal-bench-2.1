@@ -1,0 +1,87 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 15 items
+
+../tests/test_outputs.py ............F..                                 [100%]
+
+=================================== FAILURES ===================================
+_______________________ test_lock_prefer_lowest_and_ties _______________________
+
+pinwheel = '/tmp/pinwheel-verify/pinwheel'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_prefer_lowest_and_ti0')
+
+    def test_lock_prefer_lowest_and_ties(pinwheel, tmp_path):
+        """prefer=lowest picks lowest releases; equal-precedence ties go to latest published, then file order."""
+>       _check_lock(pinwheel, "lowest", tmp_path)
+
+/tests/test_outputs.py:192: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/pinwheel-verify/pinwheel', name = 'lowest'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_prefer_lowest_and_ti0')
+
+    def _check_lock(binary, name, tmp_path):
+        expected = (FIXTURES / "expected" / f"{name}.lock").read_text(encoding="utf-8")
+        count = len(json.loads(expected)["packages"])
+        rc, out, err, lock = _resolve(binary, name, tmp_path)
+        assert rc == 0, f"resolve {name}: exit {rc}, stderr: {err.strip()}"
+        assert out == f"resolved {count} packages\n", f"resolve {name}: stdout {out!r}"
+        assert lock.is_file(), f"resolve {name}: no pin.lock written"
+        actual = lock.read_text(encoding="utf-8")
+        diff = "".join(difflib.unified_diff(
+            expected.splitlines(True), actual.splitlines(True), "expected pin.lock", "actual pin.lock"))
+>       assert actual == expected, f"resolve {name}: lock differs\n{diff}"
+E       AssertionError: resolve lowest: lock differs
+E         --- expected pin.lock
+E         +++ actual pin.lock
+E         @@ -10,7 +10,7 @@
+E                "dependencies": {}
+E              },
+E              "dune-parse": {
+E         -      "version": "1.0.0+build.2",
+E         +      "version": "1.0.0+build.1",
+E                "requiredBy": [
+E                  "<root>"
+E                ],
+E         @@ -24,7 +24,7 @@
+E                "dependencies": {}
+E              },
+E              "iris-fmt": {
+E         -      "version": "0.3.0+r2",
+E         +      "version": "0.3.0+r1",
+E                "requiredBy": [
+E                  "<root>"
+E                ],
+E         
+E       assert '{\n  "lockfi...  }\n  }\n}\n' == '{\n  "lockfi...  }\n  }\n}\n'
+E         
+E         Skipping 234 identical leading characters in diff, use -v to show
+E         Skipping 277 identical trailing characters in diff, use -v to show
+E         - 0.0+build.2",
+E         ?           ^
+E         + 0.0+build.1",
+E         ?           ^...
+E         
+E         ...Full output truncated (18 lines hidden), use '-vv' to show
+
+/tests/test_outputs.py:107: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_caret_ranges
+PASSED ../tests/test_outputs.py::test_tilde_ranges
+PASSED ../tests/test_outputs.py::test_partial_version_comparators
+PASSED ../tests/test_outputs.py::test_hyphen_ranges
+PASSED ../tests/test_outputs.py::test_prerelease_admission
+PASSED ../tests/test_outputs.py::test_union_and_operator_spacing
+PASSED ../tests/test_outputs.py::test_build_metadata_ignored
+PASSED ../tests/test_outputs.py::test_prerelease_precedence
+PASSED ../tests/test_outputs.py::test_invalid_input_rejected
+PASSED ../tests/test_outputs.py::test_lock_drops_packages_no_longer_required
+PASSED ../tests/test_outputs.py::test_lock_applies_overrides
+PASSED ../tests/test_outputs.py::test_lock_yanked_releases
+PASSED ../tests/test_outputs.py::test_lock_mixed_range_forms
+PASSED ../tests/test_outputs.py::test_resolution_failures
+FAILED ../tests/test_outputs.py::test_lock_prefer_lowest_and_ties - Assertion...
+========================= 1 failed, 14 passed in 7.38s =========================

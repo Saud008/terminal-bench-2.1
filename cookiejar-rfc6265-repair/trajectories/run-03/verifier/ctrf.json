@@ -1,0 +1,134 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 12,
+            "passed": 10,
+            "failed": 2,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790481965.4764235,
+            "stop": 1790481966.8752806
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_default_path",
+                "status": "passed",
+                "duration": 1.3342148589981662,
+                "start": 1790481965.487036,
+                "stop": 1790481966.8216004,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_path_boundary",
+                "status": "passed",
+                "duration": 0.00235779800277669,
+                "start": 1790481966.8218362,
+                "stop": 1790481966.824381,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_host_only",
+                "status": "passed",
+                "duration": 0.0022857959993416443,
+                "start": 1790481966.8245847,
+                "stop": 1790481966.827165,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_ip_hosts",
+                "status": "passed",
+                "duration": 0.0026150750054512173,
+                "start": 1790481966.8274746,
+                "stop": 1790481966.8302865,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_max_age_precedence",
+                "status": "passed",
+                "duration": 0.002312587996129878,
+                "start": 1790481966.830608,
+                "stop": 1790481966.8331125,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_two_digit_years",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.0023165880011219997,
+                "start": 1790481966.833323,
+                "stop": 1790481966.8454278,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "crumbjar = '/tmp/crumbjar-verify-target/release/crumbjar'\n\n    def test_two_digit_years(crumbjar):\n        \"\"\"Two-digit years in Expires map 70-99 to 19xx and 00-69 to 20xx.\"\"\"\n>       _check_group(crumbjar, \"two_digit_years\")\n\n/tests/test_outputs.py:106: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/crumbjar-verify-target/release/crumbjar'\ngroup = 'two_digit_years'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            p = subprocess.run(\n                [binary, \"replay\", \"-\"],\n                input=case[\"transcript\"], capture_output=True, text=True, timeout=60,\n                env={\"PATH\": \"/usr/local/bin:/usr/bin:/bin\", \"LC_ALL\": \"C\"},\n            )\n            if p.returncode != 0 or p.stdout != case[\"stdout\"]:\n                failures.append(\n                    f\"--- transcript\\n{case['transcript']}\"\n                    f\"--- expected (exit 0)\\n{case['stdout']}\"\n                    f\"--- got (exit {p.returncode})\\n{p.stdout}{p.stderr[-500:]}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} transcripts differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 2 of 2 transcripts differ:\nE         --- transcript\nE         at 1767225600\nE         set https://app.example.net/ y61=1; Expires=Wed, 09-Jun-61 10:18:14 GMT\nE         set https://app.example.net/ y55=1; Expires=Tue, 01-Jan-55 00:00:00 GMT\nE         set https://app.example.net/ y99=1; Expires=Fri, 31-Dec-99 23:59:59 GMT\nE         set https://app.example.net/ y70=1; Expires=Thu, 01-Jan-70 00:00:01 GMT\nE         set https://app.example.net/ y37=1; Expires=Thu, 01-Jan-37 00:00:00 GMT\nE         set https://app.example.net/ y4d=1; Expires=Mon, 01 Jan 2052 00:00:00 GMT\nE         get https://app.example.net/\nE         dump\nE         --- expected (exit 0)\nE         https://app.example.net/\ty61=1; y55=1; y37=1; y4d=1\nE         -- jar @1767225600: 4 cookie(s)\nE         app.example.net\t/\ty37=1\thost-only\t2114380800\t1767225600\t1767225600\nE         app.example.net\t/\ty4d=1\thost-only\t2587680000\t1767225600\t1767225600\nE         app.example.net\t/\ty55=1\thost-only\t2682374400\t1767225600\t1767225600\nE         app.example.net\t/\ty61=1\thost-only\t2885537894\t1767225600\t1767225600\nE         --- got (exit 0)\nE         https://app.example.net/\ty37=1; y4d=1\nE         -- jar @1767225600: 2 cookie(s)\nE         app.example.net\t/\ty37=1\thost-only\t2114380800\t1767225600\t1767225600\nE         app.example.net\t/\ty4d=1\thost-only\t2587680000\t1767225600\t1767225600\nE         \nE         --- transcript\nE         at 1767225600\nE         set https://cdn.example.org/ keep=1\nE         set https://cdn.example.org/ keep=2; Expires=Sun, 06-Nov-94 08:49:37 GMT\nE         set https://cdn.example.org/ late=1; expires=06 nov 68 08:49:37\nE         get https://cdn.example.org/\nE         dump\nE         --- expected (exit 0)\nE         https://cdn.example.org/\tlate=1\nE         -- jar @1767225600: 1 cookie(s)\nE         cdn.example.org\t/\tlate=1\thost-only\t3119417377\t1767225600\t1767225600\nE         --- got (exit 0)\nE         https://cdn.example.org/\t\nE         -- jar @1767225600: 0 cookie(s)\nE         \nE       assert not ['--- transcript\\nat 1767225600\\nset https://app.example.net/ y61=1; Expires=Wed, 09-Jun-61 10:18:14 GMT\\nset https://...\\t3119417377\\t1767225600\\t1767225600\\n--- got (exit 0)\\nhttps://cdn.example.org/\\t\\n-- jar @1767225600: 0 cookie(s)\\n']\n\n/tests/test_outputs.py:76: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_invalid_dates",
+                "status": "passed",
+                "duration": 0.005325087007804541,
+                "start": 1790481966.8457582,
+                "stop": 1790481966.8514776,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_replacement",
+                "status": "passed",
+                "duration": 0.005319697000231827,
+                "start": 1790481966.851882,
+                "stop": 1790481966.8575454,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_header_order",
+                "status": "passed",
+                "duration": 0.00331333499707398,
+                "start": 1790481966.8578525,
+                "stop": 1790481966.8614082,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_public_suffix",
+                "status": "passed",
+                "duration": 0.002912849002314033,
+                "start": 1790481966.86169,
+                "stop": 1790481966.8648462,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_site_limit",
+                "status": "passed",
+                "duration": 0.0022432059995480813,
+                "start": 1790481966.8650734,
+                "stop": 1790481966.8674998,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_name_value_pair",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.0031192389978969004,
+                "start": 1790481966.8676887,
+                "stop": 1790481966.8751087,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "crumbjar = '/tmp/crumbjar-verify-target/release/crumbjar'\n\n    def test_name_value_pair(crumbjar):\n        \"\"\"Set-Cookie headers without '=' in the first pair, or with an empty name, are ignored.\"\"\"\n>       _check_group(crumbjar, \"name_value_pair\")\n\n/tests/test_outputs.py:136: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/crumbjar-verify-target/release/crumbjar'\ngroup = 'name_value_pair'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            p = subprocess.run(\n                [binary, \"replay\", \"-\"],\n                input=case[\"transcript\"], capture_output=True, text=True, timeout=60,\n                env={\"PATH\": \"/usr/local/bin:/usr/bin:/bin\", \"LC_ALL\": \"C\"},\n            )\n            if p.returncode != 0 or p.stdout != case[\"stdout\"]:\n                failures.append(\n                    f\"--- transcript\\n{case['transcript']}\"\n                    f\"--- expected (exit 0)\\n{case['stdout']}\"\n                    f\"--- got (exit {p.returncode})\\n{p.stdout}{p.stderr[-500:]}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} transcripts differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 2 of 2 transcripts differ:\nE         --- transcript\nE         at 1767225600\nE         set https://cdn.example.com/ token\nE         set https://cdn.example.com/ =abc\nE         set https://cdn.example.com/  ; Path=/\nE         set https://cdn.example.com/ ok=1\nE         set https://cdn.example.com/ spaced = two words ; Path=/\nE         set https://cdn.example.com/ empty=\nE         get https://cdn.example.com/\nE         dump\nE         --- expected (exit 0)\nE         https://cdn.example.com/\tok=1; spaced=two words; empty=\nE         -- jar @1767225600: 3 cookie(s)\nE         cdn.example.com\t/\tempty=\thost-only\tsession\t1767225600\t1767225600\nE         cdn.example.com\t/\tok=1\thost-only\tsession\t1767225600\t1767225600\nE         cdn.example.com\t/\tspaced=two words\thost-only\tsession\t1767225600\t1767225600\nE         --- got (exit 0)\nE         https://cdn.example.com/\t=abc; ok=1; spaced=two words; empty=\nE         -- jar @1767225600: 4 cookie(s)\nE         cdn.example.com\t/\t=abc\thost-only\tsession\t1767225600\t1767225600\nE         cdn.example.com\t/\tempty=\thost-only\tsession\t1767225600\t1767225600\nE         cdn.example.com\t/\tok=1\thost-only\tsession\t1767225600\t1767225600\nE         cdn.example.com\t/\tspaced=two words\thost-only\tsession\t1767225600\t1767225600\nE         \nE         --- transcript\nE         at 1767225600\nE         set https://login.example.org/ flag; Secure\nE         set https://login.example.org/ sid=\"a=b\"; Secure\nE         set https://login.example.org/ \t=tabbed\nE         get https://login.example.org/\nE         dump\nE         --- expected (exit 0)\nE         https://login.example.org/\tsid=\"a=b\"\nE         -- jar @1767225600: 1 cookie(s)\nE         login.example.org\t/\tsid=\"a=b\"\thost-only,secure\tsession\t1767225600\t1767225600\nE         --- got (exit 0)\nE         https://login.example.org/\tsid=\"a=b\"; =tabbed\nE         -- jar @1767225600: 2 cookie(s)\nE         login.example.org\t/\t=tabbed\thost-only\tsession\t1767225600\t1767225600\nE         login.example.org\t/\tsid=\"a=b\"\thost-only,secure\tsession\t1767225600\t1767225600\nE         \nE       assert not ['--- transcript\\nat 1767225600\\nset https://cdn.example.com/ token\\nset https://cdn.example.com/ =abc\\nset https://cd...session\\t1767225600\\t1767225600\\nlogin.example.org\\t/\\tsid=\"a=b\"\\thost-only,secure\\tsession\\t1767225600\\t1767225600\\n']\n\n/tests/test_outputs.py:76: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            }
+        ]
+    }
+}

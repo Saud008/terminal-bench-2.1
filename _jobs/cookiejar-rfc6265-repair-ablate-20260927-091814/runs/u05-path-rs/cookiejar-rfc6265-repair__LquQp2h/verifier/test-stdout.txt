@@ -1,0 +1,200 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 12 items
+
+../tests/test_outputs.py FF..........                                    [100%]
+
+=================================== FAILURES ===================================
+______________________________ test_default_path _______________________________
+
+crumbjar = '/tmp/crumbjar-verify-target/release/crumbjar'
+
+    def test_default_path(crumbjar):
+        """Cookies without a usable Path attribute get the directory of the request path as their path."""
+>       _check_group(crumbjar, "default_path")
+
+/tests/test_outputs.py:81: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/crumbjar-verify-target/release/crumbjar', group = 'default_path'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            p = subprocess.run(
+                [binary, "replay", "-"],
+                input=case["transcript"], capture_output=True, text=True, timeout=60,
+                env={"PATH": "/usr/local/bin:/usr/bin:/bin", "LC_ALL": "C"},
+            )
+            if p.returncode != 0 or p.stdout != case["stdout"]:
+                failures.append(
+                    f"--- transcript\n{case['transcript']}"
+                    f"--- expected (exit 0)\n{case['stdout']}"
+                    f"--- got (exit {p.returncode})\n{p.stdout}{p.stderr[-500:]}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} transcripts differ:\n" + "\n".join(failures)
+E       AssertionError: 2 of 2 transcripts differ:
+E         --- transcript
+E         at 1767225600
+E         set https://docs.example.com/guide/intro/page lang=en
+E         set https://docs.example.com/guide/intro/page theme=dark; Path=guide
+E         set https://docs.example.com/top root=1
+E         set https://docs.example.com/a?next=/x/y/z w=1
+E         set https://docs.example.com/guide/intro/ idx=1
+E         get https://docs.example.com/guide/intro
+E         get https://docs.example.com/guide/intro/
+E         get https://docs.example.com/guide/intropage
+E         get https://docs.example.com/guide
+E         dump
+E         --- expected (exit 0)
+E         https://docs.example.com/guide/intro	lang=en; theme=dark; idx=1; root=1; w=1
+E         https://docs.example.com/guide/intro/	lang=en; theme=dark; idx=1; root=1; w=1
+E         https://docs.example.com/guide/intropage	root=1; w=1
+E         https://docs.example.com/guide	root=1; w=1
+E         -- jar @1767225600: 5 cookie(s)
+E         docs.example.com	/	root=1	host-only	session	1767225600	1767225600
+E         docs.example.com	/	w=1	host-only	session	1767225600	1767225600
+E         docs.example.com	/guide/intro	idx=1	host-only	session	1767225600	1767225600
+E         docs.example.com	/guide/intro	lang=en	host-only	session	1767225600	1767225600
+E         docs.example.com	/guide/intro	theme=dark	host-only	session	1767225600	1767225600
+E         --- got (exit 0)
+E         https://docs.example.com/guide/intro	root=1; w=1
+E         https://docs.example.com/guide/intro/	lang=en; theme=dark; idx=1; root=1; w=1
+E         https://docs.example.com/guide/intropage	root=1; w=1
+E         https://docs.example.com/guide	root=1; w=1
+E         -- jar @1767225600: 5 cookie(s)
+E         docs.example.com	/	root=1	host-only	session	1767225600	1767225600
+E         docs.example.com	/	w=1	host-only	session	1767225600	1767225600
+E         docs.example.com	/guide/intro/	idx=1	host-only	session	1767225600	1767225600
+E         docs.example.com	/guide/intro/	lang=en	host-only	session	1767225600	1767225600
+E         docs.example.com	/guide/intro/	theme=dark	host-only	session	1767225600	1767225600
+E         
+E         --- transcript
+E         at 1767225600
+E         set http://files.example.net/pub/releases/v2/notes.txt seen=1
+E         set http://files.example.net/pub/releases/v2/notes.txt dl=7; Path=
+E         get http://files.example.net/pub/releases/v2
+E         get http://files.example.net/pub/releases/v2/
+E         get http://files.example.net/pub/releases
+E         get http://files.example.net/pub/releases/v20/x
+E         dump
+E         --- expected (exit 0)
+E         http://files.example.net/pub/releases/v2	seen=1; dl=7
+E         http://files.example.net/pub/releases/v2/	seen=1; dl=7
+E         http://files.example.net/pub/releases	
+E         http://files.example.net/pub/releases/v20/x	
+E         -- jar @1767225600: 2 cookie(s)
+E         files.example.net	/pub/releases/v2	dl=7	host-only	session	1767225600	1767225600
+E         files.example.net	/pub/releases/v2	seen=1	host-only	session	1767225600	1767225600
+E         --- got (exit 0)
+E         http://files.example.net/pub/releases/v2	
+E         http://files.example.net/pub/releases/v2/	seen=1; dl=7
+E         http://files.example.net/pub/releases	
+E         http://files.example.net/pub/releases/v20/x	
+E         -- jar @1767225600: 2 cookie(s)
+E         files.example.net	/pub/releases/v2/	dl=7	host-only	session	1767225600	1767225600
+E         files.example.net	/pub/releases/v2/	seen=1	host-only	session	1767225600	1767225600
+E         
+E       assert not ['--- transcript\nat 1767225600\nset https://docs.example.com/guide/intro/page lang=en\nset https://docs.example.com/g...n\t1767225600\t1767225600\nfiles.example.net\t/pub/releases/v2/\tseen=1\thost-only\tsession\t1767225600\t1767225600\n']
+
+/tests/test_outputs.py:76: AssertionError
+______________________________ test_path_boundary ______________________________
+
+crumbjar = '/tmp/crumbjar-verify-target/release/crumbjar'
+
+    def test_path_boundary(crumbjar):
+        """A cookie path only matches request paths that continue it at a '/' boundary."""
+>       _check_group(crumbjar, "path_boundary")
+
+/tests/test_outputs.py:86: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/crumbjar-verify-target/release/crumbjar', group = 'path_boundary'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            p = subprocess.run(
+                [binary, "replay", "-"],
+                input=case["transcript"], capture_output=True, text=True, timeout=60,
+                env={"PATH": "/usr/local/bin:/usr/bin:/bin", "LC_ALL": "C"},
+            )
+            if p.returncode != 0 or p.stdout != case["stdout"]:
+                failures.append(
+                    f"--- transcript\n{case['transcript']}"
+                    f"--- expected (exit 0)\n{case['stdout']}"
+                    f"--- got (exit {p.returncode})\n{p.stdout}{p.stderr[-500:]}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} transcripts differ:\n" + "\n".join(failures)
+E       AssertionError: 2 of 2 transcripts differ:
+E         --- transcript
+E         at 1767225600
+E         set https://shop.example.com/cart/ c=1; Path=/cart
+E         set https://shop.example.com/ all=1; Path=/
+E         set https://shop.example.com/ api=1; Path=/api/
+E         get https://shop.example.com/cart
+E         get https://shop.example.com/cart/items
+E         get https://shop.example.com/cartography
+E         get https://shop.example.com/api
+E         get https://shop.example.com/api/v2
+E         get https://shop.example.com/apiary
+E         --- expected (exit 0)
+E         https://shop.example.com/cart	c=1; all=1
+E         https://shop.example.com/cart/items	c=1; all=1
+E         https://shop.example.com/cartography	all=1
+E         https://shop.example.com/api	all=1
+E         https://shop.example.com/api/v2	api=1; all=1
+E         https://shop.example.com/apiary	all=1
+E         --- got (exit 0)
+E         https://shop.example.com/cart	c=1; all=1
+E         https://shop.example.com/cart/items	c=1; all=1
+E         https://shop.example.com/cartography	c=1; all=1
+E         https://shop.example.com/api	all=1
+E         https://shop.example.com/api/v2	api=1; all=1
+E         https://shop.example.com/apiary	all=1
+E         
+E         --- transcript
+E         at 1767225600
+E         set https://wiki.example.org/ ns=1; Path=/wiki/Talk
+E         set https://wiki.example.org/ ro=1; Path=/w
+E         get https://wiki.example.org/wiki/Talk:Main
+E         get https://wiki.example.org/wiki/Talk/Archive
+E         get https://wiki.example.org/wiki/Talk
+E         get https://wiki.example.org/wiki
+E         get https://wiki.example.org/w/index.php
+E         get https://wiki.example.org/wx
+E         --- expected (exit 0)
+E         https://wiki.example.org/wiki/Talk:Main	
+E         https://wiki.example.org/wiki/Talk/Archive	ns=1
+E         https://wiki.example.org/wiki/Talk	ns=1
+E         https://wiki.example.org/wiki	
+E         https://wiki.example.org/w/index.php	ro=1
+E         https://wiki.example.org/wx	
+E         --- got (exit 0)
+E         https://wiki.example.org/wiki/Talk:Main	ns=1; ro=1
+E         https://wiki.example.org/wiki/Talk/Archive	ns=1; ro=1
+E         https://wiki.example.org/wiki/Talk	ns=1; ro=1
+E         https://wiki.example.org/wiki	ro=1
+E         https://wiki.example.org/w/index.php	ro=1
+E         https://wiki.example.org/wx	ro=1
+E         
+E       assert not ['--- transcript\nat 1767225600\nset https://shop.example.com/cart/ c=1; Path=/cart\nset https://shop.example.com/ all...nhttps://wiki.example.org/wiki\tro=1\nhttps://wiki.example.org/w/index.php\tro=1\nhttps://wiki.example.org/wx\tro=1\n']
+
+/tests/test_outputs.py:76: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_host_only
+PASSED ../tests/test_outputs.py::test_ip_hosts
+PASSED ../tests/test_outputs.py::test_max_age_precedence
+PASSED ../tests/test_outputs.py::test_two_digit_years
+PASSED ../tests/test_outputs.py::test_invalid_dates
+PASSED ../tests/test_outputs.py::test_replacement
+PASSED ../tests/test_outputs.py::test_header_order
+PASSED ../tests/test_outputs.py::test_public_suffix
+PASSED ../tests/test_outputs.py::test_site_limit
+PASSED ../tests/test_outputs.py::test_name_value_pair
+FAILED ../tests/test_outputs.py::test_default_path - AssertionError: 2 of 2 t...
+FAILED ../tests/test_outputs.py::test_path_boundary - AssertionError: 2 of 2 ...
+========================= 2 failed, 10 passed in 1.03s =========================

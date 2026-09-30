@@ -1,0 +1,112 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 10 items
+
+../tests/test_outputs.py ........F.                                      [100%]
+
+=================================== FAILURES ===================================
+_______________________________ test_value_case ________________________________
+
+quire = '/tmp/quire-verify/quire'
+
+    def test_value_case(quire):
+        """Which property values are lowercased."""
+>       _check_group(quire, "value_case")
+
+/tests/test_outputs.py:142: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/quire-verify/quire', group = 'value_case'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']!r}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err!r}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 5 of 5 cases differ:
+E         --- value_case-01 args=['{root}/a.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         indent_style=space
+E         end_of_line=crlf
+E         charset=utf-8
+E         insert_final_newline=true
+E         trim_trailing_whitespace=false
+E         max_line_length=OFF
+E         got rc=0 stderr=''
+E         indent_style=space
+E         end_of_line=crlf
+E         charset=utf-8
+E         insert_final_newline=true
+E         trim_trailing_whitespace=false
+E         max_line_length=off
+E         
+E         --- value_case-02 args=['{root}/a.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         indent_style=tab
+E         tab_width=Eight
+E         quote_type=Double
+E         indent_size=eight
+E         got rc=0 stderr=''
+E         indent_style=tab
+E         tab_width=eight
+E         quote_type=Double
+E         indent_size=eight
+E         
+E         --- value_case-03 args=['{root}/a.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         indent_size=4
+E         tab_width=AUTO
+E         x_custom=MiXeD
+E         spelling_language=en-US
+E         got rc=0 stderr=''
+E         indent_size=4
+E         tab_width=auto
+E         x_custom=MiXeD
+E         spelling_language=en-US
+E         
+E         --- value_case-04 args=['-b', '0.8', '{root}/a.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         indent_size=tab
+E         tab_width=X4
+E         got rc=0 stderr=''
+E         indent_size=tab
+E         tab_width=x4
+E         
+E         --- value_case-05 args=['{root}/a.txt', '{root}/a.md'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/value_case-05/a.txt]
+E         max_line_length=Off
+E         [/srv/qc/value_case-05/a.md]
+E         max_line_length=OFF
+E         charset=utf-8-bom
+E         got rc=0 stderr=''
+E         [/srv/qc/value_case-05/a.txt]
+E         max_line_length=off
+E         [/srv/qc/value_case-05/a.md]
+E         max_line_length=off
+E         charset=utf-8-bom
+E         
+E       assert not ["--- value_case-01 args=['{root}/a.txt'] stdin=None\nexpected rc=0 stderr=''\nindent_style=space\nend_of_line=crlf\nc.../qc/value_case-05/a.txt]\nmax_line_length=off\n[/srv/qc/value_case-05/a.md]\nmax_line_length=off\ncharset=utf-8-bom\n"]
+
+/tests/test_outputs.py:97: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_section_anchoring
+PASSED ../tests/test_outputs.py::test_tab_indentation
+PASSED ../tests/test_outputs.py::test_bracketed_directories
+PASSED ../tests/test_outputs.py::test_stdin_paths
+PASSED ../tests/test_outputs.py::test_globstar_segments
+PASSED ../tests/test_outputs.py::test_negated_classes
+PASSED ../tests/test_outputs.py::test_inline_comments
+PASSED ../tests/test_outputs.py::test_root_declarations
+PASSED ../tests/test_outputs.py::test_property_order
+FAILED ../tests/test_outputs.py::test_value_case - AssertionError: 5 of 5 cas...
+========================= 1 failed, 9 passed in 8.72s ==========================

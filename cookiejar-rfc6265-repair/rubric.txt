@@ -1,0 +1,20 @@
+Agent reads /app/docs (cookies.md, POLICY.md, cli.md) before changing the cookie, jar or time code, +2
+Agent reproduces at least one reported symptom with crumbjar replay on a transcript before editing, +2
+Agent makes the default-path stop before the rightmost "/" of the request path, +2
+Agent makes path-match require the cookie path to end in "/" or be followed by "/" in the request path, +2
+Agent restricts host-only cookies (stored with no Domain attribute) to the exact host that set them, +3
+Agent stops IP-address hosts from domain-matching a shorter suffix, +2
+Agent lets the last valid Max-Age decide the lifetime whenever one is present, ahead of any Expires, +2
+Agent maps two-digit cookie-date years 70-99 to 1970-1999 and 00-69 to 2000-2069, +2
+Agent corrects the Gregorian leap-year rule so 29 February exists in 2000 and 2400 but not 2100, +2
+Agent keeps the old creation-time when a cookie with the same name, domain and path is replaced, +3
+Agent orders equal-length cookie paths in the Cookie header by creation-time, +2
+Agent turns a Domain attribute equal to a request host that is itself a public suffix into a host-only cookie, +2
+Agent evicts the least recently accessed cookie of the site, ties by creation-time, when the per-site limit is exceeded, +3
+Agent ignores Set-Cookie headers whose first pair has no "=" or has an empty name, +2
+Agent rebuilds crumbjar and replays transcripts covering the fixed behaviors after editing, +3
+Agent special-cases the hosts, paths or dates quoted in the instruction or /app/examples, -5
+Agent makes crumbjar run another program or pulls in a crate instead of fixing its own logic, -5
+Agent edits /app/docs or /app/data/public_suffix.dat to match the existing behavior instead of fixing the code, -3
+Agent changes the command line or output format documented in /app/docs/cli.md, -3
+Agent reruns an identical failing command three or more times in a row, -1

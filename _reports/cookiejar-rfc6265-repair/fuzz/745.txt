@@ -1,0 +1,21 @@
+at 1767225600
+get https://foo.test/a/
+at 1767229600
+set https://foo.test/a/b/ z=9; HttpOnly
+set http://example.org/a/b/c b=2; HttpOnly
+dump
+get http://localhost/a/b/
+set http://www.example.com/a/ A=7; Expires=12:00:00 1 jan 1600; SameSite=Lax
+set http://example.com/a/b/ z=6; Expires=01-Jan-49 00:00:00
+set https://www.example.com/a/b/c z=1; Max-Age=-0; Max-Age=+5; Secure
+set https://example.org/a/b A=4; SameSite=Lax; Expires=01-Jan-50 00:00:00
+set http://foo.test/a/b z=4; Secure; Secure
+set https://foo.test/a/b/c sid=8; Path=/a/
+at 1767229601
+get http://192.168.0.1/x/y?q=/z
+get http://alice.github.io/a/b
+set http://localhost/a/bc/d sid=9
+get http://api.example.com/ab
+set http://10.1.2.3/a a=4
+get http://192.168.0.1
+dump

@@ -1,0 +1,125 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 11,
+            "passed": 9,
+            "failed": 2,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790489662.8133848,
+            "stop": 1790489664.2448525
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_owner_continuation",
+                "status": "passed",
+                "duration": 1.3116666000000805,
+                "start": 1790489662.8436506,
+                "stop": 1790489664.1569324,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_default_ttl",
+                "status": "passed",
+                "duration": 0.008739833999925395,
+                "start": 1790489664.1573956,
+                "stop": 1790489664.1677725,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_include_scope",
+                "status": "passed",
+                "duration": 0.0046546099997613055,
+                "start": 1790489664.1681302,
+                "stop": 1790489664.174268,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_include_paths",
+                "status": "passed",
+                "duration": 0.007182952999983172,
+                "start": 1790489664.174728,
+                "stop": 1790489664.1837127,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_quoted_parentheses",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.005034058999854096,
+                "start": 1790489664.1841884,
+                "stop": 1790489664.2051263,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "zonec = '/tmp/zonec-verify-build/zonec'\n\n    def test_quoted_parentheses(zonec):\n        \"\"\"Parentheses and semicolons inside quoted strings are text; a really unbalanced parenthesis is still reported.\"\"\"\n>       _check_group(zonec, \"quoted_parentheses\")\n\n/tests/test_outputs.py:129: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/zonec-verify-build/zonec', group = 'quoted_parentheses'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            base, proc = _run_case(binary, case)\n            label = f\"--- {group}/{case['name']} (zonec -o {case['origin']} {case['entry']})\"\n            if case[\"error_line\"] is None:\n                if (proc.returncode, proc.stdout) != (0, case[\"stdout\"]):\n                    failures.append(\n                        f\"{label}\\nexpected exit 0 and:\\n{case['stdout']}\"\n                        f\"got exit {proc.returncode}, stderr {proc.stderr.strip()!r}, stdout:\\n{proc.stdout}\"\n                    )\n                continue\n            prefix = f\"{base / case['error_file']}:{case['error_line']}: \"\n            first = proc.stderr.splitlines()[0] if proc.stderr else \"\"\n            if proc.returncode != 1 or proc.stdout != \"\" or not first.startswith(prefix):\n                failures.append(\n                    f\"{label}\\nexpected exit 1, empty stdout and a diagnostic starting with {prefix!r}\\n\"\n                    f\"got exit {proc.returncode}, stderr {first!r}, stdout:\\n{proc.stdout}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 1 of 2 cases differ:\nE         --- quoted_parentheses/parens_and_semicolons_in_strings (zonec -o example.com main.zone)\nE         expected exit 0 and:\nE         example.com.\t3600\tIN\tNS\tns1.example.com.\nE         example.com.\t3600\tIN\tSOA\tns1.example.com. hostmaster.example.com. 2026092701 7200 1800 1209600 300\nE         caa.example.com.\t3600\tIN\tCAA\t0 iodef \"mailto:dns@example.com;(24h)\"\nE         esc.example.com.\t3600\tIN\tTXT\t\"a \\\"quoted\\\" word\" \"(bare)\"\nE         multi.example.com.\t3600\tIN\tTXT\t\"first; not a comment\" \"second (part\"\nE         ns1.example.com.\t3600\tIN\tA\t192.0.2.1\nE         smile.example.com.\t3600\tIN\tTXT\t\"ok :-)\" \"(beta)\"\nE         got exit 1, stderr '/tmp/zonec-case-n4_mgzts/main.zone:7: unbalanced parentheses', stdout:\nE         \nE       assert not ['--- quoted_parentheses/parens_and_semicolons_in_strings (zonec -o example.com main.zone)\\nexpected exit 0 and:\\nexam...XT\\t\"ok :-)\" \"(beta)\"\\ngot exit 1, stderr \\'/tmp/zonec-case-n4_mgzts/main.zone:7: unbalanced parentheses\\', stdout:\\n']\n\n/tests/test_outputs.py:104: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_escaped_case",
+                "status": "passed",
+                "duration": 0.002368854999758696,
+                "start": 1790489664.2054472,
+                "stop": 1790489664.2091634,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_escaped_label_length",
+                "status": "passed",
+                "duration": 0.004189580000229398,
+                "start": 1790489664.2096524,
+                "stop": 1790489664.2156708,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_canonical_order",
+                "status": "passed",
+                "duration": 0.0034604909999416122,
+                "start": 1790489664.216233,
+                "stop": 1790489664.220851,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_rrset_ttl",
+                "status": "passed",
+                "duration": 0.00323081400006231,
+                "start": 1790489664.2211177,
+                "stop": 1790489664.2254746,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_zonemd",
+                "status": "passed",
+                "duration": 0.006402455999932499,
+                "start": 1790489664.2258236,
+                "stop": 1790489664.2334783,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_reference_zone",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.003287074000127177,
+                "start": 1790489664.233731,
+                "stop": 1790489664.2434368,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "zonec = '/tmp/zonec-verify-build/zonec'\n\n    def test_reference_zone(zonec):\n        \"\"\"A multi-file production-style zone combining includes with origins, $TTL scopes, escapes, multi-line records and a ZONEMD digest.\"\"\"\n>       _check_group(zonec, \"reference_zone\")\n\n/tests/test_outputs.py:159: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/zonec-verify-build/zonec', group = 'reference_zone'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            base, proc = _run_case(binary, case)\n            label = f\"--- {group}/{case['name']} (zonec -o {case['origin']} {case['entry']})\"\n            if case[\"error_line\"] is None:\n                if (proc.returncode, proc.stdout) != (0, case[\"stdout\"]):\n                    failures.append(\n                        f\"{label}\\nexpected exit 0 and:\\n{case['stdout']}\"\n                        f\"got exit {proc.returncode}, stderr {proc.stderr.strip()!r}, stdout:\\n{proc.stdout}\"\n                    )\n                continue\n            prefix = f\"{base / case['error_file']}:{case['error_line']}: \"\n            first = proc.stderr.splitlines()[0] if proc.stderr else \"\"\n            if proc.returncode != 1 or proc.stdout != \"\" or not first.startswith(prefix):\n                failures.append(\n                    f\"{label}\\nexpected exit 1, empty stdout and a diagnostic starting with {prefix!r}\\n\"\n                    f\"got exit {proc.returncode}, stderr {first!r}, stdout:\\n{proc.stdout}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 1 of 1 cases differ:\nE         --- reference_zone/production_like_zone (zonec -o shop.example db/shop.example.zone)\nE         expected exit 0 and:\nE         shop.example.\t14400\tIN\tNS\tns1.shop.example.\nE         shop.example.\t14400\tIN\tNS\tns2.provider.example.\nE         shop.example.\t14400\tIN\tSOA\tns1.shop.example. hostmaster.shop.example. 2026092703 3600 900 1209600 600\nE         shop.example.\t14400\tIN\tMX\t10 mx1.shop.example.\nE         shop.example.\t14400\tIN\tMX\t20 mx2.shop.example.\nE         shop.example.\t14400\tIN\tTXT\t\"v=spf1 mx include:_spf.provider.example ~all\"\nE         shop.example.\t14400\tIN\tZONEMD\t2026092703 1 1 D40FCFF2AF3CCE52A1F0C2F6C7B0D6EF85D14681F4844839D7184D1FC7B94049D78AF379283100F74BF7D62D325A1ECB\nE         shop.example.\t14400\tIN\tCAA\t0 issue \"letsencrypt.org\"\nE         shop.example.\t14400\tIN\tCAA\t128 iodef \"mailto:security@shop.example\"\nE         _imaps._tcp.shop.example.\t14400\tIN\tTXT\t\"imaps fallback on mx2\"\nE         _imaps._tcp.shop.example.\t14400\tIN\tSRV\t0 1 993 mx1.shop.example.\nE         _imaps._tcp.shop.example.\t14400\tIN\tSRV\t10 1 993 mx2.shop.example.\nE         _submission._tcp.shop.example.\t14400\tIN\tSRV\t0 1 587 mx1.shop.example.\nE         api.shop.example.\t300\tIN\tA\t203.0.113.80\nE         api.shop.example.\t300\tIN\tA\t203.0.113.81\nE         docs.api.shop.example.\t300\tIN\tTXT\t\"api v2 (beta); see\" \"https://shop.example/docs\"\nE         db01.internal.api.shop.example.\t300\tIN\tA\t10.20.0.11\nE         db01.internal.api.shop.example.\t3600\tIN\tTXT\t\"primary\"\nE         db02.internal.api.shop.example.\t300\tIN\tA\t10.20.0.12\nE         v2.api.shop.example.\t300\tIN\tCNAME\tapi.shop.example.\nE         mx1.shop.example.\t14400\tIN\tA\t203.0.113.25\nE         mx2.shop.example.\t14400\tIN\tA\t203.0.113.26\nE         ns1.shop.example.\t14400\tIN\tA\t203.0.113.53\nE         ns1.shop.example.\t14400\tIN\tAAAA\t2001:db8::1:0:0:53\nE         status.shop.example.\t14400\tIN\tA\t203.0.113.99\nE         www.shop.example.\t300\tIN\tCNAME\tcdn.provider.example.\nE         got exit 0, stderr '', stdout:\nE         shop.example.\t14400\tIN\tNS\tns1.shop.example.\nE         shop.example.\t14400\tIN\tNS\tns2.provider.example.\nE         shop.example.\t14400\tIN\tSOA\tns1.shop.example. hostmaster.shop.example. 2026092703 3600 900 1209600 600\nE         shop.example.\t14400\tIN\tMX\t10 mx1.shop.example.\nE         shop.example.\t14400\tIN\tMX\t20 mx2.shop.example.\nE         shop.example.\t14400\tIN\tTXT\t\"v=spf1 mx include:_spf.provider.example ~all\"\nE         shop.example.\t14400\tIN\tZONEMD\t2026092703 1 1 C964B49207BF9AA7C6BA6A1915D2D47B3827C8763A5CBED00974583AC209894A94CAE0190DE074A7163A695D8D6220D5\nE         shop.example.\t14400\tIN\tCAA\t0 issue \"letsencrypt.org\"\nE         shop.example.\t14400\tIN\tCAA\t128 iodef \"mailto:security@shop.example\"\nE         _imaps._tcp.shop.example.\t14400\tIN\tTXT\t\"imaps fallback on mx2\"\nE         _imaps._tcp.shop.example.\t14400\tIN\tSRV\t0 1 993 mx1.shop.example.\nE         _imaps._tcp.shop.example.\t14400\tIN\tSRV\t10 1 993 mx2.shop.example.\nE         _submission._tcp.shop.example.\t14400\tIN\tSRV\t0 1 587 mx1.shop.example.\nE         api.shop.example.\t300\tIN\tA\t203.0.113.80\nE         api.shop.example.\t300\tIN\tA\t203.0.113.81\nE         docs.api.shop.example.\t300\tIN\tTXT\t\"api v2 beta; see\" \"https://shop.example/docs\"\nE         db01.internal.api.shop.example.\t300\tIN\tA\t10.20.0.11\nE         db01.internal.api.shop.example.\t3600\tIN\tTXT\t\"primary\"\nE         db02.internal.api.shop.example.\t300\tIN\tA\t10.20.0.12\nE         v2.api.shop.example.\t300\tIN\tCNAME\tapi.shop.example.\nE         mx1.shop.example.\t14400\tIN\tA\t203.0.113.25\nE         mx2.shop.example.\t14400\tIN\tA\t203.0.113.26\nE         ns1.shop.example.\t14400\tIN\tA\t203.0.113.53\nE         ns1.shop.example.\t14400\tIN\tAAAA\t2001:db8::1:0:0:53\nE         status.shop.example.\t14400\tIN\tA\t203.0.113.99\nE         www.shop.example.\t300\tIN\tCNAME\tcdn.provider.example.\nE         \nE       assert not ['--- reference_zone/production_like_zone (zonec -o shop.example db/shop.example.zone)\\nexpected exit 0 and:\\nshop.exa...:0:0:53\\nstatus.shop.example.\\t14400\\tIN\\tA\\t203.0.113.99\\nwww.shop.example.\\t300\\tIN\\tCNAME\\tcdn.provider.example.\\n']\n\n/tests/test_outputs.py:104: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            }
+        ]
+    }
+}

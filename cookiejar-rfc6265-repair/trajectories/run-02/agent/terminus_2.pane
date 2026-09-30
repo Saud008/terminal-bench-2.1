@@ -1,0 +1,1729 @@
+[?2004hroot@a33208476d7f:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@a33208476d7f:/app# clear
+[?2004l[H[J[3J[?2004hroot@a33208476d7f:/app# find . -maxdepth 3 -type f -print | sort
+[?2004l./Cargo.lock
+./Cargo.toml
+./README.md
+./data/public_suffix.dat
+./docs/POLICY.md
+./docs/cli.md
+./docs/cookies.md
+./docs/transcript.md
+./examples/basic.txt
+./examples/expiry.txt
+./examples/subdomains.txt
+./src/cli.rs
+./src/cookie/domain.rs
+./src/cookie/expiry.rs
+./src/cookie/mod.rs
+./src/cookie/parse.rs
+./src/cookie/path.rs
+./src/dump.rs
+./src/error.rs
+./src/host.rs
+./src/jar/evict.rs
+./src/jar/mod.rs
+./src/jar/order.rs
+./src/jar/select.rs
+./src/jar/store.rs
+./src/main.rs
+./src/psl.rs
+./src/time/civil.rs
+./src/time/date.rs
+./src/time/mod.rs
+./src/transcript.rs
+./src/url.rs
+./target/.rustc_info.json
+./target/CACHEDIR.TAG
+./target/release/.cargo-lock
+./target/release/crumbjar
+./target/release/crumbjar.d
+[?2004hroot@a33208476d7f:/app# printf '%s\n' '--- Cargo.toml ---'; cat Cargo.toml; for f in docs/*; do printf '\n--- %s ---\n' "$f"; cat "$f"; done
+[?2004l--- Cargo.toml ---
+[package]
+name = "crumbjar"
+version = "0.4.2"
+edition = "2021"
+publish = false
+description = "Cookie store for replaying recorded HTTP sessions"
+
+[dependencies]
+
+[profile.release]
+debug = false
+
+--- docs/POLICY.md ---
+# Storage policy
+
+Replays of long crawls used to grow the store without bound, so crumbjar
+caps how many cookies one site can keep.
+
+## Sites
+
+A cookie belongs to the site of its domain field (for a host-only cookie
+that is the host it was set by). The site of a domain is:
+
+1. the domain itself, if it is an IPv4 address or a public suffix;
+2. otherwise the longest public suffix that is a proper suffix of the domain
+   (on a label boundary), plus the label directly in front of it
+   (`a.b.example.co.uk` belongs to `example.co.uk`);
+3. otherwise, when no listed suffix applies, its last two labels (or the
+   domain itself if it has fewer).
+
+## Limit
+
+A site may hold at most 6 cookies.
+
+After a cookie has been stored (and expired cookies removed), if its site
+holds more than 6 cookies, crumbjar evicts cookies of that site one at a
+time until 6 remain. The cookie evicted each time is the one with the
+oldest last-access-time; among cookies with the same last-access-time,
+the one with the oldest creation-time goes first.
+
+Times compare by clock value first and by transcript order within one clock
+value, so two cookies only share a last-access-time when they were last sent
+in the same request.
+
+Replacing an existing cookie (same name, domain and path) does not change
+the count. Cookies of other sites are never evicted to make room.
+
+--- docs/cli.md ---
+# Command line
+
+```
+crumbjar replay <transcript>
+crumbjar replay -
+crumbjar --version
+```
+
+`replay` reads a transcript (see `transcript.md`) from the named file, or
+from standard input when the argument is `-`, and executes its commands in
+order against an empty cookie store.
+
+## Output
+
+Everything goes to standard output, one line per event, in transcript order.
+
+A `get` command prints the request URL exactly as written in the
+transcript, a single TAB, and the value of the `Cookie` header the request
+carries: `name=value` pairs joined with `"; "` (semicolon, space). When no
+cookie applies, the line is the URL followed by the TAB and nothing else.
+
+```
+https://www.example.com/cart	sid=31d4d96e; lang=en-US
+https://static.example.net/logo.png	
+```
+
+A `dump` command prints a header line followed by one line per cookie in the
+store that has not expired at the current clock:
+
+```
+-- jar @<clock>: <n> cookie(s)
+<domain>	<path>	<name>=<value>	<flags>	<expiry>	<created>	<accessed>
+```
+
+Fields are separated by a single TAB.
+
+- `domain`, `path`, `name`, `value`: the cookie's stored fields.
+- `flags`: the set flags among `host-only`, `secure`, `httponly`, in that
+  order, joined with commas; `-` when none is set.
+- `expiry`: `session` for a non-persistent cookie, otherwise its
+  expiry-time in seconds since the epoch.
+- `created`, `accessed`: clock value of the cookie's creation-time and
+  last-access-time.
+
+Cookie lines are sorted by domain, then path, then name (byte order). A
+`dump` does not count as an access.
+
+## Exit status
+
+- 0: the transcript was replayed.
+- 1: the transcript could not be read or has a malformed line; a message of
+  the form `crumbjar: line <n>: <reason>` goes to standard error and nothing
+  is replayed.
+- 2: bad command line.
+
+--- docs/cookies.md ---
+# Cookie semantics
+
+crumbjar is the user agent side of RFC 6265, "HTTP State Management
+Mechanism" (April 2011), section 5: date parsing, `Set-Cookie` parsing, the
+storage model and the `Cookie` header. It follows that RFC as published, not
+the later rfc6265bis drafts; SameSite and cookie prefixes are ordinary
+unknown attributes and names to crumbjar.
+
+Where RFC 6265 leaves a choice to the user agent, crumbjar does this:
+
+- **Representable times.** Expiry-times are whole seconds between
+  0001-01-01T00:00:00Z (the earliest representable date) and
+  9999-12-31T23:59:59Z (the latest). Out-of-range values are clamped to
+  those bounds as section 5.2 describes.
+- **Expiry.** A persistent cookie is expired once the clock is at or past
+  its expiry-time. Expired cookies are removed before any cookie is stored
+  or any `Cookie` header is built, and never show up in a `dump`.
+- **Session cookies** keep living for the whole replay (the replay is a
+  single session) and are shown with expiry `session`.
+- **Empty Domain attribute.** Ignored, as the RFC recommends.
+- **Public suffixes.** A domain is a public suffix exactly when it appears
+  as a line in `data/public_suffix.dat`. Wildcard and exception rules of the
+  upstream list are not supported. Section 5.3 step 5 is applied with this
+  list.
+- **Creation order.** Cookies created at the same clock value are ordered
+  by transcript order.
+- **Limits.** The per-site cookie limit is described in `POLICY.md`. There
+  is no limit on cookie size and no global limit.
+- **Canonical host names** are the lower-cased host of the URL; no IDNA
+  processing.
+
+--- docs/transcript.md ---
+# Transcript format
+
+A transcript is UTF-8 text, one command per line. Blank lines and lines
+whose first non-blank character is `#` are ignored. Leading blanks are
+ignored; a single space separates a command from its arguments.
+
+| Command | Meaning |
+|---|---|
+| `at <seconds>` | Set the replay clock (seconds since the epoch, UTC). |
+| `set <url> <set-cookie-string>` | A response to a request for `<url>` carried a `Set-Cookie` header whose field value is `<set-cookie-string>`. |
+| `get <url>` | The user agent sends an HTTP request to `<url>`. |
+| `dump` | Print the cookie store. |
+
+The clock starts at 0 and may never move backwards. It only changes on
+`at`; any number of events can happen at the same clock value, and they
+happen in transcript order.
+
+For `set`, everything after the space that follows the URL, up to the end of
+the line, is the header field value, byte for byte (no `Set-Cookie:` prefix).
+Each `set` line is one header; a response with several `Set-Cookie` headers
+is written as several `set` lines.
+
+Every `set` and `get` is an HTTP API in the sense of RFC 6265 (there is no
+script access to cookies in a replay).
+
+## URLs
+
+Only `http://` and `https://` URLs are accepted (scheme case-insensitive).
+`https` is the only secure protocol. The host is lower-cased; a `:port`
+suffix is dropped, and cookies do not depend on the port. IPv6 literals and
+user information are not supported. The request path is the URL path
+without query or fragment, or `/` if the URL has no path.
+
+## Example
+
+```
+at 1767225600
+set https://www.example.com/account/login sid=31d4d96e; Path=/; Secure; HttpOnly
+set https://www.example.com/account/login lang=en-US; Max-Age=86400
+get https://www.example.com/account/settings
+at 1767312001
+get https://www.example.com/account/settings
+dump
+```
+[?2004hroot@a33208476d7f:/app# for f in $(find src tests -type f 2>/dev/null | sort); do printf '\n--- %s ---\n' "$f"; sed -n '1,260p' "$f"; done
+[?2004l
+--- src/cli.rs ---
+use crate::dump;
+use crate::jar::Jar;
+use crate::psl::List;
+use crate::transcript::{self, Command};
+use std::io::{self, BufWriter, Read, Write};
+
+const USAGE: &str = "usage: crumbjar replay <transcript | ->";
+
+pub fn run(args: &[String]) -> i32 {
+    let source = match args {
+        [cmd, src] if cmd == "replay" => src,
+        [flag] if flag == "--version" => {
+            println!("crumbjar {}", env!("CARGO_PKG_VERSION"));
+            return 0;
+        }
+        _ => {
+            eprintln!("{USAGE}");
+            return 2;
+        }
+    };
+
+    let text = match read_source(source) {
+        Ok(t) => t,
+        Err(e) => {
+            eprintln!("crumbjar: {source}: {e}");
+            return 1;
+        }
+    };
+    let commands = match transcript::parse(&text) {
+        Ok(c) => c,
+        Err(e) => {
+            eprintln!("crumbjar: {e}");
+            return 1;
+        }
+    };
+
+    let mut jar = Jar::new(List::builtin());
+    let stdout = io::stdout();
+    let mut out = BufWriter::new(stdout.lock());
+    if let Err(e) = replay(&mut jar, commands, &mut out).and_then(|_| out.flush()) {
+        eprintln!("crumbjar: write error: {e}");
+        return 1;
+    }
+    0
+}
+
+fn read_source(source: &str) -> io::Result<String> {
+    if source == "-" {
+        let mut s = String::new();
+        io::stdin().read_to_string(&mut s)?;
+        Ok(s)
+    } else {
+        std::fs::read_to_string(source)
+    }
+}
+
+fn replay<W: Write>(jar: &mut Jar, commands: Vec<Command>, out: &mut W) -> io::Result<()> {
+    for cmd in commands {
+        match cmd {
+            Command::At(t) => jar.set_clock(t),
+            Command::Set(url, header) => jar.set_cookie(&url, &header),
+            Command::Get(url) => {
+                let header = jar.cookie_header(&url);
+                writeln!(out, "{}\t{}", url.raw, header)?;
+            }
+            Command::Dump => dump::write(out, jar)?,
+        }
+    }
+    Ok(())
+}
+
+--- src/cookie/domain.rs ---
+//! Which hosts a new cookie is scoped to (RFC 6265 section 5.3, steps 4-6).
+
+use super::parse::Attr;
+use crate::host::domain_match;
+use crate::psl::List;
+
+pub enum Scope {
+    /// Only sent back to exactly this host.
+    HostOnly(String),
+    /// Sent to this domain and every subdomain of it.
+    Domain(String),
+}
+
+/// `None` means the cookie must be ignored.
+pub fn resolve(attrs: &[Attr], host: &str, psl: &List) -> Option<Scope> {
+    let domain = attrs
+        .iter()
+        .rev()
+        .find_map(|a| match a {
+            Attr::Domain(d) => Some(d.clone()),
+            _ => None,
+        })
+        .unwrap_or_default();
+
+    if !domain.is_empty() && psl.is_public_suffix(&domain) {
+        return None;
+    }
+
+    if domain.is_empty() {
+        return Some(Scope::HostOnly(host.to_string()));
+    }
+    if !domain_match(host, &domain) {
+        return None;
+    }
+    Some(Scope::Domain(domain))
+}
+
+--- src/cookie/expiry.rs ---
+use super::parse::Attr;
+
+pub enum Lifetime {
+    Session,
+    Persistent(i64),
+}
+
+/// Lifetime of a new cookie from its attribute list (RFC 6265 section 5.3,
+/// step 3).
+pub fn resolve(attrs: &[Attr]) -> Lifetime {
+    attrs
+        .iter()
+        .rev()
+        .find_map(|a| match a {
+            Attr::MaxAge(t) | Attr::Expires(t) => Some(*t),
+            _ => None,
+        })
+        .map_or(Lifetime::Session, Lifetime::Persistent)
+}
+
+--- src/cookie/mod.rs ---
+//! Everything derived from a single Set-Cookie header before it reaches the
+//! store.
+
+pub mod domain;
+pub mod expiry;
+pub mod parse;
+pub mod path;
+
+--- src/cookie/parse.rs ---
+//! Set-Cookie parsing (RFC 6265 section 5.2).
+
+use super::path::default_path;
+use crate::time::{date, EARLIEST, LATEST};
+use crate::url::Url;
+
+/// One entry of the cookie-attribute-list, already interpreted.
+#[derive(Clone, Debug)]
+pub enum Attr {
+    Expires(i64),
+    MaxAge(i64),
+    Domain(String),
+    Path(String),
+    Secure,
+    HttpOnly,
+}
+
+#[derive(Debug)]
+pub struct SetCookie {
+    pub name: String,
+    pub value: String,
+    pub attrs: Vec<Attr>,
+}
+
+fn trim_wsp(s: &str) -> &str {
+    s.trim_matches(|c| c == ' ' || c == '\t')
+}
+
+/// Max-Age attribute value to an expiry-time, relative to `now`.
+fn max_age(v: &str, now: i64) -> Option<i64> {
+    let (neg, digits) = match v.strip_prefix('-') {
+        Some(rest) => (true, rest),
+        None => (false, v),
+    };
+    if digits.is_empty() || !digits.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    let delta = digits
+        .bytes()
+        .fold(0i64, |acc, b| acc.saturating_mul(10).saturating_add(i64::from(b - b'0')));
+    if neg || delta == 0 {
+        Some(EARLIEST)
+    } else {
+        Some(now.saturating_add(delta).min(LATEST))
+    }
+}
+
+/// Parses a set-cookie-string received in a response to `url` at time `now`.
+/// Returns `None` when the whole header has to be ignored.
+pub fn parse(header: &str, url: &Url, now: i64) -> Option<SetCookie> {
+    let (pair, unparsed) = match header.split_once(';') {
+        Some((p, rest)) => (p, Some(rest)),
+        None => (header, None),
+    };
+
+    let (name, value) = match pair.split_once('=') {
+        Some((n, v)) => (trim_wsp(n), trim_wsp(v)),
+        None => ("", trim_wsp(pair)),
+    };
+    if name.is_empty() && value.is_empty() {
+        return None;
+    }
+
+    let mut attrs = Vec::new();
+    for av in unparsed.into_iter().flat_map(|u| u.split(';')) {
+        let (n, v) = av.split_once('=').unwrap_or((av, ""));
+        let (n, v) = (trim_wsp(n), trim_wsp(v));
+        match n.to_ascii_lowercase().as_str() {
+            "expires" => {
+                if let Some(t) = date::parse_cookie_date(v) {
+                    attrs.push(Attr::Expires(t.clamp(EARLIEST, LATEST)));
+                }
+            }
+            "max-age" => {
+                if let Some(t) = max_age(v, now) {
+                    attrs.push(Attr::MaxAge(t));
+                }
+            }
+            "domain" => {
+                if !v.is_empty() {
+                    let d = v.strip_prefix('.').unwrap_or(v);
+                    attrs.push(Attr::Domain(d.to_ascii_lowercase()));
+                }
+            }
+            "path" => {
+                let p = if v.starts_with('/') { v.to_string() } else { default_path(&url.path) };
+                attrs.push(Attr::Path(p));
+            }
+            "secure" => attrs.push(Attr::Secure),
+            "httponly" => attrs.push(Attr::HttpOnly),
+            _ => {}
+        }
+    }
+
+    Some(SetCookie {
+        name: name.to_string(),
+        value: value.to_string(),
+        attrs,
+    })
+}
+
+--- src/cookie/path.rs ---
+//! Paths and path-match (RFC 6265 section 5.1.4).
+
+/// The default-path of a request-uri path.
+pub fn default_path(uri_path: &str) -> String {
+    if !uri_path.starts_with('/') {
+        return "/".to_string();
+    }
+    match uri_path.rfind('/') {
+        Some(0) | None => "/".to_string(),
+        Some(i) => uri_path[..=i].to_string(),
+    }
+}
+
+pub fn path_match(request_path: &str, cookie_path: &str) -> bool {
+    request_path.starts_with(cookie_path)
+}
+
+--- src/dump.rs ---
+//! The `dump` listing. Format in docs/cli.md.
+
+use crate::jar::{Cookie, Jar};
+use std::io::{self, Write};
+
+fn flags(c: &Cookie) -> String {
+    let mut f = Vec::new();
+    if c.host_only {
+        f.push("host-only");
+    }
+    if c.secure {
+        f.push("secure");
+    }
+    if c.http_only {
+        f.push("httponly");
+    }
+    if f.is_empty() {
+        "-".to_string()
+    } else {
+        f.join(",")
+    }
+}
+
+pub fn write<W: Write>(out: &mut W, jar: &Jar) -> io::Result<()> {
+    let mut live: Vec<&Cookie> = jar.live_cookies().collect();
+    live.sort_by(|a, b| (&a.domain, &a.path, &a.name).cmp(&(&b.domain, &b.path, &b.name)));
+
+    writeln!(out, "-- jar @{}: {} cookie(s)", jar.clock(), live.len())?;
+    for c in live {
+        let expiry = c.expiry.map_or_else(|| "session".to_string(), |t| t.to_string());
+        writeln!(
+            out,
+            "{}\t{}\t{}={}\t{}\t{}\t{}\t{}",
+            c.domain,
+            c.path,
+            c.name,
+            c.value,
+            flags(c),
+            expiry,
+            c.created.time,
+            c.accessed.time
+        )?;
+    }
+    Ok(())
+}
+
+--- src/error.rs ---
+use std::fmt;
+
+/// A transcript line crumbjar could not understand.
+#[derive(Debug)]
+pub struct LineError {
+    pub line: usize,
+    pub msg: String,
+}
+
+impl fmt::Display for LineError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "line {}: {}", self.line, self.msg)
+    }
+}
+
+--- src/host.rs ---
+/// True for a dotted-quad IPv4 address such as `192.0.2.7`.
+pub fn is_ip_address(host: &str) -> bool {
+    let parts: Vec<&str> = host.split('.').collect();
+    parts.len() == 4
+        && parts.iter().all(|p| {
+            !p.is_empty()
+                && p.len() <= 3
+                && p.bytes().all(|b| b.is_ascii_digit())
+                && p.parse::<u16>().map_or(false, |v| v <= 255)
+        })
+}
+
+/// Domain matching (RFC 6265 section 5.1.3). Both arguments must already be
+/// canonicalized.
+pub fn domain_match(string: &str, domain: &str) -> bool {
+    if string == domain {
+        return true;
+    }
+    string.len() > domain.len()
+        && string.ends_with(domain)
+        && string.as_bytes()[string.len() - domain.len() - 1] == b'.'
+}
+
+--- src/jar/evict.rs ---
+//! Removing cookies: expiry, and the per-site limit from docs/POLICY.md.
+
+use super::Jar;
+
+pub const MAX_COOKIES_PER_SITE: usize = 6;
+
+impl Jar {
+    pub(super) fn purge_expired(&mut self) {
+        let now = self.clock;
+        self.cookies.retain(|c| !c.is_expired(now));
+    }
+
+    /// Evicts cookies of `site` until it is back within the limit.
+    pub(super) fn enforce_site_limit(&mut self, site: &str) {
+        loop {
+            let members: Vec<usize> = (0..self.cookies.len())
+                .filter(|&i| self.psl.registrable_domain(&self.cookies[i].domain) == site)
+                .collect();
+            if members.len() <= MAX_COOKIES_PER_SITE {
+                return;
+            }
+            let victim = members
+                .into_iter()
+                .min_by_key(|&i| self.cookies[i].created)
+                .expect("site has members");
+            self.cookies.remove(victim);
+        }
+    }
+}
+
+--- src/jar/mod.rs ---
+//! The cookie store.
+
+mod evict;
+mod order;
+mod select;
+mod store;
+
+use crate::psl::List;
+
+/// A point on the replay clock. `seq` orders events that share a clock
+/// value, in transcript order.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Stamp {
+    pub time: i64,
+    pub seq: u64,
+}
+
+#[derive(Clone, Debug)]
+pub struct Cookie {
+    pub name: String,
+    pub value: String,
+    pub domain: String,
+    pub path: String,
+    /// `None` for session cookies.
+    pub expiry: Option<i64>,
+    pub host_only: bool,
+    pub secure: bool,
+    pub http_only: bool,
+    pub created: Stamp,
+    pub accessed: Stamp,
+}
+
+impl Cookie {
+    pub fn is_expired(&self, now: i64) -> bool {
+        matches!(self.expiry, Some(t) if t <= now)
+    }
+}
+
+pub struct Jar {
+    cookies: Vec<Cookie>,
+    clock: i64,
+    seq: u64,
+    psl: List,
+}
+
+impl Jar {
+    pub fn new(psl: List) -> Jar {
+        Jar {
+            cookies: Vec::new(),
+            clock: 0,
+            seq: 0,
+            psl,
+        }
+    }
+
+    pub fn clock(&self) -> i64 {
+        self.clock
+    }
+
+    pub fn set_clock(&mut self, t: i64) {
+        self.clock = t;
+    }
+
+    /// Cookies that have not expired at the current clock, in store order.
+    pub fn live_cookies(&self) -> impl Iterator<Item = &Cookie> {
+        let now = self.clock;
+        self.cookies.iter().filter(move |c| !c.is_expired(now))
+    }
+
+    fn stamp(&mut self) -> Stamp {
+        self.seq += 1;
+        Stamp {
+            time: self.clock,
+            seq: self.seq,
+        }
+    }
+}
+
+--- src/jar/order.rs ---
+use super::Cookie;
+
+/// Orders the indices of the cookies going into one Cookie header.
+pub fn sort(hits: &mut [usize], cookies: &[Cookie]) {
+    hits.sort_by(|&a, &b| {
+        let (a, b) = (&cookies[a], &cookies[b]);
+        b.path.len().cmp(&a.path.len()).then_with(|| a.name.cmp(&b.name))
+    });
+}
+
+--- src/jar/select.rs ---
+//! Building the Cookie header (RFC 6265 section 5.4).
+
+use super::{order, Cookie, Jar};
+use crate::cookie::path::path_match;
+use crate::host::domain_match;
+use crate::url::Url;
+
+fn applies_to(c: &Cookie, url: &Url) -> bool {
+    let domain_ok = url.host == c.domain || domain_match(&url.host, &c.domain);
+    domain_ok && path_match(&url.path, &c.path) && (!c.secure || url.secure)
+}
+
+impl Jar {
+    /// The Cookie header value for an HTTP request to `url` (empty when no
+    /// cookie applies). Updates the last-access-time of every cookie sent.
+    pub fn cookie_header(&mut self, url: &Url) -> String {
+        self.purge_expired();
+        let stamp = self.stamp();
+
+        let mut hits: Vec<usize> = (0..self.cookies.len())
+            .filter(|&i| applies_to(&self.cookies[i], url))
+            .collect();
+        order::sort(&mut hits, &self.cookies);
+
+        let mut parts = Vec::with_capacity(hits.len());
+        for &i in &hits {
+            let c = &mut self.cookies[i];
+            c.accessed = stamp;
+            parts.push(format!("{}={}", c.name, c.value));
+        }
+        parts.join("; ")
+    }
+}
+
+--- src/jar/store.rs ---
+//! Storage model (RFC 6265 section 5.3).
+
+use super::{Cookie, Jar};
+use crate::cookie::domain::{self, Scope};
+use crate::cookie::expiry::{self, Lifetime};
+use crate::cookie::parse::{self, Attr};
+use crate::cookie::path::default_path;
+use crate::url::Url;
+
+impl Jar {
+    /// Handles a Set-Cookie header received in the response to `url`.
+    pub fn set_cookie(&mut self, url: &Url, header: &str) {
+        let Some(sc) = parse::parse(header, url, self.clock) else {
+            return;
+        };
+        let Some(scope) = domain::resolve(&sc.attrs, &url.host, &self.psl) else {
+            return;
+        };
+        let (domain, host_only) = match scope {
+            Scope::HostOnly(h) => (h, true),
+            Scope::Domain(d) => (d, false),
+        };
+        let path = sc
+            .attrs
+            .iter()
+            .rev()
+            .find_map(|a| match a {
+                Attr::Path(p) => Some(p.clone()),
+                _ => None,
+            })
+            .unwrap_or_else(|| default_path(&url.path));
+        let expiry = match expiry::resolve(&sc.attrs) {
+            Lifetime::Session => None,
+            Lifetime::Persistent(t) => Some(t),
+        };
+        let secure = sc.attrs.iter().any(|a| matches!(a, Attr::Secure));
+        let http_only = sc.attrs.iter().any(|a| matches!(a, Attr::HttpOnly));
+
+        let stamp = self.stamp();
+        let site = self.psl.registrable_domain(&domain);
+
+        if let Some(i) = self
+            .cookies
+            .iter()
+            .position(|c| c.name == sc.name && c.domain == domain && c.path == path)
+        {
+            self.cookies.remove(i);
+        }
+
+        self.cookies.push(Cookie {
+            name: sc.name,
+            value: sc.value,
+            domain,
+            path,
+            expiry,
+            host_only,
+            secure,
+            http_only,
+            created: stamp,
+            accessed: stamp,
+        });
+
+        self.purge_expired();
+        self.enforce_site_limit(&site);
+    }
+}
+
+--- src/main.rs ---
+mod cli;
+mod cookie;
+mod dump;
+mod error;
+mod host;
+mod jar;
+mod psl;
+mod time;
+mod transcript;
+mod url;
+
+fn main() {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    std::process::exit(cli::run(&args));
+}
+
+--- src/psl.rs ---
+//! Public suffix lookups against the vendored list in data/public_suffix.dat.
+
+use crate::host::is_ip_address;
+use std::collections::HashSet;
+
+const BUILTIN: &str = include_str!("../data/public_suffix.dat");
+
+pub struct List {
+    suffixes: HashSet<String>,
+}
+
+impl List {
+    pub fn builtin() -> List {
+        let suffixes = BUILTIN
+            .lines()
+            .map(str::trim)
+            .filter(|l| !l.is_empty() && !l.starts_with("//"))
+            .map(|l| l.to_ascii_lowercase())
+            .collect();
+        List { suffixes }
+    }
+
+    pub fn is_public_suffix(&self, domain: &str) -> bool {
+        self.suffixes.contains(domain)
+    }
+
+    /// The "site" a host belongs to: its longest listed public suffix plus
+    /// one more label. See docs/POLICY.md.
+    pub fn registrable_domain(&self, host: &str) -> String {
+        if is_ip_address(host) || self.is_public_suffix(host) {
+            return host.to_string();
+        }
+        let labels: Vec<&str> = host.split('.').collect();
+        for i in 1..labels.len() {
+            if self.is_public_suffix(&labels[i..].join(".")) {
+                return labels[i - 1..].join(".");
+            }
+        }
+        if labels.len() > 2 {
+            labels[labels.len() - 2..].join(".")
+        } else {
+            host.to_string()
+        }
+    }
+}
+
+--- src/time/civil.rs ---
+//! Proleptic Gregorian calendar arithmetic, all in UTC.
+
+pub const SECS_PER_DAY: i64 = 86_400;
+
+pub fn is_leap(year: i64) -> bool {
+    year % 4 == 0 && (year % 100 != 0 || year % 400 != 0)
+}
+
+pub fn days_in_month(year: i64, month: i64) -> i64 {
+    match month {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 if is_leap(year) => 29,
+        2 => 28,
+        _ => 0,
+    }
+}
+
+/// Days since 1970-01-01.
+pub fn days_from_civil(year: i64, month: i64, day: i64) -> i64 {
+    let y = if month <= 2 { year - 1 } else { year };
+    let era = y.div_euclid(400);
+    let yoe = y - era * 400;
+    let mp = (month + 9) % 12;
+    let doy = (153 * mp + 2) / 5 + day - 1;
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    era * 146_097 + doe - 719_468
+}
+
+/// Seconds since the epoch for a calendar date and time of day, or `None`
+/// when no such date exists.
+pub fn timestamp(year: i64, month: i64, day: i64, hour: i64, minute: i64, second: i64) -> Option<i64> {
+    if !(1..=12).contains(&month) || day < 1 || day > days_in_month(year, month) {
+        return None;
+    }
+    Some(days_from_civil(year, month, day) * SECS_PER_DAY + hour * 3600 + minute * 60 + second)
+}
+
+--- src/time/date.rs ---
+//! The cookie-date parser (RFC 6265 section 5.1.1). It accepts far more than
+//! the three formats servers are supposed to send.
+
+use super::civil::timestamp;
+
+const MONTHS: [&[u8; 3]; 12] = [
+    b"jan", b"feb", b"mar", b"apr", b"may", b"jun", b"jul", b"aug", b"sep", b"oct", b"nov", b"dec",
+];
+
+fn is_delimiter(b: u8) -> bool {
+    b == 0x09
+        || (0x20..=0x2f).contains(&b)
+        || (0x3b..=0x40).contains(&b)
+        || (0x5b..=0x60).contains(&b)
+        || (0x7b..=0x7e).contains(&b)
+}
+
+/// `min*maxDIGIT ( non-digit *OCTET )`: the value of the leading digits and
+/// whatever follows them.
+fn digits(tok: &[u8], min: usize, max: usize) -> Option<(i64, &[u8])> {
+    let n = tok.iter().take_while(|b| b.is_ascii_digit()).count();
+    if n < min || n > max {
+        return None;
+    }
+    let v = tok[..n].iter().fold(0i64, |acc, b| acc * 10 + i64::from(b - b'0'));
+    Some((v, &tok[n..]))
+}
+
+fn time(tok: &[u8]) -> Option<(i64, i64, i64)> {
+    let (h, rest) = digits(tok, 1, 2)?;
+    let rest = rest.strip_prefix(b":")?;
+    let (m, rest) = digits(rest, 1, 2)?;
+    let rest = rest.strip_prefix(b":")?;
+    let (s, _) = digits(rest, 1, 2)?;
+    Some((h, m, s))
+}
+
+fn month(tok: &[u8]) -> Option<i64> {
+    if tok.len() < 3 {
+        return None;
+    }
+    let head = tok[..3].to_ascii_lowercase();
+    MONTHS.iter().position(|m| head[..] == m[..]).map(|i| i as i64 + 1)
+}
+
+/// Seconds since the epoch, or `None` when the string is not a cookie-date.
+pub fn parse_cookie_date(s: &str) -> Option<i64> {
+    let mut found_time = None;
+    let mut found_day = None;
+    let mut found_month = None;
+    let mut found_year = None;
+
+    for tok in s.as_bytes().split(|&b| is_delimiter(b)).filter(|t| !t.is_empty()) {
+        if found_time.is_none() {
+            if let Some(t) = time(tok) {
+                found_time = Some(t);
+                continue;
+            }
+        }
+        if found_day.is_none() {
+            if let Some((d, _)) = digits(tok, 1, 2) {
+                found_day = Some(d);
+                continue;
+            }
+        }
+        if found_month.is_none() {
+            if let Some(m) = month(tok) {
+                found_month = Some(m);
+                continue;
+            }
+        }
+        if found_year.is_none() {
+            if let Some((y, _)) = digits(tok, 2, 4) {
+                found_year = Some(y);
+                continue;
+            }
+        }
+    }
+
+    let (hour, minute, second) = found_time?;
+    let day = found_day?;
+    let month = found_month?;
+    let mut year = found_year?;
+
+    if (50..=99).contains(&year) {
+        year += 1900;
+    } else if (0..=49).contains(&year) {
+        year += 2000;
+    }
+
+    if !(1..=31).contains(&day) || year < 1601 || hour > 23 || minute > 59 || second > 59 {
+        return None;
+    }
+    timestamp(year, month, day, hour, minute, second)
+}
+
+--- src/time/mod.rs ---
+pub mod civil;
+pub mod date;
+
+/// Earliest expiry-time crumbjar can represent (0001-01-01T00:00:00Z).
+pub const EARLIEST: i64 = -62_135_596_800;
+/// Latest expiry-time crumbjar can represent (9999-12-31T23:59:59Z).
+pub const LATEST: i64 = 253_402_300_799;
+
+--- src/transcript.rs ---
+//! Transcript reader. See docs/transcript.md for the format.
+
+use crate::error::LineError;
+use crate::url::Url;
+
+pub enum Command {
+    At(i64),
+    Set(Url, String),
+    Get(Url),
+    Dump,
+}
+
+pub fn parse(text: &str) -> Result<Vec<Command>, LineError> {
+    let mut out = Vec::new();
+    let mut clock: i64 = 0;
+
+    for (idx, raw) in text.lines().enumerate() {
+        let line_no = idx + 1;
+        let err = |msg: String| LineError { line: line_no, msg };
+
+        let line = raw.trim_start();
+        if line.trim_end().is_empty() || line.starts_with('#') {
+            continue;
+        }
+        let (word, rest) = line.split_once(' ').unwrap_or((line.trim_end(), ""));
+
+        match word {
+            "at" => {
+                let v = rest.trim();
+                let t: i64 = v.parse().map_err(|_| err(format!("bad clock value {v:?}")))?;
+                if t < clock {
+                    return Err(err(format!("clock moves backwards ({t} < {clock})")));
+                }
+                clock = t;
+                out.push(Command::At(t));
+            }
+            "set" => {
+                let (u, header) = rest
+                    .split_once(' ')
+                    .ok_or_else(|| err("set needs a URL and a Set-Cookie value".to_string()))?;
+                out.push(Command::Set(Url::parse(u).map_err(err)?, header.to_string()));
+            }
+            "get" => out.push(Command::Get(Url::parse(rest.trim()).map_err(err)?)),
+            "dump" if rest.trim().is_empty() => out.push(Command::Dump),
+            _ => return Err(err(format!("unknown command {word:?}"))),
+        }
+    }
+    Ok(out)
+}
+
+--- src/url.rs ---
+/// The parts of a request URL the cookie algorithms look at.
+#[derive(Clone, Debug)]
+pub struct Url {
+    /// The URL exactly as written in the transcript.
+    pub raw: String,
+    /// `https` (a secure protocol in RFC 6265 terms).
+    pub secure: bool,
+    /// Canonicalized (lower case) host, port removed.
+    pub host: String,
+    /// Path without query or fragment; `/` when the URL has none.
+    pub path: String,
+}
+
+impl Url {
+    pub fn parse(raw: &str) -> Result<Url, String> {
+        let lower = raw.to_ascii_lowercase();
+        let (secure, rest) = if lower.starts_with("https://") {
+            (true, &raw[8..])
+        } else if lower.starts_with("http://") {
+            (false, &raw[7..])
+        } else {
+            return Err(format!("unsupported URL {raw:?}"));
+        };
+
+        let end = rest.find(['/', '?', '#']).unwrap_or(rest.len());
+        let authority = &rest[..end];
+        if authority.contains('@') || authority.starts_with('[') {
+            return Err(format!("unsupported authority in {raw:?}"));
+        }
+        let host = match authority.rsplit_once(':') {
+            Some((h, port)) if !port.is_empty() && port.bytes().all(|b| b.is_ascii_digit()) => h,
+            Some(_) => return Err(format!("bad port in {raw:?}")),
+            None => authority,
+        };
+        if host.is_empty() {
+            return Err(format!("missing host in {raw:?}"));
+        }
+
+        let tail = &rest[end..];
+        let path_end = tail.find(['?', '#']).unwrap_or(tail.len());
+        let path = match &tail[..path_end] {
+            "" => "/".to_string(),
+            p => p.to_string(),
+        };
+
+        Ok(Url {
+            raw: raw.to_string(),
+            secure,
+            host: host.to_ascii_lowercase(),
+            path,
+        })
+    }
+}
+[?2004hroot@a33208476d7f:/app# cat > src/cookie/path.rs <<'EOF'
+[?2004l[?2004h> //! Paths and path-match (RFC 6265 section 5.1.4).
+[?2004lBuilding the Cookie header (RFC 6265 section 5.4).
+
+use super::{order, Cookie, Jar};
+use crate::cookie::path::path_match;
+use crate::host::domain_match;
+use crate::url::Url;
+
+fn applies_to(c: &Cookie, url: &Url) -> bool {
+    let domain_ok = if c.host_only {
+        url.host == c.domain
+    } else {
+        domain_match(&url.host, &c.domain)
+    };
+    domain_ok && path_match(&url.path, &c.path) && (!c.secure || url.secure)
+}
+
+impl Jar {
+    /// The Cookie header value for an HTTP request to `url` (empty when no
+    /// cookie applies). Updates the last-access-time of every cookie sent.
+    pub fn cookie_header(&mut self, url: &Url) -> String {
+        self.purge_expired();
+        let stamp = self.stamp();
+
+        let mut hits: Vec<usize> = (0..self.cookies.len())
+            .filter(|&i| applies_to(&self.cookies[i], url))
+            .collect();
+        order::sort(&mut hits, &self.cookies);
+
+        let mut parts = Vec::with_capacity(hits.len());
+        for &i in &hits {
+            let c = &mut self.cookies[i];
+            c.accessed = stamp;
+            parts.push(format!("{}={}", c.[?2004h> 
+[?2004l[?2004h> /// The default-path of a request-uri path.
+[?2004l[?2004h> pub fn default_path(uri_path: &str) -> String {
+[?2004l[?2004h>     if !uri_path.starts_with('/') {
+[?2004l[?2004h>         return "/".to_string();
+[?2004l[?2004h>     }
+[?2004l[?2004h>     match uri_path.rfind('/') {
+[?2004l[?2004h>         Some(0) | None => "/".to_string(),
+[?2004l[?2004h>         Some(i) => uri_path[..i].to_string(),
+[?2004l[?2004h>     }
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> pub fn path_match(request_path: &str, cookie_path: &str) -> bool {
+[?2004l[?2004h>     request_path == cookie_path
+[?2004l[?2004h>         || (request_path.starts_with(cookie_path)
+[?2004l[?2004h>             && (cookie_path.ends_with('/')
+[?2004l[?2004h>                 || request_path.as_bytes().get(cookie_path.len()) == Some(&b'/')))
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@a33208476d7f:/app# cat > src/cookie/domain.rs <<'EOF'
+[?2004l[?2004h> //! Which hosts a new cookie is scoped to (RFC 6265 section 5.3, steps 4-6).
+[?2004l[?2004h> 
+[?2004l[?2004h> use super::parse::Attr;
+[?2004l[?2004h> use crate::host::domain_match;
+[?2004l[?2004h> use crate::psl::List;
+[?2004l[?2004h> 
+[?2004l[?2004h> pub enum Scope {
+[?2004l[?2004h>     /// Only sent back to exactly this host.
+[?2004l[?2004h>     HostOnly(String),
+[?2004l[?2004h>     /// Sent to this domain and every subdomain of it.
+[?2004l[?2004h>     Domain(String),
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> /// `None` means the cookie must be ignored.
+[?2004l[?2004h> pub fn resolve(attrs: &[Attr], host: &str, psl: &List) -> Option<Scope> {
+[?2004l[?2004h>     let domain = attrs
+[?2004l[?2004h>         .iter()
+[?2004l[?2004h>         .rev()
+[?2004l[?2004h>         .find_map(|a| match a {
+[?2004l[?2004h>             Attr::Domain(d) => Some(d.clone()),
+[?2004l[?2004h>             _ => None,
+[?2004l[?2004h>         })
+[?2004l[?2004h>         .unwrap_or_default();
+[?2004l[?2004h> 
+[?2004l[?2004h>     // A public-suffix Domain is rejected, except that one equal to the
+[?2004l[?2004h>     // request host is ignored and produces a host-only cookie.
+[?2004l[?2004h>     if !domain.is_empty() && psl.is_public_suffix(&domain) {
+[?2004l[?2004h>         return if domain == host {
+[?2004l[?2004h>             Some(Scope::HostOnly(host.to_string()))
+[?2004l[?2004h>         } else {
+[?2004l[?2004h>             None
+[?2004l[?2004h>         };
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     if domain.is_empty() {
+[?2004l[?2004h>         return Some(Scope::HostOnly(host.to_string()));
+[?2004l[?2004h>     }
+[?2004l[?2004h>     if !domain_match(host, &domain) {
+[?2004l[?2004h>         return None;
+[?2004l[?2004h>     }
+[?2004l[?2004h>     Some(Scope::Domain(domain))
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004lname, c.value));
+        }
+        parts.join("; ")
+    }
+}
+EOF
+perl -0pi -e 's/\.min_by_key\(\|&i\| self\.cookies\[i\]\.created\)/.min_by_key(|&i| (self.cookies[i].accessed, self.cookies[i].created))/g' src/jar/evict.rs
+perl -0pi -e 's/    let \(name, value\) = match pair\.split_once\('\''='\''\) \{\n        Some\(\(n, v\)\) => \(trim_wsp\(n\), trim_wsp\(v\)\),\n        None => \("", trim_wsp\(pair\)\),\n    \};/    let (name, value) = pair.split_once('\''='\'')?;\n    let (name, value) = (trim_wsp(name), trim_wsp(value));/' src/cookie/parse.rs
+perl -0pi -e 's/year % 4 == 0 && \(year % 100 != 0 \|\| year % 400 != 0\)/year % 4 == 0 \&\& (year % 100 != 0 || year % 400 == 0)/' src/time/civil.rs
+[?2004hroot@a33208476d7f:/app# cat > src/cookie/expiry.rs <<'EOF'
+[?2004l[?2004h> use super::parse::Attr;
+[?2004l[?2004h> 
+[?2004l[?2004h> pub enum Lifetime {
+[?2004l[?2004h>     Session,
+[?2004l[?2004h>     Persistent(i64),
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> /// Lifetime of a new cookie from its attribute list (RFC 6265 section 5.3,
+[?2004l[?2004h> /// step 3). Max-Age takes precedence over Expires regardless of attribute
+[?2004l[?2004h> /// order; for duplicate attributes the last one is used.
+[?2004l[?2004h> pub fn resolve(attrs: &[Attr]) -> Lifetime {
+[?2004l[?2004h>     let max_age = attrs.iter().rev().find_map(|a| match a {
+[?2004l[?2004h>         Attr::MaxAge(t) => Some(*t),
+[?2004l[?2004h>         _ => None,
+[?2004l[?2004h>     });
+[?2004l[?2004h>     let expires = attrs.iter().rev().find_map(|a| match a {
+[?2004l[?2004h>         Attr::Expires(t) => Some(*t),
+[?2004l[?2004h>         _ => None,
+[?2004l[?2004h>     });
+[?2004l[?2004h>     max_age
+[?2004l[?2004h>         .or(expires)
+[?2004l[?2004h>         .map_or(Lifetime::Session, Lifetime::Persistent)
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@a33208476d7f:/app# cat > src/jar/order.rs <<'EOF'
+[?2004l[?2004h> use super::Cookie;
+[?2004l[?2004h> 
+[?2004l[?2004h> /// Orders the indices of the cookies going into one Cookie header: longer
+[?2004l[?2004h> /// paths first, then earlier creation-times (RFC 6265 section 5.4).
+[?2004l[?2004h> pub fn sort(hits: &mut [usize], cookies: &[Cookie]) {
+[?2004l[?2004h>     hits.sort_by(|&a, &b| {
+[?2004l[?2004h>         let (a, b) = (&cookies[a], &cookies[b]);
+[?2004l[?2004h>         b.path
+[?2004l[?2004h>             .len()
+[?2004l[?2004h>             .cmp(&a.path.len())
+[?2004l[?2004h>             .then_with(|| a.created.cmp(&b.created))
+[?2004l[?2004h>     });
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@a33208476d7f:/app# cat > src/jar/select.rs <<'EOF'
+[?2004l[?2004h> //! Building the Cookie header (RFC 6265 section 5.4).
+[?2004l[?2004h> 
+[?2004l[?2004h> use super::{order, Cookie, Jar};
+[?2004l[?2004h> use crate::cookie::path::path_match;
+[?2004l[?2004h> use crate::host::domain_match;
+[?2004l[?2004h> use crate::url::Url;
+[?2004l[?2004h> 
+[?2004l[?2004h> fn applies_to(c: &Cookie, url: &Url) -> bool {
+[?2004l[?2004h>     let domain_ok = if c.host_only {
+[?2004l[?2004h>         url.host == c.domain
+[?2004l[?2004h>     } else {
+[?2004l[?2004h>         domain_match(&url.host, &c.domain)
+[?2004l[?2004h>     };
+[?2004l[?2004h>     domain_ok && path_match(&url.path, &c.path) && (!c.secure || url.secure)
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> impl Jar {
+[?2004l[?2004h>     /// The Cookie header value for an HTTP request to `url` (empty when no
+[?2004l[?2004h>     /// cookie applies). Updates the last-access-time of every cookie sent.
+[?2004l[?2004h>     pub fn cookie_header(&mut self, url: &Url) -> String {
+[?2004l[?2004h>         self.purge_expired();
+[?2004l[?2004h>         let stamp = self.stamp();
+[?2004l[?2004h> 
+[?2004l[?2004h>         let mut hits: Vec<usize> = (0..self.cookies.len())
+[?2004l[?2004h>             .filter(|&i| applies_to(&self.cookies[i], url))
+[?2004l[?2004h>             .collect();
+[?2004l[?2004h>         order::sort(&mut hits, &self.cookies);
+[?2004l[?2004h> 
+[?2004l[?2004h>         let mut parts = Vec::with_capacity(hits.len());
+[?2004l[?2004h>         for &i in &hits {
+[?2004l[?2004h>             let c = &mut self.cookies[i];
+[?2004l[?2004h>             c.accessed = stamp;
+[?2004l[?2004h>             parts.push(format!("{}={}", c.name, c.value));
+[?2004l[?2004h>         }
+[?2004l[?2004h>         parts.join("; ")
+[?2004l[?2004h>     }
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@a33208476d7f:/app# perl -0pi -e 's/\.min_by_key\(\|&i\| self\.cookies\[i\]\.created\)/.min_by_key(|&i| (self.cookies[i].accessed, self.cookies[i].created))/g' src/jar/evict.rs
+[?2004l[?2004hroot@a33208476d7f:/app# perl -0pi -e 's/    let \(name, value\) = match pair\.split_once\('\''='\''\) \{\n        Some\(\(n, v\)\) => \(trim_wsp\(n\), trim_wsp\(v\)\),\n        None => \("", trim_wsp\(pair\)\),\n    \};/    let (name, value) = pair.split_once('\''='\'')?;\n    let (name, value) = (trim_wsp(name), trim_wsp(value));/' src/cookie/parse.rs
+[?2004l[?2004hroot@a33208476d7f:/app# perl -0pi -e 's/year % 4 == 0 && \(year % 100 != 0 \|\| year % 400 != 0\)/year % 4 == 0 \&\& (year % 100 != 0 || year % 400 == 0)/' src/time/civil.rs
+[?2004l[?2004hroot@a33208476d7f:/app# cat > src/jar/store.rs <<'EOF'
+[?2004l[?2004h> //! Storage model (RFC 6265 section 5.3).
+[?2004l[?2004h> 
+[?2004l[?2004h> use super::{Cookie, Jar};
+[?2004l[?2004h> use crate::cookie::domain::{self, Scope};
+[?2004l[?2004h> use crate::cookie::expiry::{self, Lifetime};
+[?2004l[?2004h> use crate::cookie::parse::{self, Attr};
+[?2004l[?2004h> use crate::cookie::path::default_path;
+[?2004l[?2004h> use crate::url::Url;
+[?2004l[?2004h> 
+[?2004l[?2004h> impl Jar {
+[?2004l[?2004h>     /// Handles a Set-Cookie header received in the response to `url`.
+[?2004l[?2004h>     pub fn set_cookie(&mut self, url: &Url, header: &str) {
+[?2004l[?2004h>         let Some(sc) = parse::parse(header, url, self.clock) else {
+[?2004l[?2004h>             return;
+[?2004l[?2004h>         };
+[?2004l[?2004h>         let Some(scope) = domain::resolve(&sc.attrs, &url.host, &self.psl) else {
+[?2004l[?2004h>             return;
+[?2004l[?2004h>         };
+[?2004l[?2004h>         let (domain, host_only) = match scope {
+[?2004l[?2004h>             Scope::HostOnly(h) => (h, true),
+[?2004l[?2004h>             Scope::Domain(d) => (d, false),
+[?2004l[?2004h>         };
+[?2004l[?2004h>         let path = sc
+[?2004l[?2004h>             .attrs
+[?2004l[?2004h>             .iter()
+[?2004l[?2004h>             .rev()
+[?2004l[?2004h>             .find_map(|a| match a {
+[?2004l[?2004h>                 Attr::Path(p) => Some(p.clone()),
+[?2004l[?2004h>                 _ => None,
+[?2004l[?2004h>             })
+[?2004l[?2004h>             .unwrap_or_else(|| default_path(&url.path));
+[?2004l[?2004h>         let expiry = match expiry::resolve(&sc.attrs) {
+[?2004l[?2004h>             Lifetime::Session => None,
+[?2004l[?2004h>             Lifetime::Persistent(t) => Some(t),
+[?2004l[?2004h>         };
+[?2004l[?2004h>         let secure = sc.attrs.iter().any(|a| matches!(a, Attr::Secure));
+[?2004l[?2004h>         let http_only = sc.attrs.iter().any(|a| matches!(a, Attr::HttpOnly));
+[?2004l[?2004h> 
+[?2004l[?2004h>         // Expired cookies are gone before storage and therefore cannot lend
+[?2004l[?2004h>         // their creation-time to a replacement.
+[?2004l[?2004h>         self.purge_expired();
+[?2004l[?2004h>         let stamp = self.stamp();
+[?2004l[?2004h>         let site = self.psl.registrable_domain(&domain);
+[?2004l[?2004h> 
+[?2004l[?2004h>         // RFC 6265 replacement retains the old cookie's creation-time.
+[?2004l[?2004h>         let mut created = stamp;
+[?2004l[?2004h>         if let Some(i) = self
+[?2004l[?2004h>             .cookies
+[?2004l[?2004h>             .iter()
+[?2004l[?2004h>             .position(|c| c.name == sc.name && c.domain == domain && c.path == path)
+[?2004l[?2004h>         {
+[?2004l[?2004h>             created = self.cookies[i].created;
+[?2004l[?2004h>             self.cookies.remove(i);
+[?2004l[?2004h>         }
+[?2004l[?2004h> 
+[?2004l[?2004h>         self.cookies.push(Cookie {
+[?2004l[?2004h>             name: sc.name,
+[?2004l[?2004h>             value: sc.value,
+[?2004l[?2004h>             domain,
+[?2004l[?2004h>             path,
+[?2004l[?2004h>             expiry,
+[?2004l[?2004h>             host_only,
+[?2004l[?2004h>             secure,
+[?2004l[?2004h>             http_only,
+[?2004l[?2004h>             created,
+[?2004l[?2004h>             accessed: stamp,
+[?2004l[?2004h>         });
+[?2004l[?2004h> 
+[?2004l[?2004h>         self.purge_expired();
+[?2004l[?2004h>         self.enforce_site_limit(&site);
+[?2004l[?2004h>     }
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@a33208476d7f:/app# cargo fmt -- --check || cargo fmt
+[?2004lcat > /tmp/regression.txt <<'EOF'
+at 0
+# host-only must not reach a subdomain
+set https://example.com/ root=1
+get https://api.example.com/
+# default path is /kb/articles, and boundary path matching is required
+set https://help.example.net/kb/articles/123 article=1
+get https://help.example.net/kb/articles
+get https://help.example.net/kb/articles-more
+# Max-Age wins even when Expires occurs later
+set https://example.org/ maxwins=1; Max-Age=100; Expires=Thu, 01 Jan 1970 00:00:00 GMT
+# years divisible by 400 are leap years
+set https://example.org/ future=1; Expires=Tue, 29 Feb 2400 12:00:00 GMT
+# public suffix equal to request host becomes host-only
+set https://com/ suffix=1; Domain=com
+get https://x.com/
+get https://com/
+# equal-path order is creation order and survives replacement
+set https://example.org/ z=old; Path=/
+set https://example.org/ a=1; Path=/
+set https://example.org/ z=new; Path=/
+get https://example.org/
+# no equals means ignore
+set https://example.org/ invalid-cookie
+# path boundary
+set https://example.org/foo p=1; Path=/foo
+get https://example.org/foobar
+dump
+EOF
+./target/release/crumbjar replay /tmp/regression.txt
+[0m[1m[31merror: [0m'cargo-fmt' is not installed for the toolchain '1.85.1-x86_64-unknown-linux-gnu'.
+To install, run `rustup component add rustfmt`
+[0m[1m[31merror: [0m'cargo-fmt' is not installed for the toolchain '1.85.1-x86_64-unknown-linux-gnu'.
+To install, run `rustup component add rustfmt`
+[?2004hroot@a33208476d7f:/app# cargo build --release
+[?2004l[1m[32m   Compiling[0m crumbjar v0.4.2 (/app)
+[1m[36m    Building[0m [                             ] 0/1: crumbjar(bin)                                                                                               [K[1m[32m    Finished[0m `release` profile [optimized] target(s) in 1.47s
+[?2004hroot@a33208476d7f:/app# cat > /tmp/regression.txt <<'EOF'
+[?2004l[?2004h> at 0
+[?2004l[?2004h> # host-only must not reach a subdomain
+[?2004l[?2004h> set https://example.com/ root=1
+[?2004l[?2004h> get https://api.example.com/
+[?2004l[?2004h> # default path is /kb/articles, and boundary path matching is required
+[?2004l[?2004h> set https://help.example.net/kb/articles/123 article=1
+[?2004l[?2004h> get https://help.example.net/kb/articles
+[?2004l[?2004h> get https://help.example.net/kb/articles-more
+[?2004l[?2004h> # Max-Age wins even when Expires occurs later
+[?2004l[?2004h> set https://example.org/ maxwins=1; Max-Age=100; Expires=Thu, 01 Jan 1970 00:00:00 GMT
+[?2004l[?2004h> # years divisible by 400 are leap years
+[?2004l[?2004h> set https://example.org/ future=1; Expires=Tue, 29 Feb 2400 12:00:00 GMT
+[?2004l[?2004h> # public suffix equal to request host becomes host-only
+[?2004l[?2004h> set https://com/ suffix=1; Domain=com
+[?2004l[?2004h> get https://x.com/
+[?2004l[?2004h> get https://com/
+[?2004l[?2004h> # equal-path order is creation order and survives replacement
+[?2004l[?2004h> set https://example.org/ z=old; Path=/
+[?2004l[?2004h> set https://example.org/ a=1; Path=/
+[?2004l[?2004h> set https://example.org/ z=new; Path=/
+[?2004l[?2004h> get https://example.org/
+[?2004l[?2004h> # no equals means ignore
+[?2004l[?2004h> set https://example.org/ invalid-cookie
+[?2004l[?2004h> # path boundary
+[?2004l[?2004h> set https://example.org/foo p=1; Path=/foo
+[?2004l[?2004h> get https://example.org/foobar
+[?2004l[?2004h> dump
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@a33208476d7f:/app# ./target/release/crumbjar replay /tmp/regression.txt
+[?2004lhttps://api.example.com/	
+https://help.example.net/kb/articles	article=1
+https://help.example.net/kb/articles-more	
+https://x.com/	
+https://com/	suffix=1
+https://example.org/	maxwins=1; future=1; z=new; a=1
+https://example.org/foobar	maxwins=1; future=1; z=new; a=1
+-- jar @0: 8 cookie(s)
+com	/	suffix=1	host-only	session	0	0
+example.com	/	root=1	host-only	session	0	0
+example.org	/	a=1	host-only	session	0	0
+example.org	/	future=1	host-only	13574606400	0	0
+example.org	/	maxwins=1	host-only	100	0	0
+example.org	/	z=new	host-only	session	0	0
+example.org	/foo	p=1	host-only	session	0	0
+help.example.net	/kb/articles	article=1	host-only	session	0	0
+[?2004hroot@a33208476d7f:/app# python3 - <<'PY'
+[?2004l[?2004h> p='src/host.rs'
+[?2004l[?2004h> s=open(p).read()
+[?2004l[?2004h> s=s.replace('    string.len() > domain.len()\n        && string.ends_with(domain)', '    !is_ip_address(string)\n        && string.len() > domain.len()\n        && string.ends_with(domain)')
+[?2004l[?2004h> open(p,'w').write(s)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@a33208476d7f:/app# sed -n '1,220p' src/cookie/parse.rs; sed -n '1,160p' src/host.rs; sed -n '1,140p' src/jar/evict.rs; git diff -- src
+[?2004l//! Set-Cookie parsing (RFC 6265 section 5.2).
+
+use super::path::default_path;
+use crate::time::{date, EARLIEST, LATEST};
+use crate::url::Url;
+
+/// One entry of the cookie-attribute-list, already interpreted.
+#[derive(Clone, Debug)]
+pub enum Attr {
+    Expires(i64),
+    MaxAge(i64),
+    Domain(String),
+    Path(String),
+    Secure,
+    HttpOnly,
+}
+
+#[derive(Debug)]
+pub struct SetCookie {
+    pub name: String,
+    pub value: String,
+    pub attrs: Vec<Attr>,
+}
+
+fn trim_wsp(s: &str) -> &str {
+    s.trim_matches(|c| c == ' ' || c == '\t')
+}
+
+/// Max-Age attribute value to an expiry-time, relative to `now`.
+fn max_age(v: &str, now: i64) -> Option<i64> {
+    let (neg, digits) = match v.strip_prefix('-') {
+        Some(rest) => (true, rest),
+        None => (false, v),
+    };
+    if digits.is_empty() || !digits.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    let delta = digits
+        .bytes()
+        .fold(0i64, |acc, b| acc.saturating_mul(10).saturating_add(i64::from(b - b'0')));
+    if neg || delta == 0 {
+        Some(EARLIEST)
+    } else {
+        Some(now.saturating_add(delta).min(LATEST))
+    }
+}
+
+/// Parses a set-cookie-string received in a response to `url` at time `now`.
+/// Returns `None` when the whole header has to be ignored.
+pub fn parse(header: &str, url: &Url, now: i64) -> Option<SetCookie> {
+    let (pair, unparsed) = match header.split_once(';') {
+        Some((p, rest)) => (p, Some(rest)),
+        None => (header, None),
+    };
+
+    let (name, value) = pair.split_once('=')?;
+    let (name, value) = (trim_wsp(name), trim_wsp(value));
+    if name.is_empty() && value.is_empty() {
+        return None;
+    }
+
+    let mut attrs = Vec::new();
+    for av in unparsed.into_iter().flat_map(|u| u.split(';')) {
+        let (n, v) = av.split_once('=').unwrap_or((av, ""));
+        let (n, v) = (trim_wsp(n), trim_wsp(v));
+        match n.to_ascii_lowercase().as_str() {
+            "expires" => {
+                if let Some(t) = date::parse_cookie_date(v) {
+                    attrs.push(Attr::Expires(t.clamp(EARLIEST, LATEST)));
+                }
+            }
+            "max-age" => {
+                if let Some(t) = max_age(v, now) {
+                    attrs.push(Attr::MaxAge(t));
+                }
+            }
+            "domain" => {
+                if !v.is_empty() {
+                    let d = v.strip_prefix('.').unwrap_or(v);
+                    attrs.push(Attr::Domain(d.to_ascii_lowercase()));
+                }
+            }
+            "path" => {
+                let p = if v.starts_with('/') { v.to_string() } else { default_path(&url.path) };
+                attrs.push(Attr::Path(p));
+            }
+            "secure" => attrs.push(Attr::Secure),
+            "httponly" => attrs.push(Attr::HttpOnly),
+            _ => {}
+        }
+    }
+
+    Some(SetCookie {
+        name: name.to_string(),
+        value: value.to_string(),
+        attrs,
+    })
+}
+/// True for a dotted-quad IPv4 address such as `192.0.2.7`.
+pub fn is_ip_address(host: &str) -> bool {
+    let parts: Vec<&str> = host.split('.').collect();
+    parts.len() == 4
+        && parts.iter().all(|p| {
+            !p.is_empty()
+                && p.len() <= 3
+                && p.bytes().all(|b| b.is_ascii_digit())
+                && p.parse::<u16>().map_or(false, |v| v <= 255)
+        })
+}
+
+/// Domain matching (RFC 6265 section 5.1.3). Both arguments must already be
+/// canonicalized.
+pub fn domain_match(string: &str, domain: &str) -> bool {
+    if string == domain {
+        return true;
+    }
+    !is_ip_address(string)
+        && string.len() > domain.len()
+        && string.ends_with(domain)
+        && string.as_bytes()[string.len() - domain.len() - 1] == b'.'
+}
+//! Removing cookies: expiry, and the per-site limit from docs/POLICY.md.
+
+use super::Jar;
+
+pub const MAX_COOKIES_PER_SITE: usize = 6;
+
+impl Jar {
+    pub(super) fn purge_expired(&mut self) {
+        let now = self.clock;
+        self.cookies.retain(|c| !c.is_expired(now));
+    }
+
+    /// Evicts cookies of `site` until it is back within the limit.
+    pub(super) fn enforce_site_limit(&mut self, site: &str) {
+        loop {
+            let members: Vec<usize> = (0..self.cookies.len())
+                .filter(|&i| self.psl.registrable_domain(&self.cookies[i].domain) == site)
+                .collect();
+            if members.len() <= MAX_COOKIES_PER_SITE {
+                return;
+            }
+            let victim = members
+                .into_iter()
+                .min_by_key(|&i| (self.cookies[i].accessed, self.cookies[i].created))
+                .expect("site has members");
+            self.cookies.remove(victim);
+        }
+    }
+}
+bash: git: command not found
+[?2004hroot@a33208476d7f:/app# cargo build --release
+[?2004l[1m[32m   Compiling[0m crumbjar v0.4.2 (/app)
+[1m[36m    Building[0m [                             ] 0/1: crumbjar(bin)                                                                                               [K[1m[32m    Finished[0m `release` profile [optimized] target(s) in 1.19s
+[?2004hroot@a33208476d7f:/app# ./target/release/crumbjar replay /tmp/regression.txt
+[?2004lhttps://api.example.com/	
+https://help.example.net/kb/articles	article=1
+https://help.example.net/kb/articles-more	
+https://x.com/	
+https://com/	suffix=1
+https://example.org/	maxwins=1; future=1; z=new; a=1
+https://example.org/foobar	maxwins=1; future=1; z=new; a=1
+-- jar @0: 8 cookie(s)
+com	/	suffix=1	host-only	session	0	0
+example.com	/	root=1	host-only	session	0	0
+example.org	/	a=1	host-only	session	0	0
+example.org	/	future=1	host-only	13574606400	0	0
+example.org	/	maxwins=1	host-only	100	0	0
+example.org	/	z=new	host-only	session	0	0
+example.org	/foo	p=1	host-only	session	0	0
+help.example.net	/kb/articles	article=1	host-only	session	0	0
+[?2004hroot@a33208476d7f:/app# for f in examples/*.txt; do echo "--- $f"; ./target/release/crumbjar replay "$f" || exit; done
+[?2004l--- examples/basic.txt
+https://www.example.com/account/settings	lang=en-US; sid=31d4d96e
+http://www.example.com/account/settings	lang=en-US
+https://www.example.com/account/settings	sid=31d4d96e
+-- jar @1767312001: 1 cookie(s)
+www.example.com	/	sid=31d4d96e	host-only,secure,httponly	session	1767225600	1767312001
+--- examples/expiry.txt
+https://news.example.net/	consent=yes; visit=1
+https://news.example.net/	consent=yes
+https://news.example.net/	
+-- jar @1767226300: 0 cookie(s)
+--- examples/subdomains.txt
+https://api.example.org/v1/items	token=e3b0c442; theme=dark
+https://app.example.org/settings	theme=dark; csrf=9f86d081
+https://example.org/	theme=dark
+-- jar @1767225600: 3 cookie(s)
+api.example.org	/v1	token=e3b0c442	host-only	session	1767225600	1767225600
+app.example.org	/	csrf=9f86d081	host-only	session	1767225600	1767225600
+example.org	/	theme=dark	-	session	1767225600	1767225600
+[?2004hroot@a33208476d7f:/app# cat > /tmp/evict.txt <<'EOF'
+[?2004l[?2004h> at 10
+[?2004l[?2004h> set https://a.example.com/ a=1
+[?2004l[?2004h> set https://a.example.com/ b=1
+[?2004l[?2004h> set https://a.example.com/ c=1
+[?2004l[?2004h> set https://a.example.com/ d=1
+[?2004l[?2004h> set https://a.example.com/ e=1
+[?2004l[?2004h> set https://a.example.com/ f=1
+[?2004l[?2004h> get https://a.example.com/only-a
+[?2004l[?2004h> at 11
+[?2004l[?2004h> set https://b.example.com/ g=1
+[?2004l[?2004h> dump
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@a33208476d7f:/app# ./target/release/crumbjar replay /tmp/evict.txt
+[?2004lhttps://a.example.com/only-a	a=1; b=1; c=1; d=1; e=1; f=1
+-- jar @11: 6 cookie(s)
+a.example.com	/	b=1	host-only	session	10	10
+a.example.com	/	c=1	host-only	session	10	10
+a.example.com	/	d=1	host-only	session	10	10
+a.example.com	/	e=1	host-only	session	10	10
+a.example.com	/	f=1	host-only	session	10	10
+b.example.com	/	g=1	host-only	session	11	11
+[?2004hroot@a33208476d7f:/app# cat > /tmp/final-check.txt <<'EOF'
+[?2004l[?2004h> at 1
+[?2004l[?2004h> set https://a.example.com/special a=1; Path=/special
+[?2004l[?2004h> set https://a.example.com/ b=1
+[?2004l[?2004h> set https://a.example.com/ c=1
+[?2004l[?2004h> set https://a.example.com/ d=1
+[?2004l[?2004h> set https://a.example.com/ e=1
+[?2004l[?2004h> set https://a.example.com/ f=1
+[?2004l[?2004h> at 2
+[?2004l[?2004h> get https://a.example.com/special
+[?2004l[?2004h> set https://b.example.com/ g=1
+[?2004l[?2004h> dump
+[?2004l[?2004h> set http://192.0.2.7/ bad=1; Domain=2.7
+[?2004l[?2004h> set http://192.0.2.7/ exact=1; Domain=192.0.2.7
+[?2004l[?2004h> get http://192.0.2.7/
+[?2004l[?2004h> set https://delete.example/ x=old
+[?2004l[?2004h> set https://delete.example/ x=new; Max-Age=0
+[?2004l[?2004h> get https://delete.example/
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@a33208476d7f:/app# ./target/release/crumbjar replay /tmp/final-check.txt
+[?2004lhttps://a.example.com/special	a=1; b=1; c=1; d=1; e=1; f=1
+-- jar @2: 6 cookie(s)
+a.example.com	/	b=1	host-only	session	1	2
+a.example.com	/	c=1	host-only	session	1	2
+a.example.com	/	d=1	host-only	session	1	2
+a.example.com	/	e=1	host-only	session	1	2
+a.example.com	/	f=1	host-only	session	1	2
+b.example.com	/	g=1	host-only	session	2	2
+http://192.0.2.7/	exact=1
+https://delete.example/	
+[?2004hroot@a33208476d7f:/app# cargo build --release
+[?2004l[1m[32m    Finished[0m `release` profile [optimized] target(s) in 0.01s
+[?2004hroot@a33208476d7f:/app# python3 - <<'PY'
+[?2004l[?2004h> p = 'src/cookie/parse.rs'
+[?2004l[?2004h> s = open(p).read()
+[?2004l[?2004h> s = s.replace("    let (name, value) = pair.split_once('=')?;\n    let (name, value) = (trim_wsp(name), trim_wsp(value));", "    let (name, value) = match pair.split_once('=') {\n        Some((n, v)) => (trim_wsp(n), trim_wsp(v)),\n        None => (\"\", trim_wsp(pair)),\n    };")
+[?2004l[?2004h> s = s.replace('Some(now.saturating_add(delta).min(LATEST))', 'Some(now.saturating_add(delta).clamp(EARLIEST, LATEST))')
+[?2004l[?2004h> open(p, 'w').write(s)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@a33208476d7f:/app# cargo build --release
+[?2004l[1m[32m   Compiling[0m crumbjar v0.4.2 (/app)
+[1m[36m    Building[0m [                             ] 0/1: crumbjar(bin)                                                                                               [K[1m[32m    Finished[0m `release` profile [optimized] target(s) in 1.05s
+[?2004hroot@a33208476d7f:/app# cat > /tmp/rfc-pair-check.txt <<'EOF'
+[?2004l[?2004h> set https://example.test/ nameless
+[?2004l[?2004h> get https://example.test/
+[?2004l[?2004h> at -9223372036854775808
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@a33208476d7f:/app# # The backwards-clock line is intentionally not replayable, so separately test
+[?2004l[?2004hroot@a33208476d7f:/app# # the valid nameless-pair behavior through the CLI.
+[?2004l[?2004hroot@a33208476d7f:/app# printf 'set https://example.test/ nameless\nget https://example.test/\n' | ./target/release/crumbjar replay -
+[?2004lhttps://example.test/	=nameless
+[?2004hroot@a33208476d7f:/app# 

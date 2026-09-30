@@ -1,0 +1,20 @@
+at 1767225600
+get https://github.io
+set http://1.2.3/a A=6; SameSite=Lax; Expires=Thu, 01 Jan 2032 00:00:00 GMT; Domain=github.io
+at 1767225601
+get http://192.168.0.1/x/y?q=/z
+set https://www.example.com/a/ z=7; HttpOnly; Max-Age=-5; Max-Age=3600; Expires=01-Jan-70 00:00:00
+get https://10.1.2.3/a/
+get http://github.io/a/b/
+set https://a.b.example.com/a/ z=5; Path=ab
+get https://foo.test/x/y?q=/z
+set http://api.example.com/a/b/c b=7
+set http://10.1.2.3/ b=9; Domain=b.example.com
+get https://api.example.com/ab
+get https://foo.test/x/y?q=/z
+get https://foo.test/a/b/
+set https://1.2.3/ab b=4; Path=/ab; Path=
+get http://10.1.2.3/a/b
+get https://10.1.2.3/a/bc/d
+get http://www.example.com/a/b/
+dump

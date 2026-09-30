@@ -1,0 +1,319 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 10 items
+
+../tests/test_outputs.py F...F.....                                      [100%]
+
+=================================== FAILURES ===================================
+____________________________ test_section_anchoring ____________________________
+
+quire = '/tmp/quire-verify/quire'
+
+    def test_section_anchoring(quire):
+        """Headers with a '/' are anchored to their file's directory; others match at any depth."""
+>       _check_group(quire, "section_anchoring")
+
+/tests/test_outputs.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/quire-verify/quire', group = 'section_anchoring'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']!r}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err!r}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 6 of 6 cases differ:
+E         --- section_anchoring-01 args=['{root}/scripts/build.sh', '{root}/tools/scripts/build.sh', '{root}/Makefile', '{root}/sub/Makefile', '{root}/docs/a/b.md', '{root}/x/docs/a.md'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/section_anchoring-01/scripts/build.sh]
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         [/srv/qc/section_anchoring-01/tools/scripts/build.sh]
+E         indent_style=space
+E         [/srv/qc/section_anchoring-01/Makefile]
+E         indent_style=tab
+E         indent_size=tab
+E         [/srv/qc/section_anchoring-01/sub/Makefile]
+E         [/srv/qc/section_anchoring-01/docs/a/b.md]
+E         max_line_length=100
+E         [/srv/qc/section_anchoring-01/x/docs/a.md]
+E         got rc=0 stderr=''
+E         [/srv/qc/section_anchoring-01/scripts/build.sh]
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         [/srv/qc/section_anchoring-01/tools/scripts/build.sh]
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         [/srv/qc/section_anchoring-01/Makefile]
+E         indent_style=tab
+E         indent_size=tab
+E         [/srv/qc/section_anchoring-01/sub/Makefile]
+E         [/srv/qc/section_anchoring-01/docs/a/b.md]
+E         max_line_length=100
+E         [/srv/qc/section_anchoring-01/x/docs/a.md]
+E         max_line_length=100
+E         
+E         --- section_anchoring-02 args=['{root}/web/src/app.ts', '{root}/web/lib/src/app.ts', '{root}/src/app.ts', '{root}/web/app.ts'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/section_anchoring-02/web/src/app.ts]
+E         charset=utf-8
+E         indent_size=2
+E         quote_type=single
+E         tab_width=2
+E         [/srv/qc/section_anchoring-02/web/lib/src/app.ts]
+E         charset=utf-8
+E         quote_type=single
+E         [/srv/qc/section_anchoring-02/src/app.ts]
+E         charset=utf-8
+E         [/srv/qc/section_anchoring-02/web/app.ts]
+E         charset=utf-8
+E         quote_type=single
+E         got rc=0 stderr=''
+E         [/srv/qc/section_anchoring-02/web/src/app.ts]
+E         charset=utf-8
+E         indent_size=2
+E         quote_type=single
+E         tab_width=2
+E         [/srv/qc/section_anchoring-02/web/lib/src/app.ts]
+E         charset=utf-8
+E         indent_size=2
+E         quote_type=single
+E         tab_width=2
+E         [/srv/qc/section_anchoring-02/src/app.ts]
+E         charset=utf-8
+E         [/srv/qc/section_anchoring-02/web/app.ts]
+E         charset=utf-8
+E         quote_type=single
+E         
+E         --- section_anchoring-03 args=['{root}/src/a.c', '{root}/lib/src/a.c', '{root}/test/b.c', '{root}/src.c', '{root}/x/test.c'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/section_anchoring-03/src/a.c]
+E         indent_size=8
+E         tab_width=8
+E         [/srv/qc/section_anchoring-03/lib/src/a.c]
+E         [/srv/qc/section_anchoring-03/test/b.c]
+E         indent_size=8
+E         tab_width=8
+E         [/srv/qc/section_anchoring-03/src.c]
+E         m=flat
+E         [/srv/qc/section_anchoring-03/x/test.c]
+E         m=flat
+E         got rc=0 stderr=''
+E         [/srv/qc/section_anchoring-03/src/a.c]
+E         indent_size=8
+E         tab_width=8
+E         [/srv/qc/section_anchoring-03/lib/src/a.c]
+E         indent_size=8
+E         tab_width=8
+E         [/srv/qc/section_anchoring-03/test/b.c]
+E         indent_size=8
+E         tab_width=8
+E         [/srv/qc/section_anchoring-03/src.c]
+E         m=flat
+E         [/srv/qc/section_anchoring-03/x/test.c]
+E         m=flat
+E         
+E         --- section_anchoring-04 args=['{root}/v2/readme.md', '{root}/old/v2/readme.md', '{root}/v4/readme.md', '{root}/api/v1/users/list.json', '{root}/x/api/v1/a'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/section_anchoring-04/v2/readme.md]
+E         m=versioned
+E         [/srv/qc/section_anchoring-04/old/v2/readme.md]
+E         [/srv/qc/section_anchoring-04/v4/readme.md]
+E         [/srv/qc/section_anchoring-04/api/v1/users/list.json]
+E         n=api
+E         [/srv/qc/section_anchoring-04/x/api/v1/a]
+E         got rc=0 stderr=''
+E         [/srv/qc/section_anchoring-04/v2/readme.md]
+E         m=versioned
+E         [/srv/qc/section_anchoring-04/old/v2/readme.md]
+E         m=versioned
+E         [/srv/qc/section_anchoring-04/v4/readme.md]
+E         [/srv/qc/section_anchoring-04/api/v1/users/list.json]
+E         n=api
+E         [/srv/qc/section_anchoring-04/x/api/v1/a]
+E         n=api
+E         
+E         --- section_anchoring-05 args=['{root}/a/b/c.txt', '{root}/z/a/b/c.txt', '{root}/b/c.txt', '{root}/c.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/section_anchoring-05/a/b/c.txt]
+E         m=exact
+E         o=name
+E         [/srv/qc/section_anchoring-05/z/a/b/c.txt]
+E         o=name
+E         [/srv/qc/section_anchoring-05/b/c.txt]
+E         n=tail
+E         o=name
+E         [/srv/qc/section_anchoring-05/c.txt]
+E         o=name
+E         got rc=0 stderr=''
+E         [/srv/qc/section_anchoring-05/a/b/c.txt]
+E         m=exact
+E         n=tail
+E         o=name
+E         [/srv/qc/section_anchoring-05/z/a/b/c.txt]
+E         m=exact
+E         n=tail
+E         o=name
+E         [/srv/qc/section_anchoring-05/b/c.txt]
+E         n=tail
+E         o=name
+E         [/srv/qc/section_anchoring-05/c.txt]
+E         o=name
+E         
+E         --- section_anchoring-06 args=['{root}/proj/lib/a.rb', '{root}/proj/app/lib/a.rb', '{root}/proj/a.rb'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/section_anchoring-06/proj/lib/a.rb]
+E         m=top
+E         n=rel
+E         o=any
+E         [/srv/qc/section_anchoring-06/proj/app/lib/a.rb]
+E         o=any
+E         [/srv/qc/section_anchoring-06/proj/a.rb]
+E         o=any
+E         got rc=0 stderr=''
+E         [/srv/qc/section_anchoring-06/proj/lib/a.rb]
+E         m=top
+E         n=rel
+E         o=any
+E         [/srv/qc/section_anchoring-06/proj/app/lib/a.rb]
+E         n=rel
+E         o=any
+E         [/srv/qc/section_anchoring-06/proj/a.rb]
+E         o=any
+E         
+E       assert not ["--- section_anchoring-01 args=['{root}/scripts/build.sh', '{root}/tools/scripts/build.sh', '{root}/Makefile', '{root...ny\n[/srv/qc/section_anchoring-06/proj/app/lib/a.rb]\nn=rel\no=any\n[/srv/qc/section_anchoring-06/proj/a.rb]\no=any\n"]
+
+/tests/test_outputs.py:97: AssertionError
+____________________________ test_globstar_segments ____________________________
+
+quire = '/tmp/quire-verify/quire'
+
+    def test_globstar_segments(quire):
+        """'/**/' matches zero or more directories."""
+>       _check_group(quire, "globstar_segments")
+
+/tests/test_outputs.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/quire-verify/quire', group = 'globstar_segments'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']!r}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err!r}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 3 of 5 cases differ:
+E         --- globstar_segments-01 args=['{root}/lib/a.js', '{root}/lib/x/a.js', '{root}/lib/x/y/a.min.js', '{root}/src/lib/a.js'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/globstar_segments-01/lib/a.js]
+E         indent_size=2
+E         tab_width=2
+E         [/srv/qc/globstar_segments-01/lib/x/a.js]
+E         indent_size=2
+E         tab_width=2
+E         [/srv/qc/globstar_segments-01/lib/x/y/a.min.js]
+E         indent_size=2
+E         m=min
+E         tab_width=2
+E         [/srv/qc/globstar_segments-01/src/lib/a.js]
+E         got rc=0 stderr=''
+E         [/srv/qc/globstar_segments-01/lib/a.js]
+E         indent_size=2
+E         tab_width=2
+E         [/srv/qc/globstar_segments-01/lib/x/a.js]
+E         indent_size=2
+E         tab_width=2
+E         [/srv/qc/globstar_segments-01/lib/x/y/a.min.js]
+E         indent_size=2
+E         m=min
+E         tab_width=2
+E         [/srv/qc/globstar_segments-01/src/lib/a.js]
+E         indent_size=2
+E         tab_width=2
+E         
+E         --- globstar_segments-02 args=['{root}/a/b', '{root}/a/x/b', '{root}/a/x/y/b', '{root}/a/b/c', '{root}/a/x/b/y/c', '{root}/z/a/b', '{root}/ab'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/globstar_segments-02/a/b]
+E         m=1
+E         [/srv/qc/globstar_segments-02/a/x/b]
+E         m=1
+E         [/srv/qc/globstar_segments-02/a/x/y/b]
+E         m=1
+E         [/srv/qc/globstar_segments-02/a/b/c]
+E         n=2
+E         [/srv/qc/globstar_segments-02/a/x/b/y/c]
+E         n=2
+E         [/srv/qc/globstar_segments-02/z/a/b]
+E         [/srv/qc/globstar_segments-02/ab]
+E         got rc=0 stderr=''
+E         [/srv/qc/globstar_segments-02/a/b]
+E         m=1
+E         [/srv/qc/globstar_segments-02/a/x/b]
+E         m=1
+E         [/srv/qc/globstar_segments-02/a/x/y/b]
+E         m=1
+E         [/srv/qc/globstar_segments-02/a/b/c]
+E         n=2
+E         [/srv/qc/globstar_segments-02/a/x/b/y/c]
+E         n=2
+E         [/srv/qc/globstar_segments-02/z/a/b]
+E         m=1
+E         [/srv/qc/globstar_segments-02/ab]
+E         
+E         --- globstar_segments-03 args=['{root}/node_modules/x/index.js', '{root}/a/node_modules/b.js', '{root}/src/a.py', '{root}/tests/unit/b.py', '{root}/docs/src/a.py'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/globstar_segments-03/node_modules/x/index.js]
+E         m=vendored
+E         [/srv/qc/globstar_segments-03/a/node_modules/b.js]
+E         m=vendored
+E         [/srv/qc/globstar_segments-03/src/a.py]
+E         n=py
+E         [/srv/qc/globstar_segments-03/tests/unit/b.py]
+E         n=py
+E         [/srv/qc/globstar_segments-03/docs/src/a.py]
+E         got rc=0 stderr=''
+E         [/srv/qc/globstar_segments-03/node_modules/x/index.js]
+E         m=vendored
+E         [/srv/qc/globstar_segments-03/a/node_modules/b.js]
+E         m=vendored
+E         [/srv/qc/globstar_segments-03/src/a.py]
+E         n=py
+E         [/srv/qc/globstar_segments-03/tests/unit/b.py]
+E         n=py
+E         [/srv/qc/globstar_segments-03/docs/src/a.py]
+E         n=py
+E         
+E       assert not ["--- globstar_segments-01 args=['{root}/lib/a.js', '{root}/lib/x/a.js', '{root}/lib/x/y/a.min.js', '{root}/src/lib/a....py]\nn=py\n[/srv/qc/globstar_segments-03/tests/unit/b.py]\nn=py\n[/srv/qc/globstar_segments-03/docs/src/a.py]\nn=py\n"]
+
+/tests/test_outputs.py:97: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_tab_indentation
+PASSED ../tests/test_outputs.py::test_bracketed_directories
+PASSED ../tests/test_outputs.py::test_stdin_paths
+PASSED ../tests/test_outputs.py::test_negated_classes
+PASSED ../tests/test_outputs.py::test_inline_comments
+PASSED ../tests/test_outputs.py::test_root_declarations
+PASSED ../tests/test_outputs.py::test_value_case
+PASSED ../tests/test_outputs.py::test_property_order
+FAILED ../tests/test_outputs.py::test_section_anchoring - AssertionError: 6 o...
+FAILED ../tests/test_outputs.py::test_globstar_segments - AssertionError: 3 o...
+========================= 2 failed, 8 passed in 9.07s ==========================

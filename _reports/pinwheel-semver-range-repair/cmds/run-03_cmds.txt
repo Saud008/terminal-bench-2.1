@@ -1,0 +1,109 @@
+[step 2] find . -maxdepth 3 -type f | sort
+[step 2] cat go.mod && printf '\n--- ranges ---\n' && cat docs/ranges.md && printf '\n--- resolution ---\n' && cat docs/resolution.md && printf '\n--- lockfile ---\n' && cat docs/lockfile.md && printf '\n--- cli ---\n' && cat docs/cli.md
+[step 2] printf '\n--- Go sources ---\n'; find . -name '*.go' -type f -print -exec sed -n '1,240p' {} \;
+[step 3] cat > internal/semver/compare.go <<'EOF'
+package semver
+
+import "strings"
+
+// Compare returns -1, 0 or 1 when a has lower, equal or higher precedence
+// than b. Build metadata is ignored.
+func Compare(a, b Version) int {
+	if c := cmpUint(a.Major, b.Major); c != 0 { return c }
+	if c := cmpUint(a.Minor, b.Minor); c != 0 { return c }
+	if c := cmpUint(a.Patch, b.Patch); c != 0 { return c }
+	return com...[+5728 chars]
+[step 3] python3 - <<'PY'
+p='internal/semrange/comparator.go'; s=open(p).read(); s=s.replace('return v.Equal(c.Version)', 'return d == 0'); open(p,'w').write(s)
+p='internal/semrange/range.go'; s=open(p).read()
+s=s.replace('for _, alt := range strings.Split(strings.TrimSpace(s), " || ") {', 'for _, alt := range strings.Split(strings.TrimSpace(s), "||") {')
+s=s.replace('''                if !c.Any && c.Versi...[+4165 chars]
+[step 3] python3 - <<'PY'
+p='internal/registry/registry.go'; s=open(p).read()
+s=s.replace('"github.com/brightloom/pinwheel/internal/semver"', '"github.com/brightloom/pinwheel/internal/semver"\n        "github.com/brightloom/pinwheel/internal/semrange"')
+old='''        if err := dec.Decode(&pkg); err != nil {
+                return nil, fmt.Errorf("registry: %s: %w", filepath.Base(path), err)
+        }'''
+n...[+2561 chars]
+[step 3] go build -o /tmp/pinwheel ./cmd/pinwheel && /tmp/pinwheel compare 2.1.0-beta.11 2.1.0-beta.2 && rm -f examples/*/pin.lock && for d in examples/*; do echo "--- $d"; /tmp/pinwheel resolve "$d"; cat "$d/pin.lock"; done
+[step 4] printf 'PATH=%s\n' "$PATH"; command -v go || true; command -v gofmt || true; find /usr /usr/local /opt -type f \( -name go -o -name gofmt \) 2>/dev/null | head -30; command -v node || true; command -v npm || true; command -v git || true
+[step 4] git diff --stat && git diff --check && git diff
+[step 4] sed -n '1,240p' internal/semrange/range_test.go; sed -n '1,220p' internal/registry/registry.go; sed -n '1,180p' internal/lockfile/lockfile.go
+[step 5] echo GO=$(command -v go || echo none) GOFMT=$(command -v gofmt || echo none) NODE=$(command -v node || echo none); git status --short
+[step 5] grep -R -n 'sameSelection\|func better\|SetEscapeHTML\|SameTriple(c.Version)\|strings.Split(strings.TrimSpace(s)' internal || true
+[step 5] git diff --check; git diff --stat
+[step 6] printf 'go=%s gofmt=%s node=%s\n' "$(command -v go 2>/dev/null || echo none)" "$(command -v gofmt 2>/dev/null || echo none)" "$(command -v node 2>/dev/null || echo none)"; for x in sameSelection 'func better' SetEscapeHTML 'SameTriple(c.Version)'; do printf '%s: ' "$x"; grep -R -l "$x" internal 2>/dev/null | tr '\n' ' '; echo; done
+[step 6] for f in internal/semver/compare.go internal/semver/version.go internal/semrange/partial.go internal/semrange/range.go internal/resolve/resolver.go internal/resolve/constraints.go internal/resolve/yanked.go internal/resolve/candidates.go internal/lockfile/lockfile.go internal/registry/registry.go; do echo ===$f; grep -nE 'func |Split\(|Trim|Equal|override|SetEscape|Decode|More|semrange' "$f"; done...[+1 chars]
+[step 7] python3 - <<'PY'
+p='internal/resolve/constraints.go'
+s=open(p).read()
+old='''\tout := append([]Constraint(nil), cons...)
+\treturn append(out, Constraint{From: OverrideName, Raw: raw, Range: semrange.MustParse(raw)})'''
+if old not in s:
+ old='''        out := append([]Constraint(nil), cons...)
+        return append(out, Constraint{From: OverrideName, Raw: raw, Range: semrange.MustParse(raw)})'''
+ne...[+2580 chars]
+[step 7] python3 - <<'PY'
+p='internal/manifest/manifest.go'; s=open(p).read()
+s=s.replace('"fmt"\n', '"fmt"\n\t"io"\n', 1)
+old='''\tif err := dec.Decode(&m); err != nil {
+\t\treturn nil, fmt.Errorf("manifest: %w", err)
+\t}'''
+if old not in s:
+ old='''        if err := dec.Decode(&m); err != nil {
+                return nil, fmt.Errorf("manifest: %w", err)
+        }'''
+new='''\tif err := dec.Decode(&m); err...[+608 chars]
+[step 8] export PATH=/usr/local/go/bin:$PATH; gofmt -w cmd internal; go test ./...
+[step 8] export PATH=/usr/local/go/bin:$PATH; go build -o /tmp/pinwheel ./cmd/pinwheel && /tmp/pinwheel compare 2.1.0-beta.11 2.1.0-beta.2; rm -f examples/*/pin.lock; for d in examples/*; do echo "--- $d"; /tmp/pinwheel resolve "$d"; test -f "$d/pin.lock" && cat "$d/pin.lock"; done
+[step 9] sed -n '45,90p' internal/semver/version.go; cat internal/semrange/hyphen.go
+[step 9] python3 - <<'PY'
+p='internal/semver/version.go'; s=open(p).read()
+old='''\t\tn, err := strconv.ParseUint(r, 10, 64)
+\t\tif err != nil {
+\t\t\treturn nil, false
+\t\t}
+\t\tids = append(ids, Identifier{Raw: r, Numeric: true, Num: n})'''
+assert old in s
+new='''\t\tif len(r) > 1 && r[0] == '0' {
+\t\t\treturn nil, false
+\t\t}
+\t\tn, _ := strconv.ParseUint(r, 10, 64) // overflow is harmless; Raw determin...[+344 chars]
+[step 10] sed -n '112,138p' internal/semrange/range.go; python3 - <<'PY'
+p='internal/semrange/range.go'; s=open(p).read()
+old='if !c.Any && c.Version.IsPrerelease() {'
+new='if !c.Any && c.Version.IsPrerelease() && v.SameTriple(c.Version) {'
+assert old in s
+open(p,'w').write(s.replace(old,new))
+PY
+export PATH=/usr/local/go/bin:$PATH; gofmt -w internal/semrange/range.go; go test ./...
+[step 10] export PATH=/usr/local/go/bin:$PATH; go build -o /tmp/pinwheel ./cmd/pinwheel && echo compare=$(/tmp/pinwheel compare 2.1.0-beta.11 2.1.0-beta.2); rm -f examples/*/pin.lock; for d in examples/*; do echo "--- $d"; /tmp/pinwheel resolve "$d"; cat "$d/pin.lock"; done
+[step 11] grep -H -E '"(quill-log|mesh-http|json-lattice|ember-uuid)"|"version": "(0\.4\.7|1\.6\.3|1\.4\.2)"' examples/*/pin.lock || true
+[step 11] cat > internal/cli/resolve.go <<'EOF'
+package cli
+
+import (
+	"fmt"
+	"io"
+	"path/filepath"
+
+	"github.com/brightloom/pinwheel/internal/lockfile"
+	"github.com/brightloom/pinwheel/internal/manifest"
+	"github.com/brightloom/pinwheel/internal/registry"
+	"github.com/brightloom/pinwheel/internal/resolve"
+)
+
+const defaultRegistry = "/app/registry"
+
+func runResolve(args []string, stdout, stderr io.Writer) i...[+1488 chars]
+[step 11] set +e; for a in '' 'bogus' 'compare 1.0.0 nope' 'satisfies 1.0.0 nope' 'resolve examples/storefront --registry registry' 'resolve --bad x'; do echo "[$a]"; out=$(eval "/tmp/pinwheel $a" 2>&1 >/tmp/out); st=$?; printf 'status=%s stdout=%q stderr=%q\n' "$st" "$(cat /tmp/out)" "$out"; done; echo '[help]'; /tmp/pinwheel --help
+[step 11] printf '%s\n' '--- go.mod' "$(cat go.mod)" '--- prohibited imports'; grep -R -nE '"(os/exec|syscall|unsafe|plugin|C)"' --include='*.go' . || true; printf '%s\n' '--- generated lock checks'; grep -q '"ember-uuid"' examples/ledger-cli/pin.lock && grep -A2 '"ember-uuid"' examples/ledger-cli/pin.lock; ! grep -q 'json-lattice' examples/storefront/pin.lock; rm -f examples/*/pin.lock /tmp/out
+[step 12] cat docs/registry.md; printf '\n--- README ---\n'; cat README.md
+[step 12] sed -n '1,240p' internal/semver/version.go; sed -n '1,240p' internal/semrange/range.go; sed -n '1,180p' internal/registry/registry.go; sed -n '1,150p' internal/manifest/manifest.go
+[step 12] find examples -name pin.lock -print; export PATH=/usr/local/go/bin:$PATH; go test ./... && go vet ./... && go build -o /tmp/pinwheel ./cmd/pinwheel
+[step 13] cat docs/registry.md
+[step 13] sed -n '1,150p' internal/registry/registry.go
+[step 14] grep -nE 'must|invalid|duplicate|version|published|dependencies|file|name' docs/registry.md
+[step 14] find . -name pin.lock -o -name '*.tmp'; grep -R '^require' go.mod || true; export PATH=/usr/local/go/bin:$PATH; go test ./... >/tmp/final-test && tail -12 /tmp/final-test
+[step 15] {}
+[step 16] {}

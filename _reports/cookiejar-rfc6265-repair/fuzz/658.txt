@@ -1,0 +1,16 @@
+at 1767225600
+set https://10.1.2.3/ a=2; Domain=example.co.uk
+set http://10.1.2.3/a/b/c noequals
+dump
+set https://co.uk/a/ A=8; SameSite=Lax; Expires=29 Feb 2400 00:00:00; Domain=1.2.3; Max-Age=abc
+get https://a.b.example.com
+at 1767229600
+get http://shop.example.co.uk
+set http://localhost/a/ b=5; Path=ab; Max-Age=+5
+set http://example.org/a/b/ A=7; Path=/ab
+set https://github.io A=1; Max-Age=; Domain=1.2.3; Max-Age=-5
+set http://localhost/ab b=0; Path=ab; HttpOnly; Secure; SameSite=Lax
+set https://localhost/a a=5; Secure; Path=
+set https://example.org/ sid=3; HttpOnly; HttpOnly; Max-Age=60
+get http://localhost/a/
+dump

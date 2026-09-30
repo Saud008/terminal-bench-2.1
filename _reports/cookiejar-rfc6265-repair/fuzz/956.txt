@@ -1,0 +1,32 @@
+at 1767225600
+set https://foo.test/a sid=4; Max-Age=20; Expires=05 Mar 2030 12:00:00abc
+get https://www.example.com/a/b
+set http://localhost/a/b a=0; Secure; Secure
+at 1767225630
+at 1767225730
+get https://foo.test/x/y?q=/z
+set http://example.com/a/b/c noequals
+set https://example.org/a/b/ 	=x
+at 1767225730
+get https://foo.test/ab
+set http://10.1.2.3/a/ a=8; Secure; Expires=1 January 2031 10:00:00
+set http://www.example.com/a/b z=6; Expires=29 Feb 2028 1:2:3; Max-Age=-5
+set https://example.org/a/b/c A=5; Domain=test; HttpOnly; Max-Age=60
+set http://foo.test/a/b/ z=9
+set http://example.org/ab A=6; Max-Age=999999999999999999999
+get https://10.1.2.3/a/b/c
+get https://192.168.0.1/a/b/
+at 1767229730
+set https://x.co.uk/a/b/ z=4; Domain=.
+at 1767229760
+set http://x.co.uk/a/b/ b=3
+get http://1.2.3/x/y?q=/z
+set http://a.b.example.com sid=9
+get http://10.1.2.3/x/y?q=/z
+get https://api.example.com
+set http://shop.example.co.uk/ z=2; Domain=b.example.com; SameSite=Lax; Max-Age=+5
+at 1767229761
+dump
+get http://192.168.0.1/
+set http://co.uk/a noequals
+dump

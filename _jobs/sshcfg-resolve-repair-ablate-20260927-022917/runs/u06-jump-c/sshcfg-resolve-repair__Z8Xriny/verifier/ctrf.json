@@ -1,0 +1,122 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 11,
+            "passed": 10,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790456576.9771314,
+            "stop": 1790456578.627706
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_host_line_patterns",
+                "status": "passed",
+                "duration": 1.3157846580002115,
+                "start": 1790456576.998055,
+                "stop": 1790456578.315515,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_match_criteria",
+                "status": "passed",
+                "duration": 0.024522110999441793,
+                "start": 1790456578.3158207,
+                "stop": 1790456578.341754,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_final_pass",
+                "status": "passed",
+                "duration": 0.017589909000435,
+                "start": 1790456578.342326,
+                "stop": 1790456578.3612998,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_include_scoping",
+                "status": "passed",
+                "duration": 0.04651261800017892,
+                "start": 1790456578.3615973,
+                "stop": 1790456578.4101005,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_include_paths",
+                "status": "passed",
+                "duration": 0.023321870000017952,
+                "start": 1790456578.4105191,
+                "stop": 1790456578.436078,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_precedence_and_lists",
+                "status": "passed",
+                "duration": 0.028261544999622856,
+                "start": 1790456578.4364083,
+                "stop": 1790456578.4664335,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_sendenv_setenv",
+                "status": "passed",
+                "duration": 0.024676398999872617,
+                "start": 1790456578.466842,
+                "stop": 1790456578.4931762,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_time_values",
+                "status": "passed",
+                "duration": 0.023073979999935545,
+                "start": 1790456578.493645,
+                "stop": 1790456578.5188684,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_proxy_settings",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.024650991999806138,
+                "start": 1790456578.5193298,
+                "stop": 1790456578.5577261,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "hopcfg = '/tmp/hopcfg-verify-30fpbaq7/hopcfg'\n\n    def test_proxy_settings(hopcfg):\n        \"\"\"ProxyJump/ProxyCommand interplay, jump host formatting and jump host loop rejection.\"\"\"\n>       _check(hopcfg, \"proxy_settings\")\n\n/tests/test_outputs.py:160: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/hopcfg-verify-30fpbaq7/hopcfg', groups = ('proxy_settings',)\nfailures = [\"[proxy_settings] args=['-F', '/root/.ssh/config', 'legacy'] expected rc=0 got rc=0\\n--- ssh -G\\n+++ hopcfg\\n@@ -22,2...0 got rc=0\\n--- ssh -G\\n+++ hopcfg\\n@@ -22,2 +22,2 @@\\n controlpersist no\\n-proxycommand nc %h 22\\n+proxyjump later\\n\"]\ntotal = 10, group = 'proxy_settings'\n\n    def _check(binary, *groups):\n        failures = []\n        total = 0\n        for group in groups:\n            for case in GROUPS[group]:\n                total += 1\n                rc, out = _run(binary, case)\n                if (rc, out) == (case[\"rc\"], case[\"stdout\"]):\n                    continue\n                diff = \"\".join(difflib.unified_diff(\n                    case[\"stdout\"].splitlines(True), out.splitlines(True),\n                    \"ssh -G\", \"hopcfg\", n=1))\n                failures.append(f\"[{group}] args={case['args']} expected rc={case['rc']} \"\n                                f\"got rc={rc}\\n{diff}\")\n        assert total > 0\n>       assert not failures, (f\"{len(failures)}/{total} cases differ from ssh -G:\\n\"\n                              + \"\\n\".join(failures[:4]))\nE       AssertionError: 2/10 cases differ from ssh -G:\nE         [proxy_settings] args=['-F', '/root/.ssh/config', 'legacy'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -22,2 +22,2 @@\nE          controlpersist no\nE         -proxycommand /usr/bin/nc -X connect -x proxy:3128 %h %p # corp proxy\nE         +proxyjump jump9\nE         \nE         [proxy_settings] args=['-F', '/root/.ssh/config', 'first-cmd'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -22,2 +22,2 @@\nE          controlpersist no\nE         -proxycommand nc %h 22\nE         +proxyjump later\nE         \nE       assert not [\"[proxy_settings] args=['-F', '/root/.ssh/config', 'legacy'] expected rc=0 got rc=0\\n--- ssh -G\\n+++ hopcfg\\n@@ -22,2...0 got rc=0\\n--- ssh -G\\n+++ hopcfg\\n@@ -22,2 +22,2 @@\\n controlpersist no\\n-proxycommand nc %h 22\\n+proxyjump later\\n\"]\n\n/tests/test_outputs.py:114: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_token_expansion",
+                "status": "passed",
+                "duration": 0.011103740000635298,
+                "start": 1790456578.5579715,
+                "stop": 1790456578.5702708,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_syntax_and_rejections",
+                "status": "passed",
+                "duration": 0.05167789500046638,
+                "start": 1790456578.5705187,
+                "stop": 1790456578.62581,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

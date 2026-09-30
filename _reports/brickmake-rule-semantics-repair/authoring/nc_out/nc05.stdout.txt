@@ -1,0 +1,203 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 6 items
+
+../tests/test_outputs.py FFFFFF                                          [100%]
+
+=================================== FAILURES ===================================
+_________________________ test_cli_builds_and_rebuilds _________________________
+
+    def test_cli_builds_and_rebuilds():
+        """/app/cmd/brickmake compiles with the standard library only, runs a default-goal
+        build whose recipes create the objects on disk, and rebuilds only what was removed."""
+>       replay("smoke")
+
+/tests/test_outputs.py:41: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tests/test_outputs.py:23: in replay
+    binary = brickmake()
+             ^^^^^^^^^^^
+/tests/test_outputs.py:19: in brickmake
+    return build()
+           ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def build():
+        """Compile /app/cmd/brickmake with the standard library only and return the binary path."""
+        for sub in ("home", "gocache", "gopath", "bin"):
+            (SANDBOX / sub).mkdir(parents=True, exist_ok=True)
+            shutil.chown(SANDBOX / sub, USER, GROUP)
+        if BINARY.exists():
+            BINARY.unlink()
+        code, out, err = sandboxed([GO, "build", "-o", str(BINARY), "./cmd/brickmake"], "/app", BUILD_ENV, 600)
+>       assert code == 0, f"go build ./cmd/brickmake failed:\n{out}{err}"
+               ^^^^^^^^^
+E       AssertionError: go build ./cmd/brickmake failed:
+E       stat /app/cmd/brickmake: directory not found
+
+/tests/harness.py:76: AssertionError
+_________________________ test_shortest_stem_selection _________________________
+
+    def test_shortest_stem_selection():
+        """Among matching pattern rules the one with the shortest stem wins, where the
+        stem of a directory-relative match includes the directory; ties keep makefile order."""
+>       replay("stem")
+
+/tests/test_outputs.py:47: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tests/test_outputs.py:23: in replay
+    binary = brickmake()
+             ^^^^^^^^^^^
+/tests/test_outputs.py:19: in brickmake
+    return build()
+           ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def build():
+        """Compile /app/cmd/brickmake with the standard library only and return the binary path."""
+        for sub in ("home", "gocache", "gopath", "bin"):
+            (SANDBOX / sub).mkdir(parents=True, exist_ok=True)
+            shutil.chown(SANDBOX / sub, USER, GROUP)
+        if BINARY.exists():
+            BINARY.unlink()
+        code, out, err = sandboxed([GO, "build", "-o", str(BINARY), "./cmd/brickmake"], "/app", BUILD_ENV, 600)
+>       assert code == 0, f"go build ./cmd/brickmake failed:\n{out}{err}"
+               ^^^^^^^^^
+E       AssertionError: go build ./cmd/brickmake failed:
+E       stat /app/cmd/brickmake: directory not found
+
+/tests/harness.py:76: AssertionError
+____________________ test_directory_relative_prerequisites _____________________
+
+    def test_directory_relative_prerequisites():
+        """For a slash-less target pattern matched against a name with a directory, the
+        directory is prepended only to prerequisites that contain '%'."""
+>       replay("dirs")
+
+/tests/test_outputs.py:53: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tests/test_outputs.py:23: in replay
+    binary = brickmake()
+             ^^^^^^^^^^^
+/tests/test_outputs.py:19: in brickmake
+    return build()
+           ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def build():
+        """Compile /app/cmd/brickmake with the standard library only and return the binary path."""
+        for sub in ("home", "gocache", "gopath", "bin"):
+            (SANDBOX / sub).mkdir(parents=True, exist_ok=True)
+            shutil.chown(SANDBOX / sub, USER, GROUP)
+        if BINARY.exists():
+            BINARY.unlink()
+        code, out, err = sandboxed([GO, "build", "-o", str(BINARY), "./cmd/brickmake"], "/app", BUILD_ENV, 600)
+>       assert code == 0, f"go build ./cmd/brickmake failed:\n{out}{err}"
+               ^^^^^^^^^
+E       AssertionError: go build ./cmd/brickmake failed:
+E       stat /app/cmd/brickmake: directory not found
+
+/tests/harness.py:76: AssertionError
+__________________ test_mentioned_prerequisite_ought_to_exist __________________
+
+    def test_mentioned_prerequisite_ought_to_exist():
+        """A prerequisite that is mentioned anywhere in the makefile counts as one that
+        ought to exist during the first implicit-rule pass, even without a rule of its own."""
+>       replay("mention")
+
+/tests/test_outputs.py:59: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tests/test_outputs.py:23: in replay
+    binary = brickmake()
+             ^^^^^^^^^^^
+/tests/test_outputs.py:19: in brickmake
+    return build()
+           ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def build():
+        """Compile /app/cmd/brickmake with the standard library only and return the binary path."""
+        for sub in ("home", "gocache", "gopath", "bin"):
+            (SANDBOX / sub).mkdir(parents=True, exist_ok=True)
+            shutil.chown(SANDBOX / sub, USER, GROUP)
+        if BINARY.exists():
+            BINARY.unlink()
+        code, out, err = sandboxed([GO, "build", "-o", str(BINARY), "./cmd/brickmake"], "/app", BUILD_ENV, 600)
+>       assert code == 0, f"go build ./cmd/brickmake failed:\n{out}{err}"
+               ^^^^^^^^^
+E       AssertionError: go build ./cmd/brickmake failed:
+E       stat /app/cmd/brickmake: directory not found
+
+/tests/harness.py:76: AssertionError
+_____________________ test_pattern_specific_variable_order _____________________
+
+    def test_pattern_specific_variable_order():
+        """Pattern-specific variables from all matching patterns apply from the shortest
+        pattern to the longest, equal lengths in definition order; command-line values win."""
+>       replay("patvars")
+
+/tests/test_outputs.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tests/test_outputs.py:23: in replay
+    binary = brickmake()
+             ^^^^^^^^^^^
+/tests/test_outputs.py:19: in brickmake
+    return build()
+           ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def build():
+        """Compile /app/cmd/brickmake with the standard library only and return the binary path."""
+        for sub in ("home", "gocache", "gopath", "bin"):
+            (SANDBOX / sub).mkdir(parents=True, exist_ok=True)
+            shutil.chown(SANDBOX / sub, USER, GROUP)
+        if BINARY.exists():
+            BINARY.unlink()
+        code, out, err = sandboxed([GO, "build", "-o", str(BINARY), "./cmd/brickmake"], "/app", BUILD_ENV, 600)
+>       assert code == 0, f"go build ./cmd/brickmake failed:\n{out}{err}"
+               ^^^^^^^^^
+E       AssertionError: go build ./cmd/brickmake failed:
+E       stat /app/cmd/brickmake: directory not found
+
+/tests/harness.py:76: AssertionError
+_____________________________ test_project_builds ______________________________
+
+    def test_project_builds():
+        """Multi-step incremental builds of small projects produce the same commands,
+        messages and files left on disk as GNU make across edits and rebuilds."""
+>       replay("project")
+
+/tests/test_outputs.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tests/test_outputs.py:23: in replay
+    binary = brickmake()
+             ^^^^^^^^^^^
+/tests/test_outputs.py:19: in brickmake
+    return build()
+           ^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    def build():
+        """Compile /app/cmd/brickmake with the standard library only and return the binary path."""
+        for sub in ("home", "gocache", "gopath", "bin"):
+            (SANDBOX / sub).mkdir(parents=True, exist_ok=True)
+            shutil.chown(SANDBOX / sub, USER, GROUP)
+        if BINARY.exists():
+            BINARY.unlink()
+        code, out, err = sandboxed([GO, "build", "-o", str(BINARY), "./cmd/brickmake"], "/app", BUILD_ENV, 600)
+>       assert code == 0, f"go build ./cmd/brickmake failed:\n{out}{err}"
+               ^^^^^^^^^
+E       AssertionError: go build ./cmd/brickmake failed:
+E       stat /app/cmd/brickmake: directory not found
+
+/tests/harness.py:76: AssertionError
+=========================== short test summary info ============================
+FAILED ../tests/test_outputs.py::test_cli_builds_and_rebuilds - AssertionErro...
+FAILED ../tests/test_outputs.py::test_shortest_stem_selection - AssertionErro...
+FAILED ../tests/test_outputs.py::test_directory_relative_prerequisites - Asse...
+FAILED ../tests/test_outputs.py::test_mentioned_prerequisite_ought_to_exist
+FAILED ../tests/test_outputs.py::test_pattern_specific_variable_order - Asser...
+FAILED ../tests/test_outputs.py::test_project_builds - AssertionError: go bui...
+============================== 6 failed in 0.08s ===============================

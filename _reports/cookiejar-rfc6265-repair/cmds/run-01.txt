@@ -1,0 +1,351 @@
+### step 2 call_0_1
+find . -maxdepth 3 -type f -print | sort && printf '\n--- POLICY ---\n' && cat docs/POLICY.md && printf '\n--- CLI ---\n' && cat docs/cli.md && printf '\n--- OTHER DOCS ---\n' && for f in docs/*; do case "$f" in docs/POLICY.md|docs/cli.md) ;; *) echo "### $f"; cat "$f";; esac; done
+
+### step 2 call_0_2
+printf '\n--- CARGO ---\n'; cat Cargo.toml; printf '\n--- SOURCE ---\n'; for f in src/*.rs; do echo "### $f"; sed -n '1,260p' "$f"; done
+
+### step 3 call_1_1
+for f in src/cookie/*.rs src/jar/*.rs src/time/*.rs; do echo "### $f"; cat "$f"; done
+
+### step 3 call_1_2
+printf '%s\n' '--- README ---'; cat README.md; for f in examples/*; do echo "--- $f ---"; cat "$f"; done; printf '%s\n' '--- TEST MARKERS ---'; grep -RIn '#\[test\]\|cfg(test)' src || true; cargo test
+
+### step 4 call_2_1
+python3 - <<'PY'
+from pathlib import Path
+p=Path('src/time/civil.rs')
+s=p.read_text().replace('year % 4 == 0 && (year % 100 != 0 || year % 400 != 0)', 'year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)')
+p.write_text(s)
+
+p=Path('src/cookie/path.rs')
+p.write_text(r'''//! Paths and path-match (RFC 6265 section 5.1.4).
+
+/// The default-path of a request-uri path.
+pub fn default_path(uri_path: &str) -> String {
+    if !uri_path.starts_with('/') {
+        return "/".to_string();
+    }
+    match uri_path.rfind('/') {
+        Some(0) | None => "/".to_string(),
+        Some(i) => uri_path[..i].to_string(),
+    }
+}
+
+pub fn path_match(request_path: &str, cookie_path: &str) -> bool {
+    request_path == cookie_path
+        || (request_path.starts_with(cookie_path)
+            && (cookie_path.ends_with('/')
+                || request_path.as_bytes().get(cookie_path.len()) == Some(&b'/')))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn defaults_exclude_the_rightmost_slash() {
+        assert_eq!(default_path("/kb/articles/123"), "/kb/articles");
+        assert_eq!(default_path("/abc/"), "/abc");
+        assert_eq!(default_path("/abc"), "/");
+    }
+
+    #[test]
+    fn matching_observes_path_boundaries() {
+        assert!(path_match("/foo", "/foo"));
+        assert!(path_match("/foo/bar", "/foo"));
+        assert!(!path_match("/foobar", "/foo"));
+    }
+}
+''')
+
+p=Path('src/host.rs')
+s=p.read_text().replace('    string.len() > domain.len()\n        && string.ends_with(domain)', '    !is_ip_address(string)\n        && string.len() > domain.len()\n        && string.ends_with(domain)')
+p.write_text(s)
+
+p=Path('src/cookie/domain.rs')
+s=p.read_text().replace('''    if !domain.is_empty() && psl.is_public_suffix(&domain) {
+        return None;
+    }
+
+    if domain.is_empty() {
+        return Some(Scope::HostOnly(host.to_string()));
+    }
+''','''    if domain.is_empty() {
+        return Some(Scope::HostOnly(host.to_string()));
+    }
+    if psl.is_public_suffix(&domain) {
+        return if domain == host {
+            Some(Scope::HostOnly(host.to_string()))
+        } else {
+            None
+        };
+    }
+''')
+p.write_text(s)
+
+p=Path('src/cookie/expiry.rs')
+p.write_text(r'''use super::parse::Attr;
+
+pub enum Lifetime {
+    Session,
+    Persistent(i64),
+}
+
+/// Lifetime of a new cookie from its attribute list (RFC 6265 section 5.3,
+/// step 3). Max-Age takes precedence over Expires, independent of their
+/// relative order in the header. For duplicates, the last valid attribute
+/// of the selected kind is used.
+pub fn resolve(attrs: &[Attr]) -> Lifetime {
+    let max_age = attrs.iter().rev().find_map(|a| match a {
+        Attr::MaxAge(t) => Some(*t),
+        _ => None,
+    });
+    let expires = attrs.iter().rev().find_map(|a| match a {
+        Attr::Expires(t) => Some(*t),
+        _ => None,
+    });
+    max_age
+        .or(expires)
+        .map_or(Lifetime::Session, Lifetime::Persistent)
+}
+''')
+
+p=Path('src/cookie/parse.rs')
+s=p.read_text().replace('''    let (name, value) = match pair.split_once('=') {
+        Some((n, v)) => (trim_wsp(n), trim_wsp(v)),
+        None => ("", trim_wsp(pair)),
+    };
+''','''    let (name, value) = pair.split_once('=')?;
+    let (name, value) = (trim_wsp(name), trim_wsp(value));
+''')
+p.write_text(s)
+
+p=Path('src/jar/order.rs')
+s=p.read_text().replace('b.path.len().cmp(&a.path.len()).then_with(|| a.name.cmp(&b.name))','b.path.len()\n            .cmp(&a.path.len())\n            .then_with(|| a.created.cmp(&b.created))')
+p.write_text(s)
+
+p=Path('src/jar/select.rs')
+s=p.read_text().replace('''    let domain_ok = url.host == c.domain || domain_match(&url.host, &c.domain);
+''','''    let domain_ok = if c.host_only {
+        url.host == c.domain
+    } else {
+        domain_match(&url.host, &c.domain)
+    };
+''')
+p.write_text(s)
+
+p=Path('src/jar/evict.rs')
+s=p.read_text().replace('min_by_key(|&i| self.cookies[i].created)', 'min_by_key(|&i| (self.cookies[i].accessed, self.cookies[i].created))')
+p.write_text(s)
+PY
+
+cat > /tmp/new_store.rs <<'EOF'
+//! Storage model (RFC 6265 section 5.3).
+
+use super::{Cookie, Jar};
+use crate::cookie::domain::{self, Scope};
+use crate::cookie::expiry::{self, Lifetime};
+use crate::cookie::parse::{self, Attr};
+use crate::cookie::path::default_path;
+use crate::url::Url;
+
+impl Jar {
+    /// Handles a Set-Cookie header received in the response to `url`.
+    pub fn set_cookie(&mut self, url: &Url, header: &str) {
+        let Some(sc) = parse::parse(header, url, self.clock) else {
+            return;
+        };
+        let Some(scope) = domain::resolve(&sc.attrs, &url.host, &self.psl) else {
+            return;
+        };
+        let (domain, host_only) = match scope {
+            Scope::HostOnly(h) => (h, true),
+            Scope::Domain(d) => (d, false),
+        };
+        let path = sc
+            .attrs
+            .iter()
+            .rev()
+            .find_map(|a| match a {
+                Attr::Path(p) => Some(p.clone()),
+                _ => None,
+            })
+            .unwrap_or_else(|| default_path(&url.path));
+        let expiry = match expiry::resolve(&sc.attrs) {
+            Lifetime::Session => None,
+            Lifetime::Persistent(t) => Some(t),
+        };
+        let secure = sc.attrs.iter().any(|a| matches!(a, Attr::Secure));
+        let http_only = sc.attrs.iter().any(|a| matches!(a, Attr::HttpOnly));
+
+        let stamp = self.stamp();
+        let site = self.psl.registrable_domain(&domain);
+
+        // Expired stored cookies do not participate in replacement (and in
+        // particular cannot donate their old creation-time).
+        self.purge_expired();
+        let old = self
+            .cookies
+            .iter()
+            .position(|c| c.name == sc.name && c.domain == domain && c.path == path);
+
+        // An already-expired incoming cookie removes its matching cookie and
+        // is not retained in the store.
+        if matches!(expiry, Some(t) if t <= self.clock) {
+            if let Some(i) = old {
+                self.cookies.remove(i);
+            }
+            return;
+        }
+
+        if let Some(i) = old {
+            let created = self.cookies[i].created;
+            self.cookies[i] = Cookie {
+                name: sc.name,
+                value: sc.value,
+                domain,
+                path,
+                expiry,
+                host_only,
+                secure,
+                http_only,
+                created,
+                accessed: stamp,
+            };
+        } else {
+            self.cookies.push(Cookie {
+                name: sc.name,
+                value: sc.value,
+                domain,
+                path,
+                expiry,
+                host_only,
+                secure,
+                http_only,
+                created: stamp,
+                accessed: stamp,
+            });
+        }
+
+        self.enforce_site_limit(&site);
+    }
+}
+EOF
+mv /tmp/new_store.rs src/jar/store.rs
+cargo fmt && cargo test && cargo build --release
+
+### step 4 call_2_2
+cat > /tmp/regress.txt <<'EOF'
+at 1700000000
+set https://example.com/ login=one
+get https://api.example.com/
+set https://help.example.net/kb/articles/123 article=yes
+get https://help.example.net/kb/articles
+set https://order.example.org/ z=first; Path=/
+set https://order.example.org/ a=second; Path=/
+set https://order.example.org/ z=refreshed; Path=/
+get https://order.example.org/
+set https://order.example.org/foo p=bad-prefix; Path=/foo
+get https://order.example.org/foobar
+set https://order.example.org/ precedence=live; Max-Age=1000; Expires=Sun, 06 Nov 1994 08:49:37 GMT
+get https://order.example.org/
+set https://order.example.org/ leap=yes; Expires=Tue, 29 Feb 2032 00:00:00 GMT
+get https://order.example.org/
+EOF
+./target/release/crumbjar replay /tmp/regress.txt
+for f in examples/*.txt; do echo "--- $f"; ./target/release/crumbjar replay "$f"; done
+
+### step 5 call_3_1
+cargo test && cargo build --release
+
+### step 5 call_3_2
+./target/release/crumbjar replay /tmp/regress.txt
+
+### step 5 call_3_3
+cat > /tmp/policy.txt <<'EOF'
+at 10
+set https://x.example.com/ a=1
+set https://x.example.com/ b=2
+set https://x.example.com/ c=3
+set https://x.example.com/ d=4
+set https://x.example.com/ e=5
+set https://x.example.com/ f=6
+get https://x.example.com/only-a
+set https://x.example.com/ a=1; Path=/only-a
+set https://x.example.com/ g=7
+get https://x.example.com/
+dump
+EOF
+./target/release/crumbjar replay /tmp/policy.txt
+printf '\n--- DIFF ---\n'; git diff -- src 2>/dev/null || true
+
+### step 6 call_4_1
+cat > /tmp/final-check.txt <<'EOF'
+at 100
+set https://x.example.com/a a=1; Path=/a
+set https://x.example.com/b b=2; Path=/b
+set https://x.example.com/c c=3; Path=/c
+set https://x.example.com/d d=4; Path=/d
+set https://x.example.com/e e=5; Path=/e
+set https://x.example.com/f f=6; Path=/f
+get https://x.example.com/a
+set https://x.example.com/g g=7; Path=/g
+dump
+set https://com/ exact=yes; Domain=com
+get https://com/
+get https://sub.com/
+EOF
+./target/release/crumbjar replay /tmp/final-check.txt
+cargo test && cargo build --release
+
+### step 6 call_4_task_complete
+{}
+### step 7 call_5_1
+python3 - <<'PY'
+from pathlib import Path
+p = Path('src/cookie/parse.rs')
+s = p.read_text()
+s = s.replace('Some(now.saturating_add(delta).min(LATEST))', 'Some(now.saturating_add(delta).clamp(EARLIEST, LATEST))')
+p.write_text(s)
+
+p = Path('src/cookie/expiry.rs')
+s = p.read_text()
+s += r'''
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn max_age_takes_precedence_over_expires() {
+        let attrs = [Attr::MaxAge(200), Attr::Expires(100)];
+        assert!(matches!(resolve(&attrs), Lifetime::Persistent(200)));
+        let attrs = [Attr::Expires(100), Attr::MaxAge(200)];
+        assert!(matches!(resolve(&attrs), Lifetime::Persistent(200)));
+    }
+}
+'''
+p.write_text(s)
+
+p = Path('src/cookie/parse.rs')
+s = p.read_text()
+s += r'''
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn max_age_is_clamped_to_representable_range() {
+        assert_eq!(max_age("1", i64::MIN), Some(EARLIEST));
+        assert_eq!(max_age("999999999999999999999999", 0), Some(LATEST));
+        assert_eq!(max_age("-999999999999999999999999", 0), Some(EARLIEST));
+    }
+}
+'''
+p.write_text(s)
+PY
+cargo test && cargo build --release
+
+### step 7 call_5_task_complete
+{}

@@ -1,0 +1,28 @@
+at 1767225600
+set http://localhost/a/b/ A=7; Expires=01-Jan-70 00:00:00
+set http://example.org/a/bc/d a=6; HttpOnly; Expires=01-Jan-50 00:00:00; HttpOnly
+at 1767225700
+set http://1.2.3/a/b/ sid=3; Path=/a/b; SameSite=Lax
+set https://example.com/a/b/c b=9; HttpOnly; HttpOnly
+get http://example.org/a/b/
+get https://foo.test/a
+set http://1.2.3/ z=6
+at 1767225700
+at 1767225800
+get http://co.uk/a/b/c
+set http://github.io/x/y?q=/z a=8
+set http://foo.test/a/b/ a=9; SameSite=Lax; HttpOnly
+set http://api.example.com/a/ b=3; Domain=b.example.com; HttpOnly
+set https://alice.github.io/a/b A=0; Max-Age=999999999999999999999
+get https://github.io/
+set https://a.b.example.com/ b=4; SameSite=Lax
+at 1767229800
+set https://x.co.uk/a/ b=8; Secure; Path=/a/b
+set https://x.co.uk sid=1; Domain=; Path=/a/b; SameSite=Lax; HttpOnly
+set http://co.uk sid=4; Path=/ab
+set http://api.example.com/a/b/ sid=6; Path=/a/b; Max-Age=0
+at 1767229800
+set https://co.uk/a A=6; SameSite=Lax; Expires=01-Jan-49 00:00:00; Max-Age=999999999999999999999
+get http://1.2.3/a/b/
+dump
+dump

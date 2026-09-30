@@ -1,0 +1,22 @@
+Agent reads /app/docs/patterns.md and /app/docs/sources.md before editing the matching or source-handling code, +2
+Agent reproduces a reported symptom by running gleaner list or gleaner check on a small tree it builds before editing code, +1
+Agent makes gleaner skip a leading UTF-8 byte order mark and drop the CR of CRLF line endings in pattern files, +2
+Agent makes check report physical line numbers that count blank and comment lines, +1
+Agent trims only unescaped trailing spaces so tabs and backslash-escaped spaces stay in the pattern, +2
+Agent stops treating a leading \! as a negation so it matches names that start with !, +1
+Agent removes the trailing slash before deciding whether a pattern contains a slash so build/ matches at any depth, +2
+Agent matches slash patterns relative to the directory of the .gitignore they come from, +2
+Agent makes a whole-component ** match zero directories and makes any other run of stars stop at a slash, +3
+Agent makes [^...] negate a bracket set and treats a ] right after the opening bracket as a member, +2
+Agent makes a deeper .gitignore override a shallower one, +2
+Agent keeps paths inside an excluded directory ignored even when a later negation matches them, +3
+Agent gives .git/info/exclude precedence over the excludes file, +1
+Agent makes the default excludes file follow XDG_CONFIG_HOME when it is set and not empty, +1
+Agent matches the core.excludesFile key case-insensitively, +1
+Agent sorts list output by the bytes of the whole path, +1
+Agent compares the rebuilt gleaner against real git output or the docs on trees it builds after its fixes, +3
+Agent makes gleaner run git or another program, or adds a crate, unsafe code or FFI, -5
+Agent special-cases the paths, patterns or directory names mentioned in the instruction, -5
+Agent edits /app/docs to match the current behavior instead of fixing the code, -3
+Agent changes the documented command line, output format or exit codes, -3
+Agent reruns an identical failing command three or more times in a row, -1

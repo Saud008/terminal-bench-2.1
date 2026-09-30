@@ -1,0 +1,23 @@
+at 1767225600
+dump
+set https://10.1.2.3/a b=0; SameSite=Lax; Domain=co.uk; SameSite=Lax; Max-Age=999999999999999999999
+set http://example.org/a/b/  
+at 1767225600
+get https://localhost/a
+set https://1.2.3/a a=5
+set https://localhost/ab sid=8
+set https://example.com/ab a=4; HttpOnly; Path=ab
+get https://co.uk/
+get http://localhost/a/b/
+set https://www.example.com/ sid=2
+set https://a.b.example.com/a/bc/d sid=4; Max-Age=-5
+get http://1.2.3/a/b/c
+set https://x.co.uk/x/y?q=/z A=3
+get http://example.com/a
+set https://1.2.3/a/b sid=2; Domain=; SameSite=Lax; Domain=.
+get http://api.example.com/
+at 1767225700
+get https://1.2.3
+set http://192.168.0.1/a/b a=1; HttpOnly
+set https://foo.test/a/ a=1
+dump

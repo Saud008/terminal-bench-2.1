@@ -1,0 +1,26 @@
+at 1767225600
+set http://example.org/a/b z=5
+get http://10.1.2.3/a/
+set http://a.b.example.com/ b=2; Secure; HttpOnly
+get http://github.io/a/b/
+set http://alice.github.io/a/b/ sid=2
+dump
+set http://github.io/a/b/c b=2; SameSite=Lax; Path=
+get http://alice.github.io/a
+set https://shop.example.co.uk/a/bc/d A=1
+at 1767225600
+at 1767225700
+get https://1.2.3/a/bc/d
+set http://shop.example.co.uk/ab a=8; Max-Age=60; Max-Age=abc; Secure; Path=/
+get http://co.uk/x/y?q=/z
+at 1767225800
+at 1767225900
+dump
+set http://example.com/a/b/ b=1; Expires=12:00:00 1 jan 1600
+get http://10.1.2.3/a/b
+set http://x.co.uk/ab b=0; HttpOnly; Expires=24:00:00 1 jan 2030
+get http://localhost/a/b
+set http://1.2.3/x/y?q=/z b=8; Expires=Wed, 09-Jun-61 10:18:14 GMT; Path=/ab
+set http://github.io/ab b=8
+set http://a.b.example.com/a 	=x
+dump

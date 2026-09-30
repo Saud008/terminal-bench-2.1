@@ -1,0 +1,122 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 11,
+            "passed": 10,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790456597.6447966,
+            "stop": 1790456598.7386227
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_host_line_patterns",
+                "status": "passed",
+                "duration": 0.9223698920000061,
+                "start": 1790456597.6595466,
+                "stop": 1790456598.583314,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_match_criteria",
+                "status": "passed",
+                "duration": 0.009731376999752683,
+                "start": 1790456598.583569,
+                "stop": 1790456598.5944169,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_final_pass",
+                "status": "passed",
+                "duration": 0.007915868000054616,
+                "start": 1790456598.5946894,
+                "stop": 1790456598.6035771,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_include_scoping",
+                "status": "passed",
+                "duration": 0.01674698799934049,
+                "start": 1790456598.6039436,
+                "stop": 1790456598.621881,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_include_paths",
+                "status": "passed",
+                "duration": 0.012606238999978814,
+                "start": 1790456598.6221921,
+                "stop": 1790456598.6357963,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_precedence_and_lists",
+                "status": "passed",
+                "duration": 0.011565537000024051,
+                "start": 1790456598.6360247,
+                "stop": 1790456598.648733,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_sendenv_setenv",
+                "status": "passed",
+                "duration": 0.009812894000333472,
+                "start": 1790456598.6490338,
+                "stop": 1790456598.6601737,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_time_values",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.009739055999943957,
+                "start": 1790456598.660477,
+                "stop": 1790456598.6826768,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "hopcfg = '/tmp/hopcfg-verify-sra8362i/hopcfg'\n\n    def test_time_values(hopcfg):\n        \"\"\"Time values with compound units, none, ControlPersist forms and keep-alive defaults and aliases.\"\"\"\n>       _check(hopcfg, \"time_values\")\n\n/tests/test_outputs.py:155: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/hopcfg-verify-sra8362i/hopcfg', groups = ('time_values',)\nfailures = [\"[time_values] args=['-F', '/root/.ssh/config', 'batch-job'] expected rc=0 got rc=0\\n--- ssh -G\\n+++ hopcfg\\n@@ -9,3 +9,3 @@\\n serveralivecountmax 3\\n-serveraliveinterval 300\\n+serveraliveinterval 0\\n loglevel INFO\\n\"]\ntotal = 9, group = 'time_values'\n\n    def _check(binary, *groups):\n        failures = []\n        total = 0\n        for group in groups:\n            for case in GROUPS[group]:\n                total += 1\n                rc, out = _run(binary, case)\n                if (rc, out) == (case[\"rc\"], case[\"stdout\"]):\n                    continue\n                diff = \"\".join(difflib.unified_diff(\n                    case[\"stdout\"].splitlines(True), out.splitlines(True),\n                    \"ssh -G\", \"hopcfg\", n=1))\n                failures.append(f\"[{group}] args={case['args']} expected rc={case['rc']} \"\n                                f\"got rc={rc}\\n{diff}\")\n        assert total > 0\n>       assert not failures, (f\"{len(failures)}/{total} cases differ from ssh -G:\\n\"\n                              + \"\\n\".join(failures[:4]))\nE       AssertionError: 1/9 cases differ from ssh -G:\nE         [time_values] args=['-F', '/root/.ssh/config', 'batch-job'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -9,3 +9,3 @@\nE          serveralivecountmax 3\nE         -serveraliveinterval 300\nE         +serveraliveinterval 0\nE          loglevel INFO\nE         \nE       assert not [\"[time_values] args=['-F', '/root/.ssh/config', 'batch-job'] expected rc=0 got rc=0\\n--- ssh -G\\n+++ hopcfg\\n@@ -9,3 +9,3 @@\\n serveralivecountmax 3\\n-serveraliveinterval 300\\n+serveraliveinterval 0\\n loglevel INFO\\n\"]\n\n/tests/test_outputs.py:114: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_proxy_settings",
+                "status": "passed",
+                "duration": 0.014821342000232107,
+                "start": 1790456598.68292,
+                "stop": 1790456598.6987903,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_token_expansion",
+                "status": "passed",
+                "duration": 0.007633467000232486,
+                "start": 1790456598.6990273,
+                "stop": 1790456598.707825,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_syntax_and_rejections",
+                "status": "passed",
+                "duration": 0.028762511999957496,
+                "start": 1790456598.708081,
+                "stop": 1790456598.7378867,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

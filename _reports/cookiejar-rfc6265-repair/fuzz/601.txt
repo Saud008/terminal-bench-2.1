@@ -1,0 +1,19 @@
+at 1767225600
+get http://www.example.com
+get https://example.com/
+get https://x.co.uk/a/b/
+get https://10.1.2.3/a/b
+set https://localhost/x/y?q=/z b=3; HttpOnly; Domain=b.example.com; Max-Age=+5
+set http://10.1.2.3/a A=3; Expires=24:00:00 1 jan 2030; Secure; Domain=example.com; HttpOnly
+set https://10.1.2.3/a/b/ b=9
+dump
+get http://shop.example.co.uk/
+get https://www.example.com/a/b/
+at 1767225600
+get https://10.1.2.3/a/b/
+get http://shop.example.co.uk/a/b/c
+get https://192.168.0.1/ab
+set http://192.168.0.1/a/b/c z=7; Max-Age=60; Path=ab; Path=/a
+set http://x.co.uk/a a=9; Expires=29 Feb 2028 1:2:3
+set http://shop.example.co.uk/a A=1; SameSite=Lax
+dump

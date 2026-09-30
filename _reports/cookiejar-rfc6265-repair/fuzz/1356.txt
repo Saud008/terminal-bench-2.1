@@ -1,0 +1,22 @@
+at 1767225600
+get http://github.io/ab
+get http://api.example.com/ab
+set https://a.b.example.com/a/b/c sid=1; Secure
+get https://foo.test/x/y?q=/z
+set http://192.168.0.1/a/ sid=7
+set https://1.2.3/a a=8; Secure
+get http://localhost/a/b/
+get http://github.io/x/y?q=/z
+set http://localhost b=7
+set https://api.example.com/ab b=6; Expires=05 Mar 2030 12:00:00abc; SameSite=Lax; HttpOnly
+dump
+get http://api.example.com/a/b
+set https://foo.test/a/ sid=5; SameSite=Lax; Expires=Thu, 01 Jan 2032 00:00:00 GMT; Expires=Wed, 09 Jun 2021 10:18:14 GMT; Secure
+set http://localhost/ a=5; SameSite=Lax; Expires=29 Feb 2400 00:00:00; SameSite=Lax
+dump
+get https://localhost/a/b/c
+set https://10.1.2.3/a/bc/d =v
+get http://alice.github.io/a/bc/d
+set http://localhost/a/b/c a=5; Secure; Domain=com; Expires=05 Mar 2030 12:00:00abc; HttpOnly
+set https://192.168.0.1/a z=9
+dump

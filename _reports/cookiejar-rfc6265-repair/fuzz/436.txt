@@ -1,0 +1,31 @@
+at 1767225600
+set https://a.b.example.com/a/ b=8
+set http://192.168.0.1/ z=9
+at 1767225600
+dump
+set https://x.co.uk/a/bc/d b=4; Max-Age=20; Expires=junk; Domain=.example.com
+set https://1.2.3/a/ A=1; HttpOnly; Expires=01-Jan-49 00:00:00; Expires=31 Apr 2030 00:00:00
+set https://192.168.0.1/a/bc/d b=7; Path=/; Max-Age=-0; Secure; Domain=github.io
+at 1767225601
+set https://a.b.example.com/x/y?q=/z b=7; Expires=24:00:00 1 jan 2030; Domain=github.io; Domain=10.1.2.3
+get https://1.2.3/a
+at 1767225601
+set https://localhost/ b=6; Secure; Secure; Path=/a/b
+dump
+get http://co.uk/a/
+get https://foo.test/a/b/c
+set https://localhost/a/ b=0; HttpOnly; SameSite=Lax; SameSite=Lax; HttpOnly
+set https://foo.test/a/bc/d b=5; Secure; SameSite=Lax; Max-Age=999999999999999999999; HttpOnly
+set https://github.io/a/b/ A=5; SameSite=Lax
+get http://github.io/
+get https://example.org/ab
+get http://co.uk/a
+dump
+set http://co.uk/a/b/ z=6
+set http://a.b.example.com/x/y?q=/z z=2
+get http://x.co.uk/ab
+get http://a.b.example.com/
+get https://10.1.2.3
+get https://a.b.example.com/ab
+dump
+dump

@@ -1,0 +1,18 @@
+Agent reads /app/docs (globs.md, format.md, resolution.md, cli.md) before changing the resolver, glob, parser or property code, +2
+Agent reproduces at least one reported symptom with a built quire binary before editing, +2
+Agent anchors section headers that contain a '/' anywhere but first to the directory of their EditorConfig file, +2
+Agent compares versions numerically component by component so the default 0.12.6 counts as newer than 0.9.0, +2
+Agent escapes '[' and ']' in the EditorConfig file's directory along with the other glob characters, +2
+Agent prints a [path] header for every path read from standard input even when "-" is the only argument, +1
+Agent makes "/**/" match a single '/' as well as one or more directories, +3
+Agent treats "[!...]" as a negated character class and '^' as an ordinary character, +3
+Agent starts inline comments only at a ';' or '#' preceded by whitespace, +3
+Agent honours root = true only in the preamble and records root inside a section as an ordinary property, +3
+Agent lowercases only the six case-insensitive property values, leaving tab_width and max_line_length as written, +2
+Agent keeps an overridden property at the position where its name was first recorded, +2
+Agent rebuilds quire and compares its output against the editorconfig tool or the documented examples after the fixes, +3
+Agent makes quire call the editorconfig program, a C library through cgo, or any other program instead of fixing its own logic, -5
+Agent special-cases the paths, file names or section headers quoted in the instruction or docs examples, -5
+Agent edits /app/docs to match the existing behavior instead of fixing the code, -3
+Agent changes the command-line interface documented in /app/docs/cli.md, -3
+Agent reruns an identical failing command three or more times in a row, -1

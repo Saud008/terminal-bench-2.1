@@ -1,0 +1,58 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 10 items
+
+../tests/test_outputs.py .......F..                                      [100%]
+
+=================================== FAILURES ===================================
+____________________________ test_append_semantics _____________________________
+
+brickmake = '/tmp/brickmake-verify'
+
+    def test_append_semantics(brickmake):
+        """'+=' on a simply expanded variable expands the added text immediately and keeps
+        it simple; a target-specific '+=' after its own definition extends that value."""
+>       replay(brickmake, "append")
+
+/tests/test_outputs.py:95: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/brickmake-verify', group = 'append'
+
+    def replay(binary, group):
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], [binary])
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: append/simple_variables_expand_appended_text_now result #0
+E           expected: {'stdout': '[-Wall] [simple] [a -Werror] [recursive] [s] [r ]\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': '[-Wall -Werror] [recursive] [a -Werror] [recursive] [s ] [r ]\n', 'stderr': '', 'code': 0}
+E         append/simple_append_keeps_value_when_referenced_variable_changes result #0
+E           expected: {'stdout': '[src] [src/*.c]\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': '[src tools] [src/*.c lib/*.c]\n', 'stderr': '', 'code': 0}
+E       assert not ["append/simple_variables_expand_appended_text_now result #0\n  expected: {'stdout': '[-Wall] [simple] [a -Werror] [re...c]\\n', 'stderr': '', 'code': 0}\n  actual:   {'stdout': '[src tools] [src/*.c lib/*.c]\\n', 'stderr': '', 'code': 0}"]
+
+/tests/test_outputs.py:47: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_shortest_stem_selection
+PASSED ../tests/test_outputs.py::test_directory_relative_prerequisites
+PASSED ../tests/test_outputs.py::test_mentioned_prerequisite_ought_to_exist
+PASSED ../tests/test_outputs.py::test_timestamps_reread_after_recipe
+PASSED ../tests/test_outputs.py::test_per_goal_messages
+PASSED ../tests/test_outputs.py::test_pattern_specific_variable_order
+PASSED ../tests/test_outputs.py::test_target_variable_inheritance
+PASSED ../tests/test_outputs.py::test_prerequisite_merge_order
+PASSED ../tests/test_outputs.py::test_project_builds
+FAILED ../tests/test_outputs.py::test_append_semantics - AssertionError: appe...
+========================= 1 failed, 9 passed in 0.45s ==========================

@@ -1,0 +1,2233 @@
+[?2004hroot@f89da04586bb:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@f89da04586bb:/app# clear
+[?2004l[H[J[3J[?2004hroot@f89da04586bb:/app# find . -maxdepth 3 -type f -print | sort
+[?2004l./Cargo.lock
+./Cargo.toml
+./README.md
+./docs/cli.md
+./docs/patterns.md
+./docs/sources.md
+./src/cli/args.rs
+./src/cli/check.rs
+./src/cli/list.rs
+./src/cli/mod.rs
+./src/config/gitconfig.rs
+./src/config/mod.rs
+./src/config/paths.rs
+./src/error.rs
+./src/ignore/charclass.rs
+./src/ignore/lines.rs
+./src/ignore/mod.rs
+./src/ignore/parse.rs
+./src/ignore/pattern.rs
+./src/ignore/sources.rs
+./src/ignore/stack.rs
+./src/ignore/wildmatch.rs
+./src/lib.rs
+./src/main.rs
+./src/report/mod.rs
+./src/walk/mod.rs
+./src/walk/order.rs
+./src/walk/tree.rs
+./target/.rustc_info.json
+./target/CACHEDIR.TAG
+./target/release/.cargo-lock
+./target/release/gleaner
+./target/release/gleaner.d
+./target/release/libgleaner.d
+./target/release/libgleaner.rlib
+[?2004hroot@f89da04586bb:/app# printf '%s\n' '--- Cargo.toml ---'; cat Cargo.toml; printf '%s\n' '--- docs ---'; for f in docs/*; do echo "### $f"; cat "$f"; done
+[?2004l--- Cargo.toml ---
+[package]
+name = "gleaner"
+version = "0.4.2"
+edition = "2021"
+description = "Lists the files of a work tree that git would not ignore"
+
+[dependencies]
+
+[profile.release]
+debug = false
+--- docs ---
+### docs/cli.md
+# Command line
+
+```
+gleaner [--root DIR] list
+gleaner [--root DIR] check [--] PATH...
+gleaner --help
+```
+
+`--root DIR` (or `--root=DIR`) names the top of the work tree; the default
+is the current directory. `ROOT/.git/config` and `ROOT/.git/info/exclude`
+are read from there. gleaner never looks above the root.
+
+Output is exactly what git prints for the same tree, as noted per command.
+The rules git applies are written down in `patterns.md` and `sources.md`.
+
+## list
+
+Prints every file below the root that is not ignored, one per line,
+relative to the root with `/` separators. The set and the order are those of
+`git ls-files --others --exclude-standard` run at the top of a work tree in
+which nothing is tracked.
+
+- Only non-directories are printed. A symbolic link is printed like a file
+  and never followed. Empty directories do not appear.
+- An entry named `.git` is skipped at any depth, together with everything
+  inside it.
+- An ignored directory is not entered, so nothing below it is printed.
+- Lines are sorted by the bytes of the whole relative path. `a-b` sorts
+  before `a/b`, which sorts before `a0`.
+- Names are printed as they are, without quoting. File names must be valid
+  UTF-8.
+
+Exit status 0.
+
+## check
+
+For each PATH, in the order given, prints one line in the format of
+`git check-ignore -v -n`:
+
+```
+SOURCE:LINE:PATTERN<TAB>PATH
+```
+
+or, when no pattern decides the path,
+
+```
+::<TAB>PATH
+```
+
+- PATH is echoed as given. It is relative to the root and must consist of
+  ordinary components: not empty, no leading or trailing `/`, no empty,
+  `.` or `..` components. It does not need to exist.
+- PATH is taken to be a directory when it exists as one (symbolic links are
+  not followed); otherwise it is treated as a file.
+- The deciding pattern is chosen as described in `sources.md`: if one of
+  PATH's parent directories is excluded, it is the pattern that excluded
+  the outermost such directory; otherwise it is the pattern that decides
+  PATH itself, which may be a negation.
+- SOURCE names the file the pattern came from: `.gitignore` for the root's
+  file, `DIR/.gitignore` for a file in directory DIR (relative to the root),
+  `.git/info/exclude`, or the excludes file spelled the way `sources.md`
+  describes.
+- LINE is the 1-based line number of the pattern in that file. Every line
+  counts, including blank lines and comments.
+- PATTERN is the line as written, after the unescaped trailing spaces are
+  removed. A leading `!` and a trailing `/` are part of it.
+
+Exit status: 0 if at least one PATH is ignored (its deciding pattern exists
+and is not a negation), 1 if none is. This differs from git, which also
+counts negated matches when `-v` is given.
+
+## Errors
+
+Usage errors, an invalid PATH and I/O errors print a message starting with
+`gleaner: ` on standard error, print nothing on standard output, and exit
+with status 2. All PATH arguments are validated before anything is printed.
+### docs/patterns.md
+# Pattern files
+
+`.gitignore`, `.git/info/exclude` and the excludes file all use the same
+syntax, the one described in gitignore(5). This page pins down the details
+gleaner has to get right.
+
+## Reading a file
+
+- The file is split on LF. A UTF-8 byte order mark at the very start of the
+  file is skipped. A CR directly before an LF, or at the end of an
+  unterminated last line, is not part of the line.
+- Lines are numbered from 1 and every line counts, whether or not it holds
+  a pattern.
+- An empty line holds no pattern. A line whose first character is `#` is a
+  comment; `#` anywhere else is an ordinary character.
+- Trailing spaces are removed unless they are escaped with a backslash.
+  Only the space character counts: a trailing tab stays part of the
+  pattern. `foo\ ` keeps its escaped space, and `foo\  ` becomes `foo\ `.
+- A line that is empty after that holds no pattern.
+
+## Parts of a pattern
+
+- A leading `!` makes the pattern a negation: a path it matches is not
+  ignored. To match a name that starts with `!` or `#`, put a backslash in
+  front (`\!important`, `\#notes`). That backslash is an ordinary glob
+  escape, so the pattern keeps it and `check` prints it.
+- A trailing `/` makes the pattern match directories only. It is removed
+  before the rest of these rules are applied.
+- If what is left contains no `/`, it is matched against the last component
+  of the path, at any depth below the directory of the pattern file.
+- Otherwise (a `/` at the start or in the middle) it is matched against the
+  path relative to the directory holding the pattern file, and a leading
+  `/` only marks that. For `.git/info/exclude` and the excludes file that
+  directory is the root. `doc/frotz` in `sub/.gitignore` matches
+  `sub/doc/frotz` but not `sub/a/doc/frotz` or `doc/frotz`.
+
+Matching is case-sensitive; `core.ignoreCase` is not consulted.
+
+## Glob syntax
+
+Patterns use git's wildmatch rules.
+
+- `\x` matches `x` literally. A lone `\` at the end of a pattern makes it
+  match nothing.
+- `?` matches one character other than `/`; `*` matches any run of
+  characters other than `/`.
+- `[...]` matches one character from a set. It may hold single characters,
+  ranges such as `a-z`, and the classes `[:alnum:]`, `[:alpha:]`,
+  `[:blank:]`, `[:cntrl:]`, `[:digit:]`, `[:graph:]`, `[:lower:]`,
+  `[:print:]`, `[:punct:]`, `[:space:]`, `[:upper:]` and `[:xdigit:]`.
+  `[!...]` and `[^...]` match a character not in the set. A `]` right
+  after the opening `[` (or after the `!`/`^`) is a member, as is a `-` at
+  the start or the end. A backslash escapes the next character. A set never
+  matches `/` in a pattern that contains a slash. An unknown class name or a
+  missing closing `]` makes the whole pattern match nothing.
+- In a pattern that contains a slash, a run of two or more `*` that makes up
+  a whole component (preceded by the start of the pattern or `/`, followed
+  by its end or `/`) may cross directories: a leading `**/` matches in every
+  directory, including the top one; `/**/` matches zero or more directories,
+  so `a/**/b` matches `a/b`, `a/x/b` and `a/x/y/b`; a trailing `/**`
+  matches everything inside. Any other run of `*`, such as the one in
+  `logs/202?**/raw` or `**z/q`, behaves like a single `*`.
+### docs/sources.md
+# Where patterns come from
+
+## Sources and precedence
+
+For a path, these sources are consulted in order, and the first one that
+has a matching pattern decides:
+
+1. The `.gitignore` files in the path's parent directories, from the
+   deepest one up to the root's. A deeper file overrides a shallower one.
+2. `ROOT/.git/info/exclude`.
+3. The excludes file (below).
+
+Within one file the last matching pattern wins. A negation that wins means
+"not ignored"; it does not let a lower-precedence source have a say.
+
+A directory is judged by the files of its ancestors only; its own
+`.gitignore` applies to what is inside it. Missing files, and paths that
+are not regular files, are skipped silently.
+
+## Excluded directories
+
+Once a directory is excluded, nothing inside it can be re-included and the
+`.gitignore` files inside it are not read. `list` does not enter it, and
+`check` reports the pattern that excluded the outermost excluded parent for
+every path below it. A negation only helps for a directory when the
+directory itself is not excluded: `build/*` followed by `!build/keep.txt`
+keeps `build/keep.txt`, while `build/` followed by `!build/keep.txt` does
+not.
+
+## The excludes file
+
+The excludes file is `core.excludesFile` from `ROOT/.git/config`. When that
+is not set, it is `$XDG_CONFIG_HOME/git/ignore` if `XDG_CONFIG_HOME` is set
+and not empty, and `$HOME/.config/git/ignore` otherwise. A configured
+value starting with `~/` (or a lone `~`) has that part replaced by `$HOME`.
+A relative value is taken relative to the root.
+
+`check` names the excludes file by that resulting string: the configured
+value after `~` expansion, or the default path as built above.
+
+## Config syntax
+
+Only `ROOT/.git/config` is read (no system or global files, no includes).
+The subset of git's syntax gleaner understands:
+
+- `[section]` headers, and `[section "sub"]` / `[section.sub]` for
+  subsections. Section and key names are case-insensitive, so `[Core]`
+  with `ExcludesFile` sets `core.excludesfile`.
+- `key = value` lines. The last assignment wins. A line ending in `\`
+  continues on the next line.
+- Values: surrounding whitespace is dropped, double quotes group (and keep
+  inner whitespace), `\"`, `\\`, `\n`, `\t` and `\b` are escapes, and `#` or
+  `;` outside quotes starts a comment.
+[?2004hroot@f89da04586bb:/app# printf '%s\n' '--- source ---'; for f in src/*.rs; do echo "### $f"; sed -n '1,260p' "$f"; done
+[?2004l--- source ---
+### src/error.rs
+use std::fmt;
+use std::io;
+use std::path::{Path, PathBuf};
+
+#[derive(Debug)]
+pub enum Error {
+    Usage(String),
+    BadPath(String),
+    Io { path: PathBuf, source: io::Error },
+    NotUtf8(PathBuf),
+}
+
+impl Error {
+    pub fn io(path: &Path, source: io::Error) -> Error {
+        Error::Io { path: path.to_path_buf(), source }
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Error::Usage(msg) => write!(f, "{msg} (try --help)"),
+            Error::BadPath(path) => write!(f, "not a plain relative path: '{path}'"),
+            Error::Io { path, source } => write!(f, "{}: {source}", path.display()),
+            Error::NotUtf8(path) => write!(f, "{}: file name is not valid UTF-8", path.display()),
+        }
+    }
+}
+
+impl std::error::Error for Error {}
+
+pub type Result<T> = std::result::Result<T, Error>;
+### src/lib.rs
+//! gleaner decides which files of a work tree git would treat as ignored,
+//! without running git. See `docs/` for the exact rules it follows.
+
+pub mod cli;
+pub mod config;
+pub mod error;
+pub mod ignore;
+pub mod report;
+pub mod walk;
+### src/main.rs
+use std::process::ExitCode;
+
+fn main() -> ExitCode {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    match gleaner::cli::run(&args) {
+        Ok(code) => ExitCode::from(code),
+        Err(err) => {
+            eprintln!("gleaner: {err}");
+            ExitCode::from(2)
+        }
+    }
+}
+[?2004hroot@f89da04586bb:/app# cargo test
+[?2004lbash: cargo: command not found
+[?2004hroot@f89da04586bb:/app# for f in $(find src -type f -name '*.rs' | sort); do echo "### $f"; cat "$f"; done
+[?2004l### src/cli/args.rs
+use std::path::PathBuf;
+
+use crate::error::{Error, Result};
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Command {
+    Help,
+    List,
+    Check(Vec<String>),
+}
+
+#[derive(Debug, Clone)]
+pub struct Options {
+    pub root: PathBuf,
+    pub command: Command,
+}
+
+pub fn parse(argv: &[String]) -> Result<Options> {
+    let mut root: Option<PathBuf> = None;
+    let mut i = 0;
+    while i < argv.len() {
+        let arg = argv[i].as_str();
+        if arg == "-h" || arg == "--help" {
+            return Ok(Options { root: root.unwrap_or_else(|| PathBuf::from(".")), command: Command::Help });
+        } else if arg == "--root" {
+            let value = argv
+                .get(i + 1)
+                .ok_or_else(|| Error::Usage("--root needs a directory".to_string()))?;
+            root = Some(PathBuf::from(value));
+            i += 2;
+        } else if let Some(value) = arg.strip_prefix("--root=") {
+            root = Some(PathBuf::from(value));
+            i += 1;
+        } else if arg.starts_with('-') {
+            return Err(Error::Usage(format!("unknown option {arg}")));
+        } else {
+            break;
+        }
+    }
+
+    let root = root.unwrap_or_else(|| PathBuf::from("."));
+    let rest = argv.get(i + 1..).unwrap_or(&[]);
+    let command = match argv.get(i).map(String::as_str) {
+        None => return Err(Error::Usage("missing command".to_string())),
+        Some("list") => {
+            if !rest.is_empty() {
+                return Err(Error::Usage("list takes no arguments".to_string()));
+            }
+            Command::List
+        }
+        Some("check") => {
+            let paths = match rest.first().map(String::as_str) {
+                Some("--") => &rest[1..],
+                _ => rest,
+            };
+            if paths.is_empty() {
+                return Err(Error::Usage("check needs at least one path".to_string()));
+            }
+            Command::Check(paths.to_vec())
+        }
+        Some(other) => return Err(Error::Usage(format!("unknown command {other}"))),
+    };
+    Ok(Options { root, command })
+}
+### src/cli/check.rs
+use std::io::Write;
+
+use crate::cli::Options;
+use crate::error::{Error, Result};
+use crate::ignore::Matcher;
+use crate::report;
+use crate::walk;
+
+pub fn run(opts: &Options, paths: &[String]) -> Result<u8> {
+    for path in paths {
+        walk::validate_relative(path)?;
+    }
+    let matcher = Matcher::open(&opts.root)?;
+    let mut out = String::new();
+    let mut any_ignored = false;
+    for path in paths {
+        let verdict = matcher.check_path(path)?;
+        any_ignored |= verdict.is_ignored();
+        out.push_str(&report::check_line(path, &verdict));
+    }
+    std::io::stdout()
+        .write_all(out.as_bytes())
+        .map_err(|e| Error::io("<stdout>".as_ref(), e))?;
+    Ok(if any_ignored { 0 } else { 1 })
+}
+### src/cli/list.rs
+use std::io::Write;
+
+use crate::cli::Options;
+use crate::error::{Error, Result};
+use crate::ignore::Matcher;
+use crate::report;
+use crate::walk;
+
+pub fn run(opts: &Options) -> Result<u8> {
+    let matcher = Matcher::open(&opts.root)?;
+    let kept = walk::collect_kept(&matcher)?;
+    let out = report::list_lines(&walk::order::sort_paths(kept));
+    std::io::stdout()
+        .write_all(out.as_bytes())
+        .map_err(|e| Error::io("<stdout>".as_ref(), e))?;
+    Ok(0)
+}
+### src/cli/mod.rs
+mod args;
+mod check;
+mod list;
+
+pub use args::{Command, Options};
+
+use crate::error::Result;
+
+pub const USAGE: &str = "\
+usage: gleaner [--root DIR] list
+       gleaner [--root DIR] check [--] PATH...
+";
+
+/// Runs one command line and returns the process exit status.
+pub fn run(argv: &[String]) -> Result<u8> {
+    let opts = args::parse(argv)?;
+    match &opts.command {
+        Command::Help => {
+            print!("{USAGE}");
+            Ok(0)
+        }
+        Command::List => list::run(&opts),
+        Command::Check(paths) => check::run(&opts, paths),
+    }
+}
+### src/config/gitconfig.rs
+//! Just enough of git's config file syntax to find `core.excludesFile`.
+
+use std::fs;
+use std::io;
+use std::path::Path;
+
+use crate::error::{Error, Result};
+
+#[derive(Debug, Clone)]
+struct Entry {
+    section: String,
+    subsection: Option<String>,
+    key: String,
+    value: Option<String>,
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct GitConfig {
+    entries: Vec<Entry>,
+}
+
+impl GitConfig {
+    /// Reads a config file; a missing file is an empty config.
+    pub fn load(path: &Path) -> Result<GitConfig> {
+        match fs::read(path) {
+            Ok(bytes) => Ok(GitConfig::parse(&String::from_utf8_lossy(&bytes))),
+            Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(GitConfig::default()),
+            Err(e) => Err(Error::io(path, e)),
+        }
+    }
+
+    pub fn parse(text: &str) -> GitConfig {
+        let mut entries = Vec::new();
+        let mut section = String::new();
+        let mut subsection: Option<String> = None;
+        for line in logical_lines(text) {
+            let line = line.trim_start();
+            if line.is_empty() || line.starts_with('#') || line.starts_with(';') {
+                continue;
+            }
+            if let Some(header) = line.strip_prefix('[') {
+                let Some(end) = header.find(']') else { continue };
+                let (name, sub) = parse_header(&header[..end]);
+                section = name;
+                subsection = sub;
+                let tail = header[end + 1..].trim_start();
+                if tail.is_empty() || tail.starts_with('#') || tail.starts_with(';') {
+                    continue;
+                }
+                if let Some(entry) = parse_assignment(&section, &subsection, tail) {
+                    entries.push(entry);
+                }
+                continue;
+            }
+            if let Some(entry) = parse_assignment(&section, &subsection, line) {
+                entries.push(entry);
+            }
+        }
+        GitConfig { entries }
+    }
+
+    /// Last value set for `section.key` (no subsection).
+    pub fn get(&self, section: &str, key: &str) -> Option<&str> {
+        self.entries
+            .iter()
+            .rev()
+            .find(|e| e.subsection.is_none() && e.section.eq_ignore_ascii_case(section) && e.key == key)
+            .and_then(|e| e.value.as_deref())
+    }
+}
+
+/// Joins lines ending in a backslash with the following line.
+fn logical_lines(text: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut current = String::new();
+    for raw in text.split('\n') {
+        let raw = raw.strip_suffix('\r').unwrap_or(raw);
+        if let Some(head) = raw.strip_suffix('\\') {
+            if !head.ends_with('\\') {
+                current.push_str(head);
+                continue;
+            }
+        }
+        current.push_str(raw);
+        out.push(std::mem::take(&mut current));
+    }
+    if !current.is_empty() {
+        out.push(current);
+    }
+    out
+}
+
+fn parse_header(header: &str) -> (String, Option<String>) {
+    let header = header.trim();
+    if let Some(space) = header.find(char::is_whitespace) {
+        let name = header[..space].to_ascii_lowercase();
+        let sub = header[space..].trim().trim_matches('"').to_string();
+        return (name, Some(sub));
+    }
+    match header.split_once('.') {
+        Some((name, sub)) => (name.to_ascii_lowercase(), Some(sub.to_ascii_lowercase())),
+        None => (header.to_ascii_lowercase(), None),
+    }
+}
+
+fn parse_assignment(section: &str, subsection: &Option<String>, line: &str) -> Option<Entry> {
+    let (key, value) = match line.find('=') {
+        Some(eq) => (line[..eq].trim(), Some(parse_value(&line[eq + 1..]))),
+        None => (strip_comment(line).trim(), None),
+    };
+    if key.is_empty() || !key.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') {
+        return None;
+    }
+    Some(Entry {
+        section: section.to_string(),
+        subsection: subsection.clone(),
+        key: key.to_string(),
+        value,
+    })
+}
+
+fn strip_comment(text: &str) -> &str {
+    match text.find(['#', ';']) {
+        Some(at) => &text[..at],
+        None => text,
+    }
+}
+
+/// Unquotes a value: double quotes group, `\"` `\\` `\n` `\t` `\b` are
+/// escapes, `#` and `;` outside quotes start a comment, and unquoted
+/// surrounding whitespace is dropped.
+fn parse_value(raw: &str) -> String {
+    let mut out = String::new();
+    let mut pending_space = String::new();
+    let mut quoted = false;
+    let mut chars = raw.trim_start().chars();
+    while let Some(c) = chars.next() {
+        match c {
+            '"' => {
+                out.push_str(&std::mem::take(&mut pending_space));
+                quoted = !quoted;
+            }
+            '\\' => {
+                out.push_str(&std::mem::take(&mut pending_space));
+                match chars.next() {
+                    Some('n') => out.push('\n'),
+                    Some('t') => out.push('\t'),
+                    Some('b') => out.push('\u{8}'),
+                    Some(other) => out.push(other),
+                    None => {}
+                }
+            }
+            '#' | ';' if !quoted => break,
+            c if c.is_whitespace() && !quoted => pending_space.push(c),
+            c => {
+                out.push_str(&std::mem::take(&mut pending_space));
+                out.push(c);
+            }
+        }
+    }
+    out
+}
+### src/config/mod.rs
+mod gitconfig;
+pub mod paths;
+
+pub use gitconfig::GitConfig;
+### src/config/paths.rs
+use std::env;
+
+fn home() -> Option<String> {
+    env::var("HOME").ok()
+}
+
+/// Expands a leading `~/` (or a lone `~`) to `$HOME`. Other values are
+/// returned unchanged.
+pub fn expand_user(value: &str) -> Option<String> {
+    if value == "~" {
+        return home();
+    }
+    match value.strip_prefix("~/") {
+        Some(rest) => home().map(|h| format!("{h}/{rest}")),
+        None => Some(value.to_string()),
+    }
+}
+
+/// The excludes file git reads when `core.excludesFile` is not set.
+pub fn default_excludes_file() -> Option<String> {
+    home().map(|h| format!("{h}/.config/git/ignore"))
+}
+### src/error.rs
+use std::fmt;
+use std::io;
+use std::path::{Path, PathBuf};
+
+#[derive(Debug)]
+pub enum Error {
+    Usage(String),
+    BadPath(String),
+    Io { path: PathBuf, source: io::Error },
+    NotUtf8(PathBuf),
+}
+
+impl Error {
+    pub fn io(path: &Path, source: io::Error) -> Error {
+        Error::Io { path: path.to_path_buf(), source }
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Error::Usage(msg) => write!(f, "{msg} (try --help)"),
+            Error::BadPath(path) => write!(f, "not a plain relative path: '{path}'"),
+            Error::Io { path, source } => write!(f, "{}: {source}", path.display()),
+            Error::NotUtf8(path) => write!(f, "{}: file name is not valid UTF-8", path.display()),
+        }
+    }
+}
+
+impl std::error::Error for Error {}
+
+pub type Result<T> = std::result::Result<T, Error>;
+### src/ignore/charclass.rs
+//! Bracket expressions: `[abc]`, `[a-z]`, `[!x]`, `[[:digit:]]`.
+
+/// Matches `tc` against the bracket expression whose body starts at
+/// `pat[p]` (just after the `[`). Returns whether the expression accepts
+/// `tc` and the index of the closing `]`, or `None` when the expression is
+/// malformed, in which case the whole pattern fails.
+pub(super) fn bracket(pat: &[u8], mut p: usize, tc: u8) -> Option<(bool, usize)> {
+    let at = |i: usize| pat.get(i).copied().unwrap_or(0);
+    let negated = at(p) == b'!';
+    if negated {
+        p += 1;
+    }
+    let mut prev: u8 = 0;
+    let mut matched = false;
+    loop {
+        let mut pc = at(p);
+        if pc == 0 {
+            return None;
+        }
+        if pc == b']' {
+            break;
+        }
+        if pc == b'\\' {
+            p += 1;
+            pc = at(p);
+            if pc == 0 {
+                return None;
+            }
+            if tc == pc {
+                matched = true;
+            }
+        } else if pc == b'-' && prev != 0 && at(p + 1) != 0 && at(p + 1) != b']' {
+            p += 1;
+            pc = at(p);
+            if pc == b'\\' {
+                p += 1;
+                pc = at(p);
+                if pc == 0 {
+                    return None;
+                }
+            }
+            if tc <= pc && tc >= prev {
+                matched = true;
+            }
+            pc = 0;
+        } else if pc == b'[' && at(p + 1) == b':' {
+            let s = p + 2;
+            let mut q = s;
+            while at(q) != 0 && at(q) != b']' {
+                q += 1;
+            }
+            if at(q) == 0 {
+                return None;
+            }
+            if q == s || pat[q - 1] != b':' {
+                // Not a `[:class:]`; the `[` is an ordinary member.
+                if tc == pc {
+                    matched = true;
+                }
+            } else {
+                match posix_class(&pat[s..q - 1], tc) {
+                    Some(true) => matched = true,
+                    Some(false) => {}
+                    None => return None,
+                }
+                p = q;
+                pc = 0;
+            }
+        } else if tc == pc {
+            matched = true;
+        }
+        prev = pc;
+        p += 1;
+    }
+    Some((matched != negated, p))
+}
+
+fn posix_class(name: &[u8], c: u8) -> Option<bool> {
+    Some(match name {
+        b"alnum" => c.is_ascii_alphanumeric(),
+        b"alpha" => c.is_ascii_alphabetic(),
+        b"blank" => c == b' ' || c == b'\t',
+        b"cntrl" => c.is_ascii_control(),
+        b"digit" => c.is_ascii_digit(),
+        b"graph" => c.is_ascii_graphic(),
+        b"lower" => c.is_ascii_lowercase(),
+        b"print" => c.is_ascii_graphic() || c == b' ',
+        b"punct" => c.is_ascii_punctuation(),
+        b"space" => c.is_ascii_whitespace(),
+        b"upper" => c.is_ascii_uppercase(),
+        b"xdigit" => c.is_ascii_hexdigit(),
+        _ => return None,
+    })
+}
+### src/ignore/lines.rs
+//! Splitting a pattern file into candidate lines.
+
+/// A line that may hold a pattern, with its 1-based line number.
+#[derive(Debug, Clone)]
+pub struct RawLine {
+    pub number: usize,
+    pub text: Vec<u8>,
+}
+
+/// Splits file contents on `\n`, dropping blank lines and `#` comments.
+pub fn split(buf: &[u8]) -> Vec<RawLine> {
+    let mut out = Vec::new();
+    for line in buf.split(|&b| b == b'\n') {
+        if line.is_empty() || line[0] == b'#' {
+            continue;
+        }
+        out.push(RawLine { number: out.len() + 1, text: line.to_vec() });
+    }
+    out
+}
+### src/ignore/mod.rs
+//! Ignore rules: reading pattern files, matching paths, and combining the
+//! per-directory, repository and user sources.
+
+mod charclass;
+mod lines;
+mod parse;
+mod pattern;
+mod sources;
+mod stack;
+mod wildmatch;
+
+pub use pattern::{Pattern, PatternList};
+pub use sources::Sources;
+pub use stack::{inherit, resolve, Hit, Matcher, Verdict};
+pub use wildmatch::wildmatch;
+### src/ignore/parse.rs
+//! Turning one line of a pattern file into a pattern.
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Parsed {
+    /// The line as it is reported by `check`.
+    pub text: Vec<u8>,
+    /// What is matched: `text` without a leading `!` or a trailing `/`.
+    pub body: Vec<u8>,
+    pub negative: bool,
+    pub dir_only: bool,
+    /// The pattern is matched against the last path component at any depth.
+    pub basename_only: bool,
+}
+
+/// Removes trailing whitespace.
+pub fn trim_trailing_spaces(line: &[u8]) -> &[u8] {
+    let end = line
+        .iter()
+        .rposition(|b| !b.is_ascii_whitespace())
+        .map_or(0, |i| i + 1);
+    &line[..end]
+}
+
+pub fn parse_line(line: &[u8]) -> Option<Parsed> {
+    let text = trim_trailing_spaces(line);
+    if text.is_empty() {
+        return None;
+    }
+    let mut body = text;
+    if body.len() > 1 && body[0] == b'\\' && matches!(body[1], b'!' | b'#') {
+        body = &body[1..];
+    }
+    let negative = body[0] == b'!';
+    if negative {
+        body = &body[1..];
+    }
+    let basename_only = !body.contains(&b'/');
+    let dir_only = body.last() == Some(&b'/');
+    if dir_only {
+        body = &body[..body.len() - 1];
+    }
+    Some(Parsed {
+        text: text.to_vec(),
+        body: body.to_vec(),
+        negative,
+        dir_only,
+        basename_only,
+    })
+}
+### src/ignore/pattern.rs
+use super::lines;
+use super::parse::parse_line;
+use super::wildmatch::wildmatch;
+
+#[derive(Debug, Clone)]
+pub struct Pattern {
+    pub text: String,
+    pub body: Vec<u8>,
+    pub negative: bool,
+    pub dir_only: bool,
+    pub basename_only: bool,
+    pub line: usize,
+}
+
+/// The patterns of one file, with the directory they are relative to.
+#[derive(Debug, Clone, Default)]
+pub struct PatternList {
+    /// How the file is named in `check` output.
+    pub source: String,
+    /// Directory of a `.gitignore`, relative to the root and without a
+    /// trailing slash; empty for the root and for non-directory sources.
+    pub base: String,
+    pub patterns: Vec<Pattern>,
+}
+
+impl PatternList {
+    pub fn empty(source: &str, base: &str) -> PatternList {
+        PatternList { source: source.to_string(), base: base.to_string(), patterns: Vec::new() }
+    }
+
+    pub fn from_bytes(source: &str, base: &str, buf: &[u8]) -> PatternList {
+        let mut list = PatternList::empty(source, base);
+        for raw in lines::split(buf) {
+            if let Some(p) = parse_line(&raw.text) {
+                list.patterns.push(Pattern {
+                    text: String::from_utf8_lossy(&p.text).into_owned(),
+                    body: p.body,
+                    negative: p.negative,
+                    dir_only: p.dir_only,
+                    basename_only: p.basename_only,
+                    line: raw.number,
+                });
+            }
+        }
+        list
+    }
+
+    /// The last pattern in the file that matches `path` (relative to the
+    /// root). `basename` is the last component of `path`.
+    pub fn last_match(&self, path: &str, basename: &str, is_dir: bool) -> Option<&Pattern> {
+        self.patterns.iter().rev().find(|pat| {
+            if pat.dir_only && !is_dir {
+                return false;
+            }
+            if pat.basename_only {
+                wildmatch(&pat.body, basename.as_bytes(), false)
+            } else {
+                match_pathname(path, &pat.body)
+            }
+        })
+    }
+}
+
+/// Patterns containing a slash are matched against the whole path.
+fn match_pathname(path: &str, body: &[u8]) -> bool {
+    let body = body.strip_prefix(b"/").unwrap_or(body);
+    wildmatch(body, path.as_bytes(), true)
+}
+### src/ignore/sources.rs
+//! The pattern files that apply to the whole tree.
+
+use std::fs;
+use std::io;
+use std::path::{Path, PathBuf};
+
+use super::pattern::PatternList;
+use crate::config::{paths, GitConfig};
+use crate::error::{Error, Result};
+
+pub const INFO_EXCLUDE: &str = ".git/info/exclude";
+
+#[derive(Debug, Clone)]
+pub struct Sources {
+    /// `core.excludesFile` as configured (after `~/` expansion), or the
+    /// default location when it is not set.
+    pub excludes_file: Option<String>,
+}
+
+impl Sources {
+    pub fn discover(root: &Path) -> Result<Sources> {
+        let config = GitConfig::load(&root.join(".git").join("config"))?;
+        let excludes_file = match config.get("core", "excludesFile") {
+            Some(value) => paths::expand_user(value),
+            None => paths::default_excludes_file(),
+        };
+        Ok(Sources { excludes_file })
+    }
+
+    /// Loads the tree-wide lists, highest precedence first.
+    pub fn load(&self, root: &Path) -> Result<Vec<PatternList>> {
+        let mut lists = Vec::new();
+        if let Some(name) = &self.excludes_file {
+            let path = resolve(root, name);
+            if let Some(list) = read_optional(&path, name)? {
+                lists.push(list);
+            }
+        }
+        if let Some(list) = read_optional(&root.join(INFO_EXCLUDE), INFO_EXCLUDE)? {
+            lists.push(list);
+        }
+        Ok(lists)
+    }
+}
+
+/// Relative excludes-file paths are taken from the root.
+fn resolve(root: &Path, name: &str) -> PathBuf {
+    let path = Path::new(name);
+    if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        root.join(path)
+    }
+}
+
+/// Reads a pattern file; a missing file (or a directory) gives `None`.
+pub fn read_optional(path: &Path, source: &str) -> Result<Option<PatternList>> {
+    match fs::read(path) {
+        Ok(buf) => Ok(Some(PatternList::from_bytes(source, "", &buf))),
+        Err(e)
+            if matches!(
+                e.kind(),
+                io::ErrorKind::NotFound | io::ErrorKind::IsADirectory | io::ErrorKind::NotADirectory
+            ) =>
+        {
+            Ok(None)
+        }
+        Err(e) => Err(Error::io(path, e)),
+    }
+}
+### src/ignore/stack.rs
+//! Combining all pattern sources into a decision for one path.
+
+use std::path::{Path, PathBuf};
+
+use super::pattern::{Pattern, PatternList};
+use super::sources::{read_optional, Sources};
+use crate::error::Result;
+
+pub const PER_DIRECTORY: &str = ".gitignore";
+
+/// The pattern that decided a path.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Hit {
+    pub source: String,
+    pub line: usize,
+    pub text: String,
+    pub negative: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Verdict {
+    NoMatch,
+    Matched(Hit),
+}
+
+impl Verdict {
+    pub fn is_ignored(&self) -> bool {
+        matches!(self, Verdict::Matched(hit) if !hit.negative)
+    }
+}
+
+pub struct Matcher {
+    root: PathBuf,
+    /// `.git/info/exclude` and the excludes file, highest precedence first.
+    globals: Vec<PatternList>,
+}
+
+fn hit(list: &PatternList, pat: &Pattern) -> Hit {
+    Hit { source: list.source.clone(), line: pat.line, text: pat.text.clone(), negative: pat.negative }
+}
+
+/// Combines the decision inherited from an excluded parent directory with
+/// the path's own last matching pattern.
+pub fn resolve(inherited: Option<Hit>, own: Option<Hit>) -> Option<Hit> {
+    match own {
+        Some(h) if h.negative => Some(h),
+        own => inherited.or(own),
+    }
+}
+
+/// What an excluded directory passes on to its entries.
+pub fn inherit(resolved: &Option<Hit>) -> Option<Hit> {
+    match resolved {
+        Some(h) if !h.negative => Some(h.clone()),
+        _ => None,
+    }
+}
+
+impl Matcher {
+    pub fn open(root: &Path) -> Result<Matcher> {
+        let sources = Sources::discover(root)?;
+        let globals = sources.load(root)?;
+        Ok(Matcher { root: root.to_path_buf(), globals })
+    }
+
+    pub fn root(&self) -> &Path {
+        &self.root
+    }
+
+    /// The `.gitignore` of `dir` (relative to the root, "" for the root).
+    pub fn dir_list(&self, dir: &str) -> Result<PatternList> {
+        let (file, source) = if dir.is_empty() {
+            (self.root.join(PER_DIRECTORY), PER_DIRECTORY.to_string())
+        } else {
+            (self.root.join(dir).join(PER_DIRECTORY), format!("{dir}/{PER_DIRECTORY}"))
+        };
+        Ok(match read_optional(&file, &source)? {
+            Some(mut list) => {
+                list.base = dir.to_string();
+                list
+            }
+            None => PatternList::empty(&source, dir),
+        })
+    }
+
+    /// Last matching pattern for `path`, given the `.gitignore` lists of its
+    /// ancestors from the root down (`stack`), then the tree-wide sources.
+    pub fn classify(&self, stack: &[PatternList], path: &str, is_dir: bool) -> Option<Hit> {
+        let basename = path.rsplit('/').next().unwrap_or(path);
+        stack
+            .iter()
+            .chain(self.globals.iter())
+            .find_map(|list| list.last_match(path, basename, is_dir).map(|p| hit(list, p)))
+    }
+
+    /// Decision for a single path relative to the root.
+    pub fn check_path(&self, path: &str) -> Result<Verdict> {
+        let mut stack = vec![self.dir_list("")?];
+        let mut inherited: Option<Hit> = None;
+        let components: Vec<&str> = path.split('/').collect();
+        let mut prefix = String::new();
+        for comp in &components[..components.len() - 1] {
+            if !prefix.is_empty() {
+                prefix.push('/');
+            }
+            prefix.push_str(comp);
+            let own = self.classify(&stack, &prefix, true);
+            inherited = inherit(&resolve(inherited, own));
+            stack.push(self.dir_list(&prefix)?);
+        }
+        let is_dir = self
+            .root
+            .join(path)
+            .symlink_metadata()
+            .map(|m| m.is_dir())
+            .unwrap_or(false);
+        let own = self.classify(&stack, path, is_dir);
+        Ok(match resolve(inherited, own) {
+            Some(h) => Verdict::Matched(h),
+            None => Verdict::NoMatch,
+        })
+    }
+}
+### src/ignore/wildmatch.rs
+//! Glob matching with git's wildmatch rules.
+//!
+//! With `pathname` set, `*`, `?` and bracket expressions never match `/`.
+//! Without it every `*` may match `/` (only used for single components).
+
+use super::charclass;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Outcome {
+    Match,
+    NoMatch,
+    AbortAll,
+    AbortToStarStar,
+}
+
+pub fn wildmatch(pattern: &[u8], text: &[u8], pathname: bool) -> bool {
+    dowild(pattern, 0, text, 0, pathname) == Outcome::Match
+}
+
+fn is_glob_special(c: u8) -> bool {
+    matches!(c, b'*' | b'?' | b'[' | b'\\')
+}
+
+fn dowild(pat: &[u8], mut p: usize, text: &[u8], mut t: usize, pathname: bool) -> Outcome {
+    while p < pat.len() {
+        let p_ch = pat[p];
+        let t_ch = text.get(t).copied();
+        if t_ch.is_none() && p_ch != b'*' {
+            return Outcome::AbortAll;
+        }
+        match p_ch {
+            b'\\' => {
+                p += 1;
+                if pat.get(p).copied() != t_ch {
+                    return Outcome::NoMatch;
+                }
+            }
+            b'?' => {
+                if pathname && t_ch == Some(b'/') {
+                    return Outcome::NoMatch;
+                }
+            }
+            b'*' => return star(pat, p, text, t, pathname),
+            b'[' => {
+                let tc = t_ch.unwrap_or(0);
+                match charclass::bracket(pat, p + 1, tc) {
+                    None => return Outcome::AbortAll,
+                    Some((hit, end)) => {
+                        if !hit || (pathname && tc == b'/') {
+                            return Outcome::NoMatch;
+                        }
+                        p = end;
+                    }
+                }
+            }
+            _ => {
+                if t_ch != Some(p_ch) {
+                    return Outcome::NoMatch;
+                }
+            }
+        }
+        p += 1;
+        t += 1;
+    }
+    if t < text.len() {
+        Outcome::NoMatch
+    } else {
+        Outcome::Match
+    }
+}
+
+/// Handles a run of `*` starting at `pat[p]`.
+fn star(pat: &[u8], mut p: usize, text: &[u8], mut t: usize, pathname: bool) -> Outcome {
+    p += 1;
+    let match_slash = if pat.get(p) == Some(&b'*') {
+        while pat.get(p) == Some(&b'*') {
+            p += 1;
+        }
+        true
+    } else {
+        !pathname
+    };
+
+    if p == pat.len() {
+        if !match_slash && text[t..].contains(&b'/') {
+            return Outcome::NoMatch;
+        }
+        return Outcome::Match;
+    }
+    if !match_slash && pat[p] == b'/' {
+        // A single `*` followed by `/` swallows the rest of this component.
+        let Some(off) = text[t..].iter().position(|&c| c == b'/') else {
+            return Outcome::NoMatch;
+        };
+        t += off;
+        return dowild(pat, p + 1, text, t + 1, pathname);
+    }
+
+    let mut t_ch = text.get(t).copied();
+    while t_ch.is_some() {
+        if !is_glob_special(pat[p]) {
+            let lit = pat[p];
+            while let Some(c) = text.get(t).copied() {
+                if (!match_slash && c == b'/') || c == lit {
+                    break;
+                }
+                t += 1;
+            }
+            t_ch = text.get(t).copied();
+            if t_ch != Some(lit) {
+                return if match_slash { Outcome::AbortAll } else { Outcome::AbortToStarStar };
+            }
+        }
+        let matched = dowild(pat, p, text, t, pathname);
+        if matched != Outcome::NoMatch {
+            if !match_slash || matched != Outcome::AbortToStarStar {
+                return matched;
+            }
+        } else if !match_slash && t_ch == Some(b'/') {
+            return Outcome::AbortToStarStar;
+        }
+        t += 1;
+        t_ch = text.get(t).copied();
+    }
+    Outcome::AbortAll
+}
+### src/lib.rs
+//! gleaner decides which files of a work tree git would treat as ignored,
+//! without running git. See `docs/` for the exact rules it follows.
+
+pub mod cli;
+pub mod config;
+pub mod error;
+pub mod ignore;
+pub mod report;
+pub mod walk;
+### src/main.rs
+use std::process::ExitCode;
+
+fn main() -> ExitCode {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    match gleaner::cli::run(&args) {
+        Ok(code) => ExitCode::from(code),
+        Err(err) => {
+            eprintln!("gleaner: {err}");
+            ExitCode::from(2)
+        }
+    }
+}
+### src/report/mod.rs
+//! Output formatting for both commands.
+
+use crate::ignore::Verdict;
+
+/// One `check` line: `SOURCE:LINE:PATTERN<TAB>PATH`, or `::<TAB>PATH` when
+/// no pattern matched.
+pub fn check_line(path: &str, verdict: &Verdict) -> String {
+    match verdict {
+        Verdict::Matched(hit) => format!("{}:{}:{}\t{}\n", hit.source, hit.line, hit.text, path),
+        Verdict::NoMatch => format!("::\t{path}\n"),
+    }
+}
+
+pub fn list_lines(paths: &[String]) -> String {
+    let mut out = String::with_capacity(paths.iter().map(|p| p.len() + 1).sum());
+    for path in paths {
+        out.push_str(path);
+        out.push('\n');
+    }
+    out
+}
+### src/walk/mod.rs
+pub mod order;
+mod tree;
+
+pub use tree::collect_kept;
+
+use crate::error::{Error, Result};
+
+/// Paths given to `check` must be relative to the root and made only of
+/// ordinary components.
+pub fn validate_relative(path: &str) -> Result<()> {
+    let ok = !path.is_empty()
+        && !path.starts_with('/')
+        && path.split('/').all(|c| !c.is_empty() && c != "." && c != "..");
+    if ok {
+        Ok(())
+    } else {
+        Err(Error::BadPath(path.to_string()))
+    }
+}
+### src/walk/order.rs
+/// Sorts listed paths directory by directory, comparing one path component
+/// at a time.
+pub fn sort_paths(mut paths: Vec<String>) -> Vec<String> {
+    paths.sort_unstable_by(|a, b| a.split('/').cmp(b.split('/')));
+    paths
+}
+### src/walk/tree.rs
+use std::fs;
+
+use crate::error::{Error, Result};
+use crate::ignore::{Hit, Matcher, PatternList};
+
+/// Entries with this name are never listed or entered, at any depth.
+const GIT_DIR: &str = ".git";
+
+/// Every non-ignored file below the root, relative to it, in no particular
+/// order.
+pub fn collect_kept(matcher: &Matcher) -> Result<Vec<String>> {
+    let mut out = Vec::new();
+    let mut stack = vec![matcher.dir_list("")?];
+    visit(matcher, "", None, &mut stack, &mut out)?;
+    Ok(out)
+}
+
+fn visit(
+    matcher: &Matcher,
+    dir: &str,
+    inherited: Option<Hit>,
+    stack: &mut Vec<PatternList>,
+    out: &mut Vec<String>,
+) -> Result<()> {
+    let abs = matcher.root().join(dir);
+    let entries = fs::read_dir(&abs).map_err(|e| Error::io(&abs, e))?;
+    for entry in entries {
+        let entry = entry.map_err(|e| Error::io(&abs, e))?;
+        let name = entry
+            .file_name()
+            .into_string()
+            .map_err(|_| Error::NotUtf8(entry.path()))?;
+        if name == GIT_DIR {
+            continue;
+        }
+        let rel = if dir.is_empty() { name } else { format!("{dir}/{name}") };
+        let is_dir = entry.file_type().map_err(|e| Error::io(&entry.path(), e))?.is_dir();
+        let own = matcher.classify(stack, &rel, is_dir);
+        let resolved = crate::ignore::resolve(inherited.clone(), own);
+        let ignored = matches!(&resolved, Some(h) if !h.negative);
+        if is_dir {
+            stack.push(matcher.dir_list(&rel)?);
+            let result = visit(matcher, &rel, crate::ignore::inherit(&resolved), stack, out);
+            stack.pop();
+            result?;
+        } else if !ignored {
+            out.push(rel);
+        }
+    }
+    Ok(())
+}
+[?2004hroot@f89da04586bb:/app# cat README.md; printf '\n--- toolchain search ---\n'; command -v rustc || true; command -v cargo || true; find /root /usr/local /opt -type f \( -name cargo -o -name rustc \) 2>/dev/null | head -30
+[?2004l# gleaner
+
+gleaner lists the files of a work tree that git would not ignore, and
+explains why a given path is or isn't ignored, without running git. The
+build farm uses it to decide what goes into source snapshots, on machines
+that have no git installed.
+
+```
+cargo build --release
+target/release/gleaner --root /path/to/tree list
+target/release/gleaner --root /path/to/tree check build/out.o src/main.rs
+```
+
+It is plain Rust on the standard library.
+
+- `docs/cli.md`: commands, output formats, exit status
+- `docs/patterns.md`: pattern file syntax and glob matching
+- `docs/sources.md`: which files are read and how they are combined
+
+Layout: `src/cli` (argument handling and the two commands), `src/ignore`
+(reading pattern files, wildmatch, combining sources), `src/config`
+(`.git/config` and the excludes-file location), `src/walk` (tree walk and
+output order), `src/report` (output lines).
+
+--- toolchain search ---
+/usr/local/rustup/toolchains/1.85.1-x86_64-unknown-linux-gnu/bin/rustc
+/usr/local/rustup/toolchains/1.85.1-x86_64-unknown-linux-gnu/bin/cargo
+/usr/local/rustup/toolchains/1.85.1-x86_64-unknown-linux-gnu/etc/bash_completion.d/cargo
+[?2004hroot@f89da04586bb:/app# cat > src/ignore/lines.rs <<'EOF'
+[?2004l[?2004h> //! Splitting a pattern file into candidate lines.
+[?2004l[?2004h> 
+[?2004l[?2004h> #[derive(Debug, Clone)]
+[?2004l[?2004h> pub struct RawLine {
+[?2004l[?2004h>     pub number: usize,
+[?2004l[?2004h>     pub text: Vec<u8>,
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> pub fn split(buf: &[u8]) -> Vec<RawLine> {
+[?2004l[?2004h>     let mut out = Vec::new();
+[?2004l[?2004h>     for (index, raw) in buf.split(|&b| b == b'\n').enumerate() {
+[?2004l[?2004h>         let mut line = raw;
+[?2004l[?2004h>         if index == 0 {
+[?2004l[?2004h>             line = line.strip_prefix(b"\xef\xbb\xbf").unwrap_or(line);
+[?2004l[?2004h>         }
+[?2004l[?2004h>         line = line.strip_suffix(b"\r").unwrap_or(line);
+[?2004l[?2004h>         if line.is_empty() || line[0] == b'#' {
+[?2004l[?2004h>             continue;
+[?2004l[?2004h>         }
+[?2004l[?2004h>         out.push(RawLine { number: index + 1, text: line.to_vec() });
+[?2004l[?2004h>     }
+[?2004l[?2004h>     out
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@f89da04586bb:/app# cat > src/ignore/parse.rs <<'EOF'
+[?2004l[?2004h> //! Turning one line of a pattern file into a pattern.
+[?2004l[?2004h> 
+[?2004l[?2004h> #[derive(Debug, Clone, PartialEq, Eq)]
+[?2004l[?2004h> pub struct Parsed {
+[?2004l[?2004h>     pub text: Vec<u8>,
+[?2004l[?2004h>     pub body: Vec<u8>,
+[?2004l[?2004h>     pub negative: bool,
+[?2004l[?2004h>     pub dir_only: bool,
+[?2004l[?2004h>     pub basename_only: bool,
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> /// Remove only unescaped trailing space characters.
+[?2004l[?2004h> pub fn trim_trailing_spaces(line: &[u8]) -> &[u8] {
+[?2004l[?2004h>     let mut end = line.len();
+[?2004l[?2004h>     while end > 0 && line[end - 1] == b' ' {
+[?2004l[?2004h>         let mut slashes = 0;
+[?2004l[?2004h>         let mut i = end - 1;
+[?2004l[?2004h>         while i > 0 && line[i - 1] == b'\\' {
+[?2004l[?2004h>             slashes += 1;
+[?2004l[?2004h>             i -= 1;
+[?2004l[?2004h>         }
+[?2004l[?2004h>         if slashes % 2 == 1 {
+[?2004l[?2004h>             break;
+[?2004l[?2004h>         }
+[?2004l[?2004h>         end -= 1;
+[?2004l[?2004h>     }
+[?2004l[?2004h>     &line[..end]
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> pub fn parse_line(line: &[u8]) -> Option<Parsed> {
+[?2004l[?2004h>     let text = trim_trailing_spaces(line);
+[?2004l[?2004h>     if text.is_empty() {
+[?2004l[?2004h>         return None;
+[?2004l[?2004h>     }
+[?2004l[?2004h>     let negative = text[0] == b'!';
+[?2004l[?2004h>     let mut body = if negative { &text[1..] } else { text };
+[?2004l[?2004h>     let dir_only = body.last() == Some(&b'/');
+[?2004l[?2004h>     if dir_only {
+[?2004l[?2004h>         body = &body[..body.len() - 1];
+[?2004l[?2004h>     }
+[?2004l[?2004h>     let basename_only = !body.contains(&b'/');
+[?2004l[?2004h>     Some(Parsed {
+[?2004l[?2004h>         text: text.to_vec(),
+[?2004l[?2004h>         body: body.to_vec(),
+[?2004l[?2004h>         negative,
+[?2004l[?2004h>         dir_only,
+[?2004l[?2004h>         basename_only,
+[?2004l[?2004h>     })
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@f89da04586bb:/app# cat > src/ignore/pattern.rs <<'EOF'
+[?2004l[?2004h> use super::lines;
+[?2004l[?2004h> use super::parse::parse_line;
+[?2004l[?2004h> use super::wildmatch::wildmatch;
+[?2004l[?2004h> 
+[?2004l[?2004h> #[derive(Debug, Clone)]
+[?2004l[?2004h> pub struct Pattern {
+[?2004l[?2004h>     pub text: String,
+[?2004l[?2004h>     pub body: Vec<u8>,
+[?2004l[?2004h>     pub negative: bool,
+[?2004l[?2004h>     pub dir_only: bool,
+[?2004l[?2004h>     pub basename_only: bool,
+[?2004l[?2004h>     pub line: usize,
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> #[derive(Debug, Clone, Default)]
+[?2004l[?2004h> pub struct PatternList {
+[?2004l[?2004h>     pub source: String,
+[?2004l[?2004h>     pub base: String,
+[?2004l[?2004h>     pub patterns: Vec<Pattern>,
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> impl PatternList {
+[?2004l[?2004h>     pub fn empty(source: &str, base: &str) -> PatternList {
+[?2004l[?2004h>         PatternList { source: source.to_string(), base: base.to_string(), patterns: Vec::new() }
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     pub fn from_bytes(source: &str, base: &str, buf: &[u8]) -> PatternList {
+[?2004l[?2004h>         let mut list = PatternList::empty(source, base);
+[?2004l[?2004h>         for raw in lines::split(buf) {
+[?2004l[?2004h>             if let Some(p) = parse_line(&raw.text) {
+[?2004l[?2004h>                 list.patterns.push(Pattern {
+[?2004l[?2004h>                     text: String::from_utf8_lossy(&p.text).into_owned(),
+[?2004l[?2004h>                     body: p.body,
+[?2004l[?2004h>                     negative: p.negative,
+[?2004l[?2004h>                     dir_only: p.dir_only,
+[?2004l[?2004h>                     basename_only: p.basename_only,
+[?2004l[?2004h>                     line: raw.number,
+[?2004l[?2004h>                 });
+[?2004l[?2004h>             }
+[?2004l[?2004h>         }
+[?2004l[?2004h>         list
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     pub fn last_match(&self, path: &str, _basename: &str, is_dir: bool) -> Option<&Pattern> {
+[?2004l[?2004h>         let relative = if self.base.is_empty() {
+[?2004l[?2004h>             path
+[?2004l[?2004h>         } else {
+[?2004l[?2004h>             path.strip_prefix(&self.base)
+[?2004l[?2004h>                 .and_then(|p| p.strip_prefix('/'))?
+[?2004l[?2004h>         };
+[?2004l[?2004h>         let basename = relative.rsplit('/').next().unwrap_or(relative);
+[?2004l[?2004h>         self.patterns.iter().rev().find(|pat| {
+[?2004l[?2004h>             if pat.body.is_empty() || (pat.dir_only && !is_dir) {
+[?2004l[?2004h>                 return false;
+[?2004l[?2004h>             }
+[?2004l[?2004h>             if pat.basename_only {
+[?2004l[?2004h>                 wildmatch(&pat.body, basename.as_bytes(), false)
+[?2004l[?2004h>             } else {
+[?2004l[?2004h>                 let body = pat.body.strip_prefix(b"/").unwrap_or(&pat.body);
+[?2004l[?2004h>                 wildmatch(body, relative.as_bytes(), true)
+[?2004l[?2004h>             }
+[?2004l[?2004h>         })
+[?2004l[?2004h>     }
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@f89da04586bb:/app# python3 - <<'PY'
+[?2004l[?2004h> p='src/ignore/sources.rs'
+[?2004l[?2004h> s=open(p).read()
+[?2004l[?2004h> s=s.replace('config.get("core", "excludesFile")', 'config.get("core", "excludesfile")')
+[?2004l[?2004h> s=s.replace('''        if let Some(name) = &self.excludes_file {
+[?2004l[?2004h>             let path = resolve(root, name);
+[?2004l[?2004h>             if let Some(list) = read_optional(&path, name)? {
+[?2004l[?2004h>                 lists.push(list);
+[?2004l[?2004h>             }
+[?2004l[?2004h>         }
+[?2004l[?2004h>         if let Some(list) = read_optional(&root.join(INFO_EXCLUDE), INFO_EXCLUDE)? {
+[?2004l[?2004h>             lists.push(list);
+[?2004l[?2004h>         }''','''        if let Some(list) = read_optional(&root.join(INFO_EXCLUDE), INFO_EXCLUDE)? {
+[?2004l[?2004h>             lists.push(list);
+[?2004l[?2004h>         }
+[?2004l[?2004h>         if let Some(name) = &self.excludes_file {
+[?2004l[?2004h>             let path = resolve(root, name);
+[?2004l[?2004h>             if let Some(list) = read_optional(&path, name)? {
+[?2004l[?2004h>                 lists.push(list);
+[?2004l[?2004h>             }
+[?2004l[?2004h>         }''')
+[?2004l[?2004h> open(p,'w').write(s)
+[?2004l[?2004h> 
+[?2004l[?2004h> p='src/config/gitconfig.rs'; s=open(p).read()
+[?2004l[?2004h> s=s.replace('key: key.to_string(),', 'key: key.to_ascii_lowercase(),')
+[?2004l[?2004h> s=s.replace('&& e.key == key)', '&& e.key.eq_ignore_ascii_case(key))')
+[?2004l[?2004h> open(p,'w').write(s)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@f89da04586bb:/app# cat > src/config/paths.rs <<'EOF'
+[?2004l[?2004h> use std::env;
+[?2004l[?2004h> 
+[?2004l[?2004h> fn home() -> Option<String> {
+[?2004l[?2004h>     env::var("HOME").ok()
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> pub fn expand_user(value: &str) -> Option<String> {
+[?2004l[?2004h>     if value == "~" {
+[?2004l[?2004h>         return home();
+[?2004l[?2004h>     }
+[?2004l[?2004h>     match value.strip_prefix("~/") {
+[?2004l[?2004h>         Some(rest) => home().map(|h| format!("{h}/{rest}")),
+[?2004l[?2004h>         None => Some(value.to_string()),
+[?2004l[?2004h>     }
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> pub fn default_excludes_file() -> Option<String> {
+[?2004l[?2004h>     match env::var("XDG_CONFIG_HOME") {
+[?2004l[?2004h>         Ok(xdg) if !xdg.is_empty() => Some(format!("{xdg}/git/ignore")),
+[?2004l[?2004h>         _ => home().map(|h| format!("{h}/.config/git/ignore")),
+[?2004l[?2004h>     }
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@f89da04586bb:/app# python3 - <<'PY'
+[?2004l[?2004h> p='src/ignore/stack.rs'; s=open(p).read()
+[?2004l[?2004h> s=s.replace('''    match own {
+[?2004l[?2004h>         Some(h) if h.negative => Some(h),
+[?2004l[?2004h>         own => inherited.or(own),
+[?2004l[?2004h>     }''','''    inherited.or(own)''')
+[?2004l[?2004h> s=s.replace('''        stack
+[?2004l[?2004h>             .iter()
+[?2004l[?2004h>             .chain(self.globals.iter())''','''        stack
+[?2004l[?2004h>             .iter()
+[?2004l[?2004h>             .rev()
+[?2004l[?2004h>             .chain(self.globals.iter())''')
+[?2004l[?2004h> start=s.index('    pub fn check_path(&self, path: &str) -> Result<Verdict> {')
+[?2004l[?2004h> end=s.index('\n    }\n}', start)+6
+[?2004l[?2004h> new='''    pub fn check_path(&self, path: &str) -> Result<Verdict> {
+[?2004l[?2004h>         let mut stack = vec![self.dir_list("")?];
+[?2004l[?2004h>         let mut inherited: Option<Hit> = None;
+[?2004l[?2004h>         let components: Vec<&str> = path.split('/').collect();
+[?2004l[?2004h>         let mut prefix = String::new();
+[?2004l[?2004h>         for comp in &components[..components.len() - 1] {
+[?2004l[?2004h>             if !prefix.is_empty() {
+[?2004l[?2004h>                 prefix.push('/');
+[?2004l[?2004h>             }
+[?2004l[?2004h>             prefix.push_str(comp);
+[?2004l[?2004h>             let own = self.classify(&stack, &prefix, true);
+[?2004l[?2004h>             inherited = inherit(&resolve(inherited, own));
+[?2004l[?2004h>             if inherited.is_some() {
+[?2004l[?2004h>                 break;
+[?2004l[?2004h>             }
+[?2004l[?2004h>             stack.push(self.dir_list(&prefix)?);
+[?2004l[?2004h>         }
+[?2004l[?2004h>         let resolved = if inherited.is_some() {
+[?2004l[?2004h>             inherited
+[?2004l[?2004h>         } else {
+[?2004l[?2004h>             let is_dir = self.root.join(path).symlink_metadata()
+[?2004l[?2004h>                 .map(|m| m.file_type().is_dir()).unwrap_or(false);
+[?2004l[?2004h>             resolve(None, self.classify(&stack, path, is_dir))
+[?2004l[?2004h>         };
+[?2004l[?2004h>         Ok(match resolved {
+[?2004l[?2004h>             Some(h) => Verdict::Matched(h),
+[?2004l[?2004h>             None => Verdict::NoMatch,
+[?2004l[?2004h>         })
+[?2004l[?2004h>     }'''
+[?2004l[?2004h> s=s[:start]+new+s[end:]
+[?2004l[?2004h> open(p,'w').write(s)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@f89da04586bb:/app# cat > src/walk/order.rs <<'EOF'
+[?2004l[?2004h> /// Git orders the bytes of the complete relative pathname.
+[?2004l[?2004h> pub fn sort_paths(mut paths: Vec<String>) -> Vec<String> {
+[?2004l[?2004h>     paths.sort_unstable_by(|a, b| a.as_bytes().cmp(b.as_bytes()));
+[?2004l[?2004h>     paths
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@f89da04586bb:/app# python3 - <<'PY'
+[?2004l[?2004h> p='src/walk/tree.rs'; s=open(p).read()
+[?2004l[?2004h> old='''        if is_dir {
+[?2004l[?2004h>             stack.push(matcher.dir_list(&rel)?);
+[?2004l[?2004h>             let result = visit(matcher, &rel, crate::ignore::inherit(&resolved), stack, out);
+[?2004l[?2004h>             stack.pop();
+[?2004l[?2004h>             result?;
+[?2004l[?2004h>         } else if !ignored {'''
+[?2004l[?2004h> new='''        if is_dir {
+[?2004l[?2004h>             if ignored {
+[?2004l[?2004h>                 continue;
+[?2004l[?2004h>             }
+[?2004l[?2004h>             stack.push(matcher.dir_list(&rel)?);
+[?2004l[?2004h>             let result = visit(matcher, &rel, None, stack, out);
+[?2004l[?2004h>             stack.pop();
+[?2004l[?2004h>             result?;
+[?2004l[?2004h>         } else if !ignored {'''
+[?2004l[?2004h> s=s.replace(old,new)
+[?2004l[?2004h> open(p,'w').write(s)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@f89da04586bb:/app# cat > src/ignore/charclass.rs <<'EOF'
+[?2004let(p + 1).copied()?, p + 2)
+        } else {
+            (c, p + 1)
+        };
+        if value == b'-' && previous.is_some() && pat.get(next) != Some(&b']') {
+            let mut end = *pat.get(next)?;
+            let mut after = next + 1;
+            if end == b'\\' {
+                end = *pat.get(after)?;
+                after += 1;
+            }
+            let lo = previous.unwrap();
+            matched |= lo <= tc && tc <= end;
+            previous = None;
+            p = after;
+        } else {
+            matched |= value == tc;
+            previous = Some(value);
+            p = next;
+        }
+    }
+}
+
+fn posix_class(name: &[u8], c: u8) -> Option<bool> {
+    Some(match name {
+        b"alnum" => c.is_ascii_alphanumeric(), b"alpha" => c.is_ascii_alphabetic(),
+        b"blank" => c == b' ' || c == b'\t', b"cntrl" => c.is_ascii_control(),
+        b"digit" => c.is_ascii_digit(), b"graph" => c.is_ascii_graphic(),
+        b"lower" => c.is_ascii_lowercase(), b"print" => c.is_ascii_graphic() || c == b' ',
+[?2004h> //! Bracket expressions used by wildmatch.
+[?2004l               b'[' => {
+                    if t >= text.len() || (pathname && text[t] == b'/') { false }
+                    else if let Some((hit, end)) = charclass::bracket(pat, p + 1, text[t]) {
+                        hit && go(pat, text, pathname, end + 1, t + 1, memo)
+                    } else { false }
+                }
+                b'*' => {
+                    let mut end = p + 1;
+                    while pat.get(end) == Some(&b'*') { end += 1; }
+                    let globstar = pathname && end - p >= 2
+                        && (p == 0 || pat[p - 1] == b'/')
+                        && (end == pat.len() || pat[end] == b'/');
+                    if globstar && end < pat.len() {
+                        let after_slash = end + 1;
+                        let mut ok = go(pat, text, pathname, after_slash, t, memo);
+                        let mut i = t;
+                        while !ok && i < text.len() {
+                            if text[i] == b'/' {
+                                ok = go(pa[?2004h> 
+[?2004l[?2004h> pub(super) fn bracket(pat: &[u8], mut p: usize, tc: u8) -> Option<(bool, usize)> {
+[?2004l[?2004h>     let mut negated = false;
+[?2004l[?2004h>     if matches!(pat.get(p), Some(b'!') | Some(b'^')) {
+[?2004l[?2004h>         negated = true;
+[?2004l[?2004h>         p += 1;
+[?2004l[?2004h>     }
+[?2004l[?2004h>     let mut matched = false;
+[?2004l[?2004h>     let mut first = true;
+[?2004l[?2004h>     let mut previous: Option<u8> = None;
+[?2004l[?2004h>     loop {
+[?2004l[?2004h>         let c = *pat.get(p)?;
+[?2004l[?2004h>         if c == b']' && !first {
+[?2004l|| text[i] != b'/')[?2004h>             return Some((matched != negated, p));
+[?2004l[?2004h>         }
+[?2004l[?2004h>         first = false;
+[?2004l[?2004h> 
+[?2004l[?2004h>         if c == b'[' && pat.get(p + 1) == Some(&b':') {
+[?2004l= 1;
+                            ok = go(pat, text, pathname, end, i, memo);
+                        }
+   [?2004h>             let mut q = p + 2;
+[?2004l[?2004h>             while q + 1 < pat.len() && !(pat[q] == b':' && pat[q + 1] == b']') {
+[?2004l[?2004h>                 q += 1;
+[?2004l[?2004h>             }
+[?2004l[?2004h>             if q + 1 < pat.len() {
+[?2004l[?2004h>                 matched |= posix_class(&pat[p + 2..q], tc)?;
+[?2004l[?2004h>                 previous = None;
+[?2004l[?2004h>                 p = q + 2;
+[?2004l[?2004h>                 continue;
+[?2004lrn, text, pathname, 0, 0, &mut HashMap::new())
+}
+EOF
+[?2004h>             }
+[?2004l[?2004h>         }
+[?2004l[?2004h> 
+[?2004l[?2004h>         let (value, next) = if c == b'\\' {
+[?2004l[?2004h>             (pat.get(p + 1).copied()?, p + 2)
+[?2004l[?2004h>         } else {
+[?2004l[?2004h>             (c, p + 1)
+[?2004l[?2004h>         };
+[?2004l[?2004h>         if value == b'-' && previous.is_some() && pat.get(next) != Some(&b']') {
+[?2004l[?2004h>             let mut end = *pat.get(next)?;
+[?2004l[?2004h>             let mut after = next + 1;
+[?2004l[?2004h>             if end == b'\\' {
+[?2004l[?2004h>                 end = *pat.get(after)?;
+[?2004l[?2004h>                 after += 1;
+[?2004l[?2004h>             }
+[?2004l[?2004h>             let lo = previous.unwrap();
+[?2004l[?2004h>             matched |= lo <= tc && tc <= end;
+[?2004l[?2004h>             previous = None;
+[?2004l[?2004h>             p = after;
+[?2004l[?2004h>         } else {
+[?2004l[?2004h>             matched |= value == tc;
+[?2004l[?2004h>             previous = Some(value);
+[?2004l[?2004h>             p = next;
+[?2004l[?2004h>         }
+[?2004l[?2004h>     }
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> fn posix_class(name: &[u8], c: u8) -> Option<bool> {
+[?2004l[?2004h>     Some(match name {
+[?2004l[?2004h>         b"alnum" => c.is_ascii_alphanumeric(), b"alpha" => c.is_ascii_alphabetic(),
+[?2004l[?2004h>         b"blank" => c == b' ' || c == b'\t', b"cntrl" => c.is_ascii_control(),
+[?2004l[?2004h>         b"digit" => c.is_ascii_digit(), b"graph" => c.is_ascii_graphic(),
+[?2004l[?2004h>         b"lower" => c.is_ascii_lowercase(), b"print" => c.is_ascii_graphic() || c == b' ',
+[?2004l[?2004h>         b"punct" => c.is_ascii_punctuation(), b"space" => c.is_ascii_whitespace(),
+[?2004l[?2004h>         b"upper" => c.is_ascii_uppercase(), b"xdigit" => c.is_ascii_hexdigit(),
+[?2004l[?2004h>         _ => return None,
+[?2004l[?2004h>     })
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@f89da04586bb:/app# cat > src/ignore/wildmatch.rs <<'EOF'
+[?2004l[?2004h> //! Git-style byte-oriented wildcard matching.
+[?2004l[?2004h> 
+[?2004l[?2004h> use std::collections::HashMap;
+[?2004l[?2004h> use super::charclass;
+[?2004l[?2004h> 
+[?2004l[?2004h> pub fn wildmatch(pattern: &[u8], text: &[u8], pathname: bool) -> bool {
+[?2004l[?2004h>     fn go(pat: &[u8], text: &[u8], pathname: bool, p: usize, t: usize,
+[?2004l[?2004h>           memo: &mut HashMap<(usize, usize), bool>) -> bool {
+[?2004l[?2004h>         if let Some(&answer) = memo.get(&(p, t)) { return answer; }
+[?2004l[?2004h>         let answer = if p == pat.len() {
+[?2004l[?2004h>             t == text.len()
+[?2004l[?2004h>         } else {
+[?2004l[?2004h>             match pat[p] {
+[?2004l[?2004h>                 b'\\' => p + 1 < pat.len() && t < text.len() && pat[p + 1] == text[t]
+[?2004l[?2004h>                     && go(pat, text, pathname, p + 2, t + 1, memo),
+[?2004l[?2004h>                 b'?' => t < text.len() && (!pathname || text[t] != b'/')
+[?2004l[?2004h>                     && go(pat, text, pathname, p + 1, t + 1, memo),
+[?2004l[?2004h>                 b'[' => {
+[?2004l[?2004h>                     if t >= text.len() || (pathname && text[t] == b'/') { false }
+[?2004l[?2004h>                     else if let Some((hit, end)) = charclass::bracket(pat, p + 1, text[t]) {
+[?2004l[?2004h>                         hit && go(pat, text, pathname, end + 1, t + 1, memo)
+[?2004l[?2004h>                     } else { false }
+[?2004l[?2004h>                 }
+[?2004l[?2004h>                 b'*' => {
+[?2004l[?2004h>                     let mut end = p + 1;
+[?2004l[?2004h>                     while pat.get(end) == Some(&b'*') { end += 1; }
+[?2004l[?2004h>                     let globstar = pathname && end - p >= 2
+[?2004l[?2004h>                         && (p == 0 || pat[p - 1] == b'/')
+[?2004l[?2004h>                         && (end == pat.len() || pat[end] == b'/');
+[?2004l[?2004h>                     if globstar && end < pat.len() {
+[?2004l[?2004h>                         let after_slash = end + 1;
+[?2004l[?2004h>                         let mut ok = go(pat, text, pathname, after_slash, t, memo);
+[?2004l[?2004h>                         let mut i = t;
+[?2004l[?2004h>                         while !ok && i < text.len() {
+[?2004l[?2004h>                             if text[i] == b'/' {
+[?2004l[?2004h>                                 ok = go(pat, text, pathname, after_slash, i + 1, memo);
+[?2004l[?2004h>                             }
+[?2004l[?2004h>                             i += 1;
+[?2004l[?2004h>                         }
+[?2004l[?2004h>                         ok
+[?2004l[?2004h>                     } else if globstar {
+[?2004l[?2004h>                         true
+[?2004l[?2004h>                     } else {
+[?2004l[?2004h>                         let mut ok = go(pat, text, pathname, end, t, memo);
+[?2004l[?2004h>                         let mut i = t;
+[?2004l[?2004h>                         while !ok && i < text.len() && (!pathname || text[i] != b'/') {
+[?2004l[?2004h>                             i += 1;
+[?2004l[?2004h>                             ok = go(pat, text, pathname, end, i, memo);
+[?2004l[?2004h>                         }
+[?2004l[?2004h>                         ok
+[?2004l[?2004h>                     }
+[?2004l[?2004h>                 }
+[?2004l[?2004h>                 c => t < text.len() && c == text[t]
+[?2004l[?2004h>                     && go(pat, text, pathname, p + 1, t + 1, memo),
+[?2004l[?2004h>             }
+[?2004l[?2004h>         };
+[?2004l[?2004h>         memo.insert((p, t), answer);
+[?2004l[?2004h>         answer
+[?2004l[?2004h>     }
+[?2004l[?2004h>     go(pattern, text, pathname, 0, 0, &mut HashMap::new())
+[?2004l[?2004h> }
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@f89da04586bb:/app# export PATH=/usr/local/rustup/toolchains/1.85.1-x86_64-unknown-linux-gnu/bin:$PATH
+[?2004l[?2004hroot@f89da04586bb:/app# cargo fmt -- --check || cargo fmt
+[?2004l[0m[1m[31merror: [0m'cargo-fmt' is not installed for the toolchain '1.85.1-x86_64-unknown-linux-gnu'.
+To install, run `rustup component add rustfmt`
+rm -rf /tmp/gtest && mkdir -p /tmp/gtest/{sub/build,build,ignored/deep,.git/info} && touch /tmp/gtest/{a.tmp,keep.txt,build/top,sub/build/nested,sub/keep.tmp,ignored/deep/rescue,ignored/visible} && printf '\357\273\277*.tmp\r\nbuild/\r\nignored/\r\n!ignored/visible\r\n' > /tmp/gtest/.gitignore && printf '!keep.tmp\r\n' > /tmp/gtest/sub/.gitignore && target/release/gleaner --root /tmp/gtest list; echo '--- check ---'; target/release/gleaner --root /tmp/gtest check a.tmp sub/keep.tmp sub/build/nested ignored/visible ignored/deep/rescue keep.txt; echo status=$?
+[0m[1m[31merror: [0m'cargo-fmt' is not installed for the toolchain '1.85.1-x86_64-unknown-linux-gnu'.
+To install, run `rustup component add rustfmt`
+[?2004hroot@f89da04586bb:/app# cargo build --release
+[?2004l[1m[32m   Compiling[0m gleaner v0.4.2 (/app)
+[1m[36m    Building[0m [                             ] 0/2: gleaner                                                                                                     [1m[36m    Building[0m [=============>               ] 1/2: gleaner(bin)                                                                                                [K[1m[32m    Finished[0m `release` profile [optimized] target(s) in 2.80s
+[?2004hroot@f89da04586bb:/app# rm -rf /tmp/gtest && mkdir -p /tmp/gtest/{sub/build,build,ignored/deep,.git/info} && touch /tmp/gtest/{a.tmp,keep.txt,build/top,sub/build/nested,sub/keep.tmp,ignored/deep/rescue,ignored/visible} && printf '\357\273\277*.tmp\r\nbuild/\r\nignored/\r\n!ignored/visible\r\n' > /tmp/gtest/.gitignore && printf '!keep.tmp\r\n' > /tmp/gtest/sub/.gitignore && target/release/gleaner --root /tmp/gtest list; echo '--- check ---'; target/release/gleaner --root /tmp/gtest check a.tmp sub/keep.tmp sub/build/nested ignored/visible ignored/deep/rescue keep.txt; echo status=$?
+[?2004l.gitignore
+keep.txt
+sub/.gitignore
+sub/keep.tmp
+--- check ---
+.gitignore:1:*.tmp	a.tmp
+sub/.gitignore:1:!keep.tmp	sub/keep.tmp
+.gitignore:2:build/	sub/build/nested
+.gitignore:3:ignored/	ignored/visible
+.gitignore:3:ignored/	ignored/deep/rescue
+::	keep.txt
+status=0
+[?2004hroot@f89da04586bb:/app# 
+[?2004l[?2004hroot@f89da04586bb:/app# sed -n '1,240p' src/ignore/charclass.rs; echo '--- wildmatch ---'; sed -n '1,260p' src/ignore/wildmatch.rs; echo '--- stack tail ---'; tail -100 src/ignore/stack.rs
+[?2004l//! Bracket expressions used by wildmatch.
+
+pub(super) fn bracket(pat: &[u8], mut p: usize, tc: u8) -> Option<(bool, usize)> {
+    let mut negated = false;
+    if matches!(pat.get(p), Some(b'!') | Some(b'^')) {
+        negated = true;
+        p += 1;
+    }
+    let mut matched = false;
+    let mut first = true;
+    let mut previous: Option<u8> = None;
+    loop {
+        let c = *pat.get(p)?;
+        if c == b']' && !first {
+            return Some((matched != negated, p));
+        }
+        first = false;
+
+        if c == b'[' && pat.get(p + 1) == Some(&b':') {
+            let mut q = p + 2;
+            while q + 1 < pat.len() && !(pat[q] == b':' && pat[q + 1] == b']') {
+                q += 1;
+            }
+            if q + 1 < pat.len() {
+                matched |= posix_class(&pat[p + 2..q], tc)?;
+                previous = None;
+                p = q + 2;
+                continue;
+            }
+        }
+
+        let (value, next) = if c == b'\\' {
+            (pat.get(p + 1).copied()?, p + 2)
+        } else {
+            (c, p + 1)
+        };
+        if value == b'-' && previous.is_some() && pat.get(next) != Some(&b']') {
+            let mut end = *pat.get(next)?;
+            let mut after = next + 1;
+            if end == b'\\' {
+                end = *pat.get(after)?;
+                after += 1;
+            }
+            let lo = previous.unwrap();
+            matched |= lo <= tc && tc <= end;
+            previous = None;
+            p = after;
+        } else {
+            matched |= value == tc;
+            previous = Some(value);
+            p = next;
+        }
+    }
+}
+
+fn posix_class(name: &[u8], c: u8) -> Option<bool> {
+    Some(match name {
+        b"alnum" => c.is_ascii_alphanumeric(), b"alpha" => c.is_ascii_alphabetic(),
+        b"blank" => c == b' ' || c == b'\t', b"cntrl" => c.is_ascii_control(),
+        b"digit" => c.is_ascii_digit(), b"graph" => c.is_ascii_graphic(),
+        b"lower" => c.is_ascii_lowercase(), b"print" => c.is_ascii_graphic() || c == b' ',
+        b"punct" => c.is_ascii_punctuation(), b"space" => c.is_ascii_whitespace(),
+        b"upper" => c.is_ascii_uppercase(), b"xdigit" => c.is_ascii_hexdigit(),
+        _ => return None,
+    })
+}
+--- wildmatch ---
+//! Git-style byte-oriented wildcard matching.
+
+use std::collections::HashMap;
+use super::charclass;
+
+pub fn wildmatch(pattern: &[u8], text: &[u8], pathname: bool) -> bool {
+    fn go(pat: &[u8], text: &[u8], pathname: bool, p: usize, t: usize,
+          memo: &mut HashMap<(usize, usize), bool>) -> bool {
+        if let Some(&answer) = memo.get(&(p, t)) { return answer; }
+        let answer = if p == pat.len() {
+            t == text.len()
+        } else {
+            match pat[p] {
+                b'\\' => p + 1 < pat.len() && t < text.len() && pat[p + 1] == text[t]
+                    && go(pat, text, pathname, p + 2, t + 1, memo),
+                b'?' => t < text.len() && (!pathname || text[t] != b'/')
+                    && go(pat, text, pathname, p + 1, t + 1, memo),
+                b'[' => {
+                    if t >= text.len() || (pathname && text[t] == b'/') { false }
+                    else if let Some((hit, end)) = charclass::bracket(pat, p + 1, text[t]) {
+                        hit && go(pat, text, pathname, end + 1, t + 1, memo)
+                    } else { false }
+                }
+                b'*' => {
+                    let mut end = p + 1;
+                    while pat.get(end) == Some(&b'*') { end += 1; }
+                    let globstar = pathname && end - p >= 2
+                        && (p == 0 || pat[p - 1] == b'/')
+                        && (end == pat.len() || pat[end] == b'/');
+                    if globstar && end < pat.len() {
+                        let after_slash = end + 1;
+                        let mut ok = go(pat, text, pathname, after_slash, t, memo);
+                        let mut i = t;
+                        while !ok && i < text.len() {
+                            if text[i] == b'/' {
+                                ok = go(pat, text, pathname, after_slash, i + 1, memo);
+                            }
+                            i += 1;
+                        }
+                        ok
+                    } else if globstar {
+                        true
+                    } else {
+                        let mut ok = go(pat, text, pathname, end, t, memo);
+                        let mut i = t;
+                        while !ok && i < text.len() && (!pathname || text[i] != b'/') {
+                            i += 1;
+                            ok = go(pat, text, pathname, end, i, memo);
+                        }
+                        ok
+                    }
+                }
+                c => t < text.len() && c == text[t]
+                    && go(pat, text, pathname, p + 1, t + 1, memo),
+            }
+        };
+        memo.insert((p, t), answer);
+        answer
+    }
+    go(pattern, text, pathname, 0, 0, &mut HashMap::new())
+}
+--- stack tail ---
+
+impl Verdict {
+    pub fn is_ignored(&self) -> bool {
+        matches!(self, Verdict::Matched(hit) if !hit.negative)
+    }
+}
+
+pub struct Matcher {
+    root: PathBuf,
+    /// `.git/info/exclude` and the excludes file, highest precedence first.
+    globals: Vec<PatternList>,
+}
+
+fn hit(list: &PatternList, pat: &Pattern) -> Hit {
+    Hit { source: list.source.clone(), line: pat.line, text: pat.text.clone(), negative: pat.negative }
+}
+
+/// Combines the decision inherited from an excluded parent directory with
+/// the path's own last matching pattern.
+pub fn resolve(inherited: Option<Hit>, own: Option<Hit>) -> Option<Hit> {
+    inherited.or(own)
+}
+
+/// What an excluded directory passes on to its entries.
+pub fn inherit(resolved: &Option<Hit>) -> Option<Hit> {
+    match resolved {
+        Some(h) if !h.negative => Some(h.clone()),
+        _ => None,
+    }
+}
+
+impl Matcher {
+    pub fn open(root: &Path) -> Result<Matcher> {
+        let sources = Sources::discover(root)?;
+        let globals = sources.load(root)?;
+        Ok(Matcher { root: root.to_path_buf(), globals })
+    }
+
+    pub fn root(&self) -> &Path {
+        &self.root
+    }
+
+    /// The `.gitignore` of `dir` (relative to the root, "" for the root).
+    pub fn dir_list(&self, dir: &str) -> Result<PatternList> {
+        let (file, source) = if dir.is_empty() {
+            (self.root.join(PER_DIRECTORY), PER_DIRECTORY.to_string())
+        } else {
+            (self.root.join(dir).join(PER_DIRECTORY), format!("{dir}/{PER_DIRECTORY}"))
+        };
+        Ok(match read_optional(&file, &source)? {
+            Some(mut list) => {
+                list.base = dir.to_string();
+                list
+            }
+            None => PatternList::empty(&source, dir),
+        })
+    }
+
+    /// Last matching pattern for `path`, given the `.gitignore` lists of its
+    /// ancestors from the root down (`stack`), then the tree-wide sources.
+    pub fn classify(&self, stack: &[PatternList], path: &str, is_dir: bool) -> Option<Hit> {
+        let basename = path.rsplit('/').next().unwrap_or(path);
+        stack
+            .iter()
+            .rev()
+            .chain(self.globals.iter())
+            .find_map(|list| list.last_match(path, basename, is_dir).map(|p| hit(list, p)))
+    }
+
+    /// Decision for a single path relative to the root.
+    pub fn check_path(&self, path: &str) -> Result<Verdict> {
+        let mut stack = vec![self.dir_list("")?];
+        let mut inherited: Option<Hit> = None;
+        let components: Vec<&str> = path.split('/').collect();
+        let mut prefix = String::new();
+        for comp in &components[..components.len() - 1] {
+            if !prefix.is_empty() {
+                prefix.push('/');
+            }
+            prefix.push_str(comp);
+            let own = self.classify(&stack, &prefix, true);
+            inherited = inherit(&resolve(inherited, own));
+            if inherited.is_some() {
+                break;
+            }
+            stack.push(self.dir_list(&prefix)?);
+        }
+        let resolved = if inherited.is_some() {
+            inherited
+        } else {
+            let is_dir = self.root.join(path).symlink_metadata()
+                .map(|m| m.file_type().is_dir()).unwrap_or(false);
+            resolve(None, self.classify(&stack, path, is_dir))
+        };
+        Ok(match resolved {
+            Some(h) => Verdict::Matched(h),
+            None => Verdict::NoMatch,
+        })
+    }
+}
+[?2004hroot@f89da04586bb:/app# export PATH=/usr/local/rustup/toolchains/1.85.1-x86_64-unknown-linux-gnu/bin:$PATH; cargo build --release
+[?2004l[1m[32m    Finished[0m `release` profile [optimized] target(s) in 0.01s
+[?2004hroot@f89da04586bb:/app# rm -rf /tmp/gtest && mkdir -p /tmp/gtest/{sub/build,build,ignored/deep,.git/info} && touch /tmp/gtest/{a.tmp,keep.txt,build/top,sub/build/nested,sub/keep.tmp,ignored/deep/rescue,ignored/visible} && printf '\357\273\277*.tmp\r\nbuild/\r\nignored/\r\n!ignored/visible\r\n' > /tmp/gtest/.gitignore && printf '!keep.tmp\r\n' > /tmp/gtest/sub/.gitignore && echo '--- list ---' && target/release/gleaner --root /tmp/gtest list && echo '--- check ---' && target/release/gleaner --root /tmp/gtest check a.tmp sub/keep.tmp sub/build/nested ignored/visible ignored/deep/rescue keep.txt; echo status=$?
+[?2004l--- list ---
+.gitignore
+keep.txt
+sub/.gitignore
+sub/keep.tmp
+--- check ---
+.gitignore:1:*.tmp	a.tmp
+sub/.gitignore:1:!keep.tmp	sub/keep.tmp
+.gitignore:2:build/	sub/build/nested
+.gitignore:3:ignored/	ignored/visible
+.gitignore:3:ignored/	ignored/deep/rescue
+::	keep.txt
+status=0
+[?2004hroot@f89da04586bb:/app# python3 - <<'PY'
+[?2004l[?2004h> p='src/ignore/sources.rs'
+[?2004l[?2004h> s=open(p).read()
+[?2004l[?2004h> old='''pub fn read_optional(path: &Path, source: &str) -> Result<Option<PatternList>> {
+[?2004l[?2004h>     match fs::read(path) {'''
+[?2004l[?2004h> new='''pub fn read_optional(path: &Path, source: &str) -> Result<Option<PatternList>> {
+[?2004l[?2004h>     match fs::symlink_metadata(path) {
+[?2004l[?2004h>         Ok(meta) if !meta.file_type().is_file() => return Ok(None),
+[?2004l[?2004h>         Ok(_) => {}
+[?2004l[?2004h>         Err(e) if matches!(e.kind(), io::ErrorKind::NotFound | io::ErrorKind::NotADirectory) => return Ok(None),
+[?2004l[?2004h>         Err(e) => return Err(Error::io(path, e)),
+[?2004l[?2004h>     }
+[?2004l[?2004h>     match fs::read(path) {'''
+[?2004l[?2004h> assert old in s
+[?2004l[?2004h> open(p,'w').write(s.replace(old,new))
+[?2004l[?2004h> 
+[?2004l[?2004h> p='src/config/gitconfig.rs'
+[?2004l[?2004h> s=open(p).read()
+[?2004l[?2004h> old='''        if let Some(head) = raw.strip_suffix('\\\\') {
+[?2004l[?2004h>             if !head.ends_with('\\\\') {
+[?2004l[?2004h>                 current.push_str(head);
+[?2004l[?2004h>                 continue;
+[?2004l[?2004h>             }
+[?2004l[?2004h>         }
+[?2004l[?2004h>         current.push_str(raw);'''
+[?2004l[?2004h> new='''        let trailing = raw.as_bytes().iter().rev().take_while(|&&b| b == b'\\\\').count();
+[?2004l[?2004h>         if trailing % 2 == 1 {
+[?2004l[?2004h>             current.push_str(&raw[..raw.len() - 1]);
+[?2004l[?2004h>             continue;
+[?2004l[?2004h>         }
+[?2004l[?2004h>         current.push_str(raw);'''
+[?2004l[?2004h> assert old in s
+[?2004l[?2004h> open(p,'w').write(s.replace(old,new))
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@f89da04586bb:/app# export PATH=/usr/local/rustup/toolchains/1.85.1-x86_64-unknown-linux-gnu/bin:$PATH; cargo build --release
+[?2004l[1m[32m   Compiling[0m gleaner v0.4.2 (/app)
+[1m[36m    Building[0m [                             ] 0/2: gleaner                                                                                                     [1m[36m    Building[0m [=============>               ] 1/2: gleaner(bin)                                                                                                [K[1m[32m    Finished[0m `release` profile [optimized] target(s) in 1.67s
+[?2004hroot@f89da04586bb:/app# rm -rf /tmp/gcases /tmp/gxdg && mkdir -p /tmp/gcases/{a/x/y,sub,.git/info} /tmp/gxdg/git && touch /tmp/gcases/{foo,a/foo,a/x/y/foo,a/x/y/bar,sub/foo.tmp,bang,'hash#',space,'trail ',z} && cat > /tmp/gcases/.gitignore <<'EOF'
+[?2004l[?2004h> # comment
+[?2004l[?2004h> 
+[?2004l[?2004h> /foo
+[?2004l[?2004h> **/bar
+[?2004l[?2004h> \!bang
+[?2004l[?2004h> \#hash
+[?2004l[?2004h> trail\ 
+[?2004l[?2004h> *.tmp
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@f89da04586bb:/app# cat > /tmp/gcases/sub/.gitignore <<'EOF'
+[?2004l[?2004h> !foo.tmp
+[?2004l[?2004h> EOF
+[?2004l[?2004hroot@f89da04586bb:/app# printf 'z\n' > /tmp/gcases/.git/info/exclude
+[?2004l[?2004hroot@f89da04586bb:/app# printf 'space\n' > /tmp/gxdg/git/ignore
+[?2004l[?2004hroot@f89da04586bb:/app# XDG_CONFIG_HOME=/tmp/gxdg target/release/gleaner --root /tmp/gcases check foo a/foo a/x/y/bar bang hash space 'trail ' sub/foo.tmp z > /tmp/actual; printf '.gitignore:3:/foo\tfoo\n::\ta/foo\n.gitignore:4:**/bar\ta/x/y/bar\n.gitignore:5:\\!bang\tbang\n.gitignore:6:\\#hash\thash\n/tmp/gxdg/git/ignore:1:space\tspace\n.gitignore:7:trail\\ \ttrail \nsub/.gitignore:1:!foo.tmp\tsub/foo.tmp\n.git/info/exclude:1:z\tz\n' > /tmp/expected; diff -u /tmp/expected /tmp/actual; rc=$?; echo assertion_status=$rc; cat /tmp/actual
+[?2004l--- /tmp/expected	2026-09-27 05:12:59.601694150 +0000
++++ /tmp/actual	2026-09-27 05:12:59.599872179 +0000
+@@ -1,8 +1,8 @@
+ .gitignore:3:/foo	foo
+ ::	a/foo
+ .gitignore:4:**/bar	a/x/y/bar
+-.gitignore:5:\!bang	bang
+-.gitignore:6:\#hash	hash
++::	bang
++::	hash
+ /tmp/gxdg/git/ignore:1:space	space
+ .gitignore:7:trail\ 	trail 
+ sub/.gitignore:1:!foo.tmp	sub/foo.tmp
+assertion_status=1
+.gitignore:3:/foo	foo
+::	a/foo
+.gitignore:4:**/bar	a/x/y/bar
+::	bang
+::	hash
+/tmp/gxdg/git/ignore:1:space	space
+.gitignore:7:trail\ 	trail 
+sub/.gitignore:1:!foo.tmp	sub/foo.tmp
+.git/info/exclude:1:z	z
+[?2004hroot@f89da04586bb:/app# touch '/tmp/gcases/!bang' '/tmp/gcases/#hash'; XDG_CONFIG_HOME=/tmp/gxdg target/release/gleaner --root /tmp/gcases check foo a/foo a/x/y/bar '!bang' '#hash' space 'trail ' sub/foo.tmp z > /tmp/actual; printf '.gitignore:3:/foo\tfoo\n::\ta/foo\n.gitignore:4:**/bar\ta/x/y/bar\n.gitignore:5:\\!bang\t!bang\n.gitignore:6:\\#hash\t#hash\n/tmp/gxdg/git/ignore:1:space\tspace\n.gitignore:7:trail\\ \ttrail \nsub/.gitignore:1:!foo.tmp\tsub/foo.tmp\n.git/info/exclude:1:z\tz\n' > /tmp/expected; diff -u /tmp/expected /tmp/actual; echo corrected_pattern_assertion=$?
+[?2004lcorrected_pattern_assertion=0
+[?2004hroot@f89da04586bb:/app# rm -rf /tmp/gconfig && mkdir -p /tmp/gconfig/{.git/info,sub} && touch /tmp/gconfig/{global,info,local,a-b,a0} /tmp/gconfig/sub/file && printf 'global\ninfo\n' > /tmp/gconfig/excludes && printf '[Core]\n  ExcludesFile = excludes\n' > /tmp/gconfig/.git/config && printf '!info\n' > /tmp/gconfig/.git/info/exclude && printf 'local\n!global\n' > /tmp/gconfig/.gitignore && target/release/gleaner --root /tmp/gconfig check global info local > /tmp/config.actual; printf '.gitignore:2:!global\tglobal\n.git/info/exclude:1:!info\tinfo\n.gitignore:1:local\tlocal\n' > /tmp/config.expected; diff -u /tmp/config.expected /tmp/config.actual; echo precedence_config_assertion=$?; target/release/gleaner --root /tmp/gconfig list > /tmp/list.actual; printf '.gitignore\na-b\na0\nexcludes\nsub/file\n' > /tmp/list.expected; diff -u /tmp/list.expected /tmp/list.actual; echo list_assertion=$?
+[?2004lprecedence_config_assertion=0
+--- /tmp/list.expected	2026-09-27 05:13:28.163472856 +0000
++++ /tmp/list.actual	2026-09-27 05:13:28.163472856 +0000
+@@ -2,4 +2,6 @@
+ a-b
+ a0
+ excludes
++global
++info
+ sub/file
+list_assertion=1
+[?2004hroot@f89da04586bb:/app# export PATH=/usr/local/rustup/toolchains/1.85.1-x86_64-unknown-linux-gnu/bin:$PATH; cargo test && cargo build --release
+[?2004l[1m[32m   Compiling[0m gleaner v0.4.2 (/app)
+[1m[36m    Building[0m [                             ] 0/4: gleaner                                                                                                     [1m[36m    Building[0m [                             ] 0/4: gleaner(test), gleaner                                                                                      [1m[36m    Building[0m [======>                      ] 1/4: gleaner                                                                                                     [1m[36m    Building[0m [=============>               ] 2/4: gleaner(bin test)                                                                                           [1m[36m    Building[0m [====================>        ] 3/4: gleaner(bin test)                                                                                           [K[1m[32m    Finished[0m `test` profile [unoptimized + debuginfo] target(s) in 2.66s
+[1m[32m     Running[0m unittests src/lib.rs (target/debug/deps/gleaner-e874003c88c78691)
+
+running 0 tests
+
+test result: [32mok[m. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+[1m[32m     Running[0m unittests src/main.rs (target/debug/deps/gleaner-1f6b547fc471645b)
+
+running 0 tests
+
+test result: [32mok[m. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+[1m[32m   Doc-tests[0m gleaner
+
+running 0 tests
+
+test result: [32mok[m. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+[1m[32m    Finished[0m `release` profile [optimized] target(s) in 0.01s
+[?2004hroot@f89da04586bb:/app# printf '.gitignore\na-b\na0\nexcludes\nglobal\ninfo\nsub/file\n' > /tmp/list.expected; diff -u /tmp/list.expected /tmp/list.actual; echo corrected_list_assertion=$?; echo '--- policy scan ---'; grep -RInE '\bunsafe\b|std::process::Command|extern[[:space:]]+"C"' src || true; awk '/^\[dependencies\]/{flag=1;next}/^\[/{flag=0}flag&&NF{print}' Cargo.toml
+[?2004lcorrected_list_assertion=0
+--- policy scan ---
+[?2004hroot@f89da04586bb:/app# export PATH=/usr/local/rustup/toolchains/1.85.1-x86_64-unknown-linux-gnu/bin:$PATH; cargo build --release
+[?2004l[1m[32m    Finished[0m `release` profile [optimized] target(s) in 0.02s
+[?2004hroot@f89da04586bb:/app# command -v git || true
+[?2004l[?2004hroot@f89da04586bb:/app# 

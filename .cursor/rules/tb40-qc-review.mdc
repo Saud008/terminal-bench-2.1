@@ -1,0 +1,77 @@
+---
+description: TB 4.0 QC review — reviewer checklist severities + QC rubric (1–5) per artifact. Use when reviewing/auditing a task bundle before submit or as peer reviewer.
+alwaysApply: false
+---
+
+# TB 4.0 — QC review / audit
+
+Two different things: the **per-task `rubric.txt`** (grades agent traces) vs the **QC rubric** (grades bundle quality). Never confuse them.
+
+For shipping decisions the pool's **Master Ship Checklist 4.0** (`tb40-ship-checklist.mdc`, checks 0–99) is final: zero open findings of any severity. Where anything below disagrees with it, the checklist wins.
+
+## Severity
+
+- Checklist severities (BLOCKER / MAJOR / MINOR) are for **fix ordering only** — nothing ships with any open finding.
+- Review comprehensively: report **all** issues in one pass, each with what / where (file:line) / how to fix, and the checklist number.
+- Old tasks are judged by the rules at their submission time; a TB 2.1 bundle re-submitted now is judged by 4.0.
+
+## QC rubric scale
+
+Each criterion 1–5: **1–2 Major** (blocks delivery) · **3–4 Minor** · **5 clean**. Record score + concrete evidence (file:line / quote / command output), re-derived from disk now, not from memory.
+
+The full pool QC rubric — 9 tabs, every criterion with its 1–2 / 3–4 / 5 bar — is in `GUIDE_TB4.0.md` → "QC Rubric": instruction.md (21), environment (12), solution (7), tests (25), task.toml (12), rubric.txt (7), trajectories (10), Reward-Hacking / Corpus (6), Structure / Packaging (5). Score every criterion of every tab in a full review. Criteria most often missed: Degenerate-Input Coverage, Enum/Multi-Value Rule Documentation, Per-Test Manifest & TBENCH_TEST_ID, Negative-Control Coverage (NC-01–14), Full Causal Trial Classification, Corpus Uniqueness (recorded comparison), Public-Solution Resistance, Metadata Freshness After Rerun.
+
+## Reviewer checklist (pool severities)
+
+| Artifact | Item | Severity |
+|---|---|---|
+| Instruction | Absolute paths only | Blocker |
+| Instruction | No hints / stepwise / Detection Guidance | Blocker |
+| Instruction | Task name not in body | Major |
+| Environment | Reserved paths untouched | Blocker |
+| Environment | Digest-pinned, canonical or justified base | Blocker |
+| Environment | tmux and asciinema preinstalled | Blocker |
+| Oracle | Reward 1.0 on every test, all three runs | Blocker |
+| Oracle | Minimal, targeted diff | Major |
+| Verifiers | No wall-clock assertions | Blocker |
+| Verifiers | Oracle/agent identical logic | Blocker |
+| Verifiers | Semantic correctness, not format-only | Blocker |
+| Rubric | Format compliance | Major |
+| Rubric | ±1/±2/±3/±5, positive sum 10–40 | Major |
+| Metadata | Taxonomy exact match | Major |
+| Metadata | No edition residue (allow_internet, milestones) or PII | Blocker |
+| Metadata | No difficulty tag anywhere | Blocker |
+
+Don't send back: an unconfirmed task.toml "structure" complaint (CI already ran it), or instruction length alone past ~20 bullets.
+
+## LLMaJ signals to pre-empt (GPT-5.6, informational)
+
+`behavior_in_task_description` · `behavior_in_tests` · `informative_test_docstrings` · `anti_cheating_measures` · `structured_data_schema` · `hardcoded_solution` · `file_reference_mentioned`. Agent Review (Critical / Warning / Suggestion → Ready to use / Needs fixes / Requires revision) is informational too — neither replaces the checklist.
+
+## Checklist by artifact (condensed, numbers = checklist 4.0)
+
+**instruction.md** (0–11) — human-authored, outcome-focused, absolute paths in backticks, names every output; length from the problem not from step lists; requirement ↔ test both ways (NOP-passable coverage may be dropped); no tooling words; constants/paths/schema exactness match tests and env; no self-contradiction; no defect narration or "why the naive path fails"; no canary/GUID; no tier/rate language.
+
+**environment** (12–26) — every file required and read; no defect-narrating or instruction-echoing comments; no lore/notes/attempt-log indexing defects (confirm against trajectories); names decodable and honest; no dead files or unused answer-key modules; **no file byte-identical to tests/ or solution/** (leak — test a leak-only solver); authoritative docs consistent; **every doc treated as a tested requirement**; vendored archives clean; no tests/solution COPY and no touching `/tests`, `/solution`, `/oracle`, `/logs/verifier`, `/logs/artifacts`; decoys fair and unlabeled; digest-pinned canonical FROM, no `--platform`, tmux+asciinema, language deps pinned / apt unpinned, ≤100 MiB, no privileged ops.
+
+**solution** (27–36) — full delta enumerated; each change ↔ requested fix; no no-op or out-of-scope delta; independently verified correctness; no scenario-id branching; no privileged held-out knowledge; convergent-agent disagreement investigated; no orphan copies; per-file ablation done; cold, portable oracle build.
+
+**tests** (37–59) — separate verifier with top-level `artifacts` and parent dirs pre-created; `tests/Dockerfile` bakes pinned deps and `COPY . /tests/`; test.sh no `set -e`, reward always written, `exit 0`; NOP per-test zero; guards coupled not deleted; assertions match names/docstrings; no agent-editable ground truth; verifier fixtures baked independently (tamper-tested); holdouts change the outcome; exactness literal; tolerances match; no obfuscation/dead code; fail-closed tests with positive control; captured test count = current suite; agent code run sandboxed (unprivileged, bounded, sanitized env, fixed tool paths, pgroup killed, no `/logs/verifier` write); no wall-clock/latency assertions; binary reward initialized to 0, identical oracle/agent logic; checks values not format; `test_manifest.json` 1:1 with CTRF names and `TBENCH_TEST_ID` selector correct (all / exact / reject unknown); NC-01–06 run and each rejected by its own named test, NC-07–14 run or specifically n/a (`_reports/<slug>/negative_controls.toml`).
+
+**task.toml** (61–65) — top-level `name` + `artifacts`; anonymous authors; exact 29-subdomain taxonomy category/subcategory by what the agent must understand; 3–6 tags; languages from the supported list; `expert_time_estimate_hours` fresh after reruns; four substantive, current write-ups; no `difficulty` or tier anywhere; `environment_mode = "separate"`; agent/verifier timeouts 28800; `network_mode = "public"` (or justified `"no-network"`); 2 CPU / 8192 MB / 10240 MB; no `schema_version`/`[task]`/`[[task.authors]]`/`codebase_size`/minute estimates/pipeline metadata/local paths; `is_multi_container` only when genuinely multi-container.
+
+**rubric.txt** (66–71) — every line maps to an instruction requirement (implicit OK); strict format, ±{1,2,3,5}, explicit `+`, ≥1 negative, positives 10–40; no contradictions; no double counting incl. positive/negative mirrors; arithmetic consistent with every rubric_score.txt.
+
+**oracle-nop-evidence** (73–78) — exactly 3 oracle + 2 NOP with the 3 standard files; oracle every test passes; NOP every test `failed` with genuine assertions (no infra/autouse errors); newer than graded files; runs independent.
+
+**trajectories** (79–96) — SUMMARY exactly 2 data lines matching each run's reward.txt/ctrf; fresh sha AND mtimes newer than graded files; oracle/NOP/model runs not duplicated (incl. full-precision float check); failing-run causes read from each run's own files; rubric_score files pure data, distinct, every NOT MET/negative cited from that run, MET spot-checked; PII scrub per directory incl. evidence; no canary/GUID; raw result.json untouched; consistent agent/verifier file sets; xhigh per run; no exception_info / cut-off-while-progressing runs; per-run reward-hacking scan; reruns updated atomically.
+
+**Cross-artifact** (97–99) — difficulty from genuine reasoning, classified in plain words; exact delivery layout with no junk or AI-scaffolding names; final stb/path/canary grep after the last edit.
+
+## Test-quality eval flags (verify each; helper, not replacement)
+
+`req-gap` · `weak-assertion` · `phantom-spec` · `flaky-execution` · `vacuous-test`.
+
+## Review report shape
+
+Status (PASS / WARNING / FAIL) · Summary · Critical ❌ · Warnings ⚠️ · Suggestions 💡 · Overall assessment · Recommendation: READY / NEEDS FIXES / REQUIRES REVISION.

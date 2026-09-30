@@ -1,0 +1,113 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 10,
+            "passed": 9,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790451398.1209195,
+            "stop": 1790451405.5960805
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_section_anchoring",
+                "status": "passed",
+                "duration": 7.311493519984651,
+                "start": 1790451398.1334164,
+                "stop": 1790451405.4444895,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_tab_indentation",
+                "status": "passed",
+                "duration": 0.019486739940475672,
+                "start": 1790451405.4447494,
+                "stop": 1790451405.4653819,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_bracketed_directories",
+                "status": "passed",
+                "duration": 0.014895433996571228,
+                "start": 1790451405.4656303,
+                "stop": 1790451405.4815881,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_stdin_paths",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.014868823025608435,
+                "start": 1790451405.481862,
+                "stop": 1790451405.5075068,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "quire = '/tmp/quire-verify/quire'\n\n    def test_stdin_paths(quire):\n        \"\"\"File paths read from standard input.\"\"\"\n>       _check_group(quire, \"stdin_paths\")\n\n/tests/test_outputs.py:117: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/quire-verify/quire', group = 'stdin_paths'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            rc, out, err = _run_case(binary, case)\n            if (rc, out, err) != (case[\"rc\"], case[\"stdout\"], case[\"stderr\"]):\n                failures.append(\n                    f\"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\\n\"\n                    f\"expected rc={case['rc']} stderr={case['stderr']!r}\\n{case['stdout']}\"\n                    f\"got rc={rc} stderr={err!r}\\n{out}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 4 of 7 cases differ:\nE         --- stdin_paths-01 args=['-'] stdin='{root}/app.py\\n'\nE         expected rc=0 stderr=''\nE         [/srv/qc/stdin_paths-01/app.py]\nE         indent_style=space\nE         indent_size=4\nE         tab_width=4\nE         got rc=0 stderr=''\nE         indent_style=space\nE         indent_size=4\nE         tab_width=4\nE         \nE         --- stdin_paths-02 args=['-'] stdin='  {root}/app.py  \\n\\n\\t\\n{root}/Makefile\\n{root}/notes.txt'\nE         expected rc=0 stderr=''\nE         [/srv/qc/stdin_paths-02/app.py]\nE         indent_style=space\nE         indent_size=4\nE         tab_width=4\nE         [/srv/qc/stdin_paths-02/Makefile]\nE         indent_style=tab\nE         indent_size=tab\nE         [/srv/qc/stdin_paths-02/notes.txt]\nE         indent_style=space\nE         got rc=0 stderr=''\nE         indent_style=space\nE         indent_size=4\nE         tab_width=4\nE         indent_style=tab\nE         indent_size=tab\nE         indent_style=space\nE         \nE         --- stdin_paths-06 args=['-'] stdin='{root}/app.py\\nrelative/app.py\\n{root}/Makefile\\n'\nE         expected rc=1 stderr='Input file must be a full path name.\\n'\nE         [/srv/qc/stdin_paths-06/app.py]\nE         indent_style=space\nE         indent_size=4\nE         tab_width=4\nE         [relative/app.py]\nE         got rc=1 stderr='Input file must be a full path name.\\n'\nE         indent_style=space\nE         indent_size=4\nE         tab_width=4\nE         \nE         --- stdin_paths-07 args=['-b', '0.8', '-'] stdin='{root}/Makefile\\n'\nE         expected rc=0 stderr=''\nE         [/srv/qc/stdin_paths-07/Makefile]\nE         indent_style=tab\nE         got rc=0 stderr=''\nE         indent_style=tab\nE         \nE       assert not [\"--- stdin_paths-01 args=['-'] stdin='{root}/app.py\\\\n'\\nexpected rc=0 stderr=''\\n[/srv/qc/stdin_paths-01/app.py]\\nin...nexpected rc=0 stderr=''\\n[/srv/qc/stdin_paths-07/Makefile]\\nindent_style=tab\\ngot rc=0 stderr=''\\nindent_style=tab\\n\"]\n\n/tests/test_outputs.py:97: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_globstar_segments",
+                "status": "passed",
+                "duration": 0.01208647500607185,
+                "start": 1790451405.5077403,
+                "stop": 1790451405.5208611,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_negated_classes",
+                "status": "passed",
+                "duration": 0.013827935967128724,
+                "start": 1790451405.5211205,
+                "stop": 1790451405.5360768,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_inline_comments",
+                "status": "passed",
+                "duration": 0.015872068965109065,
+                "start": 1790451405.5363364,
+                "stop": 1790451405.5532806,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_root_declarations",
+                "status": "passed",
+                "duration": 0.01658544800011441,
+                "start": 1790451405.5535421,
+                "stop": 1790451405.5712883,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_value_case",
+                "status": "passed",
+                "duration": 0.009077008988242596,
+                "start": 1790451405.5715222,
+                "stop": 1790451405.5815997,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_property_order",
+                "status": "passed",
+                "duration": 0.012226932973135263,
+                "start": 1790451405.581818,
+                "stop": 1790451405.5949936,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

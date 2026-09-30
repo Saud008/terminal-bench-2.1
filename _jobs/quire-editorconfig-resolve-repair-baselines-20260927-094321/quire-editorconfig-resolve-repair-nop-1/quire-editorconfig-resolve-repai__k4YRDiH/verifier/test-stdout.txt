@@ -1,0 +1,1093 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 10 items
+
+../tests/test_outputs.py FFFFFFFFFF                                      [100%]
+
+=================================== FAILURES ===================================
+____________________________ test_section_anchoring ____________________________
+
+quire = '/tmp/quire-verify/quire'
+
+    def test_section_anchoring(quire):
+        """Headers with a '/' are anchored to their file's directory; others match at any depth."""
+>       _check_group(quire, "section_anchoring")
+
+/tests/test_outputs.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/quire-verify/quire', group = 'section_anchoring'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']!r}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err!r}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 6 of 6 cases differ:
+E         --- section_anchoring-01 args=['{root}/scripts/build.sh', '{root}/tools/scripts/build.sh', '{root}/Makefile', '{root}/sub/Makefile', '{root}/docs/a/b.md', '{root}/x/docs/a.md'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/section_anchoring-01/scripts/build.sh]
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         [/srv/qc/section_anchoring-01/tools/scripts/build.sh]
+E         indent_style=space
+E         [/srv/qc/section_anchoring-01/Makefile]
+E         indent_style=tab
+E         indent_size=tab
+E         [/srv/qc/section_anchoring-01/sub/Makefile]
+E         [/srv/qc/section_anchoring-01/docs/a/b.md]
+E         max_line_length=100
+E         [/srv/qc/section_anchoring-01/x/docs/a.md]
+E         got rc=0 stderr=''
+E         [/srv/qc/section_anchoring-01/scripts/build.sh]
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         [/srv/qc/section_anchoring-01/tools/scripts/build.sh]
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         [/srv/qc/section_anchoring-01/Makefile]
+E         indent_style=tab
+E         [/srv/qc/section_anchoring-01/sub/Makefile]
+E         [/srv/qc/section_anchoring-01/docs/a/b.md]
+E         max_line_length=100
+E         [/srv/qc/section_anchoring-01/x/docs/a.md]
+E         max_line_length=100
+E         
+E         --- section_anchoring-02 args=['{root}/web/src/app.ts', '{root}/web/lib/src/app.ts', '{root}/src/app.ts', '{root}/web/app.ts'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/section_anchoring-02/web/src/app.ts]
+E         charset=utf-8
+E         indent_size=2
+E         quote_type=single
+E         tab_width=2
+E         [/srv/qc/section_anchoring-02/web/lib/src/app.ts]
+E         charset=utf-8
+E         quote_type=single
+E         [/srv/qc/section_anchoring-02/src/app.ts]
+E         charset=utf-8
+E         [/srv/qc/section_anchoring-02/web/app.ts]
+E         charset=utf-8
+E         quote_type=single
+E         got rc=0 stderr=''
+E         [/srv/qc/section_anchoring-02/web/src/app.ts]
+E         charset=utf-8
+E         indent_size=2
+E         quote_type=single
+E         tab_width=2
+E         [/srv/qc/section_anchoring-02/web/lib/src/app.ts]
+E         charset=utf-8
+E         indent_size=2
+E         quote_type=single
+E         tab_width=2
+E         [/srv/qc/section_anchoring-02/src/app.ts]
+E         charset=utf-8
+E         [/srv/qc/section_anchoring-02/web/app.ts]
+E         charset=utf-8
+E         quote_type=single
+E         
+E         --- section_anchoring-03 args=['{root}/src/a.c', '{root}/lib/src/a.c', '{root}/test/b.c', '{root}/src.c', '{root}/x/test.c'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/section_anchoring-03/src/a.c]
+E         indent_size=8
+E         tab_width=8
+E         [/srv/qc/section_anchoring-03/lib/src/a.c]
+E         [/srv/qc/section_anchoring-03/test/b.c]
+E         indent_size=8
+E         tab_width=8
+E         [/srv/qc/section_anchoring-03/src.c]
+E         m=flat
+E         [/srv/qc/section_anchoring-03/x/test.c]
+E         m=flat
+E         got rc=0 stderr=''
+E         [/srv/qc/section_anchoring-03/src/a.c]
+E         indent_size=8
+E         tab_width=8
+E         [/srv/qc/section_anchoring-03/lib/src/a.c]
+E         indent_size=8
+E         tab_width=8
+E         [/srv/qc/section_anchoring-03/test/b.c]
+E         indent_size=8
+E         tab_width=8
+E         [/srv/qc/section_anchoring-03/src.c]
+E         m=flat
+E         [/srv/qc/section_anchoring-03/x/test.c]
+E         m=flat
+E         
+E         --- section_anchoring-04 args=['{root}/v2/readme.md', '{root}/old/v2/readme.md', '{root}/v4/readme.md', '{root}/api/v1/users/list.json', '{root}/x/api/v1/a'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/section_anchoring-04/v2/readme.md]
+E         m=versioned
+E         [/srv/qc/section_anchoring-04/old/v2/readme.md]
+E         [/srv/qc/section_anchoring-04/v4/readme.md]
+E         [/srv/qc/section_anchoring-04/api/v1/users/list.json]
+E         n=api
+E         [/srv/qc/section_anchoring-04/x/api/v1/a]
+E         got rc=0 stderr=''
+E         [/srv/qc/section_anchoring-04/v2/readme.md]
+E         m=versioned
+E         [/srv/qc/section_anchoring-04/old/v2/readme.md]
+E         m=versioned
+E         [/srv/qc/section_anchoring-04/v4/readme.md]
+E         [/srv/qc/section_anchoring-04/api/v1/users/list.json]
+E         n=api
+E         [/srv/qc/section_anchoring-04/x/api/v1/a]
+E         n=api
+E         
+E         --- section_anchoring-05 args=['{root}/a/b/c.txt', '{root}/z/a/b/c.txt', '{root}/b/c.txt', '{root}/c.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/section_anchoring-05/a/b/c.txt]
+E         m=exact
+E         o=name
+E         [/srv/qc/section_anchoring-05/z/a/b/c.txt]
+E         o=name
+E         [/srv/qc/section_anchoring-05/b/c.txt]
+E         n=tail
+E         o=name
+E         [/srv/qc/section_anchoring-05/c.txt]
+E         o=name
+E         got rc=0 stderr=''
+E         [/srv/qc/section_anchoring-05/a/b/c.txt]
+E         m=exact
+E         n=tail
+E         o=name
+E         [/srv/qc/section_anchoring-05/z/a/b/c.txt]
+E         m=exact
+E         n=tail
+E         o=name
+E         [/srv/qc/section_anchoring-05/b/c.txt]
+E         n=tail
+E         o=name
+E         [/srv/qc/section_anchoring-05/c.txt]
+E         o=name
+E         
+E         --- section_anchoring-06 args=['{root}/proj/lib/a.rb', '{root}/proj/app/lib/a.rb', '{root}/proj/a.rb'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/section_anchoring-06/proj/lib/a.rb]
+E         m=top
+E         n=rel
+E         o=any
+E         [/srv/qc/section_anchoring-06/proj/app/lib/a.rb]
+E         o=any
+E         [/srv/qc/section_anchoring-06/proj/a.rb]
+E         o=any
+E         got rc=0 stderr=''
+E         [/srv/qc/section_anchoring-06/proj/lib/a.rb]
+E         m=top
+E         n=rel
+E         o=any
+E         [/srv/qc/section_anchoring-06/proj/app/lib/a.rb]
+E         n=rel
+E         o=any
+E         [/srv/qc/section_anchoring-06/proj/a.rb]
+E         o=any
+E         
+E       assert not ["--- section_anchoring-01 args=['{root}/scripts/build.sh', '{root}/tools/scripts/build.sh', '{root}/Makefile', '{root...ny\n[/srv/qc/section_anchoring-06/proj/app/lib/a.rb]\nn=rel\no=any\n[/srv/qc/section_anchoring-06/proj/a.rb]\no=any\n"]
+
+/tests/test_outputs.py:97: AssertionError
+_____________________________ test_tab_indentation _____________________________
+
+quire = '/tmp/quire-verify/quire'
+
+    def test_tab_indentation(quire):
+        """indent_size / tab_width derivation, with and without -b."""
+>       _check_group(quire, "tab_indentation")
+
+/tests/test_outputs.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/quire-verify/quire', group = 'tab_indentation'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']!r}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err!r}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 9 of 12 cases differ:
+E         --- tab_indentation-01 args=['{root}/a.go'] stdin=None
+E         expected rc=0 stderr=''
+E         indent_style=tab
+E         indent_size=tab
+E         got rc=0 stderr=''
+E         indent_style=tab
+E         
+E         --- tab_indentation-02 args=['{root}/a.go', '{root}/a.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/tab_indentation-02/a.go]
+E         indent_style=tab
+E         tab_width=8
+E         indent_size=8
+E         [/srv/qc/tab_indentation-02/a.txt]
+E         indent_style=tab
+E         indent_size=tab
+E         got rc=0 stderr=''
+E         [/srv/qc/tab_indentation-02/a.go]
+E         indent_style=tab
+E         tab_width=8
+E         [/srv/qc/tab_indentation-02/a.txt]
+E         indent_style=tab
+E         
+E         --- tab_indentation-03 args=['{root}/a.py', '{root}/a.c', '{root}/a.md'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/tab_indentation-03/a.py]
+E         indent_size=4
+E         tab_width=4
+E         [/srv/qc/tab_indentation-03/a.c]
+E         indent_size=tab
+E         [/srv/qc/tab_indentation-03/a.md]
+E         indent_size=3
+E         tab_width=3
+E         got rc=0 stderr=''
+E         [/srv/qc/tab_indentation-03/a.py]
+E         indent_size=tab
+E         tab_width=4
+E         [/srv/qc/tab_indentation-03/a.c]
+E         indent_size=tab
+E         tab_width=tab
+E         [/srv/qc/tab_indentation-03/a.md]
+E         indent_size=3
+E         tab_width=3
+E         
+E         --- tab_indentation-04 args=['{root}/a.txt', '{root}/rules.mk'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/tab_indentation-04/a.txt]
+E         indent_style=tab
+E         indent_size=2
+E         tab_width=2
+E         [/srv/qc/tab_indentation-04/rules.mk]
+E         indent_style=tab
+E         indent_size=tab
+E         got rc=0 stderr=''
+E         [/srv/qc/tab_indentation-04/a.txt]
+E         indent_style=tab
+E         indent_size=2
+E         tab_width=2
+E         [/srv/qc/tab_indentation-04/rules.mk]
+E         indent_style=tab
+E         indent_size=tab
+E         tab_width=tab
+E         
+E         --- tab_indentation-05 args=['-b', '0.8', '{root}/a.go'] stdin=None
+E         expected rc=0 stderr=''
+E         indent_style=tab
+E         got rc=1 stderr='Required version is greater than the current version.\n'
+E         
+E         --- tab_indentation-06 args=['-b', '0.8.4', '{root}/a.go', '{root}/b.go'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/tab_indentation-06/a.go]
+E         indent_size=tab
+E         tab_width=tab
+E         [/srv/qc/tab_indentation-06/b.go]
+E         indent_size=tab
+E         tab_width=tab
+E         got rc=1 stderr='Required version is greater than the current version.\n'
+E         [/srv/qc/tab_indentation-06/a.go]
+E         
+E         --- tab_indentation-07 args=['-b', '0.9', '{root}/a.go'] stdin=None
+E         expected rc=0 stderr=''
+E         indent_size=6
+E         tab_width=6
+E         got rc=1 stderr='Required version is greater than the current version.\n'
+E         
+E         --- tab_indentation-08 args=['-b', '0.12.6', '{root}/a.go'] stdin=None
+E         expected rc=0 stderr=''
+E         indent_style=tab
+E         indent_size=tab
+E         got rc=0 stderr=''
+E         indent_style=tab
+E         
+E         --- tab_indentation-11 args=['-b', '0..10', '{root}/a.go'] stdin=None
+E         expected rc=0 stderr=''
+E         indent_style=tab
+E         indent_size=tab
+E         got rc=0 stderr=''
+E         indent_style=tab
+E         indent_size=tab
+E         tab_width=tab
+E         
+E       assert not ["--- tab_indentation-01 args=['{root}/a.go'] stdin=None\nexpected rc=0 stderr=''\nindent_style=tab\nindent_size=tab\n...ngot rc=1 stderr='Required version is greater than the current version.\\n'\n[/srv/qc/tab_indentation-06/a.go]\n", ...]
+
+/tests/test_outputs.py:97: AssertionError
+__________________________ test_bracketed_directories __________________________
+
+quire = '/tmp/quire-verify/quire'
+
+    def test_bracketed_directories(quire):
+        """EditorConfig files in directories whose names contain glob characters."""
+>       _check_group(quire, "bracketed_directories")
+
+/tests/test_outputs.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/quire-verify/quire', group = 'bracketed_directories'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']!r}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err!r}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 5 of 6 cases differ:
+E         --- bracketed_directories-01 args=['{root}/[wip] shop/app.tsx', '{root}/[wip] shop/components/Button.tsx'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/bracketed_directories-01/[wip] shop/app.tsx]
+E         indent_style=space
+E         indent_size=2
+E         tab_width=2
+E         [/srv/qc/bracketed_directories-01/[wip] shop/components/Button.tsx]
+E         indent_style=space
+E         indent_size=2
+E         m=component
+E         tab_width=2
+E         got rc=0 stderr=''
+E         [/srv/qc/bracketed_directories-01/[wip] shop/app.tsx]
+E         [/srv/qc/bracketed_directories-01/[wip] shop/components/Button.tsx]
+E         
+E         --- bracketed_directories-02 args=['{root}/site[2024]/index.tsx', '{root}/site[2024]/components/Nav.tsx'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/bracketed_directories-02/site[2024]/index.tsx]
+E         indent_style=space
+E         indent_size=2
+E         tab_width=2
+E         [/srv/qc/bracketed_directories-02/site[2024]/components/Nav.tsx]
+E         indent_style=space
+E         indent_size=2
+E         m=component
+E         tab_width=2
+E         got rc=0 stderr=''
+E         [/srv/qc/bracketed_directories-02/site[2024]/index.tsx]
+E         [/srv/qc/bracketed_directories-02/site[2024]/components/Nav.tsx]
+E         
+E         --- bracketed_directories-03 args=['{root}/a[!x]b/sub/page.tsx', '{root}/a[!x]b/page.tsx'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/bracketed_directories-03/a[!x]b/sub/page.tsx]
+E         indent_style=space
+E         indent_size=2
+E         quote_type=double
+E         tab_width=2
+E         [/srv/qc/bracketed_directories-03/a[!x]b/page.tsx]
+E         indent_style=space
+E         indent_size=2
+E         tab_width=2
+E         got rc=0 stderr=''
+E         [/srv/qc/bracketed_directories-03/a[!x]b/sub/page.tsx]
+E         [/srv/qc/bracketed_directories-03/a[!x]b/page.tsx]
+E         
+E         --- bracketed_directories-04 args=['{root}/r[0-9]/x.tsx', '{root}/r5/x.tsx'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/bracketed_directories-04/r[0-9]/x.tsx]
+E         indent_style=space
+E         indent_size=2
+E         tab_width=2
+E         [/srv/qc/bracketed_directories-04/r5/x.tsx]
+E         got rc=0 stderr=''
+E         [/srv/qc/bracketed_directories-04/r[0-9]/x.tsx]
+E         [/srv/qc/bracketed_directories-04/r5/x.tsx]
+E         
+E         --- bracketed_directories-06 args=['{root}/[x]/a/b/readme.md'] stdin=None
+E         expected rc=0 stderr=''
+E         trim_trailing_whitespace=false
+E         charset=latin1
+E         got rc=0 stderr=''
+E         
+E       assert not ["--- bracketed_directories-01 args=['{root}/[wip] shop/app.tsx', '{root}/[wip] shop/components/Button.tsx'] stdin=Non...readme.md'] stdin=None\nexpected rc=0 stderr=''\ntrim_trailing_whitespace=false\ncharset=latin1\ngot rc=0 stderr=''\n"]
+
+/tests/test_outputs.py:97: AssertionError
+_______________________________ test_stdin_paths _______________________________
+
+quire = '/tmp/quire-verify/quire'
+
+    def test_stdin_paths(quire):
+        """File paths read from standard input."""
+>       _check_group(quire, "stdin_paths")
+
+/tests/test_outputs.py:117: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/quire-verify/quire', group = 'stdin_paths'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']!r}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err!r}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 5 of 7 cases differ:
+E         --- stdin_paths-01 args=['-'] stdin='{root}/app.py\n'
+E         expected rc=0 stderr=''
+E         [/srv/qc/stdin_paths-01/app.py]
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         got rc=0 stderr=''
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         
+E         --- stdin_paths-02 args=['-'] stdin='  {root}/app.py  \n\n\t\n{root}/Makefile\n{root}/notes.txt'
+E         expected rc=0 stderr=''
+E         [/srv/qc/stdin_paths-02/app.py]
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         [/srv/qc/stdin_paths-02/Makefile]
+E         indent_style=tab
+E         indent_size=tab
+E         [/srv/qc/stdin_paths-02/notes.txt]
+E         indent_style=space
+E         got rc=0 stderr=''
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         indent_style=tab
+E         indent_style=space
+E         
+E         --- stdin_paths-03 args=['{root}/app.py', '-', '{root}/Makefile'] stdin='{root}/b.txt\n{root}/c.py\n'
+E         expected rc=0 stderr=''
+E         [/srv/qc/stdin_paths-03/app.py]
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         [/srv/qc/stdin_paths-03/b.txt]
+E         indent_style=space
+E         [/srv/qc/stdin_paths-03/c.py]
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         [/srv/qc/stdin_paths-03/Makefile]
+E         indent_style=tab
+E         indent_size=tab
+E         got rc=0 stderr=''
+E         [/srv/qc/stdin_paths-03/app.py]
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         [/srv/qc/stdin_paths-03/b.txt]
+E         indent_style=space
+E         [/srv/qc/stdin_paths-03/c.py]
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         [/srv/qc/stdin_paths-03/Makefile]
+E         indent_style=tab
+E         
+E         --- stdin_paths-06 args=['-'] stdin='{root}/app.py\nrelative/app.py\n{root}/Makefile\n'
+E         expected rc=1 stderr='Input file must be a full path name.\n'
+E         [/srv/qc/stdin_paths-06/app.py]
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         [relative/app.py]
+E         got rc=1 stderr='Input file must be a full path name.\n'
+E         indent_style=space
+E         indent_size=4
+E         tab_width=4
+E         
+E         --- stdin_paths-07 args=['-b', '0.8', '-'] stdin='{root}/Makefile\n'
+E         expected rc=0 stderr=''
+E         [/srv/qc/stdin_paths-07/Makefile]
+E         indent_style=tab
+E         got rc=1 stderr='Required version is greater than the current version.\n'
+E         
+E       assert not ["--- stdin_paths-01 args=['-'] stdin='{root}/app.py\\n'\nexpected rc=0 stderr=''\n[/srv/qc/stdin_paths-01/app.py]\nin...in_paths-07/Makefile]\nindent_style=tab\ngot rc=1 stderr='Required version is greater than the current version.\\n'\n"]
+
+/tests/test_outputs.py:97: AssertionError
+____________________________ test_globstar_segments ____________________________
+
+quire = '/tmp/quire-verify/quire'
+
+    def test_globstar_segments(quire):
+        """'/**/' matches zero or more directories."""
+>       _check_group(quire, "globstar_segments")
+
+/tests/test_outputs.py:122: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/quire-verify/quire', group = 'globstar_segments'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']!r}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err!r}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 5 of 5 cases differ:
+E         --- globstar_segments-01 args=['{root}/lib/a.js', '{root}/lib/x/a.js', '{root}/lib/x/y/a.min.js', '{root}/src/lib/a.js'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/globstar_segments-01/lib/a.js]
+E         indent_size=2
+E         tab_width=2
+E         [/srv/qc/globstar_segments-01/lib/x/a.js]
+E         indent_size=2
+E         tab_width=2
+E         [/srv/qc/globstar_segments-01/lib/x/y/a.min.js]
+E         indent_size=2
+E         m=min
+E         tab_width=2
+E         [/srv/qc/globstar_segments-01/src/lib/a.js]
+E         got rc=0 stderr=''
+E         [/srv/qc/globstar_segments-01/lib/a.js]
+E         [/srv/qc/globstar_segments-01/lib/x/a.js]
+E         indent_size=2
+E         tab_width=2
+E         [/srv/qc/globstar_segments-01/lib/x/y/a.min.js]
+E         indent_size=2
+E         m=min
+E         tab_width=2
+E         [/srv/qc/globstar_segments-01/src/lib/a.js]
+E         
+E         --- globstar_segments-02 args=['{root}/a/b', '{root}/a/x/b', '{root}/a/x/y/b', '{root}/a/b/c', '{root}/a/x/b/y/c', '{root}/z/a/b', '{root}/ab'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/globstar_segments-02/a/b]
+E         m=1
+E         [/srv/qc/globstar_segments-02/a/x/b]
+E         m=1
+E         [/srv/qc/globstar_segments-02/a/x/y/b]
+E         m=1
+E         [/srv/qc/globstar_segments-02/a/b/c]
+E         n=2
+E         [/srv/qc/globstar_segments-02/a/x/b/y/c]
+E         n=2
+E         [/srv/qc/globstar_segments-02/z/a/b]
+E         [/srv/qc/globstar_segments-02/ab]
+E         got rc=0 stderr=''
+E         [/srv/qc/globstar_segments-02/a/b]
+E         [/srv/qc/globstar_segments-02/a/x/b]
+E         m=1
+E         [/srv/qc/globstar_segments-02/a/x/y/b]
+E         m=1
+E         [/srv/qc/globstar_segments-02/a/b/c]
+E         [/srv/qc/globstar_segments-02/a/x/b/y/c]
+E         n=2
+E         [/srv/qc/globstar_segments-02/z/a/b]
+E         [/srv/qc/globstar_segments-02/ab]
+E         
+E         --- globstar_segments-03 args=['{root}/node_modules/x/index.js', '{root}/a/node_modules/b.js', '{root}/src/a.py', '{root}/tests/unit/b.py', '{root}/docs/src/a.py'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/globstar_segments-03/node_modules/x/index.js]
+E         m=vendored
+E         [/srv/qc/globstar_segments-03/a/node_modules/b.js]
+E         m=vendored
+E         [/srv/qc/globstar_segments-03/src/a.py]
+E         n=py
+E         [/srv/qc/globstar_segments-03/tests/unit/b.py]
+E         n=py
+E         [/srv/qc/globstar_segments-03/docs/src/a.py]
+E         got rc=0 stderr=''
+E         [/srv/qc/globstar_segments-03/node_modules/x/index.js]
+E         [/srv/qc/globstar_segments-03/a/node_modules/b.js]
+E         m=vendored
+E         [/srv/qc/globstar_segments-03/src/a.py]
+E         [/srv/qc/globstar_segments-03/tests/unit/b.py]
+E         n=py
+E         [/srv/qc/globstar_segments-03/docs/src/a.py]
+E         
+E         --- globstar_segments-04 args=['{root}/pkg/fixtures/a.json', '{root}/pkg/x/fixtures/a.json', '{root}/pkg/a.json'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/globstar_segments-04/pkg/fixtures/a.json]
+E         m=fixture
+E         n=json
+E         [/srv/qc/globstar_segments-04/pkg/x/fixtures/a.json]
+E         m=fixture
+E         n=json
+E         [/srv/qc/globstar_segments-04/pkg/a.json]
+E         n=json
+E         got rc=0 stderr=''
+E         [/srv/qc/globstar_segments-04/pkg/fixtures/a.json]
+E         n=json
+E         [/srv/qc/globstar_segments-04/pkg/x/fixtures/a.json]
+E         m=fixture
+E         n=json
+E         [/srv/qc/globstar_segments-04/pkg/a.json]
+E         
+E         --- globstar_segments-05 args=['{root}/docs/v2/a.md', '{root}/docs/api/v10/a.md', '{root}/docs/api/old/v3/b.md', '{root}/test_a.go', '{root}/x/test_ab.go'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/globstar_segments-05/docs/v2/a.md]
+E         [/srv/qc/globstar_segments-05/docs/api/v10/a.md]
+E         [/srv/qc/globstar_segments-05/docs/api/old/v3/b.md]
+E         [/srv/qc/globstar_segments-05/test_a.go]
+E         n=t
+E         [/srv/qc/globstar_segments-05/x/test_ab.go]
+E         got rc=0 stderr=''
+E         [/srv/qc/globstar_segments-05/docs/v2/a.md]
+E         [/srv/qc/globstar_segments-05/docs/api/v10/a.md]
+E         [/srv/qc/globstar_segments-05/docs/api/old/v3/b.md]
+E         m=doc
+E         [/srv/qc/globstar_segments-05/test_a.go]
+E         [/srv/qc/globstar_segments-05/x/test_ab.go]
+E         
+E       assert not ["--- globstar_segments-01 args=['{root}/lib/a.js', '{root}/lib/x/a.js', '{root}/lib/x/y/a.min.js', '{root}/src/lib/a....docs/api/old/v3/b.md]\nm=doc\n[/srv/qc/globstar_segments-05/test_a.go]\n[/srv/qc/globstar_segments-05/x/test_ab.go]\n"]
+
+/tests/test_outputs.py:97: AssertionError
+_____________________________ test_negated_classes _____________________________
+
+quire = '/tmp/quire-verify/quire'
+
+    def test_negated_classes(quire):
+        """Bracket expressions: '[!...]' negation, literal '^', brackets containing '/'."""
+>       _check_group(quire, "negated_classes")
+
+/tests/test_outputs.py:127: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/quire-verify/quire', group = 'negated_classes'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']!r}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err!r}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 6 of 6 cases differ:
+E         --- negated_classes-01 args=['{root}/readme.md', '{root}/.gitignore', '{root}/sub/.env', '{root}/sub/x'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/negated_classes-01/readme.md]
+E         m=visible
+E         n=all
+E         [/srv/qc/negated_classes-01/.gitignore]
+E         n=all
+E         [/srv/qc/negated_classes-01/sub/.env]
+E         n=all
+E         [/srv/qc/negated_classes-01/sub/x]
+E         m=visible
+E         n=all
+E         got rc=0 stderr=''
+E         [/srv/qc/negated_classes-01/readme.md]
+E         n=all
+E         [/srv/qc/negated_classes-01/.gitignore]
+E         m=visible
+E         n=all
+E         [/srv/qc/negated_classes-01/sub/.env]
+E         m=visible
+E         n=all
+E         [/srv/qc/negated_classes-01/sub/x]
+E         n=all
+E         
+E         --- negated_classes-02 args=['{root}/a.c', '{root}/a.o', '{root}/a.h', '{root}/a.cc'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/negated_classes-02/a.c]
+E         m=source
+E         n=c
+E         [/srv/qc/negated_classes-02/a.o]
+E         [/srv/qc/negated_classes-02/a.h]
+E         m=source
+E         n=c
+E         [/srv/qc/negated_classes-02/a.cc]
+E         got rc=0 stderr=''
+E         [/srv/qc/negated_classes-02/a.c]
+E         n=c
+E         [/srv/qc/negated_classes-02/a.o]
+E         m=source
+E         [/srv/qc/negated_classes-02/a.h]
+E         n=c
+E         [/srv/qc/negated_classes-02/a.cc]
+E         
+E         --- negated_classes-03 args=['{root}/file1.txt', '{root}/filea.txt', '{root}/file!.txt', '{root}/file.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/negated_classes-03/file1.txt]
+E         n=numbered
+E         [/srv/qc/negated_classes-03/filea.txt]
+E         m=named
+E         [/srv/qc/negated_classes-03/file!.txt]
+E         m=named
+E         [/srv/qc/negated_classes-03/file.txt]
+E         got rc=0 stderr=''
+E         [/srv/qc/negated_classes-03/file1.txt]
+E         m=named
+E         n=numbered
+E         [/srv/qc/negated_classes-03/filea.txt]
+E         [/srv/qc/negated_classes-03/file!.txt]
+E         m=named
+E         [/srv/qc/negated_classes-03/file.txt]
+E         
+E         --- negated_classes-04 args=['{root}/main.go', '{root}/_gen.go', '{root}/^x.go'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/negated_classes-04/main.go]
+E         n=bang
+E         [/srv/qc/negated_classes-04/_gen.go]
+E         m=caret
+E         [/srv/qc/negated_classes-04/^x.go]
+E         m=caret
+E         n=bang
+E         got rc=0 stderr=''
+E         [/srv/qc/negated_classes-04/main.go]
+E         m=caret
+E         [/srv/qc/negated_classes-04/_gen.go]
+E         n=bang
+E         [/srv/qc/negated_classes-04/^x.go]
+E         m=caret
+E         
+E         --- negated_classes-05 args=['{root}/[!/]x', '{root}/ax', '{root}/ay', '{root}/dy', '{root}/-y'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/negated_classes-05/[!/]x]
+E         m=slash
+E         [/srv/qc/negated_classes-05/ax]
+E         [/srv/qc/negated_classes-05/ay]
+E         [/srv/qc/negated_classes-05/dy]
+E         n=range
+E         [/srv/qc/negated_classes-05/-y]
+E         n=range
+E         got rc=0 stderr=''
+E         [/srv/qc/negated_classes-05/[!/]x]
+E         m=slash
+E         [/srv/qc/negated_classes-05/ax]
+E         [/srv/qc/negated_classes-05/ay]
+E         n=range
+E         [/srv/qc/negated_classes-05/dy]
+E         [/srv/qc/negated_classes-05/-y]
+E         
+E         --- negated_classes-06 args=['{root}/app.py', '{root}/tool.py', '{root}/test_main.py', '{root}/test_other.py'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/negated_classes-06/app.py]
+E         m=alt
+E         [/srv/qc/negated_classes-06/tool.py]
+E         [/srv/qc/negated_classes-06/test_main.py]
+E         m=alt
+E         [/srv/qc/negated_classes-06/test_other.py]
+E         got rc=0 stderr=''
+E         [/srv/qc/negated_classes-06/app.py]
+E         [/srv/qc/negated_classes-06/tool.py]
+E         m=alt
+E         [/srv/qc/negated_classes-06/test_main.py]
+E         m=alt
+E         [/srv/qc/negated_classes-06/test_other.py]
+E         m=alt
+E         
+E       assert not ["--- negated_classes-01 args=['{root}/readme.md', '{root}/.gitignore', '{root}/sub/.env', '{root}/sub/x'] stdin=None\...ool.py]\nm=alt\n[/srv/qc/negated_classes-06/test_main.py]\nm=alt\n[/srv/qc/negated_classes-06/test_other.py]\nm=alt\n"]
+
+/tests/test_outputs.py:97: AssertionError
+_____________________________ test_inline_comments _____________________________
+
+quire = '/tmp/quire-verify/quire'
+
+    def test_inline_comments(quire):
+        """Comment, header and property line syntax, limits and syntax errors."""
+>       _check_group(quire, "inline_comments")
+
+/tests/test_outputs.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/quire-verify/quire', group = 'inline_comments'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']!r}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err!r}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 2 of 8 cases differ:
+E         --- inline_comments-01 args=['{root}/a.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         color=#ff0000
+E         quote=a
+E         sep=a;b
+E         sep2=a
+E         lead=;x
+E         tabbed=x
+E         got rc=0 stderr=''
+E         color=
+E         quote=a
+E         sep=a
+E         sep2=a
+E         lead=
+E         tabbed=x
+E         
+E         --- inline_comments-03 args=['{root}/a.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         url=http://example.test/#frag
+E         list=a;b;c
+E         path=C:\x
+E         got rc=0 stderr=''
+E         url=http://example.test/
+E         list=a
+E         path=C:\x
+E         
+E       assert not ["--- inline_comments-01 args=['{root}/a.txt'] stdin=None\nexpected rc=0 stderr=''\ncolor=#ff0000\nquote=a\nsep=a;b\ns...http://example.test/#frag\nlist=a;b;c\npath=C:\\x\ngot rc=0 stderr=''\nurl=http://example.test/\nlist=a\npath=C:\\x\n"]
+
+/tests/test_outputs.py:97: AssertionError
+____________________________ test_root_declarations ____________________________
+
+quire = '/tmp/quire-verify/quire'
+
+    def test_root_declarations(quire):
+        """root = true in a preamble; root inside a section."""
+>       _check_group(quire, "root_declarations")
+
+/tests/test_outputs.py:137: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/quire-verify/quire', group = 'root_declarations'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']!r}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err!r}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 2 of 7 cases differ:
+E         --- root_declarations-03 args=['{root}/p/x'] stdin=None
+E         expected rc=0 stderr=''
+E         a=outer
+E         root=true
+E         b=inner
+E         got rc=0 stderr=''
+E         b=inner
+E         
+E         --- root_declarations-05 args=['{root}/p/x.md', '{root}/p/x.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/root_declarations-05/p/x.md]
+E         a=outer
+E         root=true
+E         b=1
+E         [/srv/qc/root_declarations-05/p/x.txt]
+E         a=outer
+E         b=1
+E         got rc=0 stderr=''
+E         [/srv/qc/root_declarations-05/p/x.md]
+E         b=1
+E         [/srv/qc/root_declarations-05/p/x.txt]
+E         b=1
+E         
+E       assert not ["--- root_declarations-03 args=['{root}/p/x'] stdin=None\nexpected rc=0 stderr=''\na=outer\nroot=true\nb=inner\ngot r...r\nb=1\ngot rc=0 stderr=''\n[/srv/qc/root_declarations-05/p/x.md]\nb=1\n[/srv/qc/root_declarations-05/p/x.txt]\nb=1\n"]
+
+/tests/test_outputs.py:97: AssertionError
+_______________________________ test_value_case ________________________________
+
+quire = '/tmp/quire-verify/quire'
+
+    def test_value_case(quire):
+        """Which property values are lowercased."""
+>       _check_group(quire, "value_case")
+
+/tests/test_outputs.py:142: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/quire-verify/quire', group = 'value_case'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']!r}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err!r}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 5 of 5 cases differ:
+E         --- value_case-01 args=['{root}/a.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         indent_style=space
+E         end_of_line=crlf
+E         charset=utf-8
+E         insert_final_newline=true
+E         trim_trailing_whitespace=false
+E         max_line_length=OFF
+E         got rc=0 stderr=''
+E         indent_style=space
+E         end_of_line=crlf
+E         charset=utf-8
+E         insert_final_newline=true
+E         trim_trailing_whitespace=false
+E         max_line_length=off
+E         
+E         --- value_case-02 args=['{root}/a.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         indent_style=tab
+E         tab_width=Eight
+E         quote_type=Double
+E         indent_size=eight
+E         got rc=0 stderr=''
+E         indent_style=tab
+E         tab_width=eight
+E         quote_type=Double
+E         
+E         --- value_case-03 args=['{root}/a.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         indent_size=4
+E         tab_width=AUTO
+E         x_custom=MiXeD
+E         spelling_language=en-US
+E         got rc=0 stderr=''
+E         indent_size=4
+E         tab_width=auto
+E         x_custom=MiXeD
+E         spelling_language=en-US
+E         
+E         --- value_case-04 args=['-b', '0.8', '{root}/a.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         indent_size=tab
+E         tab_width=X4
+E         got rc=1 stderr='Required version is greater than the current version.\n'
+E         
+E         --- value_case-05 args=['{root}/a.txt', '{root}/a.md'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/value_case-05/a.txt]
+E         max_line_length=Off
+E         [/srv/qc/value_case-05/a.md]
+E         max_line_length=OFF
+E         charset=utf-8-bom
+E         got rc=0 stderr=''
+E         [/srv/qc/value_case-05/a.txt]
+E         max_line_length=off
+E         [/srv/qc/value_case-05/a.md]
+E         max_line_length=off
+E         charset=utf-8-bom
+E         
+E       assert not ["--- value_case-01 args=['{root}/a.txt'] stdin=None\nexpected rc=0 stderr=''\nindent_style=space\nend_of_line=crlf\nc.../qc/value_case-05/a.txt]\nmax_line_length=off\n[/srv/qc/value_case-05/a.md]\nmax_line_length=off\ncharset=utf-8-bom\n"]
+
+/tests/test_outputs.py:97: AssertionError
+_____________________________ test_property_order ______________________________
+
+quire = '/tmp/quire-verify/quire'
+
+    def test_property_order(quire):
+        """Output order when properties are overridden or derived."""
+>       _check_group(quire, "property_order")
+
+/tests/test_outputs.py:147: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/quire-verify/quire', group = 'property_order'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']!r}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err!r}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 6 of 6 cases differ:
+E         --- property_order-01 args=['{root}/f.txt', '{root}/f.md'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/property_order-01/f.txt]
+E         a=x
+E         b=2
+E         c=3
+E         [/srv/qc/property_order-01/f.md]
+E         a=1
+E         b=2
+E         c=3
+E         got rc=0 stderr=''
+E         [/srv/qc/property_order-01/f.txt]
+E         b=2
+E         c=3
+E         a=x
+E         [/srv/qc/property_order-01/f.md]
+E         a=1
+E         b=2
+E         c=3
+E         
+E         --- property_order-02 args=['{root}/f.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         z=3
+E         y=2
+E         got rc=0 stderr=''
+E         y=2
+E         z=3
+E         
+E         --- property_order-03 args=['{root}/s/f'] stdin=None
+E         expected rc=0 stderr=''
+E         charset=latin1
+E         indent_size=2
+E         end_of_line=lf
+E         tab_width=2
+E         got rc=0 stderr=''
+E         indent_size=2
+E         end_of_line=lf
+E         charset=latin1
+E         tab_width=2
+E         
+E         --- property_order-04 args=['{root}/f'] stdin=None
+E         expected rc=0 stderr=''
+E         indent_style=tab
+E         indent_size=4
+E         tab_width=4
+E         got rc=0 stderr=''
+E         indent_style=tab
+E         indent_size=tab
+E         tab_width=4
+E         
+E         --- property_order-05 args=['{root}/f.go'] stdin=None
+E         expected rc=0 stderr=''
+E         tab_width=8
+E         indent_style=tab
+E         indent_size=8
+E         got rc=0 stderr=''
+E         tab_width=8
+E         indent_style=tab
+E         
+E         --- property_order-06 args=['{root}/p/f.c'] stdin=None
+E         expected rc=0 stderr=''
+E         b=3
+E         a=2
+E         got rc=0 stderr=''
+E         a=2
+E         b=3
+E         
+E       assert not ["--- property_order-01 args=['{root}/f.txt', '{root}/f.md'] stdin=None\nexpected rc=0 stderr=''\n[/srv/qc/property_or...property_order-06 args=['{root}/p/f.c'] stdin=None\nexpected rc=0 stderr=''\nb=3\na=2\ngot rc=0 stderr=''\na=2\nb=3\n"]
+
+/tests/test_outputs.py:97: AssertionError
+=========================== short test summary info ============================
+FAILED ../tests/test_outputs.py::test_section_anchoring - AssertionError: 6 o...
+FAILED ../tests/test_outputs.py::test_tab_indentation - AssertionError: 9 of ...
+FAILED ../tests/test_outputs.py::test_bracketed_directories - AssertionError:...
+FAILED ../tests/test_outputs.py::test_stdin_paths - AssertionError: 5 of 7 ca...
+FAILED ../tests/test_outputs.py::test_globstar_segments - AssertionError: 5 o...
+FAILED ../tests/test_outputs.py::test_negated_classes - AssertionError: 6 of ...
+FAILED ../tests/test_outputs.py::test_inline_comments - AssertionError: 2 of ...
+FAILED ../tests/test_outputs.py::test_root_declarations - AssertionError: 2 o...
+FAILED ../tests/test_outputs.py::test_value_case - AssertionError: 5 of 5 cas...
+FAILED ../tests/test_outputs.py::test_property_order - AssertionError: 6 of 6...
+============================== 10 failed in 7.91s ==============================

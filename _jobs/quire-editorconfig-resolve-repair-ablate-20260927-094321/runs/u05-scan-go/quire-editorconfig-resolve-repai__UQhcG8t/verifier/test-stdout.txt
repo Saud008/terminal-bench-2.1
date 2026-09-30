@@ -1,0 +1,76 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 10 items
+
+../tests/test_outputs.py ......F...                                      [100%]
+
+=================================== FAILURES ===================================
+_____________________________ test_inline_comments _____________________________
+
+quire = '/tmp/quire-verify/quire'
+
+    def test_inline_comments(quire):
+        """Comment, header and property line syntax, limits and syntax errors."""
+>       _check_group(quire, "inline_comments")
+
+/tests/test_outputs.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/quire-verify/quire', group = 'inline_comments'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']!r}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err!r}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 2 of 8 cases differ:
+E         --- inline_comments-01 args=['{root}/a.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         color=#ff0000
+E         quote=a
+E         sep=a;b
+E         sep2=a
+E         lead=;x
+E         tabbed=x
+E         got rc=0 stderr=''
+E         color=
+E         quote=a
+E         sep=a
+E         sep2=a
+E         lead=
+E         tabbed=x
+E         
+E         --- inline_comments-03 args=['{root}/a.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         url=http://example.test/#frag
+E         list=a;b;c
+E         path=C:\x
+E         got rc=0 stderr=''
+E         url=http://example.test/
+E         list=a
+E         path=C:\x
+E         
+E       assert not ["--- inline_comments-01 args=['{root}/a.txt'] stdin=None\nexpected rc=0 stderr=''\ncolor=#ff0000\nquote=a\nsep=a;b\ns...http://example.test/#frag\nlist=a;b;c\npath=C:\\x\ngot rc=0 stderr=''\nurl=http://example.test/\nlist=a\npath=C:\\x\n"]
+
+/tests/test_outputs.py:97: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_section_anchoring
+PASSED ../tests/test_outputs.py::test_tab_indentation
+PASSED ../tests/test_outputs.py::test_bracketed_directories
+PASSED ../tests/test_outputs.py::test_stdin_paths
+PASSED ../tests/test_outputs.py::test_globstar_segments
+PASSED ../tests/test_outputs.py::test_negated_classes
+PASSED ../tests/test_outputs.py::test_root_declarations
+PASSED ../tests/test_outputs.py::test_value_case
+PASSED ../tests/test_outputs.py::test_property_order
+FAILED ../tests/test_outputs.py::test_inline_comments - AssertionError: 2 of ...
+========================= 1 failed, 9 passed in 9.18s ==========================

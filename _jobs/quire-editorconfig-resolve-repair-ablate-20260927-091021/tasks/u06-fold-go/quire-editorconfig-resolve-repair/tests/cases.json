@@ -1,0 +1,964 @@
+{
+ "generator": "editorconfig 0.12.6 (Debian bookworm package 0.12.6-0.1), LC_ALL=C, case root /srv/qc/<id>",
+ "groups": {
+  "section_anchoring": [
+   {
+    "id": "section_anchoring-01",
+    "files": {
+     ".editorconfig": "root = true\n\n[*.sh]\nindent_style = space\n\n[scripts/*.sh]\nindent_size = 4\n\n[/Makefile]\nindent_style = tab\n\n[docs/**]\nmax_line_length = 100\n"
+    },
+    "args": [
+     "{root}/scripts/build.sh",
+     "{root}/tools/scripts/build.sh",
+     "{root}/Makefile",
+     "{root}/sub/Makefile",
+     "{root}/docs/a/b.md",
+     "{root}/x/docs/a.md"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/section_anchoring-01/scripts/build.sh]\nindent_style=space\nindent_size=4\ntab_width=4\n[/srv/qc/section_anchoring-01/tools/scripts/build.sh]\nindent_style=space\n[/srv/qc/section_anchoring-01/Makefile]\nindent_style=tab\nindent_size=tab\n[/srv/qc/section_anchoring-01/sub/Makefile]\n[/srv/qc/section_anchoring-01/docs/a/b.md]\nmax_line_length=100\n[/srv/qc/section_anchoring-01/x/docs/a.md]\n",
+    "stderr": ""
+   },
+   {
+    "id": "section_anchoring-02",
+    "files": {
+     ".editorconfig": "root = true\n[*]\ncharset = utf-8\n",
+     "web/.editorconfig": "[src/*.ts]\nindent_size = 2\n[*.ts]\nquote_type = single\n"
+    },
+    "args": [
+     "{root}/web/src/app.ts",
+     "{root}/web/lib/src/app.ts",
+     "{root}/src/app.ts",
+     "{root}/web/app.ts"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/section_anchoring-02/web/src/app.ts]\ncharset=utf-8\nindent_size=2\nquote_type=single\ntab_width=2\n[/srv/qc/section_anchoring-02/web/lib/src/app.ts]\ncharset=utf-8\nquote_type=single\n[/srv/qc/section_anchoring-02/src/app.ts]\ncharset=utf-8\n[/srv/qc/section_anchoring-02/web/app.ts]\ncharset=utf-8\nquote_type=single\n",
+    "stderr": ""
+   },
+   {
+    "id": "section_anchoring-03",
+    "files": {
+     ".editorconfig": "root = true\n[{src,test}/*.c]\nindent_size = 8\n[{src,test}.c]\nm = flat\n"
+    },
+    "args": [
+     "{root}/src/a.c",
+     "{root}/lib/src/a.c",
+     "{root}/test/b.c",
+     "{root}/src.c",
+     "{root}/x/test.c"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/section_anchoring-03/src/a.c]\nindent_size=8\ntab_width=8\n[/srv/qc/section_anchoring-03/lib/src/a.c]\n[/srv/qc/section_anchoring-03/test/b.c]\nindent_size=8\ntab_width=8\n[/srv/qc/section_anchoring-03/src.c]\nm=flat\n[/srv/qc/section_anchoring-03/x/test.c]\nm=flat\n",
+    "stderr": ""
+   },
+   {
+    "id": "section_anchoring-04",
+    "files": {
+     ".editorconfig": "root = true\n[v{1..3}/*.md]\nm = versioned\n[api/v{1..3}/**]\nn = api\n"
+    },
+    "args": [
+     "{root}/v2/readme.md",
+     "{root}/old/v2/readme.md",
+     "{root}/v4/readme.md",
+     "{root}/api/v1/users/list.json",
+     "{root}/x/api/v1/a"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/section_anchoring-04/v2/readme.md]\nm=versioned\n[/srv/qc/section_anchoring-04/old/v2/readme.md]\n[/srv/qc/section_anchoring-04/v4/readme.md]\n[/srv/qc/section_anchoring-04/api/v1/users/list.json]\nn=api\n[/srv/qc/section_anchoring-04/x/api/v1/a]\n",
+    "stderr": ""
+   },
+   {
+    "id": "section_anchoring-05",
+    "files": {
+     ".editorconfig": "root = true\n[a/b/c.txt]\nm = exact\n[b/c.txt]\nn = tail\n[c.txt]\no = name\n"
+    },
+    "args": [
+     "{root}/a/b/c.txt",
+     "{root}/z/a/b/c.txt",
+     "{root}/b/c.txt",
+     "{root}/c.txt"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/section_anchoring-05/a/b/c.txt]\nm=exact\no=name\n[/srv/qc/section_anchoring-05/z/a/b/c.txt]\no=name\n[/srv/qc/section_anchoring-05/b/c.txt]\nn=tail\no=name\n[/srv/qc/section_anchoring-05/c.txt]\no=name\n",
+    "stderr": ""
+   },
+   {
+    "id": "section_anchoring-06",
+    "files": {
+     "proj/.editorconfig": "root = true\n[/lib/*.rb]\nm = top\n[lib/*.rb]\nn = rel\n[*.rb]\no = any\n"
+    },
+    "args": [
+     "{root}/proj/lib/a.rb",
+     "{root}/proj/app/lib/a.rb",
+     "{root}/proj/a.rb"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/section_anchoring-06/proj/lib/a.rb]\nm=top\nn=rel\no=any\n[/srv/qc/section_anchoring-06/proj/app/lib/a.rb]\no=any\n[/srv/qc/section_anchoring-06/proj/a.rb]\no=any\n",
+    "stderr": ""
+   }
+  ],
+  "tab_indentation": [
+   {
+    "id": "tab_indentation-01",
+    "files": {
+     ".editorconfig": "root = true\n[*]\nindent_style = tab\n"
+    },
+    "args": [
+     "{root}/a.go"
+    ],
+    "rc": 0,
+    "stdout": "indent_style=tab\nindent_size=tab\n",
+    "stderr": ""
+   },
+   {
+    "id": "tab_indentation-02",
+    "files": {
+     ".editorconfig": "root = true\n[*]\nindent_style = tab\n[*.go]\ntab_width = 8\n"
+    },
+    "args": [
+     "{root}/a.go",
+     "{root}/a.txt"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/tab_indentation-02/a.go]\nindent_style=tab\ntab_width=8\nindent_size=8\n[/srv/qc/tab_indentation-02/a.txt]\nindent_style=tab\nindent_size=tab\n",
+    "stderr": ""
+   },
+   {
+    "id": "tab_indentation-03",
+    "files": {
+     ".editorconfig": "root = true\n[*]\nindent_size = tab\n[*.py]\ntab_width = 4\n[*.md]\nindent_size = 3\n"
+    },
+    "args": [
+     "{root}/a.py",
+     "{root}/a.c",
+     "{root}/a.md"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/tab_indentation-03/a.py]\nindent_size=4\ntab_width=4\n[/srv/qc/tab_indentation-03/a.c]\nindent_size=tab\n[/srv/qc/tab_indentation-03/a.md]\nindent_size=3\ntab_width=3\n",
+    "stderr": ""
+   },
+   {
+    "id": "tab_indentation-04",
+    "files": {
+     ".editorconfig": "root = true\n[*]\nindent_style = Tab\nindent_size = 2\n[*.mk]\nindent_size = TAB\n"
+    },
+    "args": [
+     "{root}/a.txt",
+     "{root}/rules.mk"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/tab_indentation-04/a.txt]\nindent_style=tab\nindent_size=2\ntab_width=2\n[/srv/qc/tab_indentation-04/rules.mk]\nindent_style=tab\nindent_size=tab\n",
+    "stderr": ""
+   },
+   {
+    "id": "tab_indentation-05",
+    "files": {
+     ".editorconfig": "root = true\n[*]\nindent_style = tab\n"
+    },
+    "args": [
+     "-b",
+     "0.8",
+     "{root}/a.go"
+    ],
+    "rc": 0,
+    "stdout": "indent_style=tab\n",
+    "stderr": ""
+   },
+   {
+    "id": "tab_indentation-06",
+    "files": {
+     ".editorconfig": "root = true\n[*]\nindent_size = tab\n"
+    },
+    "args": [
+     "-b",
+     "0.8.4",
+     "{root}/a.go",
+     "{root}/b.go"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/tab_indentation-06/a.go]\nindent_size=tab\ntab_width=tab\n[/srv/qc/tab_indentation-06/b.go]\nindent_size=tab\ntab_width=tab\n",
+    "stderr": ""
+   },
+   {
+    "id": "tab_indentation-07",
+    "files": {
+     ".editorconfig": "root = true\n[*]\nindent_size = tab\ntab_width = 6\n"
+    },
+    "args": [
+     "-b",
+     "0.9",
+     "{root}/a.go"
+    ],
+    "rc": 0,
+    "stdout": "indent_size=6\ntab_width=6\n",
+    "stderr": ""
+   },
+   {
+    "id": "tab_indentation-08",
+    "files": {
+     ".editorconfig": "root = true\n[*]\nindent_style = tab\n"
+    },
+    "args": [
+     "-b",
+     "0.12.6",
+     "{root}/a.go"
+    ],
+    "rc": 0,
+    "stdout": "indent_style=tab\nindent_size=tab\n",
+    "stderr": ""
+   },
+   {
+    "id": "tab_indentation-09",
+    "files": {
+     ".editorconfig": "root = true\n[*]\nindent_style = tab\n"
+    },
+    "args": [
+     "-b",
+     "0.13",
+     "{root}/a.go",
+     "{root}/b.go"
+    ],
+    "rc": 1,
+    "stdout": "[/srv/qc/tab_indentation-09/a.go]\n",
+    "stderr": "Required version is greater than the current version.\n"
+   },
+   {
+    "id": "tab_indentation-10",
+    "files": {
+     ".editorconfig": "root = true\n[*]\nindent_style = tab\n"
+    },
+    "args": [
+     "-b",
+     "1",
+     "{root}/a.go"
+    ],
+    "rc": 1,
+    "stdout": "",
+    "stderr": "Required version is greater than the current version.\n"
+   },
+   {
+    "id": "tab_indentation-11",
+    "files": {
+     ".editorconfig": "root = true\n[*]\nindent_style = tab\nindent_size = tab\n"
+    },
+    "args": [
+     "-b",
+     "0..10",
+     "{root}/a.go"
+    ],
+    "rc": 0,
+    "stdout": "indent_style=tab\nindent_size=tab\n",
+    "stderr": ""
+   },
+   {
+    "id": "tab_indentation-12",
+    "files": {
+     ".editorconfig": "root = true\n[*]\nindent_style = tab\n"
+    },
+    "args": [
+     "-b",
+     "0.9.0.1",
+     "{root}/a.go"
+    ],
+    "rc": 1,
+    "stdout": "",
+    "stderr": "Invalid version number: 0.9.0.1\n"
+   }
+  ],
+  "bracketed_directories": [
+   {
+    "id": "bracketed_directories-01",
+    "files": {
+     "[wip] shop/.editorconfig": "root = true\n[*]\nindent_style = space\n[*.tsx]\nindent_size = 2\n[components/*.tsx]\nm = component\n"
+    },
+    "args": [
+     "{root}/[wip] shop/app.tsx",
+     "{root}/[wip] shop/components/Button.tsx"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/bracketed_directories-01/[wip] shop/app.tsx]\nindent_style=space\nindent_size=2\ntab_width=2\n[/srv/qc/bracketed_directories-01/[wip] shop/components/Button.tsx]\nindent_style=space\nindent_size=2\nm=component\ntab_width=2\n",
+    "stderr": ""
+   },
+   {
+    "id": "bracketed_directories-02",
+    "files": {
+     "site[2024]/.editorconfig": "root = true\n[*]\nindent_style = space\n[*.tsx]\nindent_size = 2\n[components/*.tsx]\nm = component\n"
+    },
+    "args": [
+     "{root}/site[2024]/index.tsx",
+     "{root}/site[2024]/components/Nav.tsx"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/bracketed_directories-02/site[2024]/index.tsx]\nindent_style=space\nindent_size=2\ntab_width=2\n[/srv/qc/bracketed_directories-02/site[2024]/components/Nav.tsx]\nindent_style=space\nindent_size=2\nm=component\ntab_width=2\n",
+    "stderr": ""
+   },
+   {
+    "id": "bracketed_directories-03",
+    "files": {
+     "a[!x]b/.editorconfig": "root = true\n[*]\nindent_style = space\n[*.tsx]\nindent_size = 2\n[components/*.tsx]\nm = component\n",
+     "a[!x]b/sub/.editorconfig": "[*.tsx]\nquote_type = double\n"
+    },
+    "args": [
+     "{root}/a[!x]b/sub/page.tsx",
+     "{root}/a[!x]b/page.tsx"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/bracketed_directories-03/a[!x]b/sub/page.tsx]\nindent_style=space\nindent_size=2\nquote_type=double\ntab_width=2\n[/srv/qc/bracketed_directories-03/a[!x]b/page.tsx]\nindent_style=space\nindent_size=2\ntab_width=2\n",
+    "stderr": ""
+   },
+   {
+    "id": "bracketed_directories-04",
+    "files": {
+     "r[0-9]/.editorconfig": "root = true\n[*]\nindent_style = space\n[*.tsx]\nindent_size = 2\n[components/*.tsx]\nm = component\n"
+    },
+    "args": [
+     "{root}/r[0-9]/x.tsx",
+     "{root}/r5/x.tsx"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/bracketed_directories-04/r[0-9]/x.tsx]\nindent_style=space\nindent_size=2\ntab_width=2\n[/srv/qc/bracketed_directories-04/r5/x.tsx]\n",
+    "stderr": ""
+   },
+   {
+    "id": "bracketed_directories-05",
+    "files": {
+     "why?/.editorconfig": "root = true\n[*]\nindent_style = space\n[*.tsx]\nindent_size = 2\n[components/*.tsx]\nm = component\n",
+     "star*dir/.editorconfig": "root = true\n[*]\nindent_style = space\n[*.tsx]\nindent_size = 2\n[components/*.tsx]\nm = component\n",
+     "alt{1,2}/.editorconfig": "root = true\n[*]\nindent_style = space\n[*.tsx]\nindent_size = 2\n[components/*.tsx]\nm = component\n",
+     "a-b/.editorconfig": "root = true\n[*]\nindent_style = space\n[*.tsx]\nindent_size = 2\n[components/*.tsx]\nm = component\n"
+    },
+    "args": [
+     "{root}/why?/x.tsx",
+     "{root}/star*dir/components/y.tsx",
+     "{root}/alt{1,2}/z.tsx",
+     "{root}/a-b/w.tsx"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/bracketed_directories-05/why?/x.tsx]\nindent_style=space\nindent_size=2\ntab_width=2\n[/srv/qc/bracketed_directories-05/star*dir/components/y.tsx]\nindent_style=space\nindent_size=2\nm=component\ntab_width=2\n[/srv/qc/bracketed_directories-05/alt{1,2}/z.tsx]\nindent_style=space\nindent_size=2\ntab_width=2\n[/srv/qc/bracketed_directories-05/a-b/w.tsx]\nindent_style=space\nindent_size=2\ntab_width=2\n",
+    "stderr": ""
+   },
+   {
+    "id": "bracketed_directories-06",
+    "files": {
+     "[x]/.editorconfig": "root = true\n[*.md]\ntrim_trailing_whitespace = false\n",
+     "[x]/a/.editorconfig": "[*]\ncharset = latin1\n"
+    },
+    "args": [
+     "{root}/[x]/a/b/readme.md"
+    ],
+    "rc": 0,
+    "stdout": "trim_trailing_whitespace=false\ncharset=latin1\n",
+    "stderr": ""
+   }
+  ],
+  "stdin_paths": [
+   {
+    "id": "stdin_paths-01",
+    "files": {
+     ".editorconfig": "root = true\n[*]\nindent_style = space\n[*.py]\nindent_size = 4\n[Makefile]\nindent_style = tab\n"
+    },
+    "args": [
+     "-"
+    ],
+    "stdin": "{root}/app.py\n",
+    "rc": 0,
+    "stdout": "[/srv/qc/stdin_paths-01/app.py]\nindent_style=space\nindent_size=4\ntab_width=4\n",
+    "stderr": ""
+   },
+   {
+    "id": "stdin_paths-02",
+    "files": {
+     ".editorconfig": "root = true\n[*]\nindent_style = space\n[*.py]\nindent_size = 4\n[Makefile]\nindent_style = tab\n"
+    },
+    "args": [
+     "-"
+    ],
+    "stdin": "  {root}/app.py  \n\n\t\n{root}/Makefile\n{root}/notes.txt",
+    "rc": 0,
+    "stdout": "[/srv/qc/stdin_paths-02/app.py]\nindent_style=space\nindent_size=4\ntab_width=4\n[/srv/qc/stdin_paths-02/Makefile]\nindent_style=tab\nindent_size=tab\n[/srv/qc/stdin_paths-02/notes.txt]\nindent_style=space\n",
+    "stderr": ""
+   },
+   {
+    "id": "stdin_paths-03",
+    "files": {
+     ".editorconfig": "root = true\n[*]\nindent_style = space\n[*.py]\nindent_size = 4\n[Makefile]\nindent_style = tab\n"
+    },
+    "args": [
+     "{root}/app.py",
+     "-",
+     "{root}/Makefile"
+    ],
+    "stdin": "{root}/b.txt\n{root}/c.py\n",
+    "rc": 0,
+    "stdout": "[/srv/qc/stdin_paths-03/app.py]\nindent_style=space\nindent_size=4\ntab_width=4\n[/srv/qc/stdin_paths-03/b.txt]\nindent_style=space\n[/srv/qc/stdin_paths-03/c.py]\nindent_style=space\nindent_size=4\ntab_width=4\n[/srv/qc/stdin_paths-03/Makefile]\nindent_style=tab\nindent_size=tab\n",
+    "stderr": ""
+   },
+   {
+    "id": "stdin_paths-04",
+    "files": {
+     ".editorconfig": "root = true\n[*]\nindent_style = space\n[*.py]\nindent_size = 4\n[Makefile]\nindent_style = tab\n"
+    },
+    "args": [
+     "-",
+     "-"
+    ],
+    "stdin": "{root}/app.py\n",
+    "rc": 0,
+    "stdout": "[/srv/qc/stdin_paths-04/app.py]\nindent_style=space\nindent_size=4\ntab_width=4\n",
+    "stderr": ""
+   },
+   {
+    "id": "stdin_paths-05",
+    "files": {
+     ".editorconfig": "root = true\n[*]\nindent_style = space\n[*.py]\nindent_size = 4\n[Makefile]\nindent_style = tab\n"
+    },
+    "args": [
+     "-"
+    ],
+    "stdin": "",
+    "rc": 0,
+    "stdout": "",
+    "stderr": ""
+   },
+   {
+    "id": "stdin_paths-06",
+    "files": {
+     ".editorconfig": "root = true\n[*]\nindent_style = space\n[*.py]\nindent_size = 4\n[Makefile]\nindent_style = tab\n"
+    },
+    "args": [
+     "-"
+    ],
+    "stdin": "{root}/app.py\nrelative/app.py\n{root}/Makefile\n",
+    "rc": 1,
+    "stdout": "[/srv/qc/stdin_paths-06/app.py]\nindent_style=space\nindent_size=4\ntab_width=4\n[relative/app.py]\n",
+    "stderr": "Input file must be a full path name.\n"
+   },
+   {
+    "id": "stdin_paths-07",
+    "files": {
+     ".editorconfig": "root = true\n[*]\nindent_style = space\n[*.py]\nindent_size = 4\n[Makefile]\nindent_style = tab\n"
+    },
+    "args": [
+     "-b",
+     "0.8",
+     "-"
+    ],
+    "stdin": "{root}/Makefile\n",
+    "rc": 0,
+    "stdout": "[/srv/qc/stdin_paths-07/Makefile]\nindent_style=tab\n",
+    "stderr": ""
+   }
+  ],
+  "globstar_segments": [
+   {
+    "id": "globstar_segments-01",
+    "files": {
+     ".editorconfig": "root = true\n[lib/**/*.js]\nindent_size = 2\n[**.min.js]\nm = min\n"
+    },
+    "args": [
+     "{root}/lib/a.js",
+     "{root}/lib/x/a.js",
+     "{root}/lib/x/y/a.min.js",
+     "{root}/src/lib/a.js"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/globstar_segments-01/lib/a.js]\nindent_size=2\ntab_width=2\n[/srv/qc/globstar_segments-01/lib/x/a.js]\nindent_size=2\ntab_width=2\n[/srv/qc/globstar_segments-01/lib/x/y/a.min.js]\nindent_size=2\nm=min\ntab_width=2\n[/srv/qc/globstar_segments-01/src/lib/a.js]\n",
+    "stderr": ""
+   },
+   {
+    "id": "globstar_segments-02",
+    "files": {
+     ".editorconfig": "root = true\n[a/**/b]\nm = 1\n[/a/**/b/**/c]\nn = 2\n"
+    },
+    "args": [
+     "{root}/a/b",
+     "{root}/a/x/b",
+     "{root}/a/x/y/b",
+     "{root}/a/b/c",
+     "{root}/a/x/b/y/c",
+     "{root}/z/a/b",
+     "{root}/ab"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/globstar_segments-02/a/b]\nm=1\n[/srv/qc/globstar_segments-02/a/x/b]\nm=1\n[/srv/qc/globstar_segments-02/a/x/y/b]\nm=1\n[/srv/qc/globstar_segments-02/a/b/c]\nn=2\n[/srv/qc/globstar_segments-02/a/x/b/y/c]\nn=2\n[/srv/qc/globstar_segments-02/z/a/b]\n[/srv/qc/globstar_segments-02/ab]\n",
+    "stderr": ""
+   },
+   {
+    "id": "globstar_segments-03",
+    "files": {
+     ".editorconfig": "root = true\n[**/node_modules/**]\nm = vendored\n[{src,tests}/**/*.py]\nn = py\n"
+    },
+    "args": [
+     "{root}/node_modules/x/index.js",
+     "{root}/a/node_modules/b.js",
+     "{root}/src/a.py",
+     "{root}/tests/unit/b.py",
+     "{root}/docs/src/a.py"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/globstar_segments-03/node_modules/x/index.js]\nm=vendored\n[/srv/qc/globstar_segments-03/a/node_modules/b.js]\nm=vendored\n[/srv/qc/globstar_segments-03/src/a.py]\nn=py\n[/srv/qc/globstar_segments-03/tests/unit/b.py]\nn=py\n[/srv/qc/globstar_segments-03/docs/src/a.py]\n",
+    "stderr": ""
+   },
+   {
+    "id": "globstar_segments-04",
+    "files": {
+     "pkg/.editorconfig": "root = true\n[/**/fixtures/*.json]\nm = fixture\n[**/*.json]\nn = json\n"
+    },
+    "args": [
+     "{root}/pkg/fixtures/a.json",
+     "{root}/pkg/x/fixtures/a.json",
+     "{root}/pkg/a.json"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/globstar_segments-04/pkg/fixtures/a.json]\nm=fixture\nn=json\n[/srv/qc/globstar_segments-04/pkg/x/fixtures/a.json]\nm=fixture\nn=json\n[/srv/qc/globstar_segments-04/pkg/a.json]\nn=json\n",
+    "stderr": ""
+   },
+   {
+    "id": "globstar_segments-05",
+    "files": {
+     ".editorconfig": "root = true\n[docs/**/v{1..9}/*.md]\nm = doc\n[**/test_?.go]\nn = t\n"
+    },
+    "args": [
+     "{root}/docs/v2/a.md",
+     "{root}/docs/api/v10/a.md",
+     "{root}/docs/api/old/v3/b.md",
+     "{root}/test_a.go",
+     "{root}/x/test_ab.go"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/globstar_segments-05/docs/v2/a.md]\n[/srv/qc/globstar_segments-05/docs/api/v10/a.md]\n[/srv/qc/globstar_segments-05/docs/api/old/v3/b.md]\n[/srv/qc/globstar_segments-05/test_a.go]\nn=t\n[/srv/qc/globstar_segments-05/x/test_ab.go]\n",
+    "stderr": ""
+   }
+  ],
+  "negated_classes": [
+   {
+    "id": "negated_classes-01",
+    "files": {
+     ".editorconfig": "root = true\n[[!.]*]\nm = visible\n[*]\nn = all\n"
+    },
+    "args": [
+     "{root}/readme.md",
+     "{root}/.gitignore",
+     "{root}/sub/.env",
+     "{root}/sub/x"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/negated_classes-01/readme.md]\nm=visible\nn=all\n[/srv/qc/negated_classes-01/.gitignore]\nn=all\n[/srv/qc/negated_classes-01/sub/.env]\nn=all\n[/srv/qc/negated_classes-01/sub/x]\nm=visible\nn=all\n",
+    "stderr": ""
+   },
+   {
+    "id": "negated_classes-02",
+    "files": {
+     ".editorconfig": "root = true\n[*.[!o]]\nm = source\n[*.[ch]]\nn = c\n"
+    },
+    "args": [
+     "{root}/a.c",
+     "{root}/a.o",
+     "{root}/a.h",
+     "{root}/a.cc"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/negated_classes-02/a.c]\nm=source\nn=c\n[/srv/qc/negated_classes-02/a.o]\n[/srv/qc/negated_classes-02/a.h]\nm=source\nn=c\n[/srv/qc/negated_classes-02/a.cc]\n",
+    "stderr": ""
+   },
+   {
+    "id": "negated_classes-03",
+    "files": {
+     ".editorconfig": "root = true\n[file[!0-9].txt]\nm = named\n[file[0-9].txt]\nn = numbered\n"
+    },
+    "args": [
+     "{root}/file1.txt",
+     "{root}/filea.txt",
+     "{root}/file!.txt",
+     "{root}/file.txt"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/negated_classes-03/file1.txt]\nn=numbered\n[/srv/qc/negated_classes-03/filea.txt]\nm=named\n[/srv/qc/negated_classes-03/file!.txt]\nm=named\n[/srv/qc/negated_classes-03/file.txt]\n",
+    "stderr": ""
+   },
+   {
+    "id": "negated_classes-04",
+    "files": {
+     ".editorconfig": "root = true\n[[^_]*.go]\nm = caret\n[[!_]*.go]\nn = bang\n"
+    },
+    "args": [
+     "{root}/main.go",
+     "{root}/_gen.go",
+     "{root}/^x.go"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/negated_classes-04/main.go]\nn=bang\n[/srv/qc/negated_classes-04/_gen.go]\nm=caret\n[/srv/qc/negated_classes-04/^x.go]\nm=caret\nn=bang\n",
+    "stderr": ""
+   },
+   {
+    "id": "negated_classes-05",
+    "files": {
+     ".editorconfig": "root = true\n[[!/]x]\nm = slash\n[[!a-c]y]\nn = range\n"
+    },
+    "args": [
+     "{root}/[!/]x",
+     "{root}/ax",
+     "{root}/ay",
+     "{root}/dy",
+     "{root}/-y"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/negated_classes-05/[!/]x]\nm=slash\n[/srv/qc/negated_classes-05/ax]\n[/srv/qc/negated_classes-05/ay]\n[/srv/qc/negated_classes-05/dy]\nn=range\n[/srv/qc/negated_classes-05/-y]\nn=range\n",
+    "stderr": ""
+   },
+   {
+    "id": "negated_classes-06",
+    "files": {
+     ".editorconfig": "root = true\n[{[!t]*,test_main}.py]\nm = alt\n"
+    },
+    "args": [
+     "{root}/app.py",
+     "{root}/tool.py",
+     "{root}/test_main.py",
+     "{root}/test_other.py"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/negated_classes-06/app.py]\nm=alt\n[/srv/qc/negated_classes-06/tool.py]\n[/srv/qc/negated_classes-06/test_main.py]\nm=alt\n[/srv/qc/negated_classes-06/test_other.py]\n",
+    "stderr": ""
+   }
+  ],
+  "inline_comments": [
+   {
+    "id": "inline_comments-01",
+    "files": {
+     ".editorconfig": "root = true\n[*]\ncolor = #ff0000\nquote = a #b\nsep = a;b\nsep2 = a ;b\nlead = ;x\ntabbed = x\t#t\n"
+    },
+    "args": [
+     "{root}/a.txt"
+    ],
+    "rc": 0,
+    "stdout": "color=#ff0000\nquote=a\nsep=a;b\nsep2=a\nlead=;x\ntabbed=x\n",
+    "stderr": ""
+   },
+   {
+    "id": "inline_comments-02",
+    "files": {
+     ".editorconfig": "root = true\n; c\n# c\n  ; indented\n[*] ; all files\na = 1\n[*.txt]#x\nb = 2\n[*.txt] #y\nc = 3\n"
+    },
+    "args": [
+     "{root}/a.txt"
+    ],
+    "rc": 0,
+    "stdout": "a=1\nb=2\nc=3\n",
+    "stderr": ""
+   },
+   {
+    "id": "inline_comments-03",
+    "files": {
+     ".editorconfig": "root = true\n[*]\nurl = http://example.test/#frag\nlist = a;b;c\npath = C:\\x ; windows\n"
+    },
+    "args": [
+     "{root}/a.txt"
+    ],
+    "rc": 0,
+    "stdout": "url=http://example.test/#frag\nlist=a;b;c\npath=C:\\x\n",
+    "stderr": ""
+   },
+   {
+    "id": "inline_comments-04",
+    "files": {
+     ".editorconfig": "root = true\n[*]\na: 1\nb:2\nc = x:y\nd: x=y\ne:f=g\n"
+    },
+    "args": [
+     "{root}/a.txt"
+    ],
+    "rc": 0,
+    "stdout": "a=1\nb=2\nc=x:y\nd: x=y\ne:f=g\n",
+    "stderr": ""
+   },
+   {
+    "id": "inline_comments-05",
+    "files": {
+     ".editorconfig": "root = true\n[*.txt ;x]\nq = 1\n[*.txt;x]\nr = 2\n[a#b]\ns = 3\n"
+    },
+    "args": [
+     "{root}/a.txt",
+     "{root}/a.txt;x",
+     "{root}/a#b"
+    ],
+    "rc": 1,
+    "stdout": "[/srv/qc/inline_comments-05/a.txt]\n",
+    "stderr": "Failed to parse file.:2 \"/srv/qc/inline_comments-05/.editorconfig\"\n"
+   },
+   {
+    "id": "inline_comments-06",
+    "files": {
+     ".editorconfig": "root = true\n[*]\na = 1\njunk line\nb = 2\n[oops\n"
+    },
+    "args": [
+     "{root}/a.txt"
+    ],
+    "rc": 1,
+    "stdout": "",
+    "stderr": "Failed to parse file.:4 \"/srv/qc/inline_comments-06/.editorconfig\"\n"
+   },
+   {
+    "id": "inline_comments-07",
+    "files": {
+     ".editorconfig": "﻿root = true\r\n[*]\r\nk = v ; note\r\nw = two words \r\n"
+    },
+    "args": [
+     "{root}/a.txt"
+    ],
+    "rc": 0,
+    "stdout": "k=v\nw=two words\n",
+    "stderr": ""
+   },
+   {
+    "id": "inline_comments-08",
+    "files": {
+     ".editorconfig": "root = true\n[*]\na = 1\n[xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx]\nb = 2\nmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm = 3\nv = yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy\nz = ok\n"
+    },
+    "args": [
+     "{root}/a.txt"
+    ],
+    "rc": 0,
+    "stdout": "a=1\nb=2\nz=ok\n",
+    "stderr": ""
+   }
+  ],
+  "root_declarations": [
+   {
+    "id": "root_declarations-01",
+    "files": {
+     ".editorconfig": "[*]\na = outer\nb = outer\n",
+     "p/.editorconfig": "root = true\n[*]\na = inner\n"
+    },
+    "args": [
+     "{root}/p/x"
+    ],
+    "rc": 0,
+    "stdout": "a=inner\n",
+    "stderr": ""
+   },
+   {
+    "id": "root_declarations-02",
+    "files": {
+     ".editorconfig": "root=true\n[*]\na = outer\n",
+     "p/.editorconfig": "ROOT = True\n[*]\nb = inner\n"
+    },
+    "args": [
+     "{root}/p/x"
+    ],
+    "rc": 0,
+    "stdout": "b=inner\n",
+    "stderr": ""
+   },
+   {
+    "id": "root_declarations-03",
+    "files": {
+     ".editorconfig": "root=true\n[*]\na = outer\n",
+     "p/.editorconfig": "[*]\nroot = true\nb = inner\n"
+    },
+    "args": [
+     "{root}/p/x"
+    ],
+    "rc": 0,
+    "stdout": "a=outer\nroot=true\nb=inner\n",
+    "stderr": ""
+   },
+   {
+    "id": "root_declarations-04",
+    "files": {
+     ".editorconfig": "root=true\n[*]\na = outer\n",
+     "p/.editorconfig": "root = yes\n[*]\nb = inner\n"
+    },
+    "args": [
+     "{root}/p/x"
+    ],
+    "rc": 0,
+    "stdout": "a=outer\nb=inner\n",
+    "stderr": ""
+   },
+   {
+    "id": "root_declarations-05",
+    "files": {
+     ".editorconfig": "root=true\n[*]\na = outer\n",
+     "p/.editorconfig": "[*.md]\nroot = true\n[*]\nb = 1\n"
+    },
+    "args": [
+     "{root}/p/x.md",
+     "{root}/p/x.txt"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/root_declarations-05/p/x.md]\na=outer\nroot=true\nb=1\n[/srv/qc/root_declarations-05/p/x.txt]\na=outer\nb=1\n",
+    "stderr": ""
+   },
+   {
+    "id": "root_declarations-06",
+    "files": {
+     "p/.editorconfig": "root=true\n[*]\na = 1\n",
+     ".editorconfig": "root=true\n[*]\nb = 2\n",
+     "p/q/.editorconfig": "[*]\na = 3\nc = 4\n"
+    },
+    "args": [
+     "{root}/p/q/x",
+     "{root}/x"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/root_declarations-06/p/q/x]\na=3\nc=4\n[/srv/qc/root_declarations-06/x]\nb=2\n",
+    "stderr": ""
+   },
+   {
+    "id": "root_declarations-07",
+    "files": {
+     ".editorconfig": "root = true\nindent_style = tab\n[*]\nindent_size = 2\n",
+     "s/.editorconfig": "[*]\nroot = false\n"
+    },
+    "args": [
+     "{root}/s/x"
+    ],
+    "rc": 0,
+    "stdout": "indent_size=2\nroot=false\ntab_width=2\n",
+    "stderr": ""
+   }
+  ],
+  "value_case": [
+   {
+    "id": "value_case-01",
+    "files": {
+     ".editorconfig": "root=true\n[*]\nINDENT_STYLE = Space\nEnd_Of_Line = CRLF\ncharset = UTF-8\ninsert_final_newline = TRUE\ntrim_trailing_whitespace = False\nmax_line_length = OFF\n"
+    },
+    "args": [
+     "{root}/a.txt"
+    ],
+    "rc": 0,
+    "stdout": "indent_style=space\nend_of_line=crlf\ncharset=utf-8\ninsert_final_newline=true\ntrim_trailing_whitespace=false\nmax_line_length=OFF\n",
+    "stderr": ""
+   },
+   {
+    "id": "value_case-02",
+    "files": {
+     ".editorconfig": "root=true\n[*]\nindent_style = TAB\ntab_width = Eight\nquote_type = Double\n"
+    },
+    "args": [
+     "{root}/a.txt"
+    ],
+    "rc": 0,
+    "stdout": "indent_style=tab\ntab_width=Eight\nquote_type=Double\nindent_size=eight\n",
+    "stderr": ""
+   },
+   {
+    "id": "value_case-03",
+    "files": {
+     ".editorconfig": "root=true\n[*]\nindent_size = 4\ntab_width = AUTO\nX_Custom = MiXeD\nspelling_language = en-US\n"
+    },
+    "args": [
+     "{root}/a.txt"
+    ],
+    "rc": 0,
+    "stdout": "indent_size=4\ntab_width=AUTO\nx_custom=MiXeD\nspelling_language=en-US\n",
+    "stderr": ""
+   },
+   {
+    "id": "value_case-04",
+    "files": {
+     ".editorconfig": "root=true\n[*]\nindent_size = Tab\ntab_width = X4\n"
+    },
+    "args": [
+     "-b",
+     "0.8",
+     "{root}/a.txt"
+    ],
+    "rc": 0,
+    "stdout": "indent_size=tab\ntab_width=X4\n",
+    "stderr": ""
+   },
+   {
+    "id": "value_case-05",
+    "files": {
+     ".editorconfig": "root=true\n[*]\nMax_Line_Length = Off\n[*.md]\nmax_line_length = OFF\ncharset = UTF-8-BOM\n"
+    },
+    "args": [
+     "{root}/a.txt",
+     "{root}/a.md"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/value_case-05/a.txt]\nmax_line_length=Off\n[/srv/qc/value_case-05/a.md]\nmax_line_length=OFF\ncharset=utf-8-bom\n",
+    "stderr": ""
+   }
+  ],
+  "property_order": [
+   {
+    "id": "property_order-01",
+    "files": {
+     ".editorconfig": "root=true\n[*]\na = 1\nb = 2\nc = 3\n[*.txt]\na = x\n"
+    },
+    "args": [
+     "{root}/f.txt",
+     "{root}/f.md"
+    ],
+    "rc": 0,
+    "stdout": "[/srv/qc/property_order-01/f.txt]\na=x\nb=2\nc=3\n[/srv/qc/property_order-01/f.md]\na=1\nb=2\nc=3\n",
+    "stderr": ""
+   },
+   {
+    "id": "property_order-02",
+    "files": {
+     ".editorconfig": "root=true\n[*.txt]\nz = 1\n[*]\ny = 2\nz = 3\n"
+    },
+    "args": [
+     "{root}/f.txt"
+    ],
+    "rc": 0,
+    "stdout": "z=3\ny=2\n",
+    "stderr": ""
+   },
+   {
+    "id": "property_order-03",
+    "files": {
+     ".editorconfig": "root=true\n[*]\ncharset = utf-8\nindent_size = 2\n",
+     "s/.editorconfig": "[*]\nend_of_line = lf\ncharset = latin1\n"
+    },
+    "args": [
+     "{root}/s/f"
+    ],
+    "rc": 0,
+    "stdout": "charset=latin1\nindent_size=2\nend_of_line=lf\ntab_width=2\n",
+    "stderr": ""
+   },
+   {
+    "id": "property_order-04",
+    "files": {
+     ".editorconfig": "root=true\n[*]\nindent_style = tab\nindent_size = tab\ntab_width = 4\n"
+    },
+    "args": [
+     "{root}/f"
+    ],
+    "rc": 0,
+    "stdout": "indent_style=tab\nindent_size=4\ntab_width=4\n",
+    "stderr": ""
+   },
+   {
+    "id": "property_order-05",
+    "files": {
+     ".editorconfig": "root=true\n[*]\ntab_width = 8\nindent_style = tab\n[*.go]\nIndent_Style = tab\n"
+    },
+    "args": [
+     "{root}/f.go"
+    ],
+    "rc": 0,
+    "stdout": "tab_width=8\nindent_style=tab\nindent_size=8\n",
+    "stderr": ""
+   },
+   {
+    "id": "property_order-06",
+    "files": {
+     ".editorconfig": "[*]\na = old\n",
+     "p/.editorconfig": "root=true\n[*]\nb = 1\na = 2\n[*.c]\nb = 3\n"
+    },
+    "args": [
+     "{root}/p/f.c"
+    ],
+    "rc": 0,
+    "stdout": "b=3\na=2\n",
+    "stderr": ""
+   }
+  ]
+ }
+}

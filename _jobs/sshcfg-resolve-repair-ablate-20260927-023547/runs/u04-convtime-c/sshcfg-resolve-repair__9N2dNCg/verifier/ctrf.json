@@ -1,0 +1,122 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 11,
+            "passed": 10,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790456923.1555324,
+            "stop": 1790456924.4266734
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_host_line_patterns",
+                "status": "passed",
+                "duration": 1.0712435900004493,
+                "start": 1790456923.1715307,
+                "stop": 1790456924.2440832,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_match_criteria",
+                "status": "passed",
+                "duration": 0.011798411000199849,
+                "start": 1790456924.244357,
+                "stop": 1790456924.257572,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_final_pass",
+                "status": "passed",
+                "duration": 0.010536503000366793,
+                "start": 1790456924.2579215,
+                "stop": 1790456924.2696714,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_include_scoping",
+                "status": "passed",
+                "duration": 0.019776205000198388,
+                "start": 1790456924.269939,
+                "stop": 1790456924.2907646,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_include_paths",
+                "status": "passed",
+                "duration": 0.010798159999922063,
+                "start": 1790456924.2910256,
+                "stop": 1790456924.3027987,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_precedence_and_lists",
+                "status": "passed",
+                "duration": 0.018338282000513573,
+                "start": 1790456924.3030264,
+                "stop": 1790456924.3229628,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_sendenv_setenv",
+                "status": "passed",
+                "duration": 0.01527176299941857,
+                "start": 1790456924.3236525,
+                "stop": 1790456924.3405125,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_time_values",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.014017370999681589,
+                "start": 1790456924.3409526,
+                "stop": 1790456924.372392,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "hopcfg = '/tmp/hopcfg-verify-gvsmw3z_/hopcfg'\n\n    def test_time_values(hopcfg):\n        \"\"\"Time values with compound units, none, ControlPersist forms and keep-alive defaults and aliases.\"\"\"\n>       _check(hopcfg, \"time_values\")\n\n/tests/test_outputs.py:155: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/hopcfg-verify-gvsmw3z_/hopcfg', groups = ('time_values',)\nfailures = [\"[time_values] args=['-F', '/root/.ssh/config', 'slow'] expected rc=0 got rc=0\\n--- ssh -G\\n+++ hopcfg\\n@@ -20,3 +20,... hopcfg\\n@@ -9,3 +9,3 @@\\n serveralivecountmax 4\\n-serveraliveinterval 3661\\n+serveraliveinterval 1\\n loglevel INFO\\n\"]\ntotal = 9, group = 'time_values'\n\n    def _check(binary, *groups):\n        failures = []\n        total = 0\n        for group in groups:\n            for case in GROUPS[group]:\n                total += 1\n                rc, out = _run(binary, case)\n                if (rc, out) == (case[\"rc\"], case[\"stdout\"]):\n                    continue\n                diff = \"\".join(difflib.unified_diff(\n                    case[\"stdout\"].splitlines(True), out.splitlines(True),\n                    \"ssh -G\", \"hopcfg\", n=1))\n                failures.append(f\"[{group}] args={case['args']} expected rc={case['rc']} \"\n                                f\"got rc={rc}\\n{diff}\")\n        assert total > 0\n>       assert not failures, (f\"{len(failures)}/{total} cases differ from ssh -G:\\n\"\n                              + \"\\n\".join(failures[:4]))\nE       AssertionError: 2/9 cases differ from ssh -G:\nE         [time_values] args=['-F', '/root/.ssh/config', 'slow'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -20,3 +20,3 @@\nE          forwardagent no\nE         -connecttimeout 90\nE         -controlpersist 3900\nE         +connecttimeout 30\nE         +controlpersist 300\nE         \nE         [time_values] args=['-F', '/root/.ssh/config', 'short'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -9,3 +9,3 @@\nE          serveralivecountmax 4\nE         -serveraliveinterval 3661\nE         +serveraliveinterval 1\nE          loglevel INFO\nE         \nE       assert not [\"[time_values] args=['-F', '/root/.ssh/config', 'slow'] expected rc=0 got rc=0\\n--- ssh -G\\n+++ hopcfg\\n@@ -20,3 +20,... hopcfg\\n@@ -9,3 +9,3 @@\\n serveralivecountmax 4\\n-serveraliveinterval 3661\\n+serveraliveinterval 1\\n loglevel INFO\\n\"]\n\n/tests/test_outputs.py:114: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_proxy_settings",
+                "status": "passed",
+                "duration": 0.012614815999768325,
+                "start": 1790456924.3726637,
+                "stop": 1790456924.3866465,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_token_expansion",
+                "status": "passed",
+                "duration": 0.007855553999888798,
+                "start": 1790456924.3868847,
+                "stop": 1790456924.3956466,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_syntax_and_rejections",
+                "status": "passed",
+                "duration": 0.028461810999942827,
+                "start": 1790456924.395843,
+                "stop": 1790456924.4257767,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

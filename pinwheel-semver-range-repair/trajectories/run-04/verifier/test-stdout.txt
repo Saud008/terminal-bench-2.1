@@ -1,0 +1,61 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 15 items
+
+../tests/test_outputs.py ........F......                                 [100%]
+
+=================================== FAILURES ===================================
+_________________________ test_invalid_input_rejected __________________________
+
+pinwheel = '/tmp/pinwheel-verify/pinwheel'
+
+    def test_invalid_input_rejected(pinwheel):
+        """Strictly invalid versions and ranges exit 2 with the documented message; valid ones are accepted."""
+        inv = CASES["invalid"]
+        failures = []
+        for v in inv["versions"]:
+            for args in (["satisfies", v, "*"], ["compare", v, "1.0.0"]):
+                rc, out, err = _run(pinwheel, *args)
+                if rc != 2 or out or not err.startswith(f'pinwheel: invalid version "{v}"'):
+                    failures.append(f"{args}: expected exit 2 invalid version, got rc={rc} stdout={out!r} stderr={err.strip()!r}")
+        for r in inv["ranges"]:
+            rc, out, err = _run(pinwheel, "satisfies", "1.0.0", r)
+            if rc != 2 or out or not err.startswith(f'pinwheel: invalid range "{r}"'):
+                failures.append(f"satisfies 1.0.0 {r!r}: expected exit 2 invalid range, got rc={rc} stdout={out!r} stderr={err.strip()!r}")
+        for v in inv["valid_versions"]:
+            rc, out, err = _run(pinwheel, "satisfies", v, "*")
+            if rc != 0 or out not in ("true\n", "false\n"):
+                failures.append(f"satisfies {v!r} '*': valid version rejected, rc={rc} stderr={err.strip()!r}")
+        for r in inv["valid_ranges"]:
+            rc, out, err = _run(pinwheel, "satisfies", "1.0.0", r)
+            if rc != 0 or out not in ("true\n", "false\n"):
+                failures.append(f"satisfies 1.0.0 {r!r}: valid range rejected, rc={rc} stderr={err.strip()!r}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: ['satisfies', '1.2.3-01', '*']: expected exit 2 invalid version, got rc=0 stdout='false\n' stderr=''
+E         ['compare', '1.2.3-01', '1.0.0']: expected exit 2 invalid version, got rc=0 stdout='1\n' stderr=''
+E         ['satisfies', '1.2.3-beta.007', '*']: expected exit 2 invalid version, got rc=0 stdout='false\n' stderr=''
+E         ['compare', '1.2.3-beta.007', '1.0.0']: expected exit 2 invalid version, got rc=0 stdout='1\n' stderr=''
+E         satisfies 1.0.0 '>=1.2.3-01': expected exit 2 invalid range, got rc=0 stdout='false\n' stderr=''
+E       assert not ["['satisfies', '1.2.3-01', '*']: expected exit 2 invalid version, got rc=0 stdout='false\\n' stderr=''", "['compare',...'1\\n' stderr=''", "satisfies 1.0.0 '>=1.2.3-01': expected exit 2 invalid range, got rc=0 stdout='false\\n' stderr=''"]
+
+/tests/test_outputs.py:172: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_caret_ranges
+PASSED ../tests/test_outputs.py::test_tilde_ranges
+PASSED ../tests/test_outputs.py::test_partial_version_comparators
+PASSED ../tests/test_outputs.py::test_hyphen_ranges
+PASSED ../tests/test_outputs.py::test_prerelease_admission
+PASSED ../tests/test_outputs.py::test_union_and_operator_spacing
+PASSED ../tests/test_outputs.py::test_build_metadata_ignored
+PASSED ../tests/test_outputs.py::test_prerelease_precedence
+PASSED ../tests/test_outputs.py::test_lock_drops_packages_no_longer_required
+PASSED ../tests/test_outputs.py::test_lock_applies_overrides
+PASSED ../tests/test_outputs.py::test_lock_yanked_releases
+PASSED ../tests/test_outputs.py::test_lock_prefer_lowest_and_ties
+PASSED ../tests/test_outputs.py::test_lock_mixed_range_forms
+PASSED ../tests/test_outputs.py::test_resolution_failures
+FAILED ../tests/test_outputs.py::test_invalid_input_rejected - AssertionError...
+======================== 1 failed, 14 passed in 10.49s =========================

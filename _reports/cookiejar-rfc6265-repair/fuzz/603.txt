@@ -1,0 +1,17 @@
+at 1767225600
+set https://x.co.uk/ A=0
+set https://10.1.2.3/a/ sid=1; Path=/ab
+get http://10.1.2.3/x/y?q=/z
+get http://example.com/a
+get http://api.example.com/a/b/c
+get https://example.org/
+dump
+at 1767225601
+get http://www.example.com
+set https://localhost/a/b sid=5; Path=/; Expires=01-Jan-70 00:00:00; HttpOnly
+set https://x.co.uk/a A=9; Secure; Expires=01-Jan-69 00:00:00
+set https://10.1.2.3/ab sid=8; Domain=EXAMPLE.com; Path=/ab; HttpOnly; Max-Age=60
+set http://github.io/x/y?q=/z sid=6; HttpOnly; Secure; Expires=01-Jan-50 00:00:00
+dump
+get http://10.1.2.3/a
+dump

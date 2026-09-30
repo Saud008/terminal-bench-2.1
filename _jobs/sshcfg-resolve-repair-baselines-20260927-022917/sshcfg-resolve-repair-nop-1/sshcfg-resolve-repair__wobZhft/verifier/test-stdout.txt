@@ -1,0 +1,734 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 11 items
+
+../tests/test_outputs.py FFFFFFFFFFF                                     [100%]
+
+=================================== FAILURES ===================================
+___________________________ test_host_line_patterns ____________________________
+
+hopcfg = '/tmp/hopcfg-verify-bmknjdjd/hopcfg'
+
+    def test_host_line_patterns(hopcfg):
+        """Host lines: wildcards, case-sensitive raw-name matching, negated patterns anywhere on the line."""
+>       _check(hopcfg, "host_patterns")
+
+/tests/test_outputs.py:120: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/hopcfg-verify-bmknjdjd/hopcfg', groups = ('host_patterns',)
+failures = ["[host_patterns] args=['-F', '/root/.ssh/config', 'staging-db'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -1,5 +1,5 @@\n host staging-db\n-user root\n+user app\n hostname staging-db\n-port 22\n+port 2500\n batchmode no\n"]
+total = 21, group = 'host_patterns'
+
+    def _check(binary, *groups):
+        failures = []
+        total = 0
+        for group in groups:
+            for case in GROUPS[group]:
+                total += 1
+                rc, out = _run(binary, case)
+                if (rc, out) == (case["rc"], case["stdout"]):
+                    continue
+                diff = "".join(difflib.unified_diff(
+                    case["stdout"].splitlines(True), out.splitlines(True),
+                    "ssh -G", "hopcfg", n=1))
+                failures.append(f"[{group}] args={case['args']} expected rc={case['rc']} "
+                                f"got rc={rc}\n{diff}")
+        assert total > 0
+>       assert not failures, (f"{len(failures)}/{total} cases differ from ssh -G:\n"
+                              + "\n".join(failures[:4]))
+E       AssertionError: 1/21 cases differ from ssh -G:
+E         [host_patterns] args=['-F', '/root/.ssh/config', 'staging-db'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -1,5 +1,5 @@
+E          host staging-db
+E         -user root
+E         +user app
+E          hostname staging-db
+E         -port 22
+E         +port 2500
+E          batchmode no
+E         
+E       assert not ["[host_patterns] args=['-F', '/root/.ssh/config', 'staging-db'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -1,5 +1,5 @@\n host staging-db\n-user root\n+user app\n hostname staging-db\n-port 22\n+port 2500\n batchmode no\n"]
+
+/tests/test_outputs.py:114: AssertionError
+_____________________________ test_match_criteria ______________________________
+
+hopcfg = '/tmp/hopcfg-verify-bmknjdjd/hopcfg'
+
+    def test_match_criteria(hopcfg):
+        """Match host/originalhost/user/localuser/canonical/all criteria, incl. HostName-based host matching."""
+>       _check(hopcfg, "match_criteria")
+
+/tests/test_outputs.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/hopcfg-verify-bmknjdjd/hopcfg', groups = ('match_criteria',)
+failures = ["[match_criteria] args=['-F', '/root/.ssh/config', 'db'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -1,3 +1,3...ile ~/.ssh/id_xmss\n+identityfile ~/.ssh/id_dsa\n userknownhostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2\n"]
+total = 9, group = 'match_criteria'
+
+    def _check(binary, *groups):
+        failures = []
+        total = 0
+        for group in groups:
+            for case in GROUPS[group]:
+                total += 1
+                rc, out = _run(binary, case)
+                if (rc, out) == (case["rc"], case["stdout"]):
+                    continue
+                diff = "".join(difflib.unified_diff(
+                    case["stdout"].splitlines(True), out.splitlines(True),
+                    "ssh -G", "hopcfg", n=1))
+                failures.append(f"[{group}] args={case['args']} expected rc={case['rc']} "
+                                f"got rc={rc}\n{diff}")
+        assert total > 0
+>       assert not failures, (f"{len(failures)}/{total} cases differ from ssh -G:\n"
+                              + "\n".join(failures[:4]))
+E       AssertionError: 3/9 cases differ from ssh -G:
+E         [match_criteria] args=['-F', '/root/.ssh/config', 'db'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -1,3 +1,3 @@
+E          host db
+E         -user dc2ops
+E         +user root
+E          hostname db01.dc2.example.org
+E         @@ -8,9 +8,9 @@
+E          stricthostkeychecking ask
+E         -serveralivecountmax 9
+E         +serveralivecountmax 3
+E          serveraliveinterval 0
+E          loglevel INFO
+E         -identityfile ~/.ssh/dc2-not-cache
+E         +identityfile ~/.ssh/by-alias
+E          userknownhostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2
+E          forwardagent no
+E         -connecttimeout 7
+E         +connecttimeout none
+E          controlpersist no
+E         
+E         [match_criteria] args=['-F', '/root/.ssh/config', 'cache'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -1,3 +1,3 @@
+E          host cache
+E         -user dc2ops
+E         +user root
+E          hostname cache.dc2.example.org
+E         @@ -8,3 +8,3 @@
+E          stricthostkeychecking ask
+E         -serveralivecountmax 9
+E         +serveralivecountmax 3
+E          serveraliveinterval 0
+E         @@ -20,3 +20,3 @@
+E          forwardagent no
+E         -connecttimeout 7
+E         +connecttimeout none
+E          controlpersist no
+E         
+E         [match_criteria] args=['-F', '/root/.ssh/config', 'short'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -1,5 +1,5 @@
+E          host short
+E         -user viahost
+E         +user root
+E          hostname long.example.net
+E         -port 22
+E         +port 1111
+E          batchmode no
+E         @@ -11,3 +11,9 @@
+E          loglevel INFO
+E         -identityfile ~/.ssh/pass-one
+E         +identityfile ~/.ssh/id_rsa
+E         +identityfile ~/.ssh/id_ecdsa
+E         +identityfile ~/.ssh/id_ecdsa_sk
+E         +identityfile ~/.ssh/id_ed25519
+E         +identityfile ~/.ssh/id_ed25519_sk
+E         +identityfile ~/.ssh/id_xmss
+E         +identityfile ~/.ssh/id_dsa
+E          userknownhostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2
+E         
+E       assert not ["[match_criteria] args=['-F', '/root/.ssh/config', 'db'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -1,3 +1,3...ile ~/.ssh/id_xmss\n+identityfile ~/.ssh/id_dsa\n userknownhostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2\n"]
+
+/tests/test_outputs.py:114: AssertionError
+_______________________________ test_final_pass ________________________________
+
+hopcfg = '/tmp/hopcfg-verify-bmknjdjd/hopcfg'
+
+    def test_final_pass(hopcfg):
+        """Match final triggers a second pass that matches Host/Match against the resolved host name."""
+>       _check(hopcfg, "final_pass")
+
+/tests/test_outputs.py:130: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/hopcfg-verify-bmknjdjd/hopcfg', groups = ('final_pass',)
+failures = ["[final_pass] args=['-F', '/root/.ssh/config', 'WEB1'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -1,3 +1,3 @...ostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2\n-sendenv LC_*\n sendenv TZ\n-sendenv LC_*\n sendenv LC_ALL\n"]
+total = 7, group = 'final_pass'
+
+    def _check(binary, *groups):
+        failures = []
+        total = 0
+        for group in groups:
+            for case in GROUPS[group]:
+                total += 1
+                rc, out = _run(binary, case)
+                if (rc, out) == (case["rc"], case["stdout"]):
+                    continue
+                diff = "".join(difflib.unified_diff(
+                    case["stdout"].splitlines(True), out.splitlines(True),
+                    "ssh -G", "hopcfg", n=1))
+                failures.append(f"[{group}] args={case['args']} expected rc={case['rc']} "
+                                f"got rc={rc}\n{diff}")
+        assert total > 0
+>       assert not failures, (f"{len(failures)}/{total} cases differ from ssh -G:\n"
+                              + "\n".join(failures[:4]))
+E       AssertionError: 5/7 cases differ from ssh -G:
+E         [final_pass] args=['-F', '/root/.ssh/config', 'WEB1'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -1,3 +1,3 @@
+E          host WEB1
+E         -user alice
+E         +user root
+E          hostname web1
+E         @@ -14,3 +14,2 @@
+E          sendenv LANG
+E         -sendenv FOO_*
+E          sendenv LANG
+E         
+E         [final_pass] args=['-F', '/root/.ssh/config', 'app'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -1,3 +1,3 @@
+E          host app
+E         -user from-resolved
+E         +user root
+E          hostname app-01.int.example.com
+E         @@ -12,3 +12,2 @@
+E          localforward 5432 [db.int]:5432
+E         -identityfile ~/.ssh/resolved
+E          identityfile ~/.ssh/final
+E         
+E         [final_pass] args=['-F', '/root/.ssh/config', 'edge'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -1,3 +1,3 @@
+E          host edge
+E         -user by-address
+E         +user root
+E          hostname 10.20.30.40
+E         
+E         [final_pass] args=['-F', '/root/.ssh/config', 'EDGE'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -19,3 +19,2 @@
+E          userknownhostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2
+E         -setenv STAGE=one
+E          forwardagent no
+E         
+E       assert not ["[final_pass] args=['-F', '/root/.ssh/config', 'WEB1'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -1,3 +1,3 @...ostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2\n-sendenv LC_*\n sendenv TZ\n-sendenv LC_*\n sendenv LC_ALL\n"]
+
+/tests/test_outputs.py:114: AssertionError
+_____________________________ test_include_scoping _____________________________
+
+hopcfg = '/tmp/hopcfg-verify-bmknjdjd/hopcfg'
+
+    def test_include_scoping(hopcfg):
+        """Include inside Host/Match blocks, globbed file order and the active state around each included file."""
+>       _check(hopcfg, "include_scoping")
+
+/tests/test_outputs.py:135: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/hopcfg-verify-bmknjdjd/hopcfg', groups = ('include_scoping',)
+failures = ["[include_scoping] args=['-F', '/root/.ssh/config', 'solo'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -1,3 +...@@ -8,3 +8,3 @@\n stricthostkeychecking ask\n-serveralivecountmax 8\n+serveralivecountmax 3\n serveraliveinterval 0\n"]
+total = 13, group = 'include_scoping'
+
+    def _check(binary, *groups):
+        failures = []
+        total = 0
+        for group in groups:
+            for case in GROUPS[group]:
+                total += 1
+                rc, out = _run(binary, case)
+                if (rc, out) == (case["rc"], case["stdout"]):
+                    continue
+                diff = "".join(difflib.unified_diff(
+                    case["stdout"].splitlines(True), out.splitlines(True),
+                    "ssh -G", "hopcfg", n=1))
+                failures.append(f"[{group}] args={case['args']} expected rc={case['rc']} "
+                                f"got rc={rc}\n{diff}")
+        assert total > 0
+>       assert not failures, (f"{len(failures)}/{total} cases differ from ssh -G:\n"
+                              + "\n".join(failures[:4]))
+E       AssertionError: 3/13 cases differ from ssh -G:
+E         [include_scoping] args=['-F', '/root/.ssh/config', 'solo'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -1,3 +1,3 @@
+E          host solo
+E         -user stack-b
+E         +user root
+E          hostname solo
+E         @@ -8,3 +8,3 @@
+E          stricthostkeychecking ask
+E         -serveralivecountmax 8
+E         +serveralivecountmax 3
+E          serveraliveinterval 0
+E         
+E         [include_scoping] args=['-F', '/root/.ssh/config', 'pair-b'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -1,3 +1,3 @@
+E          host pair-b
+E         -user stack-b
+E         +user root
+E          hostname pair-b
+E         @@ -8,3 +8,3 @@
+E          stricthostkeychecking ask
+E         -serveralivecountmax 8
+E         +serveralivecountmax 3
+E          serveraliveinterval 0
+E         
+E         [include_scoping] args=['-F', '/root/.ssh/config', 'x'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -1,3 +1,3 @@
+E          host x
+E         -user stack-b
+E         +user root
+E          hostname x
+E         @@ -8,3 +8,3 @@
+E          stricthostkeychecking ask
+E         -serveralivecountmax 8
+E         +serveralivecountmax 3
+E          serveraliveinterval 0
+E         
+E       assert not ["[include_scoping] args=['-F', '/root/.ssh/config', 'solo'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -1,3 +...@@ -8,3 +8,3 @@\n stricthostkeychecking ask\n-serveralivecountmax 8\n+serveralivecountmax 3\n serveraliveinterval 0\n"]
+
+/tests/test_outputs.py:114: AssertionError
+______________________________ test_include_paths ______________________________
+
+hopcfg = '/tmp/hopcfg-verify-bmknjdjd/hopcfg'
+
+    def test_include_paths(hopcfg):
+        """Relative, absolute and ~ Include paths resolve to the same files ssh reads."""
+>       _check(hopcfg, "include_paths")
+
+/tests/test_outputs.py:140: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/hopcfg-verify-bmknjdjd/hopcfg', groups = ('include_paths',)
+failures = ["[include_paths] args=['-F', '/root/.ssh/nested/main.conf', 'x1'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ ...] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -1,3 +1,3 @@\n host y2\n-user from-b\n+user root\n hostname y2\n"]
+total = 6, group = 'include_paths'
+
+    def _check(binary, *groups):
+        failures = []
+        total = 0
+        for group in groups:
+            for case in GROUPS[group]:
+                total += 1
+                rc, out = _run(binary, case)
+                if (rc, out) == (case["rc"], case["stdout"]):
+                    continue
+                diff = "".join(difflib.unified_diff(
+                    case["stdout"].splitlines(True), out.splitlines(True),
+                    "ssh -G", "hopcfg", n=1))
+                failures.append(f"[{group}] args={case['args']} expected rc={case['rc']} "
+                                f"got rc={rc}\n{diff}")
+        assert total > 0
+>       assert not failures, (f"{len(failures)}/{total} cases differ from ssh -G:\n"
+                              + "\n".join(failures[:4]))
+E       AssertionError: 2/6 cases differ from ssh -G:
+E         [include_paths] args=['-F', '/root/.ssh/nested/main.conf', 'x1'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -1,3 +1,3 @@
+E          host x1
+E         -user from-a
+E         +user root
+E          hostname x1
+E         
+E         [include_paths] args=['-F', '/root/.ssh/nested/main.conf', 'y2'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -1,3 +1,3 @@
+E          host y2
+E         -user from-b
+E         +user root
+E          hostname y2
+E         
+E       assert not ["[include_paths] args=['-F', '/root/.ssh/nested/main.conf', 'x1'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ ...] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -1,3 +1,3 @@\n host y2\n-user from-b\n+user root\n hostname y2\n"]
+
+/tests/test_outputs.py:114: AssertionError
+__________________________ test_precedence_and_lists ___________________________
+
+hopcfg = '/tmp/hopcfg-verify-bmknjdjd/hopcfg'
+
+    def test_precedence_and_lists(hopcfg):
+        """First obtained value wins across -o/-l/-p/destination/config; list keywords accumulate and dedupe like ssh."""
+>       _check(hopcfg, "first_value_wins", "list_keywords")
+
+/tests/test_outputs.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/hopcfg-verify-bmknjdjd/hopcfg'
+groups = ('first_value_wins', 'list_keywords')
+failures = ["[first_value_wins] args=['-F', '/root/.ssh/config', '-o', 'LogLevel=QUIET', 'box'] expected rc=0 got rc=0\n--- ssh -...+ hopcfg\n@@ -10,3 +10,3 @@\n serveraliveinterval 0\n-loglevel SILENT\n+loglevel QUIET\n identityfile ~/.ssh/id_rsa\n"]
+total = 10, group = 'list_keywords'
+
+    def _check(binary, *groups):
+        failures = []
+        total = 0
+        for group in groups:
+            for case in GROUPS[group]:
+                total += 1
+                rc, out = _run(binary, case)
+                if (rc, out) == (case["rc"], case["stdout"]):
+                    continue
+                diff = "".join(difflib.unified_diff(
+                    case["stdout"].splitlines(True), out.splitlines(True),
+                    "ssh -G", "hopcfg", n=1))
+                failures.append(f"[{group}] args={case['args']} expected rc={case['rc']} "
+                                f"got rc={rc}\n{diff}")
+        assert total > 0
+>       assert not failures, (f"{len(failures)}/{total} cases differ from ssh -G:\n"
+                              + "\n".join(failures[:4]))
+E       AssertionError: 1/10 cases differ from ssh -G:
+E         [first_value_wins] args=['-F', '/root/.ssh/config', '-o', 'LogLevel=QUIET', 'box'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -10,3 +10,3 @@
+E          serveraliveinterval 0
+E         -loglevel SILENT
+E         +loglevel QUIET
+E          identityfile ~/.ssh/id_rsa
+E         
+E       assert not ["[first_value_wins] args=['-F', '/root/.ssh/config', '-o', 'LogLevel=QUIET', 'box'] expected rc=0 got rc=0\n--- ssh -...+ hopcfg\n@@ -10,3 +10,3 @@\n serveraliveinterval 0\n-loglevel SILENT\n+loglevel QUIET\n identityfile ~/.ssh/id_rsa\n"]
+
+/tests/test_outputs.py:114: AssertionError
+_____________________________ test_sendenv_setenv ______________________________
+
+hopcfg = '/tmp/hopcfg-verify-bmknjdjd/hopcfg'
+
+    def test_sendenv_setenv(hopcfg):
+        """SendEnv accumulation and -pattern removal, SetEnv first-line-wins semantics."""
+>       _check(hopcfg, "sendenv_setenv")
+
+/tests/test_outputs.py:150: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/hopcfg-verify-bmknjdjd/hopcfg', groups = ('sendenv_setenv',)
+failures = ["[sendenv_setenv] args=['-F', '/root/.ssh/config', 'dev1'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -20,2 +...ected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -21,2 +21,3 @@\n setenv REGION=eu\n+setenv LATE=1\n forwardagent no\n"]
+total = 7, group = 'sendenv_setenv'
+
+    def _check(binary, *groups):
+        failures = []
+        total = 0
+        for group in groups:
+            for case in GROUPS[group]:
+                total += 1
+                rc, out = _run(binary, case)
+                if (rc, out) == (case["rc"], case["stdout"]):
+                    continue
+                diff = "".join(difflib.unified_diff(
+                    case["stdout"].splitlines(True), out.splitlines(True),
+                    "ssh -G", "hopcfg", n=1))
+                failures.append(f"[{group}] args={case['args']} expected rc={case['rc']} "
+                                f"got rc={rc}\n{diff}")
+        assert total > 0
+>       assert not failures, (f"{len(failures)}/{total} cases differ from ssh -G:\n"
+                              + "\n".join(failures[:4]))
+E       AssertionError: 4/7 cases differ from ssh -G:
+E         [sendenv_setenv] args=['-F', '/root/.ssh/config', 'dev1'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -20,2 +20,5 @@
+E          sendenv LANG
+E         +sendenv LC_ALL
+E         +sendenv LC_CTYPE
+E         +sendenv LC_MESSAGES
+E          sendenv TERM
+E         
+E         [sendenv_setenv] args=['-F', '/root/.ssh/config', 'dev-noisy'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -20,2 +20,5 @@
+E          sendenv LANG
+E         +sendenv LC_ALL
+E         +sendenv LC_CTYPE
+E         +sendenv LC_MESSAGES
+E          sendenv TERM
+E         
+E         [sendenv_setenv] args=['-F', '/root/.ssh/config', 'api'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -21,2 +21,4 @@
+E          setenv TRACE=0
+E         +setenv REGION=eu
+E         +setenv LATE=1
+E          forwardagent no
+E         
+E         [sendenv_setenv] args=['-F', '/root/.ssh/config', 'other'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -21,2 +21,3 @@
+E          setenv REGION=eu
+E         +setenv LATE=1
+E          forwardagent no
+E         
+E       assert not ["[sendenv_setenv] args=['-F', '/root/.ssh/config', 'dev1'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -20,2 +...ected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -21,2 +21,3 @@\n setenv REGION=eu\n+setenv LATE=1\n forwardagent no\n"]
+
+/tests/test_outputs.py:114: AssertionError
+_______________________________ test_time_values _______________________________
+
+hopcfg = '/tmp/hopcfg-verify-bmknjdjd/hopcfg'
+
+    def test_time_values(hopcfg):
+        """Time values with compound units, none, ControlPersist forms and keep-alive defaults and aliases."""
+>       _check(hopcfg, "time_values")
+
+/tests/test_outputs.py:155: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/hopcfg-verify-bmknjdjd/hopcfg', groups = ('time_values',)
+failures = ["[time_values] args=['-F', '/root/.ssh/config', 'slow'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -20,3 +20,...+ hopcfg\n@@ -9,3 +9,3 @@\n serveralivecountmax 3\n-serveraliveinterval 300\n+serveraliveinterval 0\n loglevel INFO\n"]
+total = 9, group = 'time_values'
+
+    def _check(binary, *groups):
+        failures = []
+        total = 0
+        for group in groups:
+            for case in GROUPS[group]:
+                total += 1
+                rc, out = _run(binary, case)
+                if (rc, out) == (case["rc"], case["stdout"]):
+                    continue
+                diff = "".join(difflib.unified_diff(
+                    case["stdout"].splitlines(True), out.splitlines(True),
+                    "ssh -G", "hopcfg", n=1))
+                failures.append(f"[{group}] args={case['args']} expected rc={case['rc']} "
+                                f"got rc={rc}\n{diff}")
+        assert total > 0
+>       assert not failures, (f"{len(failures)}/{total} cases differ from ssh -G:\n"
+                              + "\n".join(failures[:4]))
+E       AssertionError: 3/9 cases differ from ssh -G:
+E         [time_values] args=['-F', '/root/.ssh/config', 'slow'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -20,3 +20,3 @@
+E          forwardagent no
+E         -connecttimeout 90
+E         -controlpersist 3900
+E         +connecttimeout 30
+E         +controlpersist 300
+E         
+E         [time_values] args=['-F', '/root/.ssh/config', 'short'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -9,3 +9,3 @@
+E          serveralivecountmax 4
+E         -serveraliveinterval 3661
+E         +serveraliveinterval 1
+E          loglevel INFO
+E         
+E         [time_values] args=['-F', '/root/.ssh/config', 'batch-job'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -9,3 +9,3 @@
+E          serveralivecountmax 3
+E         -serveraliveinterval 300
+E         +serveraliveinterval 0
+E          loglevel INFO
+E         
+E       assert not ["[time_values] args=['-F', '/root/.ssh/config', 'slow'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -20,3 +20,...+ hopcfg\n@@ -9,3 +9,3 @@\n serveralivecountmax 3\n-serveraliveinterval 300\n+serveraliveinterval 0\n loglevel INFO\n"]
+
+/tests/test_outputs.py:114: AssertionError
+_____________________________ test_proxy_settings ______________________________
+
+hopcfg = '/tmp/hopcfg-verify-bmknjdjd/hopcfg'
+
+    def test_proxy_settings(hopcfg):
+        """ProxyJump/ProxyCommand interplay, jump host formatting and jump host loop rejection."""
+>       _check(hopcfg, "proxy_settings")
+
+/tests/test_outputs.py:160: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/hopcfg-verify-bmknjdjd/hopcfg', groups = ('proxy_settings',)
+failures = ["[proxy_settings] args=['-F', '/root/.ssh/config', 'legacy'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -22,2...0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -22,2 +22,2 @@\n controlpersist no\n-proxycommand nc %h 22\n+proxyjump later\n"]
+total = 10, group = 'proxy_settings'
+
+    def _check(binary, *groups):
+        failures = []
+        total = 0
+        for group in groups:
+            for case in GROUPS[group]:
+                total += 1
+                rc, out = _run(binary, case)
+                if (rc, out) == (case["rc"], case["stdout"]):
+                    continue
+                diff = "".join(difflib.unified_diff(
+                    case["stdout"].splitlines(True), out.splitlines(True),
+                    "ssh -G", "hopcfg", n=1))
+                failures.append(f"[{group}] args={case['args']} expected rc={case['rc']} "
+                                f"got rc={rc}\n{diff}")
+        assert total > 0
+>       assert not failures, (f"{len(failures)}/{total} cases differ from ssh -G:\n"
+                              + "\n".join(failures[:4]))
+E       AssertionError: 2/10 cases differ from ssh -G:
+E         [proxy_settings] args=['-F', '/root/.ssh/config', 'legacy'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -22,2 +22,2 @@
+E          controlpersist no
+E         -proxycommand /usr/bin/nc -X connect -x proxy:3128 %h %p # corp proxy
+E         +proxyjump jump9
+E         
+E         [proxy_settings] args=['-F', '/root/.ssh/config', 'first-cmd'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -22,2 +22,2 @@
+E          controlpersist no
+E         -proxycommand nc %h 22
+E         +proxyjump later
+E         
+E       assert not ["[proxy_settings] args=['-F', '/root/.ssh/config', 'legacy'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -22,2...0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -22,2 +22,2 @@\n controlpersist no\n-proxycommand nc %h 22\n+proxyjump later\n"]
+
+/tests/test_outputs.py:114: AssertionError
+_____________________________ test_token_expansion _____________________________
+
+hopcfg = '/tmp/hopcfg-verify-bmknjdjd/hopcfg'
+
+    def test_token_expansion(hopcfg):
+        """HostName %h expansion and normalisation plus %-token, ${ENV} and ~ expansion in path keywords."""
+>       _check(hopcfg, "token_expansion")
+
+/tests/test_outputs.py:165: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/hopcfg-verify-bmknjdjd/hopcfg', groups = ('token_expansion',)
+failures = ["[token_expansion] args=['-F', '/root/.ssh/config', 'upper'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -19,3...eet_known_hosts\n+userknownhostsfile /root/.ssh/known_hosts.d/10.0.0.1 /etc/ssh/fleet_known_hosts\n forwardagent no\n"]
+total = 7, group = 'token_expansion'
+
+    def _check(binary, *groups):
+        failures = []
+        total = 0
+        for group in groups:
+            for case in GROUPS[group]:
+                total += 1
+                rc, out = _run(binary, case)
+                if (rc, out) == (case["rc"], case["stdout"]):
+                    continue
+                diff = "".join(difflib.unified_diff(
+                    case["stdout"].splitlines(True), out.splitlines(True),
+                    "ssh -G", "hopcfg", n=1))
+                failures.append(f"[{group}] args={case['args']} expected rc={case['rc']} "
+                                f"got rc={rc}\n{diff}")
+        assert total > 0
+>       assert not failures, (f"{len(failures)}/{total} cases differ from ssh -G:\n"
+                              + "\n".join(failures[:4]))
+E       AssertionError: 3/7 cases differ from ssh -G:
+E         [token_expansion] args=['-F', '/root/.ssh/config', 'upper'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -19,3 +19,3 @@
+E          identityfile ~/.ssh/id_dsa
+E         -userknownhostsfile /root/.ssh/known_hosts.d/upper /etc/ssh/fleet_known_hosts
+E         +userknownhostsfile /root/.ssh/known_hosts.d/db.example.com /etc/ssh/fleet_known_hosts
+E          forwardagent no
+E         
+E         [token_expansion] args=['-F', '/root/.ssh/config', 'v6lit'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -19,3 +19,3 @@
+E          identityfile ~/.ssh/id_dsa
+E         -userknownhostsfile /root/.ssh/known_hosts.d/v6lit /etc/ssh/fleet_known_hosts
+E         +userknownhostsfile /root/.ssh/known_hosts.d/fe80::1 /etc/ssh/fleet_known_hosts
+E          forwardagent no
+E         
+E         [token_expansion] args=['-F', '/root/.ssh/config', 'shortip'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -19,3 +19,3 @@
+E          identityfile ~/.ssh/id_dsa
+E         -userknownhostsfile /root/.ssh/known_hosts.d/shortip /etc/ssh/fleet_known_hosts
+E         +userknownhostsfile /root/.ssh/known_hosts.d/10.0.0.1 /etc/ssh/fleet_known_hosts
+E          forwardagent no
+E         
+E       assert not ["[token_expansion] args=['-F', '/root/.ssh/config', 'upper'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -19,3...eet_known_hosts\n+userknownhostsfile /root/.ssh/known_hosts.d/10.0.0.1 /etc/ssh/fleet_known_hosts\n forwardagent no\n"]
+
+/tests/test_outputs.py:114: AssertionError
+__________________________ test_syntax_and_rejections __________________________
+
+hopcfg = '/tmp/hopcfg-verify-bmknjdjd/hopcfg'
+
+    def test_syntax_and_rejections(hopcfg):
+        """Keyword/value spelling variants print like ssh, and invalid configs or destinations exit 255 with no output."""
+>       _check(hopcfg, "value_formats", "rejected_configs")
+
+/tests/test_outputs.py:170: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/hopcfg-verify-bmknjdjd/hopcfg'
+groups = ('value_formats', 'rejected_configs')
+failures = ["[value_formats] args=['-F', '/root/.ssh/config', 'fmt4'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -10,3 +1...+ hopcfg\n@@ -10,3 +10,3 @@\n serveraliveinterval 0\n-loglevel SILENT\n+loglevel QUIET\n identityfile ~/.ssh/id_rsa\n"]
+total = 26, group = 'rejected_configs'
+
+    def _check(binary, *groups):
+        failures = []
+        total = 0
+        for group in groups:
+            for case in GROUPS[group]:
+                total += 1
+                rc, out = _run(binary, case)
+                if (rc, out) == (case["rc"], case["stdout"]):
+                    continue
+                diff = "".join(difflib.unified_diff(
+                    case["stdout"].splitlines(True), out.splitlines(True),
+                    "ssh -G", "hopcfg", n=1))
+                failures.append(f"[{group}] args={case['args']} expected rc={case['rc']} "
+                                f"got rc={rc}\n{diff}")
+        assert total > 0
+>       assert not failures, (f"{len(failures)}/{total} cases differ from ssh -G:\n"
+                              + "\n".join(failures[:4]))
+E       AssertionError: 2/26 cases differ from ssh -G:
+E         [value_formats] args=['-F', '/root/.ssh/config', 'fmt4'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -10,3 +10,3 @@
+E          serveraliveinterval 0
+E         -loglevel SILENT
+E         +loglevel QUIET
+E          identityfile ~/.ssh/id_rsa
+E         
+E         [value_formats] args=['-F', '/root/.ssh/config', 'fmt5'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -10,3 +10,3 @@
+E          serveraliveinterval 0
+E         -loglevel SILENT
+E         +loglevel QUIET
+E          identityfile ~/.ssh/id_rsa
+E         
+E       assert not ["[value_formats] args=['-F', '/root/.ssh/config', 'fmt4'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -10,3 +1...+ hopcfg\n@@ -10,3 +10,3 @@\n serveraliveinterval 0\n-loglevel SILENT\n+loglevel QUIET\n identityfile ~/.ssh/id_rsa\n"]
+
+/tests/test_outputs.py:114: AssertionError
+=========================== short test summary info ============================
+FAILED ../tests/test_outputs.py::test_host_line_patterns - AssertionError: 1/...
+FAILED ../tests/test_outputs.py::test_match_criteria - AssertionError: 3/9 ca...
+FAILED ../tests/test_outputs.py::test_final_pass - AssertionError: 5/7 cases ...
+FAILED ../tests/test_outputs.py::test_include_scoping - AssertionError: 3/13 ...
+FAILED ../tests/test_outputs.py::test_include_paths - AssertionError: 2/6 cas...
+FAILED ../tests/test_outputs.py::test_precedence_and_lists - AssertionError: ...
+FAILED ../tests/test_outputs.py::test_sendenv_setenv - AssertionError: 4/7 ca...
+FAILED ../tests/test_outputs.py::test_time_values - AssertionError: 3/9 cases...
+FAILED ../tests/test_outputs.py::test_proxy_settings - AssertionError: 2/10 c...
+FAILED ../tests/test_outputs.py::test_token_expansion - AssertionError: 3/7 c...
+FAILED ../tests/test_outputs.py::test_syntax_and_rejections - AssertionError:...
+============================== 11 failed in 1.40s ==============================

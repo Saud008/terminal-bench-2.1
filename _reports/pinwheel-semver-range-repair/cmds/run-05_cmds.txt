@@ -1,0 +1,332 @@
+[step 2] find . -maxdepth 3 -type f | sort
+[step 2] cat go.mod && printf '\n--- ranges ---\n' && cat docs/ranges.md && printf '\n--- resolution ---\n' && cat docs/resolution.md && printf '\n--- lockfile ---\n' && cat docs/lockfile.md && printf '\n--- cli ---\n' && cat docs/cli.md
+[step 2] go test ./...
+[step 3] command -v go || find /usr/local /usr /opt -type f -name go 2>/dev/null | head
+[step 3] for f in internal/semver/*.go internal/semrange/*.go; do echo "===== $f ====="; sed -n '1,260p' "$f"; done
+[step 3] for f in internal/resolve/*.go internal/registry/*.go internal/manifest/*.go internal/lockfile/*.go internal/cli/*.go cmd/pinwheel/*.go; do echo "===== $f ====="; sed -n '1,300p' "$f"; done
+[step 3] for f in examples/*/pin.json registry/*.json docs/registry.md README.md; do echo "===== $f ====="; cat "$f"; done
+[step 4] echo '=== semver/version.go'; cat internal/semver/version.go; echo '=== semver/compare.go'; cat internal/semver/compare.go; echo '=== tests'; cat internal/semver/version_test.go
+[step 4] echo '=== range.go'; cat internal/semrange/range.go; echo '=== comparator.go'; cat internal/semrange/comparator.go; echo '=== partial.go'; cat internal/semrange/partial.go
+[step 4] for f in internal/semrange/caret.go internal/semrange/tilde.go internal/semrange/xrange.go internal/semrange/hyphen.go internal/semrange/range_test.go; do echo "=== $f"; cat "$f"; done
+[step 5] cat internal/semver/version.go
+[step 5] cat internal/semver/compare.go
+[step 6] nl -ba internal/semver/version.go | sed -n '1,90p'
+[step 6] nl -ba internal/semver/version.go | sed -n '91,180p'
+[step 6] nl -ba internal/semver/compare.go | sed -n '1,100p'
+[step 7] nl -ba internal/semver/version.go | sed -n '1,100p'
+[step 8] nl -ba internal/semver/version.go | sed -n '1,61p'
+[step 9] nl -ba internal/semver/version.go | sed -n '86,170p'
+[step 10] python3 - <<'PY'
+p='internal/semver/version.go'
+s=open(p).read().replace('body := strings.TrimPrefix(strings.TrimSpace(s), "v")','body := strings.TrimPrefix(s, "v")')
+open(p,'w').write(s)
+p='internal/semver/compare.go'
+s=open(p).read()
+s=s.replace('''\tfor i := 0; i < len(a) && i < len(b); i++ {
+\t\tif c := compareIdentifier(a[i], b[i]); c != 0 {
+\t\t\treturn c
+\t\t}
+\t}
+\treturn 0
+''','''\tfor i ...[+470 chars]
+[step 10] nl -ba internal/semrange/range.go | sed -n '1,120p'
+[step 11] nl -ba internal/semrange/range.go | sed -n '109,180p'
+[step 12] cat internal/semrange/partial.go
+[step 13] node -e 'console.log(require("semver").version || require("semver/package.json").version)' 2>/dev/null || true; which node npm 2>/dev/null || true
+[step 13] for f in caret.go tilde.go xrange.go hyphen.go comparator.go; do echo ===$f; cat internal/semrange/$f; done
+[step 14] python3 - <<'PY'
+p='internal/semrange/comparator.go'
+s=open(p).read().replace('return v.Equal(c.Version)', 'return d == 0')
+open(p,'w').write(s)
+p='internal/semrange/range.go'
+s=open(p).read().replace('strings.Split(strings.TrimSpace(s), " || ")', 'strings.Split(strings.TrimSpace(s), "||")')
+s=s.replace('if !c.Any && c.Version.IsPrerelease() {', 'if !c.Any && c.Version.IsPrerelease() && c.Version....[+73 chars]
+[step 15] cat > internal/semrange/caret.go <<'EOF'
+package semrange
+
+import "github.com/brightloom/pinwheel/internal/semver"
+
+// caret expands "^p" by allowing changes that do not modify the left-most
+// non-zero field supplied by p. Missing fields retain npm's wildcard bounds.
+func caret(p partial) []Comparator {
+	if p.fields == 0 {
+		return []Comparator{matchAll}
+	}
+	lo := p.version()
+	var hi semver.Versi...[+356 chars]
+[step 16] cat > internal/semrange/tilde.go <<'EOF'
+package semrange
+
+import "github.com/brightloom/pinwheel/internal/semver"
+
+// tilde expands "~p": patch-level changes when a minor is supplied, and
+// minor-level changes otherwise.
+func tilde(p partial) []Comparator {
+    switch p.fields {
+    case 0:
+        return []Comparator{matchAll}
+    case 1:
+        return between(semver.New(p.major, 0, 0), semver...[+254 chars]
+[step 17] cat > internal/semrange/xrange.go <<'EOF'
+package semrange
+
+import "github.com/brightloom/pinwheel/internal/semver"
+
+// xrange expands a plain or operator-prefixed partial: "1.2.3", "=1.2.3",
+// "1.x", ">1.2", "<=2", "*".
+func xrange(op string, p partial) []Comparator {
+    if p.fields == 3 {
+        return []Comparator{{Op: opFor(op), Version: p.version()}}
+    }
+    if p.fields == 0 {
+        if...[+781 chars]
+[step 18] cat > internal/semrange/hyphen.go <<'EOF'
+package semrange
+
+// hyphen expands "from - to". A full upper endpoint is inclusive; a partial
+// upper endpoint includes its entire wildcard span.
+func hyphen(from, to partial) []Comparator {
+    var set []Comparator
+    if from.fields > 0 {
+        set = append(set, Comparator{Op: OpGTE, Version: from.version()})
+    }
+    switch {
+    case to.fields == ...[+302 chars]
+[step 19] cat internal/resolve/constraints.go
+[step 20] nl -ba internal/resolve/constraints.go | sed -n '1,90p'
+[step 21] cat internal/resolve/candidates.go; echo '--- yanked'; cat internal/resolve/yanked.go
+[step 22] cat > internal/resolve/candidates.go <<'EOF'
+package resolve
+
+import (
+    "github.com/brightloom/pinwheel/internal/registry"
+    "github.com/brightloom/pinwheel/internal/semver"
+)
+
+// choose picks the release of pkg to lock under the given constraints.
+func choose(pkg *registry.Package, cons []Constraint, lowest bool) (*registry.Release, error) {
+    var best *registry.Release
+    for i := range ...[+3783 chars]
+[step 23] node - <<'JS'
+try { const s=require('semver'); console.log(require('semver/package.json').version); for (const r of ['1||2','vv1.2.3','==1.2.3','= 1.2.3','1.2.3 ||','||','1.2.3 - 2.3','>1.2','<=1.2']) console.log(JSON.stringify(r), s.validRange(r)); } catch(e) { console.log('NO_SEMVER',e.message) }
+JS
+[step 23] cat internal/registry/registry.go
+[step 24] node - <<'JS'
+try { const s=require('semver'); console.log(require('semver/package.json').version); for (const r of ['1||2','vv1.2.3','==1.2.3','= 1.2.3','1.2.3 ||','||','1.2.3 - 2.3','>1.2','<=1.2']) console.log(JSON.stringify(r), s.validRange(r)); } catch(e) { console.log('NO_SEMVER',e.message) }
+JS
+[step 25] nl -ba internal/registry/registry.go | sed -n '1,110p'
+[step 26] cat docs/registry.md; echo '--- manifest'; cat internal/manifest/manifest.go
+[step 27] cat internal/lockfile/lockfile.go
+[step 28] python3 - <<'PY'
+p='internal/lockfile/lockfile.go'
+s=open(p).read().replace('"encoding/json"', '"bytes"\n        "encoding/json"')
+old='''func Encode(l *Lock) ([]byte, error) {
+        data, err := json.MarshalIndent(l, "", "  ")
+        if err != nil {
+                return nil, err
+        }
+        return append(data, '\\n'), nil
+}'''
+new='''func Encode(l *Lock) ([]byte, error) {
+        var b...[+372 chars]
+[step 29] cat internal/cli/resolve.go
+[step 30] cat internal/cli/compare.go; cat internal/cli/satisfies.go; cat internal/resolve/errors.go; sed -n '1,30p' internal/cli/cli.go
+[step 31] cat docs/registry.md
+[step 31] git diff --check; git diff --stat
+[step 31] apt-cache policy golang-go 2>/dev/null | head
+[step 32] nl -ba internal/semver/version.go | sed -n '86,145p'
+[step 33] grep -R '\.Num\|Identifier{' -n --include='*.go' .
+[step 34] python3 - <<'PY'
+p='internal/semver/version.go'
+s=open(p).read()
+old='''                n, err := strconv.ParseUint(r, 10, 64)
+                if err != nil {
+                        return nil, false
+                }
+                ids = append(ids, Identifier{Raw: r, Numeric: true, Num: n})'''
+new='''                if len(r) > 1 && r[0] == '0' {
+                        return nil, false
+     ...[+4333 chars]
+[step 35] python3 - <<'PY'
+for p,prefix in [('internal/registry/registry.go','registry: %s: trailing JSON data'),('internal/manifest/manifest.go','manifest: trailing JSON data')]:
+    s=open(p).read()
+    if '"io"' not in s:
+        # Insert into the existing import group.
+        marker='import (\n'
+        s=s.replace(marker, marker+'        "io"\n', 1)
+    if p.startswith('internal/registry'):
+        ol...[+832 chars]
+[step 35] python3 - <<'PY'
+import urllib.request
+u='https://go.dev/dl/go1.24.0.linux-amd64.tar.gz'
+try:
+    r=urllib.request.urlopen(u, timeout=10)
+    print(r.status, r.headers.get('Content-Length'), r.geturl())
+    r.close()
+except Exception as e: print('unavailable:',e)
+PY
+[step 36] grep -n -A8 -B3 'dec.Decode' internal/registry/registry.go internal/manifest/manifest.go
+[step 36] python3 - <<'PY'
+import urllib.request
+urllib.request.urlretrieve('https://go.dev/dl/go1.24.0.linux-amd64.tar.gz','/tmp/go.tgz')
+PY
+tar -C /tmp -xzf /tmp/go.tgz
+[step 37] python3 - <<'PY'
+for p, needle, check in [
+ ('internal/registry/registry.go', '        if pkg.Name == "" {', '        if err := dec.Decode(&struct{}{}); err != io.EOF {\n                return nil, fmt.Errorf("registry: %s: trailing JSON data", filepath.Base(path))\n        }\n'),
+ ('internal/manifest/manifest.go', '        if m.Name == "" {', '        if err := dec.Decode(&struct{}{}); err != io....[+414 chars]
+[step 37] /tmp/go/bin/go build -o /tmp/pinwheel ./cmd/pinwheel
+/tmp/pinwheel compare 2.1.0-beta.11 2.1.0-beta.2
+for d in examples/*; do rm -f "$d/pin.lock"; /tmp/pinwheel resolve "$d"; done
+[step 37] for f in examples/*/pin.lock; do echo "=== $f"; cat "$f"; done
+[step 38] sed -n '1,110p' internal/registry/registry.go; sed -n '1,55p' internal/manifest/manifest.go
+[step 38] python3 - <<'PY'
+p='internal/semrange/xrange.go'
+s=open(p).read().replace('\nimport "github.com/brightloom/pinwheel/internal/semver"\n','\n')
+open(p,'w').write(s)
+for p, anchor, check in [
+ ('internal/registry/registry.go', '\tif pkg.Name == "" {', '\tif err := dec.Decode(&struct{}{}); err != io.EOF {\n\t\treturn nil, fmt.Errorf("registry: %s: trailing JSON data", filepath.Base(path))\n\t}\n'),
+ (...[+475 chars]
+[step 38] /tmp/go/bin/go build -o /tmp/pinwheel ./cmd/pinwheel && /tmp/pinwheel compare 2.1.0-beta.11 2.1.0-beta.2 && for d in examples/*; do rm -f "$d/pin.lock"; /tmp/pinwheel resolve "$d"; done
+[step 39] for f in examples/*/pin.lock; do echo "=== $f"; cat "$f"; done
+[step 39] cat internal/semver/version.go; cat internal/semver/compare.go
+[step 39] cat internal/semrange/range.go; cat internal/semrange/partial.go
+[step 40] python3 - <<'PY'
+import json,glob
+for f in glob.glob('examples/*/pin.lock'):
+ d=json.load(open(f)); print(f, {k:v['version'] for k,v in d['packages'].items()})
+PY
+[step 40] cat >> internal/semver/version_test.go <<'EOF'
+
+func TestStrictAndLargePrereleaseIdentifiers(t *testing.T) {
+	for _, s := range []string{" 1.2.3", "1.2.3 ", "1.2.3-01", "1.2.3-a..b", "1.2.3+"} {
+		if _, err := Parse(s); err == nil {
+			t.Errorf("Parse(%q) accepted", s)
+		}
+	}
+	large := "1.0.0-999999999999999999999999999999"
+	if _, err := Parse(large); err != nil {
+		t.Fatalf("Parse(%q): %v", large...[+1501 chars]
+[step 41] sed -n '85,110p' internal/semver/version.go; grep -n 'partialRe' -A7 internal/semrange/partial.go
+[step 41] python3 - <<'PY'
+p='internal/semver/version.go'
+s=open(p).read()
+start=s.index('func ParsePrerelease(')
+end=s.index('\n// ParseNumeric', start)
+new='''func ParsePrerelease(s string) ([]Identifier, bool) {
+	raw, ok := splitIdentifiers(s)
+	if !ok {
+		return nil, false
+	}
+	ids := make([]Identifier, 0, len(raw))
+	for _, r := range raw {
+		if !isDigits(r) {
+			ids = append(ids, Identifier{Raw: r})
+			c...[+723 chars]
+[step 41] python3 - <<'PY'
+import json,glob
+for f in sorted(glob.glob('examples/*/pin.lock')):
+ d=json.load(open(f)); print(f, {k:v['version'] for k,v in d['packages'].items()})
+PY
+[step 42] cat internal/semver/compare.go; sed -n '115,140p' internal/semrange/range.go
+[step 42] python3 - <<'PY'
+p='internal/semver/compare.go'
+s=open(p).read()
+start=s.index('func comparePre(')
+end=s.index('\nfunc cmpUint', start)
+new='''func comparePre(a, b []Identifier) int {
+	switch {
+	case len(a) == 0 && len(b) == 0:
+		return 0
+	case len(a) == 0:
+		return 1
+	case len(b) == 0:
+		return -1
+	}
+	for i := 0; i < len(a) && i < len(b); i++ {
+		if c := compareIdentifier(a[i], b[i]); c != 0 {
+		...[+795 chars]
+[step 43] cat docs/registry.md
+[step 43] sed -n '1,150p' internal/registry/registry.go; sed -n '1,100p' internal/manifest/manifest.go; sed -n '1,130p' internal/lockfile/lockfile.go
+[step 43] sed -n '1,180p' internal/resolve/resolver.go; sed -n '1,130p' internal/resolve/candidates.go; sed -n '55,85p' internal/resolve/constraints.go; cat internal/resolve/yanked.go
+[step 44] cat > internal/resolve/resolver_test.go <<'EOF'
+package resolve
+
+import (
+	"testing"
+	"time"
+
+	"github.com/brightloom/pinwheel/internal/manifest"
+	"github.com/brightloom/pinwheel/internal/registry"
+	"github.com/brightloom/pinwheel/internal/semrange"
+	"github.com/brightloom/pinwheel/internal/semver"
+)
+
+func release(version string, yanked bool, published int64, deps map[string]string) registry.Relea...[+2434 chars]
+[step 44] /tmp/go/bin/go vet ./... && /tmp/go/bin/go build -o /tmp/pinwheel ./cmd/pinwheel
+set +e
+/tmp/pinwheel compare bad 1.0.0 >/tmp/out 2>/tmp/err; echo compare_status=$? stdout=$(wc -c </tmp/out) stderr="$(cat /tmp/err)"
+/tmp/pinwheel resolve --registry >/tmp/out 2>/tmp/err; echo resolve_status=$? stdout=$(wc -c </tmp/out) stderr="$(cat /tmp/err)"
+set -e
+[step 45] grep -n -A12 -B4 'func Encode' internal/lockfile/lockfile.go; sed -n '1,18p' internal/lockfile/lockfile.go
+[step 45] python3 - <<'PY'
+p='internal/lockfile/lockfile.go'
+s=open(p).read()
+if '"bytes"' not in s:
+    s=s.replace('import (\n', 'import (\n\t"bytes"\n', 1)
+start=s.index('func Encode(')
+end=s.index('\n// Write stores', start)
+new='''func Encode(l *Lock) ([]byte, error) {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(l); err !=...[+262 chars]
+[step 45] for d in examples/*; do /tmp/pinwheel resolve "$d"; done
+/tmp/pinwheel compare 2.1.0-beta.11 2.1.0-beta.2
+/tmp/pinwheel satisfies 1.0.0+abc '=1.0.0+def'
+grep -R '"\(os/exec\|syscall\|unsafe\|plugin\|C\)"' -n --include='*.go' . || true
+cat go.mod
+[step 46] grep -n 'semrange\|trailing JSON\|io.EOF' internal/registry/registry.go internal/manifest/manifest.go || true
+[step 46] rm -f examples/*/pin.lock
+[step 47] python3 - <<'PY'
+p='internal/registry/registry.go'
+s=open(p).read()
+needle='"github.com/brightloom/pinwheel/internal/semver"'
+if 'internal/semrange' not in s:
+    s=s.replace(needle, '"github.com/brightloom/pinwheel/internal/semrange"\n\t'+needle)
+old='''		if rel.Dependencies == nil {
+			rel.Dependencies = map[string]string{}
+		}
+		rel.Parsed = v'''
+new='''		if rel.Dependencies == nil {
+			rel.Dep...[+1527 chars]
+[step 47] set +e
+/tmp/pinwheel >/tmp/out 2>/tmp/err; echo noarg_status=$? stdout=$(wc -c </tmp/out) lines=$(wc -l </tmp/err) stderr="$(cat /tmp/err)"
+/tmp/pinwheel wat >/tmp/out 2>/tmp/err; echo unknown_status=$? stdout=$(wc -c </tmp/out) lines=$(wc -l </tmp/err) stderr="$(cat /tmp/err)"
+set -e
+find examples -name pin.lock -print
+grep -R '"\(os/exec\|syscall\|unsafe\|plugin\|C\)"' -n --include='*.go' . || t...[+4 chars]
+[step 48] nl -ba internal/registry/registry.go | sed -n '8,22p;90,115p'; nl -ba internal/cli/cli.go | sed -n '28,58p'
+[step 48] python3 - <<'PY'
+p='internal/registry/registry.go'
+s=open(p).read()
+if 'internal/semrange' not in s:
+    s=s.replace('\t"github.com/brightloom/pinwheel/internal/semver"', '\t"github.com/brightloom/pinwheel/internal/semrange"\n\t"github.com/brightloom/pinwheel/internal/semver"')
+anchor='\t\trel.Parsed = v'
+validation='''		for name, raw := range rel.Dependencies {
+			if _, err := semrange.Parse(raw)...[+976 chars]
+[step 48] set +e
+/tmp/pinwheel >/tmp/out 2>/tmp/err; echo noarg_status=$? stdout=$(wc -c </tmp/out) lines=$(wc -l </tmp/err) stderr="$(cat /tmp/err)"
+/tmp/pinwheel wat >/tmp/out 2>/tmp/err; echo unknown_status=$? stdout=$(wc -c </tmp/out) lines=$(wc -l </tmp/err) stderr="$(cat /tmp/err)"
+set -e
+[step 49] /tmp/go/bin/gofmt -w cmd internal
+/tmp/go/bin/go test ./... && /tmp/go/bin/go vet ./... && /tmp/go/bin/go build -o /tmp/pinwheel ./cmd/pinwheel
+rm -rf /tmp/pinwheel-examples && cp -a examples /tmp/pinwheel-examples
+for d in /tmp/pinwheel-examples/*; do /tmp/pinwheel resolve "$d"; done
+python3 - <<'PY'
+import json
+s=json.load(open('/tmp/pinwheel-examples/storefront/pin.lock'))['packages']
+l=json.lo...[+440 chars]
+[step 50] {}
+[step 51] {}

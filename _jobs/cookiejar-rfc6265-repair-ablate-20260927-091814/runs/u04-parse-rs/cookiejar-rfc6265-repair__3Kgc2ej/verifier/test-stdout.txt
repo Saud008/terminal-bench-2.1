@@ -1,0 +1,98 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 12 items
+
+../tests/test_outputs.py ...........F                                    [100%]
+
+=================================== FAILURES ===================================
+_____________________________ test_name_value_pair _____________________________
+
+crumbjar = '/tmp/crumbjar-verify-target/release/crumbjar'
+
+    def test_name_value_pair(crumbjar):
+        """Set-Cookie headers without '=' in the first pair, or with an empty name, are ignored."""
+>       _check_group(crumbjar, "name_value_pair")
+
+/tests/test_outputs.py:136: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/crumbjar-verify-target/release/crumbjar'
+group = 'name_value_pair'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            p = subprocess.run(
+                [binary, "replay", "-"],
+                input=case["transcript"], capture_output=True, text=True, timeout=60,
+                env={"PATH": "/usr/local/bin:/usr/bin:/bin", "LC_ALL": "C"},
+            )
+            if p.returncode != 0 or p.stdout != case["stdout"]:
+                failures.append(
+                    f"--- transcript\n{case['transcript']}"
+                    f"--- expected (exit 0)\n{case['stdout']}"
+                    f"--- got (exit {p.returncode})\n{p.stdout}{p.stderr[-500:]}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} transcripts differ:\n" + "\n".join(failures)
+E       AssertionError: 2 of 2 transcripts differ:
+E         --- transcript
+E         at 1767225600
+E         set https://cdn.example.com/ token
+E         set https://cdn.example.com/ =abc
+E         set https://cdn.example.com/  ; Path=/
+E         set https://cdn.example.com/ ok=1
+E         set https://cdn.example.com/ spaced = two words ; Path=/
+E         set https://cdn.example.com/ empty=
+E         get https://cdn.example.com/
+E         dump
+E         --- expected (exit 0)
+E         https://cdn.example.com/	ok=1; spaced=two words; empty=
+E         -- jar @1767225600: 3 cookie(s)
+E         cdn.example.com	/	empty=	host-only	session	1767225600	1767225600
+E         cdn.example.com	/	ok=1	host-only	session	1767225600	1767225600
+E         cdn.example.com	/	spaced=two words	host-only	session	1767225600	1767225600
+E         --- got (exit 0)
+E         https://cdn.example.com/	=abc; ok=1; spaced=two words; empty=
+E         -- jar @1767225600: 4 cookie(s)
+E         cdn.example.com	/	=abc	host-only	session	1767225600	1767225600
+E         cdn.example.com	/	empty=	host-only	session	1767225600	1767225600
+E         cdn.example.com	/	ok=1	host-only	session	1767225600	1767225600
+E         cdn.example.com	/	spaced=two words	host-only	session	1767225600	1767225600
+E         
+E         --- transcript
+E         at 1767225600
+E         set https://login.example.org/ flag; Secure
+E         set https://login.example.org/ sid="a=b"; Secure
+E         set https://login.example.org/ 	=tabbed
+E         get https://login.example.org/
+E         dump
+E         --- expected (exit 0)
+E         https://login.example.org/	sid="a=b"
+E         -- jar @1767225600: 1 cookie(s)
+E         login.example.org	/	sid="a=b"	host-only,secure	session	1767225600	1767225600
+E         --- got (exit 0)
+E         https://login.example.org/	=tabbed; sid="a=b"
+E         -- jar @1767225600: 2 cookie(s)
+E         login.example.org	/	=tabbed	host-only	session	1767225600	1767225600
+E         login.example.org	/	sid="a=b"	host-only,secure	session	1767225600	1767225600
+E         
+E       assert not ['--- transcript\nat 1767225600\nset https://cdn.example.com/ token\nset https://cdn.example.com/ =abc\nset https://cd...session\t1767225600\t1767225600\nlogin.example.org\t/\tsid="a=b"\thost-only,secure\tsession\t1767225600\t1767225600\n']
+
+/tests/test_outputs.py:76: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_default_path
+PASSED ../tests/test_outputs.py::test_path_boundary
+PASSED ../tests/test_outputs.py::test_host_only
+PASSED ../tests/test_outputs.py::test_ip_hosts
+PASSED ../tests/test_outputs.py::test_max_age_precedence
+PASSED ../tests/test_outputs.py::test_two_digit_years
+PASSED ../tests/test_outputs.py::test_invalid_dates
+PASSED ../tests/test_outputs.py::test_replacement
+PASSED ../tests/test_outputs.py::test_header_order
+PASSED ../tests/test_outputs.py::test_public_suffix
+PASSED ../tests/test_outputs.py::test_site_limit
+FAILED ../tests/test_outputs.py::test_name_value_pair - AssertionError: 2 of ...
+========================= 1 failed, 11 passed in 1.08s =========================

@@ -1,0 +1,19 @@
+at 1767225600
+at 1767225630
+get http://10.1.2.3/a/
+get https://192.168.0.1/a/b
+get https://co.uk/x/y?q=/z
+at 1767225631
+get https://co.uk/ab
+dump
+set http://api.example.com/ab b=1; Path=/a/b
+set https://1.2.3/a/ z=1; Domain=example.com; Max-Age=3600; Path=/a/b; SameSite=Lax
+at 1767225731
+set http://example.com/a/b/ sid=8; Expires=Thu, 01 Jan 2032 00:00:00 GMT; HttpOnly; Secure; Secure
+get http://a.b.example.com/a/bc/d
+set http://example.com/a z=2
+set https://1.2.3 z=2
+set http://localhost/a/bc/d z=1
+set http://example.org/ab b=5; SameSite=Lax; HttpOnly
+set http://x.co.uk/a/ a=6
+dump

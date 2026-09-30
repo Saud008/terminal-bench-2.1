@@ -1,0 +1,123 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 11 items
+
+../tests/test_outputs.py .F.........                                     [100%]
+
+=================================== FAILURES ===================================
+_____________________________ test_match_criteria ______________________________
+
+hopcfg = '/tmp/hopcfg-verify-3sfzpv94/hopcfg'
+
+    def test_match_criteria(hopcfg):
+        """Match host/originalhost/user/localuser/canonical/all criteria, incl. HostName-based host matching."""
+>       _check(hopcfg, "match_criteria")
+
+/tests/test_outputs.py:125: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/hopcfg-verify-3sfzpv94/hopcfg', groups = ('match_criteria',)
+failures = ["[match_criteria] args=['-F', '/root/.ssh/config', 'db'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -1,3 +1,3...ile ~/.ssh/id_xmss\n+identityfile ~/.ssh/id_dsa\n userknownhostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2\n"]
+total = 9, group = 'match_criteria'
+
+    def _check(binary, *groups):
+        failures = []
+        total = 0
+        for group in groups:
+            for case in GROUPS[group]:
+                total += 1
+                rc, out = _run(binary, case)
+                if (rc, out) == (case["rc"], case["stdout"]):
+                    continue
+                diff = "".join(difflib.unified_diff(
+                    case["stdout"].splitlines(True), out.splitlines(True),
+                    "ssh -G", "hopcfg", n=1))
+                failures.append(f"[{group}] args={case['args']} expected rc={case['rc']} "
+                                f"got rc={rc}\n{diff}")
+        assert total > 0
+>       assert not failures, (f"{len(failures)}/{total} cases differ from ssh -G:\n"
+                              + "\n".join(failures[:4]))
+E       AssertionError: 3/9 cases differ from ssh -G:
+E         [match_criteria] args=['-F', '/root/.ssh/config', 'db'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -1,3 +1,3 @@
+E          host db
+E         -user dc2ops
+E         +user root
+E          hostname db01.dc2.example.org
+E         @@ -8,9 +8,9 @@
+E          stricthostkeychecking ask
+E         -serveralivecountmax 9
+E         +serveralivecountmax 3
+E          serveraliveinterval 0
+E          loglevel INFO
+E         -identityfile ~/.ssh/dc2-not-cache
+E         +identityfile ~/.ssh/by-alias
+E          userknownhostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2
+E          forwardagent no
+E         -connecttimeout 7
+E         +connecttimeout none
+E          controlpersist no
+E         
+E         [match_criteria] args=['-F', '/root/.ssh/config', 'cache'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -1,3 +1,3 @@
+E          host cache
+E         -user dc2ops
+E         +user root
+E          hostname cache.dc2.example.org
+E         @@ -8,3 +8,3 @@
+E          stricthostkeychecking ask
+E         -serveralivecountmax 9
+E         +serveralivecountmax 3
+E          serveraliveinterval 0
+E         @@ -20,3 +20,3 @@
+E          forwardagent no
+E         -connecttimeout 7
+E         +connecttimeout none
+E          controlpersist no
+E         
+E         [match_criteria] args=['-F', '/root/.ssh/config', 'short'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -1,5 +1,5 @@
+E          host short
+E         -user viahost
+E         +user root
+E          hostname long.example.net
+E         -port 22
+E         +port 1111
+E          batchmode no
+E         @@ -11,3 +11,9 @@
+E          loglevel INFO
+E         -identityfile ~/.ssh/pass-one
+E         +identityfile ~/.ssh/id_rsa
+E         +identityfile ~/.ssh/id_ecdsa
+E         +identityfile ~/.ssh/id_ecdsa_sk
+E         +identityfile ~/.ssh/id_ed25519
+E         +identityfile ~/.ssh/id_ed25519_sk
+E         +identityfile ~/.ssh/id_xmss
+E         +identityfile ~/.ssh/id_dsa
+E          userknownhostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2
+E         
+E       assert not ["[match_criteria] args=['-F', '/root/.ssh/config', 'db'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -1,3 +1,3...ile ~/.ssh/id_xmss\n+identityfile ~/.ssh/id_dsa\n userknownhostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2\n"]
+
+/tests/test_outputs.py:114: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_host_line_patterns
+PASSED ../tests/test_outputs.py::test_final_pass
+PASSED ../tests/test_outputs.py::test_include_scoping
+PASSED ../tests/test_outputs.py::test_include_paths
+PASSED ../tests/test_outputs.py::test_precedence_and_lists
+PASSED ../tests/test_outputs.py::test_sendenv_setenv
+PASSED ../tests/test_outputs.py::test_time_values
+PASSED ../tests/test_outputs.py::test_proxy_settings
+PASSED ../tests/test_outputs.py::test_token_expansion
+PASSED ../tests/test_outputs.py::test_syntax_and_rejections
+FAILED ../tests/test_outputs.py::test_match_criteria - AssertionError: 3/9 ca...
+========================= 1 failed, 10 passed in 1.23s =========================

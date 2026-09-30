@@ -1,0 +1,24 @@
+; example.net - sample zone used in the README
+$TTL 1h
+@       IN SOA  ns1.example.net. hostmaster.example.net. (
+                2026031501 ; serial
+                3h         ; refresh
+                30m        ; retry
+                2w         ; expire
+                5m )       ; minimum
+        IN NS   ns1
+        IN NS   ns2.example.org.
+        IN MX   10 mail
+        IN TXT  "v=spf1 mx -all"
+        IN CAA  0 issue "ca.example.org"
+
+ns1     IN A    192.0.2.53
+        IN AAAA 2001:db8::53
+mail    IN A    192.0.2.25
+www     300 IN CNAME web.example.net.
+web     IN A    192.0.2.80
+        IN A    192.0.2.81
+
+_sip._udp  IN SRV 10 60 5060 sip.office
+
+$INCLUDE office/hosts.inc office.example.net.

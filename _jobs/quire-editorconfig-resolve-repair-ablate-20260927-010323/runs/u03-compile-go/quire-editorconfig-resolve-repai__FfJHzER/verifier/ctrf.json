@@ -1,0 +1,113 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 10,
+            "passed": 9,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790451463.6264305,
+            "stop": 1790451471.1050804
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_section_anchoring",
+                "status": "passed",
+                "duration": 7.256420767022064,
+                "start": 1790451463.6371021,
+                "stop": 1790451470.895177,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_tab_indentation",
+                "status": "passed",
+                "duration": 0.027378637983929366,
+                "start": 1790451470.8955505,
+                "stop": 1790451470.9243398,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_bracketed_directories",
+                "status": "passed",
+                "duration": 0.02034138998715207,
+                "start": 1790451470.9246368,
+                "stop": 1790451470.9464297,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_stdin_paths",
+                "status": "passed",
+                "duration": 0.020297082024626434,
+                "start": 1790451470.9468365,
+                "stop": 1790451470.9683535,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_globstar_segments",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.014079407003009692,
+                "start": 1790451470.968652,
+                "stop": 1790451470.998279,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "quire = '/tmp/quire-verify/quire'\n\n    def test_globstar_segments(quire):\n        \"\"\"'/**/' matches zero or more directories.\"\"\"\n>       _check_group(quire, \"globstar_segments\")\n\n/tests/test_outputs.py:122: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/quire-verify/quire', group = 'globstar_segments'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            rc, out, err = _run_case(binary, case)\n            if (rc, out, err) != (case[\"rc\"], case[\"stdout\"], case[\"stderr\"]):\n                failures.append(\n                    f\"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\\n\"\n                    f\"expected rc={case['rc']} stderr={case['stderr']!r}\\n{case['stdout']}\"\n                    f\"got rc={rc} stderr={err!r}\\n{out}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 5 of 5 cases differ:\nE         --- globstar_segments-01 args=['{root}/lib/a.js', '{root}/lib/x/a.js', '{root}/lib/x/y/a.min.js', '{root}/src/lib/a.js'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/globstar_segments-01/lib/a.js]\nE         indent_size=2\nE         tab_width=2\nE         [/srv/qc/globstar_segments-01/lib/x/a.js]\nE         indent_size=2\nE         tab_width=2\nE         [/srv/qc/globstar_segments-01/lib/x/y/a.min.js]\nE         indent_size=2\nE         m=min\nE         tab_width=2\nE         [/srv/qc/globstar_segments-01/src/lib/a.js]\nE         got rc=0 stderr=''\nE         [/srv/qc/globstar_segments-01/lib/a.js]\nE         [/srv/qc/globstar_segments-01/lib/x/a.js]\nE         indent_size=2\nE         tab_width=2\nE         [/srv/qc/globstar_segments-01/lib/x/y/a.min.js]\nE         indent_size=2\nE         m=min\nE         tab_width=2\nE         [/srv/qc/globstar_segments-01/src/lib/a.js]\nE         \nE         --- globstar_segments-02 args=['{root}/a/b', '{root}/a/x/b', '{root}/a/x/y/b', '{root}/a/b/c', '{root}/a/x/b/y/c', '{root}/z/a/b', '{root}/ab'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/globstar_segments-02/a/b]\nE         m=1\nE         [/srv/qc/globstar_segments-02/a/x/b]\nE         m=1\nE         [/srv/qc/globstar_segments-02/a/x/y/b]\nE         m=1\nE         [/srv/qc/globstar_segments-02/a/b/c]\nE         n=2\nE         [/srv/qc/globstar_segments-02/a/x/b/y/c]\nE         n=2\nE         [/srv/qc/globstar_segments-02/z/a/b]\nE         [/srv/qc/globstar_segments-02/ab]\nE         got rc=0 stderr=''\nE         [/srv/qc/globstar_segments-02/a/b]\nE         [/srv/qc/globstar_segments-02/a/x/b]\nE         m=1\nE         [/srv/qc/globstar_segments-02/a/x/y/b]\nE         m=1\nE         [/srv/qc/globstar_segments-02/a/b/c]\nE         [/srv/qc/globstar_segments-02/a/x/b/y/c]\nE         n=2\nE         [/srv/qc/globstar_segments-02/z/a/b]\nE         [/srv/qc/globstar_segments-02/ab]\nE         \nE         --- globstar_segments-03 args=['{root}/node_modules/x/index.js', '{root}/a/node_modules/b.js', '{root}/src/a.py', '{root}/tests/unit/b.py', '{root}/docs/src/a.py'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/globstar_segments-03/node_modules/x/index.js]\nE         m=vendored\nE         [/srv/qc/globstar_segments-03/a/node_modules/b.js]\nE         m=vendored\nE         [/srv/qc/globstar_segments-03/src/a.py]\nE         n=py\nE         [/srv/qc/globstar_segments-03/tests/unit/b.py]\nE         n=py\nE         [/srv/qc/globstar_segments-03/docs/src/a.py]\nE         got rc=0 stderr=''\nE         [/srv/qc/globstar_segments-03/node_modules/x/index.js]\nE         [/srv/qc/globstar_segments-03/a/node_modules/b.js]\nE         m=vendored\nE         [/srv/qc/globstar_segments-03/src/a.py]\nE         [/srv/qc/globstar_segments-03/tests/unit/b.py]\nE         n=py\nE         [/srv/qc/globstar_segments-03/docs/src/a.py]\nE         \nE         --- globstar_segments-04 args=['{root}/pkg/fixtures/a.json', '{root}/pkg/x/fixtures/a.json', '{root}/pkg/a.json'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/globstar_segments-04/pkg/fixtures/a.json]\nE         m=fixture\nE         n=json\nE         [/srv/qc/globstar_segments-04/pkg/x/fixtures/a.json]\nE         m=fixture\nE         n=json\nE         [/srv/qc/globstar_segments-04/pkg/a.json]\nE         n=json\nE         got rc=0 stderr=''\nE         [/srv/qc/globstar_segments-04/pkg/fixtures/a.json]\nE         n=json\nE         [/srv/qc/globstar_segments-04/pkg/x/fixtures/a.json]\nE         m=fixture\nE         n=json\nE         [/srv/qc/globstar_segments-04/pkg/a.json]\nE         \nE         --- globstar_segments-05 args=['{root}/docs/v2/a.md', '{root}/docs/api/v10/a.md', '{root}/docs/api/old/v3/b.md', '{root}/test_a.go', '{root}/x/test_ab.go'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/globstar_segments-05/docs/v2/a.md]\nE         [/srv/qc/globstar_segments-05/docs/api/v10/a.md]\nE         [/srv/qc/globstar_segments-05/docs/api/old/v3/b.md]\nE         [/srv/qc/globstar_segments-05/test_a.go]\nE         n=t\nE         [/srv/qc/globstar_segments-05/x/test_ab.go]\nE         got rc=0 stderr=''\nE         [/srv/qc/globstar_segments-05/docs/v2/a.md]\nE         [/srv/qc/globstar_segments-05/docs/api/v10/a.md]\nE         [/srv/qc/globstar_segments-05/docs/api/old/v3/b.md]\nE         m=doc\nE         [/srv/qc/globstar_segments-05/test_a.go]\nE         [/srv/qc/globstar_segments-05/x/test_ab.go]\nE         \nE       assert not [\"--- globstar_segments-01 args=['{root}/lib/a.js', '{root}/lib/x/a.js', '{root}/lib/x/y/a.min.js', '{root}/src/lib/a....docs/api/old/v3/b.md]\\nm=doc\\n[/srv/qc/globstar_segments-05/test_a.go]\\n[/srv/qc/globstar_segments-05/x/test_ab.go]\\n\"]\n\n/tests/test_outputs.py:97: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_negated_classes",
+                "status": "passed",
+                "duration": 0.018909817998064682,
+                "start": 1790451470.9986594,
+                "stop": 1790451471.0187178,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_inline_comments",
+                "status": "passed",
+                "duration": 0.023094321019016206,
+                "start": 1790451471.019013,
+                "stop": 1790451471.0445807,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_root_declarations",
+                "status": "passed",
+                "duration": 0.018582995049655437,
+                "start": 1790451471.0449045,
+                "stop": 1790451471.0648801,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_value_case",
+                "status": "passed",
+                "duration": 0.016807665000669658,
+                "start": 1790451471.0651813,
+                "stop": 1790451471.0834303,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_property_order",
+                "status": "passed",
+                "duration": 0.018764063977869228,
+                "start": 1790451471.0838962,
+                "stop": 1790451471.104011,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

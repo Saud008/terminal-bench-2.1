@@ -1,0 +1,113 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 10,
+            "passed": 9,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790482760.4620519,
+            "stop": 1790482769.1802385
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_section_anchoring",
+                "status": "passed",
+                "duration": 8.480554028003098,
+                "start": 1790482760.4762812,
+                "stop": 1790482768.9581914,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_tab_indentation",
+                "status": "passed",
+                "duration": 0.028017488999466877,
+                "start": 1790482768.958537,
+                "stop": 1790482768.987623,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_bracketed_directories",
+                "status": "passed",
+                "duration": 0.023756339996907627,
+                "start": 1790482768.9878836,
+                "stop": 1790482769.013381,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_stdin_paths",
+                "status": "passed",
+                "duration": 0.03183895399706671,
+                "start": 1790482769.013776,
+                "stop": 1790482769.0468879,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_globstar_segments",
+                "status": "passed",
+                "duration": 0.015756141998281237,
+                "start": 1790482769.0472033,
+                "stop": 1790482769.064138,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_negated_classes",
+                "status": "passed",
+                "duration": 0.013270132003526669,
+                "start": 1790482769.0644157,
+                "stop": 1790482769.0787587,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_inline_comments",
+                "status": "passed",
+                "duration": 0.019306166002934333,
+                "start": 1790482769.0790064,
+                "stop": 1790482769.0995126,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_root_declarations",
+                "status": "passed",
+                "duration": 0.02560095300214016,
+                "start": 1790482769.0998633,
+                "stop": 1790482769.1269367,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_value_case",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.02021045400033472,
+                "start": 1790482769.1273518,
+                "stop": 1790482769.162921,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "quire = '/tmp/quire-verify/quire'\n\n    def test_value_case(quire):\n        \"\"\"Which property values are lowercased.\"\"\"\n>       _check_group(quire, \"value_case\")\n\n/tests/test_outputs.py:142: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/quire-verify/quire', group = 'value_case'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            rc, out, err = _run_case(binary, case)\n            if (rc, out, err) != (case[\"rc\"], case[\"stdout\"], case[\"stderr\"]):\n                failures.append(\n                    f\"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\\n\"\n                    f\"expected rc={case['rc']} stderr={case['stderr']!r}\\n{case['stdout']}\"\n                    f\"got rc={rc} stderr={err!r}\\n{out}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 5 of 5 cases differ:\nE         --- value_case-01 args=['{root}/a.txt'] stdin=None\nE         expected rc=0 stderr=''\nE         indent_style=space\nE         end_of_line=crlf\nE         charset=utf-8\nE         insert_final_newline=true\nE         trim_trailing_whitespace=false\nE         max_line_length=OFF\nE         got rc=0 stderr=''\nE         indent_style=space\nE         end_of_line=crlf\nE         charset=utf-8\nE         insert_final_newline=true\nE         trim_trailing_whitespace=false\nE         max_line_length=off\nE         \nE         --- value_case-02 args=['{root}/a.txt'] stdin=None\nE         expected rc=0 stderr=''\nE         indent_style=tab\nE         tab_width=Eight\nE         quote_type=Double\nE         indent_size=eight\nE         got rc=0 stderr=''\nE         indent_style=tab\nE         tab_width=eight\nE         quote_type=Double\nE         indent_size=eight\nE         \nE         --- value_case-03 args=['{root}/a.txt'] stdin=None\nE         expected rc=0 stderr=''\nE         indent_size=4\nE         tab_width=AUTO\nE         x_custom=MiXeD\nE         spelling_language=en-US\nE         got rc=0 stderr=''\nE         indent_size=4\nE         tab_width=auto\nE         x_custom=MiXeD\nE         spelling_language=en-US\nE         \nE         --- value_case-04 args=['-b', '0.8', '{root}/a.txt'] stdin=None\nE         expected rc=0 stderr=''\nE         indent_size=tab\nE         tab_width=X4\nE         got rc=0 stderr=''\nE         indent_size=tab\nE         tab_width=x4\nE         \nE         --- value_case-05 args=['{root}/a.txt', '{root}/a.md'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/value_case-05/a.txt]\nE         max_line_length=Off\nE         [/srv/qc/value_case-05/a.md]\nE         max_line_length=OFF\nE         charset=utf-8-bom\nE         got rc=0 stderr=''\nE         [/srv/qc/value_case-05/a.txt]\nE         max_line_length=off\nE         [/srv/qc/value_case-05/a.md]\nE         max_line_length=off\nE         charset=utf-8-bom\nE         \nE       assert not [\"--- value_case-01 args=['{root}/a.txt'] stdin=None\\nexpected rc=0 stderr=''\\nindent_style=space\\nend_of_line=crlf\\nc.../qc/value_case-05/a.txt]\\nmax_line_length=off\\n[/srv/qc/value_case-05/a.md]\\nmax_line_length=off\\ncharset=utf-8-bom\\n\"]\n\n/tests/test_outputs.py:97: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_property_order",
+                "status": "passed",
+                "duration": 0.015286977995856432,
+                "start": 1790482769.1632297,
+                "stop": 1790482769.1794431,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

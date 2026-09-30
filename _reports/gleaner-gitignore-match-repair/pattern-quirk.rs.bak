@@ -1,0 +1,96 @@
+use super::lines;
+use super::parse::parse_line;
+use super::wildmatch::wildmatch;
+
+#[derive(Debug, Clone)]
+pub struct Pattern {
+    pub text: String,
+    pub body: Vec<u8>,
+    pub negative: bool,
+    pub dir_only: bool,
+    pub basename_only: bool,
+    pub line: usize,
+}
+
+/// The patterns of one file, with the directory they are relative to.
+#[derive(Debug, Clone, Default)]
+pub struct PatternList {
+    /// How the file is named in `check` output.
+    pub source: String,
+    /// Directory of a `.gitignore`, relative to the root and without a
+    /// trailing slash; empty for the root and for non-directory sources.
+    pub base: String,
+    pub patterns: Vec<Pattern>,
+}
+
+impl PatternList {
+    pub fn empty(source: &str, base: &str) -> PatternList {
+        PatternList { source: source.to_string(), base: base.to_string(), patterns: Vec::new() }
+    }
+
+    pub fn from_bytes(source: &str, base: &str, buf: &[u8]) -> PatternList {
+        let mut list = PatternList::empty(source, base);
+        for raw in lines::split(buf) {
+            if let Some(p) = parse_line(&raw.text) {
+                list.patterns.push(Pattern {
+                    text: String::from_utf8_lossy(&p.text).into_owned(),
+                    body: p.body,
+                    negative: p.negative,
+                    dir_only: p.dir_only,
+                    basename_only: p.basename_only,
+                    line: raw.number,
+                });
+            }
+        }
+        list
+    }
+
+    /// The last pattern in the file that matches `path` (relative to the
+    /// root). `basename` is the last component of `path`.
+    pub fn last_match(&self, path: &str, basename: &str, is_dir: bool) -> Option<&Pattern> {
+        self.patterns.iter().rev().find(|pat| {
+            if pat.dir_only && !is_dir {
+                return false;
+            }
+            if pat.basename_only {
+                wildmatch(&pat.body, basename.as_bytes(), false)
+            } else {
+                match_pathname(path, &self.base, &pat.body)
+            }
+        })
+    }
+}
+
+/// Length of the leading part of a pattern that has no glob characters.
+fn literal_prefix_len(body: &[u8]) -> usize {
+    body.iter()
+        .position(|&c| matches!(c, b'*' | b'?' | b'[' | b'\\'))
+        .unwrap_or(body.len())
+}
+
+/// Patterns containing a slash are matched against the whole path below
+/// the directory of the file they come from. The literal prefix is compared
+/// first and the remainder is matched as a pattern of its own.
+fn match_pathname(path: &str, base: &str, body: &[u8]) -> bool {
+    let body = body.strip_prefix(b"/").unwrap_or(body);
+    let rest = if base.is_empty() {
+        path
+    } else {
+        match path.strip_prefix(base).and_then(|r| r.strip_prefix('/')) {
+            Some(r) => r,
+            None => return false,
+        }
+    };
+    let rest = rest.as_bytes();
+    let prefix = literal_prefix_len(body);
+    if prefix > 0 {
+        if prefix > rest.len() || body[..prefix] != rest[..prefix] {
+            return false;
+        }
+        if prefix == body.len() {
+            return prefix == rest.len();
+        }
+        return wildmatch(&body[prefix..], &rest[prefix..], true);
+    }
+    wildmatch(body, rest, true)
+}

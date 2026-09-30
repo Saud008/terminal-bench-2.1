@@ -1,0 +1,164 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 10 items
+
+../tests/test_outputs.py .F.......F                                      [100%]
+
+=================================== FAILURES ===================================
+_____________________________ test_tab_indentation _____________________________
+
+quire = '/tmp/quire-verify/quire'
+
+    def test_tab_indentation(quire):
+        """indent_size / tab_width derivation, with and without -b."""
+>       _check_group(quire, "tab_indentation")
+
+/tests/test_outputs.py:107: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/quire-verify/quire', group = 'tab_indentation'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']!r}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err!r}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 2 of 12 cases differ:
+E         --- tab_indentation-03 args=['{root}/a.py', '{root}/a.c', '{root}/a.md'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/tab_indentation-03/a.py]
+E         indent_size=4
+E         tab_width=4
+E         [/srv/qc/tab_indentation-03/a.c]
+E         indent_size=tab
+E         [/srv/qc/tab_indentation-03/a.md]
+E         indent_size=3
+E         tab_width=3
+E         got rc=0 stderr=''
+E         [/srv/qc/tab_indentation-03/a.py]
+E         tab_width=4
+E         indent_size=4
+E         [/srv/qc/tab_indentation-03/a.c]
+E         indent_size=tab
+E         [/srv/qc/tab_indentation-03/a.md]
+E         indent_size=3
+E         tab_width=3
+E         
+E         --- tab_indentation-07 args=['-b', '0.9', '{root}/a.go'] stdin=None
+E         expected rc=0 stderr=''
+E         indent_size=6
+E         tab_width=6
+E         got rc=0 stderr=''
+E         tab_width=6
+E         indent_size=6
+E         
+E       assert not ["--- tab_indentation-03 args=['{root}/a.py', '{root}/a.c', '{root}/a.md'] stdin=None\nexpected rc=0 stderr=''\n[/srv/...o'] stdin=None\nexpected rc=0 stderr=''\nindent_size=6\ntab_width=6\ngot rc=0 stderr=''\ntab_width=6\nindent_size=6\n"]
+
+/tests/test_outputs.py:97: AssertionError
+_____________________________ test_property_order ______________________________
+
+quire = '/tmp/quire-verify/quire'
+
+    def test_property_order(quire):
+        """Output order when properties are overridden or derived."""
+>       _check_group(quire, "property_order")
+
+/tests/test_outputs.py:147: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/quire-verify/quire', group = 'property_order'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']!r}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err!r}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 5 of 6 cases differ:
+E         --- property_order-01 args=['{root}/f.txt', '{root}/f.md'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/property_order-01/f.txt]
+E         a=x
+E         b=2
+E         c=3
+E         [/srv/qc/property_order-01/f.md]
+E         a=1
+E         b=2
+E         c=3
+E         got rc=0 stderr=''
+E         [/srv/qc/property_order-01/f.txt]
+E         b=2
+E         c=3
+E         a=x
+E         [/srv/qc/property_order-01/f.md]
+E         a=1
+E         b=2
+E         c=3
+E         
+E         --- property_order-02 args=['{root}/f.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         z=3
+E         y=2
+E         got rc=0 stderr=''
+E         y=2
+E         z=3
+E         
+E         --- property_order-03 args=['{root}/s/f'] stdin=None
+E         expected rc=0 stderr=''
+E         charset=latin1
+E         indent_size=2
+E         end_of_line=lf
+E         tab_width=2
+E         got rc=0 stderr=''
+E         indent_size=2
+E         end_of_line=lf
+E         charset=latin1
+E         tab_width=2
+E         
+E         --- property_order-04 args=['{root}/f'] stdin=None
+E         expected rc=0 stderr=''
+E         indent_style=tab
+E         indent_size=4
+E         tab_width=4
+E         got rc=0 stderr=''
+E         indent_style=tab
+E         tab_width=4
+E         indent_size=4
+E         
+E         --- property_order-06 args=['{root}/p/f.c'] stdin=None
+E         expected rc=0 stderr=''
+E         b=3
+E         a=2
+E         got rc=0 stderr=''
+E         a=2
+E         b=3
+E         
+E       assert not ["--- property_order-01 args=['{root}/f.txt', '{root}/f.md'] stdin=None\nexpected rc=0 stderr=''\n[/srv/qc/property_or...property_order-06 args=['{root}/p/f.c'] stdin=None\nexpected rc=0 stderr=''\nb=3\na=2\ngot rc=0 stderr=''\na=2\nb=3\n"]
+
+/tests/test_outputs.py:97: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_section_anchoring
+PASSED ../tests/test_outputs.py::test_bracketed_directories
+PASSED ../tests/test_outputs.py::test_stdin_paths
+PASSED ../tests/test_outputs.py::test_globstar_segments
+PASSED ../tests/test_outputs.py::test_negated_classes
+PASSED ../tests/test_outputs.py::test_inline_comments
+PASSED ../tests/test_outputs.py::test_root_declarations
+PASSED ../tests/test_outputs.py::test_value_case
+FAILED ../tests/test_outputs.py::test_tab_indentation - AssertionError: 2 of ...
+FAILED ../tests/test_outputs.py::test_property_order - AssertionError: 5 of 6...
+========================= 2 failed, 8 passed in 7.16s ==========================

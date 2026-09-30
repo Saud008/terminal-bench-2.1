@@ -1,0 +1,53 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 6 items
+
+../tests/test_outputs.py .F....                                          [100%]
+
+=================================== FAILURES ===================================
+_________________________ test_shortest_stem_selection _________________________
+
+    def test_shortest_stem_selection():
+        """Among matching pattern rules the one with the shortest stem wins, where the
+        stem of a directory-relative match includes the directory; ties keep makefile order."""
+>       replay("stem")
+
+/tests/test_outputs.py:47: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+group = 'stem'
+
+    def replay(group):
+        binary = brickmake()
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], binary)
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: stem/shortest_stem_wins_across_directories result #0
+E           expected: {'stdout': 'lib lib/a.o from lib/a.c (stem a)\ngen src/b.o from src/gen/b.c (stem b)\ngeneric c.o from c.c (stem c)\nlib lib/deep/d.o from lib/deep/d.c (stem deep/d)\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'lib lib/a.o from lib/a.c (stem a)\ngeneric src/b.o from src/b.c (stem src/b)\ngeneric c.o from c.c (stem c)\ngeneric lib/deep/d.o from lib/deep/d.c (stem lib/deep/d)\n', 'stderr': '', 'code': 0}
+E         stem/shortest_stem_wins_across_directories result #1
+E           expected: {'stdout': 'gen src/b.o from src/gen/b.c (stem b)\nlib lib/a.o from lib/a.c (stem a)\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'generic src/b.o from src/b.c (stem src/b)\nlib lib/a.o from lib/a.c (stem a)\n', 'stderr': '', 'code': 0}
+E       assert not ["stem/shortest_stem_wins_across_directories result #0\n  expected: {'stdout': 'lib lib/a.o from lib/a.c (stem a)\\nge...stdout': 'generic src/b.o from src/b.c (stem src/b)\\nlib lib/a.o from lib/a.c (stem a)\\n', 'stderr': '', 'code': 0}"]
+
+/tests/test_outputs.py:35: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_cli_builds_and_rebuilds
+PASSED ../tests/test_outputs.py::test_directory_relative_prerequisites
+PASSED ../tests/test_outputs.py::test_mentioned_prerequisite_ought_to_exist
+PASSED ../tests/test_outputs.py::test_pattern_specific_variable_order
+PASSED ../tests/test_outputs.py::test_project_builds
+FAILED ../tests/test_outputs.py::test_shortest_stem_selection - AssertionErro...
+========================= 1 failed, 5 passed in 3.24s ==========================

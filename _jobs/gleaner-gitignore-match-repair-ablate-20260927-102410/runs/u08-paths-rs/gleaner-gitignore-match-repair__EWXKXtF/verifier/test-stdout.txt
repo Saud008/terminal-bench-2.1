@@ -1,0 +1,235 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 15 items
+
+../tests/test_outputs.py ..........F...F                                 [100%]
+
+=================================== FAILURES ===================================
+__________________________ test_default_excludes_file __________________________
+
+gleaner = '/tmp/gleaner-verify-target/release/gleaner'
+
+    def test_default_excludes_file(gleaner):
+        """Without core.excludesFile the file is $XDG_CONFIG_HOME/git/ignore, or $HOME/.config/git/ignore when XDG_CONFIG_HOME is unset or empty."""
+>       _check_group(gleaner, "default_excludes_file")
+
+/tests/test_outputs.py:176: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/gleaner-verify-target/release/gleaner'
+group = 'default_excludes_file'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            _materialize(case)
+            rc, out, err = _run(binary, case, ["list"])
+            if (rc, out) != (0, case["list"]):
+                failures.append(f"--- {case['name']}: list\nexpected rc=0\n{case['list']}got rc={rc} {err}\n{out}")
+            rc, out, err = _run(binary, case, ["check", "--", *case["checks"]])
+            if (rc, out) != (case["check_rc"], case["check"]):
+                failures.append(
+                    f"--- {case['name']}: check {case['checks']}\n"
+                    f"expected rc={case['check_rc']}\n{case['check']}got rc={rc} {err}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} mismatches in {len(CASES[group])} trees:\n" + "\n".join(failures)
+E       AssertionError: 4 mismatches in 4 trees:
+E         --- xdg_config_home_wins: list
+E         expected rc=0
+E         b.orig
+E         c.txt
+E         got rc=0 
+E         a.swp
+E         c.txt
+E         
+E         --- xdg_config_home_wins: check ['a.swp', 'b.orig', 'c.txt']
+E         expected rc=0
+E         /tmp/gleaner-case/xdg/git/ignore:1:*.swp	a.swp
+E         ::	b.orig
+E         ::	c.txt
+E         got rc=0 
+E         ::	a.swp
+E         /tmp/gleaner-case/user/.config/git/ignore:1:*.orig	b.orig
+E         ::	c.txt
+E         
+E         --- xdg_without_ignore_file: list
+E         expected rc=0
+E         a.swp
+E         b.orig
+E         got rc=0 
+E         a.swp
+E         
+E         --- xdg_without_ignore_file: check ['a.swp', 'b.orig']
+E         expected rc=1
+E         ::	a.swp
+E         ::	b.orig
+E         got rc=0 
+E         ::	a.swp
+E         /tmp/gleaner-case/user/.config/git/ignore:1:*.orig	b.orig
+E         
+E       assert not ['--- xdg_config_home_wins: list\nexpected rc=0\nb.orig\nc.txt\ngot rc=0 \na.swp\nc.txt\n', "--- xdg_config_home_wins:...ected rc=1\n::\ta.swp\n::\tb.orig\ngot rc=0 \n::\ta.swp\n/tmp/gleaner-case/user/.config/git/ignore:1:*.orig\tb.orig\n"]
+
+/tests/test_outputs.py:121: AssertionError
+_______________________________ test_mixed_trees _______________________________
+
+gleaner = '/tmp/gleaner-verify-target/release/gleaner'
+
+    def test_mixed_trees(gleaner):
+        """Randomly generated trees combining nested .gitignore files, info/exclude and excludes files."""
+>       _check_group(gleaner, "mixed_trees")
+
+/tests/test_outputs.py:196: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/gleaner-verify-target/release/gleaner', group = 'mixed_trees'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            _materialize(case)
+            rc, out, err = _run(binary, case, ["list"])
+            if (rc, out) != (0, case["list"]):
+                failures.append(f"--- {case['name']}: list\nexpected rc=0\n{case['list']}got rc={rc} {err}\n{out}")
+            rc, out, err = _run(binary, case, ["check", "--", *case["checks"]])
+            if (rc, out) != (case["check_rc"], case["check"]):
+                failures.append(
+                    f"--- {case['name']}: check {case['checks']}\n"
+                    f"expected rc={case['check_rc']}\n{case['check']}got rc={rc} {err}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} mismatches in {len(CASES[group])} trees:\n" + "\n".join(failures)
+E       AssertionError: 4 mismatches in 30 trees:
+E         --- mixed_00: list
+E         expected rc=0
+E         A
+E         a-b
+E         b/.gitignore
+E         b/a.b
+E         b/build
+E         b/doc
+E         doc
+E         foo/x.o
+E         keep
+E         x/.gitignore
+E         x/[x]
+E         x/ba
+E         x/x
+E         got rc=0 
+E         A
+E         a-b
+E         b/.gitignore
+E         b/a
+E         b/a.b
+E         b/build
+E         b/doc
+E         doc
+E         foo/x.o
+E         keep
+E         x/.gitignore
+E         x/[x]
+E         x/ba
+E         x/x
+E         
+E         --- mixed_00: check ['x/x', 'b', 'x/[x]', 'x', 'b/a', 'b/.gitignore', 'doc', 'A', 'a-b', 'keep', 'foo/x.o', 'b/doc', 'b/build', 'foo']
+E         expected rc=0
+E         ::	x/x
+E         ::	b
+E         ::	x/[x]
+E         ::	x
+E         /tmp/gleaner-case/xdg/git/ignore:3:**/a	b/a
+E         ::	b/.gitignore
+E         .git/info/exclude:4:!doc	doc
+E         ::	A
+E         ::	a-b
+E         ::	keep
+E         ::	foo/x.o
+E         .git/info/exclude:4:!doc	b/doc
+E         ::	b/build
+E         ::	foo
+E         got rc=1 
+E         ::	x/x
+E         ::	b
+E         ::	x/[x]
+E         ::	x
+E         ::	b/a
+E         ::	b/.gitignore
+E         .git/info/exclude:4:!doc	doc
+E         ::	A
+E         ::	a-b
+E         ::	keep
+E         ::	foo/x.o
+E         .git/info/exclude:4:!doc	b/doc
+E         ::	b/build
+E         ::	foo
+E         
+E         --- mixed_09: list
+E         expected rc=0
+E         got rc=0 
+E         .gitignore
+E         a]b
+E         ab/1
+E         ab/a b
+E         ab/a0
+E         ab/foo/.gitignore
+E         ab/foo/a0
+E         ab/foo/a]b
+E         build
+E         foo/.gitignore
+E         foo/ba
+E         keep
+E         log
+E         
+E         --- mixed_09: check ['ab/foo', 'a]b', 'ab/foo/a0', 'build', 'keep', 'ab/a0', 'ab/1', 'ab', 'foo/.gitignore', 'ab/foo/.gitignore', 'ab/a b', 'ab/foo/a]b', 'foo', 'log']
+E         expected rc=0
+E         /tmp/gleaner-case/xdg/git/ignore:2:/***	ab/foo
+E         /tmp/gleaner-case/xdg/git/ignore:2:/***	a]b
+E         /tmp/gleaner-case/xdg/git/ignore:2:/***	ab/foo/a0
+E         /tmp/gleaner-case/xdg/git/ignore:2:/***	build
+E         /tmp/gleaner-case/xdg/git/ignore:2:/***	keep
+E         /tmp/gleaner-case/xdg/git/ignore:2:/***	ab/a0
+E         /tmp/gleaner-case/xdg/git/ignore:2:/***	ab/1
+E         /tmp/gleaner-case/xdg/git/ignore:2:/***	ab
+E         /tmp/gleaner-case/xdg/git/ignore:2:/***	foo/.gitignore
+E         /tmp/gleaner-case/xdg/git/ignore:2:/***	ab/foo/.gitignore
+E         /tmp/gleaner-case/xdg/git/ignore:2:/***	ab/a b
+E         /tmp/gleaner-case/xdg/git/ignore:2:/***	ab/foo/a]b
+E         /tmp/gleaner-case/xdg/git/ignore:2:/***	foo
+E         /tmp/gleaner-case/xdg/git/ignore:2:/***	log
+E         got rc=1 
+E         ::	ab/foo
+E         ::	a]b
+E         ::	ab/foo/a0
+E         ::	build
+E         ::	keep
+E         ::	ab/a0
+E         ::	ab/1
+E         ::	ab
+E         ::	foo/.gitignore
+E         ::	ab/foo/.gitignore
+E         ::	ab/a b
+E         ::	ab/foo/a]b
+E         ::	foo
+E         ::	log
+E         
+E       assert not ['--- mixed_00: list\nexpected rc=0\nA\na-b\nb/.gitignore\nb/a.b\nb/build\nb/doc\ndoc\nfoo/x.o\nkeep\nx/.gitignore\nx/...:\tab/a0\n::\tab/1\n::\tab\n::\tfoo/.gitignore\n::\tab/foo/.gitignore\n::\tab/a b\n::\tab/foo/a]b\n::\tfoo\n::\tlog\n"]
+
+/tests/test_outputs.py:121: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_file_encodings
+PASSED ../tests/test_outputs.py::test_trailing_spaces
+PASSED ../tests/test_outputs.py::test_escaped_leading_characters
+PASSED ../tests/test_outputs.py::test_directory_only_patterns
+PASSED ../tests/test_outputs.py::test_anchoring
+PASSED ../tests/test_outputs.py::test_double_star
+PASSED ../tests/test_outputs.py::test_bracket_expressions
+PASSED ../tests/test_outputs.py::test_reinclude_under_excluded_directory
+PASSED ../tests/test_outputs.py::test_per_directory_precedence
+PASSED ../tests/test_outputs.py::test_tree_wide_sources
+PASSED ../tests/test_outputs.py::test_config_spelling
+PASSED ../tests/test_outputs.py::test_list_order
+PASSED ../tests/test_outputs.py::test_check_line_numbers
+FAILED ../tests/test_outputs.py::test_default_excludes_file - AssertionError:...
+FAILED ../tests/test_outputs.py::test_mixed_trees - AssertionError: 4 mismatc...
+========================= 2 failed, 13 passed in 1.61s =========================

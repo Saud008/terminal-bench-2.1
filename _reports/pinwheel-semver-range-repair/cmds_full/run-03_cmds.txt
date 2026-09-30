@@ -1,0 +1,631 @@
+[step 2] find . -maxdepth 3 -type f | sort
+[step 2] cat go.mod && printf '\n--- ranges ---\n' && cat docs/ranges.md && printf '\n--- resolution ---\n' && cat docs/resolution.md && printf '\n--- lockfile ---\n' && cat docs/lockfile.md && printf '\n--- cli ---\n' && cat docs/cli.md
+[step 2] printf '\n--- Go sources ---\n'; find . -name '*.go' -type f -print -exec sed -n '1,240p' {} \;
+[step 3] cat > internal/semver/compare.go <<'EOF'
+package semver
+
+import "strings"
+
+// Compare returns -1, 0 or 1 when a has lower, equal or higher precedence
+// than b. Build metadata is ignored.
+func Compare(a, b Version) int {
+	if c := cmpUint(a.Major, b.Major); c != 0 { return c }
+	if c := cmpUint(a.Minor, b.Minor); c != 0 { return c }
+	if c := cmpUint(a.Patch, b.Patch); c != 0 { return c }
+	return comparePre(a.Pre, b.Pre)
+}
+
+func Less(a, b Version) bool { return Compare(a, b) < 0 }
+
+func comparePre(a, b []Identifier) int {
+	switch {
+	case len(a) == 0 && len(b) == 0: return 0
+	case len(a) == 0: return 1
+	case len(b) == 0: return -1
+	}
+	n := len(a)
+	if len(b) < n { n = len(b) }
+	for i := 0; i < n; i++ {
+		if c := compareIdentifier(a[i], b[i]); c != 0 { return c }
+	}
+	switch {
+	case len(a) < len(b): return -1
+	case len(a) > len(b): return 1
+	default: return 0
+	}
+}
+
+func compareIdentifier(a, b Identifier) int {
+	if a.Numeric != b.Numeric {
+		if a.Numeric { return -1 }
+		return 1
+	}
+	if a.Numeric {
+		// Numeric prerelease identifiers can exceed machine integer sizes.
+		if len(a.Raw) < len(b.Raw) { return -1 }
+		if len(a.Raw) > len(b.Raw) { return 1 }
+	}
+	return strings.Compare(a.Raw, b.Raw)
+}
+
+func cmpUint(a, b uint64) int {
+	if a < b { return -1 }
+	if a > b { return 1 }
+	return 0
+}
+EOF
+python3 - <<'PY'
+p='internal/semver/version.go'
+s=open(p).read()
+s=s.replace('body := strings.TrimPrefix(strings.TrimSpace(s), "v")', 'body := strings.TrimPrefix(s, "v")')
+old='''                n, err := strconv.ParseUint(r, 10, 64)
+                if err != nil {
+                        return nil, false
+                }
+                ids = append(ids, Identifier{Raw: r, Numeric: true, Num: n})'''
+new='''                if len(r) > 1 && r[0] == '0' {
+                        return nil, false
+                }
+                n, _ := strconv.ParseUint(r, 10, 64) // overflow is harmless; Raw orders it
+                ids = append(ids, Identifier{Raw: r, Numeric: true, Num: n})'''
+assert old in s
+open(p,'w').write(s.replace(old,new))
+PY
+cat > internal/semrange/partial.go <<'EOF'
+package semrange
+
+import (
+	"regexp"
+	"strings"
+
+	"github.com/brightloom/pinwheel/internal/semver"
+)
+
+type partial struct {
+	major, minor, patch uint64
+	fields int
+	pre []semver.Identifier
+}
+
+var partialRe = regexp.MustCompile(`^(\*|x|X|0|[1-9][0-9]*)(?:\.(\*|x|X|0|[1-9][0-9]*)(?:\.(\*|x|X|0|[1-9][0-9]*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?)?)?$`)
+
+func isWild(s string) bool { return s == "" || s == "x" || s == "X" || s == "*" }
+
+func parsePartial(s string) (partial, bool) {
+	// npm ranges accept a single leading v on their version operands.
+	s = strings.TrimPrefix(s, "v")
+	m := partialRe.FindStringSubmatch(s)
+	if m == nil { return partial{}, false }
+	var p partial
+	dst := [3]*uint64{&p.major, &p.minor, &p.patch}
+	wild := false
+	for i, f := range m[1:4] {
+		if isWild(f) { wild = true; continue }
+		if wild { return partial{}, false }
+		n, ok := semver.ParseNumeric(f)
+		if !ok { return partial{}, false }
+		*dst[i] = n
+		p.fields++
+	}
+	if (m[4] != "" || m[5] != "") && p.fields != 3 { return partial{}, false }
+	if m[4] != "" {
+		pre, ok := semver.ParsePrerelease(m[4])
+		if !ok { return partial{}, false }
+		p.pre = pre
+	}
+	return p, true
+}
+
+func (p partial) version() semver.Version {
+	v := semver.New(p.major, p.minor, p.patch)
+	if p.fields == 3 { v.Pre = p.pre }
+	return v
+}
+
+func (p partial) next() semver.Version {
+	if p.fields == 1 { return semver.New(p.major+1, 0, 0) }
+	return semver.New(p.major, p.minor+1, 0)
+}
+
+func between(lo, hi semver.Version) []Comparator {
+	return []Comparator{{Op: OpGTE, Version: lo}, {Op: OpLT, Version: hi.Floor()}}
+}
+EOF
+cat > internal/semrange/xrange.go <<'EOF'
+package semrange
+
+import "github.com/brightloom/pinwheel/internal/semver"
+
+func xrange(op string, p partial) []Comparator {
+	if p.fields == 3 { return []Comparator{{Op: opFor(op), Version: p.version()}} }
+	if p.fields == 0 {
+		if op == "<" || op == ">" { return []Comparator{matchNone} }
+		return []Comparator{matchAll}
+	}
+	lo := semver.New(p.major, p.minor, 0)
+	switch op {
+	case ">": return []Comparator{{Op: OpGTE, Version: p.next()}}
+	case ">=": return []Comparator{{Op: OpGTE, Version: lo}}
+	case "<": return []Comparator{{Op: OpLT, Version: lo.Floor()}}
+	case "<=": return []Comparator{{Op: OpLT, Version: p.next().Floor()}}
+	default: return between(lo, p.next())
+	}
+}
+
+func opFor(op string) Op {
+	switch op {
+	case "<": return OpLT
+	case "<=": return OpLTE
+	case ">": return OpGT
+	case ">=": return OpGTE
+	default: return OpEQ
+	}
+}
+EOF
+cat > internal/semrange/caret.go <<'EOF'
+package semrange
+
+import "github.com/brightloom/pinwheel/internal/semver"
+
+func caret(p partial) []Comparator {
+	if p.fields == 0 { return []Comparator{matchAll} }
+	lo := p.version()
+	var hi semver.Version
+	switch {
+	case p.major > 0:
+		hi = semver.New(p.major+1, 0, 0)
+	case p.fields == 1:
+		hi = semver.New(1, 0, 0)
+	case p.minor > 0:
+		hi = semver.New(0, p.minor+1, 0)
+	case p.fields == 2:
+		hi = semver.New(0, 1, 0)
+	default:
+		hi = semver.New(0, 0, p.patch+1)
+	}
+	return between(lo, hi)
+}
+EOF
+cat > internal/semrange/tilde.go <<'EOF'
+package semrange
+
+import "github.com/brightloom/pinwheel/internal/semver"
+
+func tilde(p partial) []Comparator {
+	switch p.fields {
+	case 0: return []Comparator{matchAll}
+	case 1: return between(semver.New(p.major, 0, 0), semver.New(p.major+1, 0, 0))
+	case 2: return between(semver.New(p.major, p.minor, 0), semver.New(p.major, p.minor+1, 0))
+	default: return between(p.version(), semver.New(p.major, p.minor+1, 0))
+	}
+}
+EOF
+cat > internal/semrange/hyphen.go <<'EOF'
+package semrange
+
+import "github.com/brightloom/pinwheel/internal/semver"
+
+func hyphen(from, to partial) []Comparator {
+	var set []Comparator
+	if from.fields > 0 { set = append(set, Comparator{Op: OpGTE, Version: from.version()}) }
+	if to.fields == 3 {
+		set = append(set, Comparator{Op: OpLTE, Version: to.version()})
+	} else if to.fields > 0 {
+		set = append(set, Comparator{Op: OpLT, Version: to.next().Floor()})
+	}
+	if len(set) == 0 { return []Comparator{matchAll} }
+	return set
+}
+EOF
+[step 3] python3 - <<'PY'
+p='internal/semrange/comparator.go'; s=open(p).read(); s=s.replace('return v.Equal(c.Version)', 'return d == 0'); open(p,'w').write(s)
+p='internal/semrange/range.go'; s=open(p).read()
+s=s.replace('for _, alt := range strings.Split(strings.TrimSpace(s), " || ") {', 'for _, alt := range strings.Split(strings.TrimSpace(s), "||") {')
+s=s.replace('''                if !c.Any && c.Version.IsPrerelease() {
+                        return true
+                }''','''                if !c.Any && c.Version.IsPrerelease() && v.SameTriple(c.Version) {
+                        return true
+                }''')
+open(p,'w').write(s)
+PY
+cat > internal/resolve/resolver.go <<'EOF'
+// Package resolve computes the flat set of releases a project locks.
+package resolve
+
+import (
+	"fmt"
+	"github.com/brightloom/pinwheel/internal/manifest"
+	"github.com/brightloom/pinwheel/internal/registry"
+)
+
+const maxRounds = 100
+
+type Result struct {
+	Selected map[string]*registry.Release
+	Constraints map[string][]Constraint
+}
+
+func Resolve(m *manifest.Manifest, reg *registry.Registry) (*Result, error) {
+	sel := map[string]*registry.Release{}
+	for round := 0; round < maxRounds; round++ {
+		cons, err := gather(m, sel)
+		if err != nil { return nil, err }
+		next := make(map[string]*registry.Release, len(cons))
+		for _, name := range sortedKeys(cons) {
+			pkg, ok := reg.Package(name)
+			if !ok { return nil, &UnknownPackageError{Package: name, RequiredBy: dependents(cons[name])} }
+			rel, err := choose(pkg, effective(m, name, cons[name]), m.PreferLowest())
+			if err != nil { return nil, err }
+			next[name] = rel
+		}
+		if sameSelection(sel, next) { return &Result{Selected: next, Constraints: cons}, nil }
+		sel = next
+	}
+	return nil, fmt.Errorf("resolution did not settle after %d rounds", maxRounds)
+}
+
+func sameSelection(a, b map[string]*registry.Release) bool {
+	if len(a) != len(b) { return false }
+	for name, rel := range a { if b[name] != rel { return false } }
+	return true
+}
+EOF
+python3 - <<'PY'
+p='internal/resolve/constraints.go'; s=open(p).read()
+old='''        out := append([]Constraint(nil), cons...)
+        return append(out, Constraint{From: OverrideName, Raw: raw, Range: semrange.MustParse(raw)})'''
+new='''        return []Constraint{{From: OverrideName, Raw: raw, Range: semrange.MustParse(raw)}}'''
+assert old in s; open(p,'w').write(s.replace(old,new))
+PY
+cat > internal/resolve/yanked.go <<'EOF'
+package resolve
+
+import (
+	"strings"
+	"github.com/brightloom/pinwheel/internal/registry"
+	"github.com/brightloom/pinwheel/internal/semver"
+)
+
+func pinned(rel *registry.Release, cons []Constraint) bool {
+	for _, c := range cons {
+		raw := strings.TrimSpace(c.Raw)
+		if strings.HasPrefix(raw, "=") { raw = strings.TrimSpace(raw[1:]) }
+		v, err := semver.Parse(raw)
+		if err == nil && semver.Compare(v, rel.Parsed) == 0 && c.Range.Test(rel.Parsed) { return true }
+	}
+	return false
+}
+EOF
+cat > internal/resolve/candidates.go <<'EOF'
+package resolve
+
+import (
+	"github.com/brightloom/pinwheel/internal/registry"
+	"github.com/brightloom/pinwheel/internal/semver"
+)
+
+func choose(pkg *registry.Package, cons []Constraint, lowest bool) (*registry.Release, error) {
+	var best *registry.Release
+	for i := range pkg.Releases {
+		rel := &pkg.Releases[i]
+		if !satisfiesAll(rel, cons) || (rel.Yanked && !pinned(rel, cons)) { continue }
+		if best == nil || better(rel, best, lowest) { best = rel }
+	}
+	if best == nil { return nil, &UnsatisfiableError{Package: pkg.Name, Constraints: cons} }
+	return best, nil
+}
+
+func better(a, b *registry.Release, lowest bool) bool {
+	if c := semver.Compare(a.Parsed, b.Parsed); c != 0 {
+		if lowest { return c < 0 }
+		return c > 0
+	}
+	if !a.Published.Equal(b.Published) { return a.Published.After(b.Published) }
+	return a.Index > b.Index
+}
+
+func satisfiesAll(rel *registry.Release, cons []Constraint) bool {
+	for _, c := range cons { if !c.Range.Test(rel.Parsed) { return false } }
+	return true
+}
+EOF
+python3 - <<'PY'
+p='internal/lockfile/lockfile.go'; s=open(p).read()
+s=s.replace('"encoding/json"', '"bytes"\n        "encoding/json"')
+old='''        data, err := json.MarshalIndent(l, "", "  ")
+        if err != nil {
+                return nil, err
+        }
+        return append(data, '\\n'), nil'''
+new='''        var buf bytes.Buffer
+        enc := json.NewEncoder(&buf)
+        enc.SetEscapeHTML(false)
+        enc.SetIndent("", "  ")
+        if err := enc.Encode(l); err != nil {
+                return nil, err
+        }
+        return buf.Bytes(), nil'''
+assert old in s; open(p,'w').write(s.replace(old,new))
+PY
+[step 3] python3 - <<'PY'
+p='internal/registry/registry.go'; s=open(p).read()
+s=s.replace('"github.com/brightloom/pinwheel/internal/semver"', '"github.com/brightloom/pinwheel/internal/semver"\n        "github.com/brightloom/pinwheel/internal/semrange"')
+old='''        if err := dec.Decode(&pkg); err != nil {
+                return nil, fmt.Errorf("registry: %s: %w", filepath.Base(path), err)
+        }'''
+new='''        if err := dec.Decode(&pkg); err != nil {
+                return nil, fmt.Errorf("registry: %s: %w", filepath.Base(path), err)
+        }
+        if dec.More() {
+                return nil, fmt.Errorf("registry: %s: trailing JSON data", filepath.Base(path))
+        }'''
+s=s.replace(old,new)
+old='''                if rel.Dependencies == nil {
+                        rel.Dependencies = map[string]string{}
+                }
+                rel.Parsed = v'''
+new='''                if rel.Dependencies == nil {
+                        rel.Dependencies = map[string]string{}
+                }
+                for dep, raw := range rel.Dependencies {
+                        if _, err := semrange.Parse(raw); err != nil {
+                                return nil, fmt.Errorf("registry: %s %s dependency %s: %w", pkg.Name, rel.Version, dep, err)
+                        }
+                }
+                rel.Parsed = v'''
+assert old in s; s=s.replace(old,new); open(p,'w').write(s)
+PY
+cat >> internal/semver/version_test.go <<'EOF'
+
+func TestComparePrereleaseIdentifiers(t *testing.T) {
+	cases := [][2]string{{"2.1.0-beta.2", "2.1.0-beta.11"}, {"1.0.0-alpha", "1.0.0-alpha.1"}, {"1.0.0-2", "1.0.0-11"}, {"1.0.0-999999999999999999999", "1.0.0-1000000000000000000000"}}
+	for _, c := range cases {
+		if Compare(MustParse(c[0]), MustParse(c[1])) >= 0 { t.Errorf("expected %s < %s", c[0], c[1]) }
+	}
+}
+
+func TestRejectNumericPrereleaseLeadingZero(t *testing.T) {
+	if _, err := Parse("1.0.0-01"); err == nil { t.Fatal("accepted numeric prerelease with leading zero") }
+}
+EOF
+cat >> internal/semrange/range_test.go <<'EOF'
+
+func TestDocumentedRangeEdges(t *testing.T) {
+	cases := []struct{ v, r string; want bool }{
+		{"0.4.9", "^0.4.1", true}, {"0.5.0", "^0.4.1", false},
+		{"1.9.0-rc.2", "^1.4.0", false},
+		{"0.0.3", "^0.0.3", true}, {"0.0.4", "^0.0.3", false},
+		{"2.0.0", ">1", true}, {"1.0.1", ">1", false},
+		{"1.3.0", ">1.2", true}, {"1.2.9", ">1.2", false},
+		{"1.2.9", "<=1.2", true}, {"1.3.0-rc.1", "<=1.2", false},
+		{"2.3.9", "1.2.3 - 2.3", true}, {"2.4.0-rc.1", "1.2.3 - 2.3", false},
+		{"1.9.0", "~1", true}, {"2.0.0", "~1", false},
+		{"3.4.5-alpha.9", ">1.2.3-alpha.3", false},
+		{"1.2.3+other", "=1.2.3", true},
+		{"3.1.0", "^1.0.0||^3.0.0", true},
+	}
+	for _, c := range cases {
+		r, err := Parse(c.r); if err != nil { t.Errorf("Parse(%q): %v", c.r, err); continue }
+		if got := r.Test(semver.MustParse(c.v)); got != c.want { t.Errorf("%s satisfies %q = %v, want %v", c.v, c.r, got, c.want) }
+	}
+}
+EOF
+gofmt -w cmd internal
+go test ./...
+[step 3] go build -o /tmp/pinwheel ./cmd/pinwheel && /tmp/pinwheel compare 2.1.0-beta.11 2.1.0-beta.2 && rm -f examples/*/pin.lock && for d in examples/*; do echo "--- $d"; /tmp/pinwheel resolve "$d"; cat "$d/pin.lock"; done
+[step 4] printf 'PATH=%s\n' "$PATH"; command -v go || true; command -v gofmt || true; find /usr /usr/local /opt -type f \( -name go -o -name gofmt \) 2>/dev/null | head -30; command -v node || true; command -v npm || true; command -v git || true
+[step 4] git diff --stat && git diff --check && git diff
+[step 4] sed -n '1,240p' internal/semrange/range_test.go; sed -n '1,220p' internal/registry/registry.go; sed -n '1,180p' internal/lockfile/lockfile.go
+[step 5] echo GO=$(command -v go || echo none) GOFMT=$(command -v gofmt || echo none) NODE=$(command -v node || echo none); git status --short
+[step 5] grep -R -n 'sameSelection\|func better\|SetEscapeHTML\|SameTriple(c.Version)\|strings.Split(strings.TrimSpace(s)' internal || true
+[step 5] git diff --check; git diff --stat
+[step 6] printf 'go=%s gofmt=%s node=%s\n' "$(command -v go 2>/dev/null || echo none)" "$(command -v gofmt 2>/dev/null || echo none)" "$(command -v node 2>/dev/null || echo none)"; for x in sameSelection 'func better' SetEscapeHTML 'SameTriple(c.Version)'; do printf '%s: ' "$x"; grep -R -l "$x" internal 2>/dev/null | tr '\n' ' '; echo; done
+[step 6] for f in internal/semver/compare.go internal/semver/version.go internal/semrange/partial.go internal/semrange/range.go internal/resolve/resolver.go internal/resolve/constraints.go internal/resolve/yanked.go internal/resolve/candidates.go internal/lockfile/lockfile.go internal/registry/registry.go; do echo ===$f; grep -nE 'func |Split\(|Trim|Equal|override|SetEscape|Decode|More|semrange' "$f"; done
+[step 7] python3 - <<'PY'
+p='internal/resolve/constraints.go'
+s=open(p).read()
+old='''\tout := append([]Constraint(nil), cons...)
+\treturn append(out, Constraint{From: OverrideName, Raw: raw, Range: semrange.MustParse(raw)})'''
+if old not in s:
+ old='''        out := append([]Constraint(nil), cons...)
+        return append(out, Constraint{From: OverrideName, Raw: raw, Range: semrange.MustParse(raw)})'''
+new='''\treturn []Constraint{{From: OverrideName, Raw: raw, Range: semrange.MustParse(raw)}}'''
+assert old in s, 'override block not found'
+open(p,'w').write(s.replace(old,new))
+PY
+python3 - <<'PY'
+p='internal/lockfile/lockfile.go'; s=open(p).read()
+s=s.replace('import (\n\t"encoding/json"', 'import (\n\t"bytes"\n\t"encoding/json"').replace('import (\n        "encoding/json"', 'import (\n        "bytes"\n        "encoding/json"')
+start=s.index('func Encode(l *Lock) ([]byte, error) {')
+end=s.index('\n}\n\n// Write stores', start)+2
+new='''func Encode(l *Lock) ([]byte, error) {
+\tvar buf bytes.Buffer
+\tenc := json.NewEncoder(&buf)
+\tenc.SetEscapeHTML(false)
+\tenc.SetIndent("", "  ")
+\tif err := enc.Encode(l); err != nil {
+\t\treturn nil, err
+\t}
+\treturn buf.Bytes(), nil
+}'''
+s=s[:start]+new+s[end:]
+open(p,'w').write(s)
+PY
+python3 - <<'PY'
+p='internal/registry/registry.go'; s=open(p).read()
+s=s.replace('"fmt"\n', '"fmt"\n\t"io"\n', 1)
+needle='"github.com/brightloom/pinwheel/internal/semver"'
+s=s.replace(needle, '"github.com/brightloom/pinwheel/internal/semrange"\n\t'+needle, 1)
+old='''\tif err := dec.Decode(&pkg); err != nil {
+\t\treturn nil, fmt.Errorf("registry: %s: %w", filepath.Base(path), err)
+\t}'''
+if old not in s:
+ old='''        if err := dec.Decode(&pkg); err != nil {
+                return nil, fmt.Errorf("registry: %s: %w", filepath.Base(path), err)
+        }'''
+new='''\tif err := dec.Decode(&pkg); err != nil {
+\t\treturn nil, fmt.Errorf("registry: %s: %w", filepath.Base(path), err)
+\t}
+\tif err := ensureEOF(dec); err != nil {
+\t\treturn nil, fmt.Errorf("registry: %s: %w", filepath.Base(path), err)
+\t}'''
+assert old in s
+s=s.replace(old,new)
+old='''\t\tif rel.Dependencies == nil {
+\t\t\trel.Dependencies = map[string]string{}
+\t\t}
+\t\trel.Parsed = v'''
+if old not in s:
+ old='''                if rel.Dependencies == nil {
+                        rel.Dependencies = map[string]string{}
+                }
+                rel.Parsed = v'''
+new='''\t\tif rel.Dependencies == nil {
+\t\t\trel.Dependencies = map[string]string{}
+\t\t}
+\t\tfor dep, raw := range rel.Dependencies {
+\t\t\tif _, err := semrange.Parse(raw); err != nil {
+\t\t\t\treturn nil, fmt.Errorf("registry: %s %s dependency %s: %w", pkg.Name, rel.Version, dep, err)
+\t\t\t}
+\t\t}
+\t\trel.Parsed = v'''
+assert old in s
+s=s.replace(old,new)
+s += '''
+
+func ensureEOF(dec *json.Decoder) error {
+\tvar extra any
+\tif err := dec.Decode(&extra); err != io.EOF {
+\t\tif err == nil { return fmt.Errorf("trailing JSON value") }
+\t\treturn err
+\t}
+\treturn nil
+}
+'''
+open(p,'w').write(s)
+PY
+[step 7] python3 - <<'PY'
+p='internal/manifest/manifest.go'; s=open(p).read()
+s=s.replace('"fmt"\n', '"fmt"\n\t"io"\n', 1)
+old='''\tif err := dec.Decode(&m); err != nil {
+\t\treturn nil, fmt.Errorf("manifest: %w", err)
+\t}'''
+if old not in s:
+ old='''        if err := dec.Decode(&m); err != nil {
+                return nil, fmt.Errorf("manifest: %w", err)
+        }'''
+new='''\tif err := dec.Decode(&m); err != nil {
+\t\treturn nil, fmt.Errorf("manifest: %w", err)
+\t}
+\tvar extra any
+\tif err := dec.Decode(&extra); err != io.EOF {
+\t\tif err == nil { err = fmt.Errorf("trailing JSON value") }
+\t\treturn nil, fmt.Errorf("manifest: %w", err)
+\t}'''
+assert old in s
+open(p,'w').write(s.replace(old,new))
+PY
+printf 'tools: '; command -v go || true; find /usr/local /usr /opt -type f -path '*/bin/go' 2>/dev/null | head -5
+printf '\nmarkers:\n'; grep -n 'return \[\]Constraint\|SetEscapeHTML\|ensureEOF\|semrange.Parse(raw)' internal/resolve/constraints.go internal/lockfile/lockfile.go internal/registry/registry.go
+[step 8] export PATH=/usr/local/go/bin:$PATH; gofmt -w cmd internal; go test ./...
+[step 8] export PATH=/usr/local/go/bin:$PATH; go build -o /tmp/pinwheel ./cmd/pinwheel && /tmp/pinwheel compare 2.1.0-beta.11 2.1.0-beta.2; rm -f examples/*/pin.lock; for d in examples/*; do echo "--- $d"; /tmp/pinwheel resolve "$d"; test -f "$d/pin.lock" && cat "$d/pin.lock"; done
+[step 9] sed -n '45,90p' internal/semver/version.go; cat internal/semrange/hyphen.go
+[step 9] python3 - <<'PY'
+p='internal/semver/version.go'; s=open(p).read()
+old='''\t\tn, err := strconv.ParseUint(r, 10, 64)
+\t\tif err != nil {
+\t\t\treturn nil, false
+\t\t}
+\t\tids = append(ids, Identifier{Raw: r, Numeric: true, Num: n})'''
+assert old in s
+new='''\t\tif len(r) > 1 && r[0] == '0' {
+\t\t\treturn nil, false
+\t\t}
+\t\tn, _ := strconv.ParseUint(r, 10, 64) // overflow is harmless; Raw determines ordering
+\t\tids = append(ids, Identifier{Raw: r, Numeric: true, Num: n})'''
+open(p,'w').write(s.replace(old,new))
+p='internal/semrange/hyphen.go'; s=open(p).read(); s=s.replace('\nimport "github.com/brightloom/pinwheel/internal/semver"\n','\n'); open(p,'w').write(s)
+PY
+export PATH=/usr/local/go/bin:$PATH; gofmt -w internal; go test ./...
+[step 10] sed -n '112,138p' internal/semrange/range.go; python3 - <<'PY'
+p='internal/semrange/range.go'; s=open(p).read()
+old='if !c.Any && c.Version.IsPrerelease() {'
+new='if !c.Any && c.Version.IsPrerelease() && v.SameTriple(c.Version) {'
+assert old in s
+open(p,'w').write(s.replace(old,new))
+PY
+export PATH=/usr/local/go/bin:$PATH; gofmt -w internal/semrange/range.go; go test ./...
+[step 10] export PATH=/usr/local/go/bin:$PATH; go build -o /tmp/pinwheel ./cmd/pinwheel && echo compare=$(/tmp/pinwheel compare 2.1.0-beta.11 2.1.0-beta.2); rm -f examples/*/pin.lock; for d in examples/*; do echo "--- $d"; /tmp/pinwheel resolve "$d"; cat "$d/pin.lock"; done
+[step 11] grep -H -E '"(quill-log|mesh-http|json-lattice|ember-uuid)"|"version": "(0\.4\.7|1\.6\.3|1\.4\.2)"' examples/*/pin.lock || true
+[step 11] cat > internal/cli/resolve.go <<'EOF'
+package cli
+
+import (
+	"fmt"
+	"io"
+	"path/filepath"
+
+	"github.com/brightloom/pinwheel/internal/lockfile"
+	"github.com/brightloom/pinwheel/internal/manifest"
+	"github.com/brightloom/pinwheel/internal/registry"
+	"github.com/brightloom/pinwheel/internal/resolve"
+)
+
+const defaultRegistry = "/app/registry"
+
+func runResolve(args []string, stdout, stderr io.Writer) int {
+	registryDir := defaultRegistry
+	var dir string
+	switch {
+	case len(args) == 1 && args[0] != "--registry":
+		dir = args[0]
+	case len(args) == 3 && args[0] == "--registry" && args[1] != "":
+		registryDir, dir = args[1], args[2]
+	default:
+		return fail(stderr, exitUsage, "usage: pinwheel resolve [--registry DIR] PROJECT_DIR")
+	}
+
+	m, err := manifest.Load(filepath.Join(dir, manifest.FileName))
+	if err != nil {
+		return fail(stderr, exitUsage, "%v", err)
+	}
+	reg, err := registry.Load(registryDir)
+	if err != nil {
+		return fail(stderr, exitUsage, "%v", err)
+	}
+	res, err := resolve.Resolve(m, reg)
+	if err != nil {
+		return fail(stderr, exitResolve, "%v", err)
+	}
+	if err := lockfile.Write(filepath.Join(dir, lockfile.FileName), lockfile.Build(m, res)); err != nil {
+		return fail(stderr, exitUsage, "%v", err)
+	}
+	fmt.Fprintf(stdout, "resolved %d packages\n", len(res.Selected))
+	return exitOK
+}
+EOF
+python3 - <<'PY'
+p='internal/cli/cli.go'; s=open(p).read()
+s=s.replace('''\tif len(args) == 0 {
+\t\tusage(stderr)
+\t\treturn exitUsage
+\t}''','''\tif len(args) == 0 {
+\t\treturn fail(stderr, exitUsage, "usage: pinwheel COMMAND")
+\t}''')
+s=s.replace('''\tfmt.Fprintf(stderr, "pinwheel: unknown command %q\\n", args[0])
+\tusage(stderr)
+\treturn exitUsage''','''\treturn fail(stderr, exitUsage, "unknown command %q", args[0])''')
+open(p,'w').write(s)
+PY
+export PATH=/usr/local/go/bin:$PATH; gofmt -w internal/cli; go test ./...; go vet ./...; go build -o /tmp/pinwheel ./cmd/pinwheel
+[step 11] set +e; for a in '' 'bogus' 'compare 1.0.0 nope' 'satisfies 1.0.0 nope' 'resolve examples/storefront --registry registry' 'resolve --bad x'; do echo "[$a]"; out=$(eval "/tmp/pinwheel $a" 2>&1 >/tmp/out); st=$?; printf 'status=%s stdout=%q stderr=%q\n' "$st" "$(cat /tmp/out)" "$out"; done; echo '[help]'; /tmp/pinwheel --help
+[step 11] printf '%s\n' '--- go.mod' "$(cat go.mod)" '--- prohibited imports'; grep -R -nE '"(os/exec|syscall|unsafe|plugin|C)"' --include='*.go' . || true; printf '%s\n' '--- generated lock checks'; grep -q '"ember-uuid"' examples/ledger-cli/pin.lock && grep -A2 '"ember-uuid"' examples/ledger-cli/pin.lock; ! grep -q 'json-lattice' examples/storefront/pin.lock; rm -f examples/*/pin.lock /tmp/out
+[step 12] cat docs/registry.md; printf '\n--- README ---\n'; cat README.md
+[step 12] sed -n '1,240p' internal/semver/version.go; sed -n '1,240p' internal/semrange/range.go; sed -n '1,180p' internal/registry/registry.go; sed -n '1,150p' internal/manifest/manifest.go
+[step 12] find examples -name pin.lock -print; export PATH=/usr/local/go/bin:$PATH; go test ./... && go vet ./... && go build -o /tmp/pinwheel ./cmd/pinwheel
+[step 13] cat docs/registry.md
+[step 13] sed -n '1,150p' internal/registry/registry.go
+[step 14] grep -nE 'must|invalid|duplicate|version|published|dependencies|file|name' docs/registry.md
+[step 14] find . -name pin.lock -o -name '*.tmp'; grep -R '^require' go.mod || true; export PATH=/usr/local/go/bin:$PATH; go test ./... >/tmp/final-test && tail -12 /tmp/final-test
+[step 15] {}
+[step 16] {}

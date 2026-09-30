@@ -1,0 +1,32 @@
+at 1767225600
+get https://1.2.3/a
+get https://a.b.example.com/a/
+get https://a.b.example.com/a
+get https://192.168.0.1/x/y?q=/z
+get http://alice.github.io/a/bc/d
+at 1767225700
+dump
+set https://shop.example.co.uk/a sid=9; Max-Age=-0; Expires=Wed, 09 Jun 2021 10:18:14 GMT
+get http://foo.test/
+get http://api.example.com/a/
+set http://example.com/a b=2; Path=/; Path=/a/; HttpOnly
+set https://a.b.example.com/ z=4; Path=/; HttpOnly; HttpOnly
+get https://www.example.com/
+dump
+get https://a.b.example.com/a
+get https://example.org/a/bc/d
+set http://shop.example.co.uk/a sid=3; HttpOnly; Max-Age=0
+at 1767225730
+at 1767229730
+set http://x.co.uk/a/b/ b=3; HttpOnly; Max-Age=999999999999999999999
+get http://example.org/a/b
+get https://1.2.3/a/bc/d
+get https://www.example.com/x/y?q=/z
+get https://example.com/a/
+set https://www.example.com/a/b z=1; Domain=test; Path=/ab
+set http://10.1.2.3/a/b/ A=2; Domain=.; Max-Age=3600
+get https://shop.example.co.uk/a/b/
+set https://shop.example.co.uk/a b=3; Expires=Sun Nov  6 08:49:37 1994; Path=ab; Max-Age=999999999999999999999; Domain=github.io
+set http://192.168.0.1/a/bc/d b=1; Max-Age=abc
+at 1767233730
+dump

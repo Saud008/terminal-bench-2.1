@@ -1,0 +1,113 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 10,
+            "passed": 9,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790482624.732512,
+            "stop": 1790482634.7029433
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_section_anchoring",
+                "status": "passed",
+                "duration": 9.667395335003675,
+                "start": 1790482624.74961,
+                "stop": 1790482634.4196382,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_tab_indentation",
+                "status": "passed",
+                "duration": 0.05010931400101981,
+                "start": 1790482634.4200776,
+                "stop": 1790482634.4724474,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_bracketed_directories",
+                "status": "passed",
+                "duration": 0.024045394002314424,
+                "start": 1790482634.473055,
+                "stop": 1790482634.498334,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_stdin_paths",
+                "status": "passed",
+                "duration": 0.025543452997226268,
+                "start": 1790482634.4986053,
+                "stop": 1790482634.525628,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_globstar_segments",
+                "status": "passed",
+                "duration": 0.01987888700023177,
+                "start": 1790482634.5262928,
+                "stop": 1790482634.5476754,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_negated_classes",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.021551481997448718,
+                "start": 1790482634.5482514,
+                "stop": 1790482634.5940995,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "quire = '/tmp/quire-verify/quire'\n\n    def test_negated_classes(quire):\n        \"\"\"Bracket expressions: '[!...]' negation, literal '^', brackets containing '/'.\"\"\"\n>       _check_group(quire, \"negated_classes\")\n\n/tests/test_outputs.py:127: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/quire-verify/quire', group = 'negated_classes'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            rc, out, err = _run_case(binary, case)\n            if (rc, out, err) != (case[\"rc\"], case[\"stdout\"], case[\"stderr\"]):\n                failures.append(\n                    f\"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\\n\"\n                    f\"expected rc={case['rc']} stderr={case['stderr']!r}\\n{case['stdout']}\"\n                    f\"got rc={rc} stderr={err!r}\\n{out}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 6 of 6 cases differ:\nE         --- negated_classes-01 args=['{root}/readme.md', '{root}/.gitignore', '{root}/sub/.env', '{root}/sub/x'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/negated_classes-01/readme.md]\nE         m=visible\nE         n=all\nE         [/srv/qc/negated_classes-01/.gitignore]\nE         n=all\nE         [/srv/qc/negated_classes-01/sub/.env]\nE         n=all\nE         [/srv/qc/negated_classes-01/sub/x]\nE         m=visible\nE         n=all\nE         got rc=0 stderr=''\nE         [/srv/qc/negated_classes-01/readme.md]\nE         n=all\nE         [/srv/qc/negated_classes-01/.gitignore]\nE         m=visible\nE         n=all\nE         [/srv/qc/negated_classes-01/sub/.env]\nE         m=visible\nE         n=all\nE         [/srv/qc/negated_classes-01/sub/x]\nE         n=all\nE         \nE         --- negated_classes-02 args=['{root}/a.c', '{root}/a.o', '{root}/a.h', '{root}/a.cc'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/negated_classes-02/a.c]\nE         m=source\nE         n=c\nE         [/srv/qc/negated_classes-02/a.o]\nE         [/srv/qc/negated_classes-02/a.h]\nE         m=source\nE         n=c\nE         [/srv/qc/negated_classes-02/a.cc]\nE         got rc=0 stderr=''\nE         [/srv/qc/negated_classes-02/a.c]\nE         n=c\nE         [/srv/qc/negated_classes-02/a.o]\nE         m=source\nE         [/srv/qc/negated_classes-02/a.h]\nE         n=c\nE         [/srv/qc/negated_classes-02/a.cc]\nE         \nE         --- negated_classes-03 args=['{root}/file1.txt', '{root}/filea.txt', '{root}/file!.txt', '{root}/file.txt'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/negated_classes-03/file1.txt]\nE         n=numbered\nE         [/srv/qc/negated_classes-03/filea.txt]\nE         m=named\nE         [/srv/qc/negated_classes-03/file!.txt]\nE         m=named\nE         [/srv/qc/negated_classes-03/file.txt]\nE         got rc=0 stderr=''\nE         [/srv/qc/negated_classes-03/file1.txt]\nE         m=named\nE         n=numbered\nE         [/srv/qc/negated_classes-03/filea.txt]\nE         [/srv/qc/negated_classes-03/file!.txt]\nE         m=named\nE         [/srv/qc/negated_classes-03/file.txt]\nE         \nE         --- negated_classes-04 args=['{root}/main.go', '{root}/_gen.go', '{root}/^x.go'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/negated_classes-04/main.go]\nE         n=bang\nE         [/srv/qc/negated_classes-04/_gen.go]\nE         m=caret\nE         [/srv/qc/negated_classes-04/^x.go]\nE         m=caret\nE         n=bang\nE         got rc=0 stderr=''\nE         [/srv/qc/negated_classes-04/main.go]\nE         m=caret\nE         [/srv/qc/negated_classes-04/_gen.go]\nE         n=bang\nE         [/srv/qc/negated_classes-04/^x.go]\nE         m=caret\nE         \nE         --- negated_classes-05 args=['{root}/[!/]x', '{root}/ax', '{root}/ay', '{root}/dy', '{root}/-y'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/negated_classes-05/[!/]x]\nE         m=slash\nE         [/srv/qc/negated_classes-05/ax]\nE         [/srv/qc/negated_classes-05/ay]\nE         [/srv/qc/negated_classes-05/dy]\nE         n=range\nE         [/srv/qc/negated_classes-05/-y]\nE         n=range\nE         got rc=0 stderr=''\nE         [/srv/qc/negated_classes-05/[!/]x]\nE         m=slash\nE         [/srv/qc/negated_classes-05/ax]\nE         [/srv/qc/negated_classes-05/ay]\nE         n=range\nE         [/srv/qc/negated_classes-05/dy]\nE         [/srv/qc/negated_classes-05/-y]\nE         \nE         --- negated_classes-06 args=['{root}/app.py', '{root}/tool.py', '{root}/test_main.py', '{root}/test_other.py'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/negated_classes-06/app.py]\nE         m=alt\nE         [/srv/qc/negated_classes-06/tool.py]\nE         [/srv/qc/negated_classes-06/test_main.py]\nE         m=alt\nE         [/srv/qc/negated_classes-06/test_other.py]\nE         got rc=0 stderr=''\nE         [/srv/qc/negated_classes-06/app.py]\nE         [/srv/qc/negated_classes-06/tool.py]\nE         m=alt\nE         [/srv/qc/negated_classes-06/test_main.py]\nE         m=alt\nE         [/srv/qc/negated_classes-06/test_other.py]\nE         m=alt\nE         \nE       assert not [\"--- negated_classes-01 args=['{root}/readme.md', '{root}/.gitignore', '{root}/sub/.env', '{root}/sub/x'] stdin=None\\...ool.py]\\nm=alt\\n[/srv/qc/negated_classes-06/test_main.py]\\nm=alt\\n[/srv/qc/negated_classes-06/test_other.py]\\nm=alt\\n\"]\n\n/tests/test_outputs.py:97: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_inline_comments",
+                "status": "passed",
+                "duration": 0.028165561001515016,
+                "start": 1790482634.5945094,
+                "stop": 1790482634.6246152,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_root_declarations",
+                "status": "passed",
+                "duration": 0.025561473998095607,
+                "start": 1790482634.625165,
+                "stop": 1790482634.652506,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_value_case",
+                "status": "passed",
+                "duration": 0.021223775001999456,
+                "start": 1790482634.652881,
+                "stop": 1790482634.6761022,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_property_order",
+                "status": "passed",
+                "duration": 0.022510685997986002,
+                "start": 1790482634.6765141,
+                "stop": 1790482634.700822,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

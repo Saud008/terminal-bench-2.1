@@ -1,0 +1,17 @@
+at 1767225600
+set https://api.example.com/a/b z=2
+dump
+set https://foo.test/a/b/c b=8; SameSite=Lax; Expires=Wed, 09 Jun 2021 10:18:14 GMT; HttpOnly
+get http://example.com/ab
+get https://10.1.2.3/a/b
+dump
+at 1767225630
+get http://foo.test/x/y?q=/z
+get http://a.b.example.com/
+dump
+get https://co.uk/ab
+get http://github.io
+set https://alice.github.io/a/ A=5; Path=/a/b; Path=/a/; HttpOnly
+set http://api.example.com/ab A=4; SameSite=Lax
+set http://co.uk/ab A=4
+dump

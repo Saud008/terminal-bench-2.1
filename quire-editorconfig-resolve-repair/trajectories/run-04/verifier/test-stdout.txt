@@ -1,0 +1,271 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 10 items
+
+../tests/test_outputs.py EEEEEEEEEE                                      [100%]
+
+==================================== ERRORS ====================================
+___________________ ERROR at setup of test_section_anchoring ___________________
+
+    @pytest.fixture(scope="session")
+    def quire():
+        _hide_reference_tools()
+        problems = _source_policy_problems()
+        assert not problems, "source policy: " + "; ".join(problems)
+        shutil.rmtree(OUT, ignore_errors=True)
+        OUT.mkdir(parents=True)
+        env = dict(os.environ, GOTOOLCHAIN="local", GOPROXY="off", GOFLAGS="-buildvcs=false",
+                   CGO_ENABLED="0", GOCACHE=str(OUT / "cache"))
+        build = subprocess.run(["go", "build", "-o", str(BINARY), "./cmd/quire"],
+                               cwd=APP, env=env, capture_output=True, text=True, timeout=1800)
+>       assert build.returncode == 0, "go build failed:\n" + build.stderr[-4000:]
+E       AssertionError: go build failed:
+E         # quire/internal/glob
+E         internal/glob/compile.go:102:7: undefined: inClass
+E         internal/glob/compile.go:113:7: undefined: inClass
+E         internal/glob/compile.go:115:4: undefined: inClass
+E         internal/glob/compile.go:118:7: undefined: inClass
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['go', 'build', '-o', '/tmp/quire-verify/quire', './cmd/quire'], returncode=1, stdout='', stderr...ed: inClass\ninternal/glob/compile.go:115:4: undefined: inClass\ninternal/glob/compile.go:118:7: undefined: inClass\n').returncode
+
+/tests/test_outputs.py:64: AssertionError
+____________________ ERROR at setup of test_tab_indentation ____________________
+
+    @pytest.fixture(scope="session")
+    def quire():
+        _hide_reference_tools()
+        problems = _source_policy_problems()
+        assert not problems, "source policy: " + "; ".join(problems)
+        shutil.rmtree(OUT, ignore_errors=True)
+        OUT.mkdir(parents=True)
+        env = dict(os.environ, GOTOOLCHAIN="local", GOPROXY="off", GOFLAGS="-buildvcs=false",
+                   CGO_ENABLED="0", GOCACHE=str(OUT / "cache"))
+        build = subprocess.run(["go", "build", "-o", str(BINARY), "./cmd/quire"],
+                               cwd=APP, env=env, capture_output=True, text=True, timeout=1800)
+>       assert build.returncode == 0, "go build failed:\n" + build.stderr[-4000:]
+E       AssertionError: go build failed:
+E         # quire/internal/glob
+E         internal/glob/compile.go:102:7: undefined: inClass
+E         internal/glob/compile.go:113:7: undefined: inClass
+E         internal/glob/compile.go:115:4: undefined: inClass
+E         internal/glob/compile.go:118:7: undefined: inClass
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['go', 'build', '-o', '/tmp/quire-verify/quire', './cmd/quire'], returncode=1, stdout='', stderr...ed: inClass\ninternal/glob/compile.go:115:4: undefined: inClass\ninternal/glob/compile.go:118:7: undefined: inClass\n').returncode
+
+/tests/test_outputs.py:64: AssertionError
+_________________ ERROR at setup of test_bracketed_directories _________________
+
+    @pytest.fixture(scope="session")
+    def quire():
+        _hide_reference_tools()
+        problems = _source_policy_problems()
+        assert not problems, "source policy: " + "; ".join(problems)
+        shutil.rmtree(OUT, ignore_errors=True)
+        OUT.mkdir(parents=True)
+        env = dict(os.environ, GOTOOLCHAIN="local", GOPROXY="off", GOFLAGS="-buildvcs=false",
+                   CGO_ENABLED="0", GOCACHE=str(OUT / "cache"))
+        build = subprocess.run(["go", "build", "-o", str(BINARY), "./cmd/quire"],
+                               cwd=APP, env=env, capture_output=True, text=True, timeout=1800)
+>       assert build.returncode == 0, "go build failed:\n" + build.stderr[-4000:]
+E       AssertionError: go build failed:
+E         # quire/internal/glob
+E         internal/glob/compile.go:102:7: undefined: inClass
+E         internal/glob/compile.go:113:7: undefined: inClass
+E         internal/glob/compile.go:115:4: undefined: inClass
+E         internal/glob/compile.go:118:7: undefined: inClass
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['go', 'build', '-o', '/tmp/quire-verify/quire', './cmd/quire'], returncode=1, stdout='', stderr...ed: inClass\ninternal/glob/compile.go:115:4: undefined: inClass\ninternal/glob/compile.go:118:7: undefined: inClass\n').returncode
+
+/tests/test_outputs.py:64: AssertionError
+______________________ ERROR at setup of test_stdin_paths ______________________
+
+    @pytest.fixture(scope="session")
+    def quire():
+        _hide_reference_tools()
+        problems = _source_policy_problems()
+        assert not problems, "source policy: " + "; ".join(problems)
+        shutil.rmtree(OUT, ignore_errors=True)
+        OUT.mkdir(parents=True)
+        env = dict(os.environ, GOTOOLCHAIN="local", GOPROXY="off", GOFLAGS="-buildvcs=false",
+                   CGO_ENABLED="0", GOCACHE=str(OUT / "cache"))
+        build = subprocess.run(["go", "build", "-o", str(BINARY), "./cmd/quire"],
+                               cwd=APP, env=env, capture_output=True, text=True, timeout=1800)
+>       assert build.returncode == 0, "go build failed:\n" + build.stderr[-4000:]
+E       AssertionError: go build failed:
+E         # quire/internal/glob
+E         internal/glob/compile.go:102:7: undefined: inClass
+E         internal/glob/compile.go:113:7: undefined: inClass
+E         internal/glob/compile.go:115:4: undefined: inClass
+E         internal/glob/compile.go:118:7: undefined: inClass
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['go', 'build', '-o', '/tmp/quire-verify/quire', './cmd/quire'], returncode=1, stdout='', stderr...ed: inClass\ninternal/glob/compile.go:115:4: undefined: inClass\ninternal/glob/compile.go:118:7: undefined: inClass\n').returncode
+
+/tests/test_outputs.py:64: AssertionError
+___________________ ERROR at setup of test_globstar_segments ___________________
+
+    @pytest.fixture(scope="session")
+    def quire():
+        _hide_reference_tools()
+        problems = _source_policy_problems()
+        assert not problems, "source policy: " + "; ".join(problems)
+        shutil.rmtree(OUT, ignore_errors=True)
+        OUT.mkdir(parents=True)
+        env = dict(os.environ, GOTOOLCHAIN="local", GOPROXY="off", GOFLAGS="-buildvcs=false",
+                   CGO_ENABLED="0", GOCACHE=str(OUT / "cache"))
+        build = subprocess.run(["go", "build", "-o", str(BINARY), "./cmd/quire"],
+                               cwd=APP, env=env, capture_output=True, text=True, timeout=1800)
+>       assert build.returncode == 0, "go build failed:\n" + build.stderr[-4000:]
+E       AssertionError: go build failed:
+E         # quire/internal/glob
+E         internal/glob/compile.go:102:7: undefined: inClass
+E         internal/glob/compile.go:113:7: undefined: inClass
+E         internal/glob/compile.go:115:4: undefined: inClass
+E         internal/glob/compile.go:118:7: undefined: inClass
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['go', 'build', '-o', '/tmp/quire-verify/quire', './cmd/quire'], returncode=1, stdout='', stderr...ed: inClass\ninternal/glob/compile.go:115:4: undefined: inClass\ninternal/glob/compile.go:118:7: undefined: inClass\n').returncode
+
+/tests/test_outputs.py:64: AssertionError
+____________________ ERROR at setup of test_negated_classes ____________________
+
+    @pytest.fixture(scope="session")
+    def quire():
+        _hide_reference_tools()
+        problems = _source_policy_problems()
+        assert not problems, "source policy: " + "; ".join(problems)
+        shutil.rmtree(OUT, ignore_errors=True)
+        OUT.mkdir(parents=True)
+        env = dict(os.environ, GOTOOLCHAIN="local", GOPROXY="off", GOFLAGS="-buildvcs=false",
+                   CGO_ENABLED="0", GOCACHE=str(OUT / "cache"))
+        build = subprocess.run(["go", "build", "-o", str(BINARY), "./cmd/quire"],
+                               cwd=APP, env=env, capture_output=True, text=True, timeout=1800)
+>       assert build.returncode == 0, "go build failed:\n" + build.stderr[-4000:]
+E       AssertionError: go build failed:
+E         # quire/internal/glob
+E         internal/glob/compile.go:102:7: undefined: inClass
+E         internal/glob/compile.go:113:7: undefined: inClass
+E         internal/glob/compile.go:115:4: undefined: inClass
+E         internal/glob/compile.go:118:7: undefined: inClass
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['go', 'build', '-o', '/tmp/quire-verify/quire', './cmd/quire'], returncode=1, stdout='', stderr...ed: inClass\ninternal/glob/compile.go:115:4: undefined: inClass\ninternal/glob/compile.go:118:7: undefined: inClass\n').returncode
+
+/tests/test_outputs.py:64: AssertionError
+____________________ ERROR at setup of test_inline_comments ____________________
+
+    @pytest.fixture(scope="session")
+    def quire():
+        _hide_reference_tools()
+        problems = _source_policy_problems()
+        assert not problems, "source policy: " + "; ".join(problems)
+        shutil.rmtree(OUT, ignore_errors=True)
+        OUT.mkdir(parents=True)
+        env = dict(os.environ, GOTOOLCHAIN="local", GOPROXY="off", GOFLAGS="-buildvcs=false",
+                   CGO_ENABLED="0", GOCACHE=str(OUT / "cache"))
+        build = subprocess.run(["go", "build", "-o", str(BINARY), "./cmd/quire"],
+                               cwd=APP, env=env, capture_output=True, text=True, timeout=1800)
+>       assert build.returncode == 0, "go build failed:\n" + build.stderr[-4000:]
+E       AssertionError: go build failed:
+E         # quire/internal/glob
+E         internal/glob/compile.go:102:7: undefined: inClass
+E         internal/glob/compile.go:113:7: undefined: inClass
+E         internal/glob/compile.go:115:4: undefined: inClass
+E         internal/glob/compile.go:118:7: undefined: inClass
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['go', 'build', '-o', '/tmp/quire-verify/quire', './cmd/quire'], returncode=1, stdout='', stderr...ed: inClass\ninternal/glob/compile.go:115:4: undefined: inClass\ninternal/glob/compile.go:118:7: undefined: inClass\n').returncode
+
+/tests/test_outputs.py:64: AssertionError
+___________________ ERROR at setup of test_root_declarations ___________________
+
+    @pytest.fixture(scope="session")
+    def quire():
+        _hide_reference_tools()
+        problems = _source_policy_problems()
+        assert not problems, "source policy: " + "; ".join(problems)
+        shutil.rmtree(OUT, ignore_errors=True)
+        OUT.mkdir(parents=True)
+        env = dict(os.environ, GOTOOLCHAIN="local", GOPROXY="off", GOFLAGS="-buildvcs=false",
+                   CGO_ENABLED="0", GOCACHE=str(OUT / "cache"))
+        build = subprocess.run(["go", "build", "-o", str(BINARY), "./cmd/quire"],
+                               cwd=APP, env=env, capture_output=True, text=True, timeout=1800)
+>       assert build.returncode == 0, "go build failed:\n" + build.stderr[-4000:]
+E       AssertionError: go build failed:
+E         # quire/internal/glob
+E         internal/glob/compile.go:102:7: undefined: inClass
+E         internal/glob/compile.go:113:7: undefined: inClass
+E         internal/glob/compile.go:115:4: undefined: inClass
+E         internal/glob/compile.go:118:7: undefined: inClass
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['go', 'build', '-o', '/tmp/quire-verify/quire', './cmd/quire'], returncode=1, stdout='', stderr...ed: inClass\ninternal/glob/compile.go:115:4: undefined: inClass\ninternal/glob/compile.go:118:7: undefined: inClass\n').returncode
+
+/tests/test_outputs.py:64: AssertionError
+______________________ ERROR at setup of test_value_case _______________________
+
+    @pytest.fixture(scope="session")
+    def quire():
+        _hide_reference_tools()
+        problems = _source_policy_problems()
+        assert not problems, "source policy: " + "; ".join(problems)
+        shutil.rmtree(OUT, ignore_errors=True)
+        OUT.mkdir(parents=True)
+        env = dict(os.environ, GOTOOLCHAIN="local", GOPROXY="off", GOFLAGS="-buildvcs=false",
+                   CGO_ENABLED="0", GOCACHE=str(OUT / "cache"))
+        build = subprocess.run(["go", "build", "-o", str(BINARY), "./cmd/quire"],
+                               cwd=APP, env=env, capture_output=True, text=True, timeout=1800)
+>       assert build.returncode == 0, "go build failed:\n" + build.stderr[-4000:]
+E       AssertionError: go build failed:
+E         # quire/internal/glob
+E         internal/glob/compile.go:102:7: undefined: inClass
+E         internal/glob/compile.go:113:7: undefined: inClass
+E         internal/glob/compile.go:115:4: undefined: inClass
+E         internal/glob/compile.go:118:7: undefined: inClass
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['go', 'build', '-o', '/tmp/quire-verify/quire', './cmd/quire'], returncode=1, stdout='', stderr...ed: inClass\ninternal/glob/compile.go:115:4: undefined: inClass\ninternal/glob/compile.go:118:7: undefined: inClass\n').returncode
+
+/tests/test_outputs.py:64: AssertionError
+____________________ ERROR at setup of test_property_order _____________________
+
+    @pytest.fixture(scope="session")
+    def quire():
+        _hide_reference_tools()
+        problems = _source_policy_problems()
+        assert not problems, "source policy: " + "; ".join(problems)
+        shutil.rmtree(OUT, ignore_errors=True)
+        OUT.mkdir(parents=True)
+        env = dict(os.environ, GOTOOLCHAIN="local", GOPROXY="off", GOFLAGS="-buildvcs=false",
+                   CGO_ENABLED="0", GOCACHE=str(OUT / "cache"))
+        build = subprocess.run(["go", "build", "-o", str(BINARY), "./cmd/quire"],
+                               cwd=APP, env=env, capture_output=True, text=True, timeout=1800)
+>       assert build.returncode == 0, "go build failed:\n" + build.stderr[-4000:]
+E       AssertionError: go build failed:
+E         # quire/internal/glob
+E         internal/glob/compile.go:102:7: undefined: inClass
+E         internal/glob/compile.go:113:7: undefined: inClass
+E         internal/glob/compile.go:115:4: undefined: inClass
+E         internal/glob/compile.go:118:7: undefined: inClass
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['go', 'build', '-o', '/tmp/quire-verify/quire', './cmd/quire'], returncode=1, stdout='', stderr...ed: inClass\ninternal/glob/compile.go:115:4: undefined: inClass\ninternal/glob/compile.go:118:7: undefined: inClass\n').returncode
+
+/tests/test_outputs.py:64: AssertionError
+=========================== short test summary info ============================
+ERROR ../tests/test_outputs.py::test_section_anchoring - AssertionError: go b...
+ERROR ../tests/test_outputs.py::test_tab_indentation - AssertionError: go bui...
+ERROR ../tests/test_outputs.py::test_bracketed_directories - AssertionError: ...
+ERROR ../tests/test_outputs.py::test_stdin_paths - AssertionError: go build f...
+ERROR ../tests/test_outputs.py::test_globstar_segments - AssertionError: go b...
+ERROR ../tests/test_outputs.py::test_negated_classes - AssertionError: go bui...
+ERROR ../tests/test_outputs.py::test_inline_comments - AssertionError: go bui...
+ERROR ../tests/test_outputs.py::test_root_declarations - AssertionError: go b...
+ERROR ../tests/test_outputs.py::test_value_case - AssertionError: go build fa...
+ERROR ../tests/test_outputs.py::test_property_order - AssertionError: go buil...
+============================== 10 errors in 7.10s ==============================

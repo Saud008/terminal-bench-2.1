@@ -1,0 +1,120 @@
+T E         --- escaped_case/decimal_escapes_fold_case (zonec -o example.com main.zone)
+T E         --- escaped_label_length/sixty_three_octet_labels (zonec -o example.com main.zone)
+T E         --- escaped_label_length/sixty_four_octet_label (zonec -o example.com main.zone)
+T E         --- zonemd/digest_input_near_block_end (zonec -o example.org main.zone)
+T E         --- reference_zone/production_like_zone (zonec -o shop.example db/shop.example.zone)
+T PASSED ../tests/test_outputs.py::test_owner_continuation
+T PASSED ../tests/test_outputs.py::test_default_ttl
+T PASSED ../tests/test_outputs.py::test_include_scope
+T PASSED ../tests/test_outputs.py::test_include_paths
+T PASSED ../tests/test_outputs.py::test_quoted_parentheses
+T PASSED ../tests/test_outputs.py::test_canonical_order
+T PASSED ../tests/test_outputs.py::test_rrset_ttl
+T FAILED ../tests/test_outputs.py::test_escaped_case - AssertionError: 1 of 1 c...
+T FAILED ../tests/test_outputs.py::test_escaped_label_length - AssertionError: ...
+T FAILED ../tests/test_outputs.py::test_zonemd - AssertionError: 1 of 4 cases d...
+T FAILED ../tests/test_outputs.py::test_reference_zone - AssertionError: 1 of 1...
+001> find . -maxdepth 3 -type f -print | sort | 
+001> printf '%s\n' '--- docs/zonec.1.md ---'; cat docs/zonec.1.md; printf '%s\n' '--- Makefile ---'; cat Makefile | 
+001> printf '%s\n' '--- source files ---'; for f in *.c *.h; do [ -f "$f" ] && { echo "### $f"; sed -n '1,260p' "$f"; }; done | 
+002> for f in README.md docs/master-files.md docs/rdata.md docs/output.md docs/zonemd.md; do echo "===== $f ====="; cat "$f"; done | 
+002> for f in src/*.h src/main.c src/parser.c src/lexer.c src/directives.c src/zone.c; do echo "===== $f ====="; cat "$f"; done | 
+002> for f in src/name.c src/rdata.c src/rr_*.c src/ttl.c src/zonemd.c src/sha384.c src/buf.c src/diag.c src/util.c; do echo "===== $f ====="; cat "$f"; done | 
+002> make clean && make && echo '--- example.net ---' && ./build/zonec -o example.net examples/example.net.zone; echo status=$?; echo '--- reverse ---'; ./build/zonec -o 2.0.192.in-addr.arpa examples/reverse/2.0.192.in-addr.arpa.zone; echo status=$? | 
+003> nl -ba docs/master-files.md | sed -n '1,240p'; nl -ba docs/output.md | sed -n '1,240p'; nl -ba docs/zonemd.md | sed -n '1,240p' | 
+003> nl -ba docs/rdata.md | sed -n '1,280p'; nl -ba README.md | sed -n '1,200p' | 
+003> nl -ba src/lexer.c | sed -n '1,320p'; nl -ba src/parser.c | sed -n '1,360p'; nl -ba src/directives.c | sed -n '1,280p' | 
+003> nl -ba src/name.c | sed -n '1,360p'; nl -ba src/zone.c | sed -n '1,360p'; nl -ba src/zonemd.c | sed -n '1,360p' | 
+004> cat docs/master-files.md | 
+004> cat docs/output.md | 
+004> cat docs/zonemd.md | 
+004> cat docs/rdata.md | 
+005> cat docs/master-files.md | 
+006> cat docs/output.md; echo '--- ZONEMD ---'; cat docs/zonemd.md | 
+006> cat src/lexer.h; cat src/parser.h; cat src/zone.h; cat src/name.h; cat src/rdata.h | 
+006> sed -n '1,260p' src/lexer.c | 
+006> sed -n '1,340p' src/parser.c | 
+007> cat docs/output.md | 
+007> cat docs/zonemd.md | 
+007> cat src/directives.c | 
+007> cat src/parser.c | 
+008> nl -ba src/directives.c | 
+009> nl -ba src/directives.c | sed -n '1,60p' | 
+009> nl -ba src/lexer.c | sed -n '1,180p' | 
+009> nl -ba src/lexer.c | sed -n '181,360p' | 
+010> nl -ba src/lexer.c | sed -n '1,135p' | 
+011> cat docs/output.md | 
+011> cat docs/zonemd.md | 
+011> nl -ba src/zone.c | 
+011> nl -ba src/name.c | 
+012> nl -ba src/zone.c | 
+013> cat docs/output.md | 
+014> cat docs/zonemd.md | 
+015> cat src/parser.h; cat src/ttl.h; cat src/zone.h | 
+015> nl -ba src/directives.c; nl -ba src/ttl.c | 
+015> nl -ba src/rr_zonemd.c; nl -ba src/zonemd.c | 
+015> nl -ba src/parser.c | sed -n '1,220p' | 
+016> cat src/parser.h | 
+017> cat src/directives.c | 
+018> sed -n '1,57p' src/directives.c | 
+019> cat src/rr_zonemd.c; cat src/zonemd.c; cat src/zone.h | 
+019> sed -n '1,115p' src/parser.c; sed -n '1,180p' src/name.c | 
+020> grep -RIn "name_.*cmp\|name_.*compare\|have_soa\|soa_serial\|ZONEMD" src/*.h src/*.c | 
+020> nl -ba src/rr_zonemd.c | 
+020> nl -ba src/zonemd.c | 
+020> cat src/zone.h | 
+021> cat src/rr_zonemd.c | 
+022> grep -n -B4 -A12 "have_zonemd\|have_soa\|name_c" src/parser.c src/name.c src/name.h | 
+022> cat src/zonemd.c | 
+023> python3 - <<'PY' | from pathlib import Path | p=Path('src/directives.c') | s=p.read_text() | s=s.replace('slash = strchr(including, \'/\');', 'slash = strrchr(including, \'/\');') | s=s.replace('    ctx->origin = origin;\n    ctx->owner = origin;\n    ctx->have_owner = 1;\n', '    ctx->origin = origin;\n') | s=s.replace('    int saved_have_owner = ctx->have_owner;\n    char *file;', '    int saved_have_owner = ctx->have_owner;\n    ttl_ctx_t saved_ttl = ctx->ttl;\n    char *file;') | s=s.replace('    ctx->have_owner = saved_have_owner;\n}', '    ctx->have_owner = saved_have_owner;\n    ctx->ttl = saved_ttl;\n}') | p.write_text(s) |  | p=Path('src/lexer.c') | s=p.read_text() | old='''            if (c == '(' || c ==
+023> rm -rf /tmp/zonec-test && mkdir -p /tmp/zonec-test/sub | cat > /tmp/zonec-test/main.zone <<'EOF' | $ORIGIN example. | $TTL 1h | @ IN SOA ns.example. hostmaster.example. 42 1h 1h 1w 5m |   IN NS ns.example. | old IN A 192.0.2.1 | $ORIGIN changed.example. |   IN TXT "ok :-)" | $INCLUDE sub/one.inc |   IN TXT after | @ 900 IN ZONEMD 999 1 1 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 | z 700 IN A 192.0.2.9 | z 100 IN A 192.0.2.8 | EOF | cat > /tmp/zonec-test/sub/one.inc <<'EOF' | $TTL 20 | inc IN A 192.0.2.2 | $INCLUDE two.inc | EOF | cat > /tmp/zonec-test/sub/two.inc <<'EOF' | nested IN TXT "included" | EOF | ./build/zonec -o example. /tmp/zonec-test/main.zone > /tmp/zonec-test/out && c
+023> echo '--- examples from outside their directories ---'; ./build/zonec -o example.net. examples/example.net.zone > /tmp/example.out && head -n 8 /tmp/example.out; ./build/zonec -o 2.0.192.in-addr.arpa. examples/reverse/2.0.192.in-addr.arpa.zone > /tmp/reverse.out && head -n 4 /tmp/reverse.out; echo '--- alternate BUILD ---'; make BUILD=/tmp/zonec-build clean && make BUILD=/tmp/zonec-build | 
+024> cat /tmp/zonec-test/out; echo '--- diff ---'; git diff -- src 2>/dev/null || true | 
+024> python3 - <<'PY' | from pathlib import Path | for line in Path('/tmp/zonec-test/out').read_text().splitlines(): |     f=line.split('\t') |     print(repr(f)) | PY | 
+024> nl -ba src/main.c; nl -ba src/ttl.c; nl -ba src/rdata.c | 
+024> for f in src/rr_addr.c src/rr_caa.c src/rr_names.c src/rr_soa.c src/rr_srv.c src/rr_txt.c; do echo ==== $f; nl -ba $f; done | 
+025> cat /tmp/zonec-test/out | 
+026> cat > /tmp/zonec-test/md.zone <<'EOF' | $ORIGIN example. | $TTL 300 | @ IN SOA ns hostmaster 12345 1h 2h 3d 5m | @ IN NS ns | @ 900 IN ZONEMD 999 1 1 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 | child 400 IN ZONEMD 7 2 3 111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111 | ns IN A 192.0.2.53 | EOF | ./build/zonec -o example. /tmp/zonec-test/md.zone > /tmp/zonec-test/md.out && cat /tmp/zonec-test/md.out | 
+026> python3 - <<'PY' | import hashlib, ipaddress, struct | lines=open('/tmp/zonec-test/md.out').read().splitlines() | def name(s): |     if s=='.': return b'\0' |     return b''.join(bytes([len(x)])+x.encode() for x in s[:-1].split('.'))+b'\0' | def rdata(t,s): |     f=s.split() |     if t=='A': return ipaddress.IPv4Address(s).packed |     if t=='NS': return name(s) |     if t=='SOA': return name(f[0])+name(f[1])+struct.pack('!IIIII',*map(int,f[2:])) |     if t=='ZONEMD': return struct.pack('!IBB',int(f[0]),int(f[1]),int(f[2]))+bytes.fromhex(f[3]) | types={'A':1,'NS':2,'SOA':6,'ZONEMD':63} | h=hashlib.sha384() | found=None | for line in lines: |     owner,ttl,cl,t,rd=line.split('\t') |     if owner=='example.' and t=='ZONEMD': f
+026> cat src/main.c | 
+027> python3 - <<'PY' | import hashlib, ipaddress, struct | lines=open('/tmp/zonec-test/md.out').read().splitlines() | def name(s): return b'\0' if s=='.' else b''.join(bytes([len(x)])+x.encode() for x in s[:-1].split('.'))+b'\0' | def rd(t,s): |  f=s.split() |  if t=='A': return ipaddress.IPv4Address(s).packed |  if t=='NS': return name(s) |  if t=='SOA': return name(f[0])+name(f[1])+struct.pack('!IIIII',*map(int,f[2:])) |  if t=='ZONEMD': return struct.pack('!IBB',int(f[0]),int(f[1]),int(f[2]))+bytes.fromhex(f[3]) | tc={'A':1,'NS':2,'SOA':6,'ZONEMD':63}; h=hashlib.sha384(); listed=None | for line in lines: |  o,ttl,cl,t,r=line.split('\t') |  if o=='example.' and t=='ZONEMD': listed=r.split()[3]; assert r.startswith('123
+027> cat src/ttl.c | 
+027> cat src/rr_addr.c | 
+027> sed -n '1,180p' src/name.c | 
+028> python3 - <<'PY' | import hashlib,ipaddress,struct | ls=open('/tmp/zonec-test/md.out').read().splitlines(); H=hashlib.sha384(); got='' | def nm(s): return b'\0' if s=='.' else b''.join(bytes([len(x)])+x.encode() for x in s[:-1].split('.'))+b'\0' | for l in ls: |  o,ttl,_,t,r=l.split('\t'); f=r.split(); typ={'A':1,'NS':2,'SOA':6,'ZONEMD':63}[t] |  if o=='example.' and t=='ZONEMD': got=f[3]; assert f[:3]==['12345','1','1']; continue |  if t=='A': x=ipaddress.IPv4Address(r).packed |  elif t=='NS': x=nm(r) |  elif t=='SOA': x=nm(f[0])+nm(f[1])+struct.pack('!IIIII',*map(int,f[2:])) |  else: x=struct.pack('!IBB',int(f[0]),int(f[1]),int(f[2]))+bytes.fromhex(f[3]) |  H.update(nm(o)+struct.pack('!HHIH',typ,1,int(ttl),len(
+028> cat src/ttl.c | 
+029> python3 - <<'PY' | p='src/ttl.c' | s=open(p).read() | old='''    if (c->has_last) { |         *out = c->last; |         return 1; |     } |     if (c->has_dollar) { |         *out = c->dollar; |         return 1; |     } | ''' | new='''    if (c->has_dollar) { |         *out = c->dollar; |         return 1; |     } |     if (c->has_last) { |         *out = c->last; |         return 1; |     } | ''' | assert old in s | open(p,'w').write(s.replace(old,new)) | PY | make | cat >/tmp/zonec-test/ttl.zone <<'EOF' | $ORIGIN example. | @ 600 IN SOA ns hostmaster 1 1h 1h 1w 5m | $TTL 300 | @ IN NS ns | first 900 IN A 192.0.2.1 | second IN A 192.0.2.2 | EOF | ./build/zonec -o example /tmp/zonec-test/ttl.zone | 
+029> cat src/main.c | 
+029> cat src/rr_addr.c | 
+029> cat src/rr_caa.c | 
+030> ./build/zonec -o example /tmp/zonec-test/ttl.zone | 
+030> cat src/rdata.c | 
+030> cat src/rr_addr.c | 
+031> nl -ba src/rdata.c | 
+032> sed -n '1,60p' src/rdata.c; cat src/util.h; grep -RIn "decode_string\|parse_u32" src | 
+032> sed -n '1,140p' src/name.c | 
+032> sed -n '1,140p' src/util.c | 
+032> sed -n '1,110p' src/rr_addr.c | 
+033> sed -n '1,95p' src/rr_addr.c | 
+033> grep -n -A70 -B10 'decode_string' src/util.c src/util.h | 
+034> nl -ba src/rr_addr.c | sed -n '1,90p' | 
+035> sed -n '1,110p' src/parser.c; cat src/lexer.h | 
+035> sed -n '1,90p' src/util.c | 
+035> cat src/rr_soa.c; cat src/rr_srv.c; cat src/rr_names.c | 
+036> nl -ba src/parser.c | sed -n '1,75p' | 
+037> python3 - <<'PY' | from pathlib import Path | p=Path('src/util.h'); s=p.read_text(); s=s.replace('int decode_string(const char *raw, unsigned char *out, size_t cap, size_t *len);', 'int decode_string(const char *raw, unsigned char *out, size_t cap, size_t *len);\n\n/* Decodes a token for parsers that require a C string.  Embedded NUL is\n * rejected. */\nint decode_cstr(const char *raw, char *out, size_t cap);'); p.write_text(s) | p=Path('src/util.c'); s=p.read_text(); marker='\nvoid emit_string(buf_t *b, const unsigned char *s, size_t n)\n'; insert=''' | int decode_cstr(const char *raw, char *out, size_t cap) | { |     size_t n; |     int r; |  |     if (cap == 0) |         return -1; |     r = decode_string(raw
+037> cat >/tmp/zonec-test/esc.zone <<'EOF' | $ORIGIN example. | $TTL \05100 | @ IN SOA ns hostmaster \049 1h 1h 1w 5m | @ I\116 N\083 ns | host \05200 IN A 192\0460\0462\0461 | v6 IN AAAA 2001\058db8\058\0581 | mx IN MX \0490 mail | EOF | ./build/zonec -o example /tmp/zonec-test/esc.zone | ./build/zonec -o example /tmp/zonec-test/main.zone >/tmp/zonec-test/out2 && diff -u /tmp/zonec-test/out /tmp/zonec-test/out2 | 
+038> python3 - <<'PY' | from pathlib import Path | p=Path('src/rr_addr.c'); s=p.read_text(); s=s.replace('#include "rdata.h"\n', '#include "rdata.h"\n#include "util.h"\n'); p.write_text(s) | p=Path('src/util.c'); b=p.read_bytes(); b=b.replace(b"out[n] = '\x00';", b"out[n] = '\\0';"); p.write_bytes(b) |  | p=Path('src/directives.c'); s=p.read_text(); old='''    const char *d = ll->v[0].text; |  |     if (strcasecmp(d, "$ORIGIN") == 0) | '''; new='''    char dtext[64]; |     if (ll->v[0].quoted || decode_cstr(ll->v[0].text, dtext, sizeof dtext)) |         fail_at(&pos, "bad directive"); |     const char *d = dtext; |  |     if (strcasecmp(d, "$ORIGIN") == 0) | '''; assert old in s; p.write_text(s.replace(old,new)) |  | p=Path('sr
+038> sed -i 's/I\\116/I\\078/' /tmp/zonec-test/esc.zone | ./build/zonec -o example /tmp/zonec-test/esc.zone | 
+038> ./build/zonec -o example /tmp/zonec-test/main.zone >/tmp/zonec-test/out3 && diff -u /tmp/zonec-test/out /tmp/zonec-test/out3 && ./build/zonec -o example /tmp/zonec-test/md.zone >/tmp/zonec-test/md2.out && diff -u /tmp/zonec-test/md.out /tmp/zonec-test/md2.out && ./build/zonec -o example.net examples/example.net.zone >/dev/null && make BUILD=/tmp/zonec-build clean all CFLAGS='-O2 -g -Wall -Wextra -Werror -std=c11' | 
+039> cp /tmp/zonec-test/md2.out /tmp/zonec-test/md.out | python3 - <<'PY' | import hashlib,ipaddress,struct | ls=open('/tmp/zonec-test/md.out').read().splitlines(); H=hashlib.sha384(); got='' | def nm(s): return b'\0' if s=='.' else b''.join(bytes([len(x)])+x.encode() for x in s[:-1].split('.'))+b'\0' | for l in ls: |  o,ttl,_,t,r=l.split('\t'); f=r.split(); typ={'A':1,'NS':2,'SOA':6,'ZONEMD':63}[t] |  if o=='example.' and t=='ZONEMD': got=f[3]; assert f[:3]==['12345','1','1']; continue |  if t=='A': x=ipaddress.IPv4Address(r).packed |  elif t=='NS': x=nm(r) |  elif t=='SOA': x=nm(f[0])+nm(f[1])+struct.pack('!IIIII',*map(int,f[2:])) |  else: x=struct.pack('!IBB',int(f[0]),int(f[1]),int(f[2]))+bytes.fromhex(f[3]) |  H.up
+039> python3 - <<'PY' | from pathlib import Path | p=Path('src/rr_zonemd.c'); s=p.read_text() | old='''    for (size_t i = 3; i < n; i++) { |         if (tok[i].quoted) |             fail_at(cx->pos, "bad ZONEMD digest"); |         for (const char *p = tok[i].text; *p; p++) { | ''' | new='''    for (size_t i = 3; i < n; i++) { |         char text[2 * ZONEMD_DIGEST_MAX + 1]; |         if (tok[i].quoted || decode_cstr(tok[i].text, text, sizeof text)) |             fail_at(cx->pos, "bad ZONEMD digest"); |         for (const char *p = text; *p; p++) { | ''' | assert old in s; p.write_text(s.replace(old,new)) | PY | make clean && make CFLAGS='-O2 -g -Wall -Wextra -Werror -std=c11' | 
+039> cat >/tmp/zonec-test/dup.zone <<'EOF' | $ORIGIN example. | $TTL 300 | @ IN SOA ns hostmaster 1 1h 1h 1w 5m | @ IN NS ns | x 700 IN A 192.0.2.2 | x 100 IN A 192.0.2.1 | x 900 IN A 192.0.2.2 | EOF | ./build/zonec -o example /tmp/zonec-test/dup.zone > /tmp/zonec-test/dup.out | cat /tmp/zonec-test/dup.out | test "$(grep -c $'^x.example.\t' /tmp/zonec-test/dup.out)" = 2 | test "$(grep $'^x.example.\t' /tmp/zonec-test/dup.out | cut -f2 | sort -u)" = 700 | 
+039> set +e | printf '$ORIGIN example.\n  IN A 192.0.2.1\n' >/tmp/zonec-test/bad.zone | ./build/zonec -o example /tmp/zonec-test/bad.zone >/tmp/zonec-test/bad.stdout 2>/tmp/zonec-test/bad.stderr; s1=$? | ./build/zonec >/tmp/zonec-test/usage.stdout 2>/tmp/zonec-test/usage.stderr; s2=$? | ./build/zonec -h >/tmp/zonec-test/help.stdout 2>/tmp/zonec-test/help.stderr; s3=$? | printf 'zone-error=%s usage=%s help=%s stdout-bytes=%s\n' "$s1" "$s2" "$s3" "$(wc -c </tmp/zonec-test/bad.stdout)" | cat /tmp/zonec-test/bad.stderr | test "$s1" = 1 && test "$s2" = 2 && test "$s3" = 0 && test ! -s /tmp/zonec-test/bad.stdout | set -e | ./build/zonec -o example.net examples/example.net.zone >/tmp/example.final | ./build/zonec -o 2.0.19
+040> python3 - <<'PY' | from pathlib import Path | p=Path('src/rr_zonemd.c'); s=p.read_text(); s=s.replace('#include "rdata.h"\n', '#include "rdata.h"\n#include "util.h"\n'); p.write_text(s) | PY | make clean && make CFLAGS='-O2 -g -Wall -Wextra -Werror -std=c11' | 
+040> ./build/zonec -o example /tmp/zonec-test/dup.zone > /tmp/zonec-test/dup.out | cat /tmp/zonec-test/dup.out | test "$(grep -c $'^x.example.\t' /tmp/zonec-test/dup.out)" = 2 | test "$(grep $'^x.example.\t' /tmp/zonec-test/dup.out | cut -f2 | sort -u)" = 700 | 
+040> set +e | ./build/zonec -o example /tmp/zonec-test/bad.zone >/tmp/zonec-test/bad.stdout 2>/tmp/zonec-test/bad.stderr; s1=$? | ./build/zonec >/tmp/zonec-test/usage.stdout 2>/tmp/zonec-test/usage.stderr; s2=$? | ./build/zonec -h >/tmp/zonec-test/help.stdout 2>/tmp/zonec-test/help.stderr; s3=$? | set -e | printf 'zone-error=%s usage=%s help=%s stdout-bytes=%s\n' "$s1" "$s2" "$s3" "$(wc -c </tmp/zonec-test/bad.stdout)" | cat /tmp/zonec-test/bad.stderr | test "$s1" = 1 && test "$s2" = 2 && test "$s3" = 0 && test ! -s /tmp/zonec-test/bad.stdout | 
+040> ./build/zonec -o example.net examples/example.net.zone >/tmp/example.final | ./build/zonec -o 2.0.192.in-addr.arpa examples/reverse/2.0.192.in-addr.arpa.zone >/tmp/reverse.final | ./build/zonec -o example /tmp/zonec-test/main.zone >/tmp/zonec-test/main.final | ./build/zonec -o example /tmp/zonec-test/md.zone >/tmp/zonec-test/md.final | make BUILD=/tmp/zonec-build clean all CFLAGS='-O2 -g -Wall -Wextra -Werror -std=c11' | 
+041> python3 - <<'PY' | import hashlib,ipaddress,struct | ls=open('/tmp/zonec-test/md.final').read().splitlines(); H=hashlib.sha384(); got='' | def nm(s): return b'\0' if s=='.' else b''.join(bytes([len(x)])+x.encode() for x in s[:-1].split('.'))+b'\0' | for l in ls: |  o,ttl,_,t,r=l.split('\t'); f=r.split(); typ={'A':1,'NS':2,'SOA':6,'ZONEMD':63}[t] |  if o=='example.' and t=='ZONEMD': got=f[3]; assert f[:3]==['12345','1','1']; continue |  if t=='A': x=ipaddress.IPv4Address(r).packed |  elif t=='NS': x=nm(r) |  elif t=='SOA': x=nm(f[0])+nm(f[1])+struct.pack('!IIIII',*map(int,f[2:])) |  else: x=struct.pack('!IBB',int(f[0]),int(f[1]),int(f[2]))+bytes.fromhex(f[3]) |  H.update(nm(o)+struct.pack('!HHIH',typ,1,int(ttl),le
+041> git diff --check 2>/dev/null || true; git diff --stat 2>/dev/null || true; git diff -- src/directives.c src/lexer.c src/parser.c src/ttl.c src/zone.c src/zonemd.c src/util.c src/util.h src/rdata.c src/rr_addr.c src/rr_caa.c src/rr_zonemd.c 2>/dev/null || true | 
+041> python3 - <<'PY' | from pathlib import Path | bad=[] | for p in Path('src').glob('*'): |  if p.is_file() and b'\0' in p.read_bytes(): bad.append(str(p)) | assert not bad, bad | print('source byte scan clean') | PY | make | 

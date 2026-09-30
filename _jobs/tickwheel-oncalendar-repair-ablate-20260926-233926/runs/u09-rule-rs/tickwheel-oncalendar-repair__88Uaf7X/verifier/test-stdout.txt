@@ -1,0 +1,171 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 10 items
+
+../tests/test_outputs.py ........F.                                      [100%]
+
+=================================== FAILURES ===================================
+____________________________ test_far_future_rules _____________________________
+
+tickwheel = '/tmp/tickwheel-verify-target/release/tickwheel'
+
+    def test_far_future_rules(tickwheel):
+        """Instants after the last stored transition use the zone's footer rule."""
+>       _check_group(tickwheel, "far_future_rules")
+
+/tests/test_outputs.py:137: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/tickwheel-verify-target/release/tickwheel'
+group = 'far_future_rules'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['exprs']} base={case['base']} iterations={case['iterations']}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 5 of 6 cases differ:
+E         --- ['*-*-* 02:30 Europe/Berlin'] base=2040-03-20 00:00:00 iterations=8
+E         expected rc=0 stderr=[]
+E           Original form: *-*-* 02:30 Europe/Berlin
+E         Normalized form: *-*-* 02:30:00 Europe/Berlin
+E             Next elapse: Tue 2040-03-20 01:30:00 UTC
+E                Iter. #2: Wed 2040-03-21 01:30:00 UTC
+E                Iter. #3: Thu 2040-03-22 01:30:00 UTC
+E                Iter. #4: Fri 2040-03-23 01:30:00 UTC
+E                Iter. #5: Sat 2040-03-24 01:30:00 UTC
+E                Iter. #6: Mon 2040-03-26 00:30:00 UTC
+E                Iter. #7: Tue 2040-03-27 00:30:00 UTC
+E                Iter. #8: Wed 2040-03-28 00:30:00 UTC
+E         got rc=0 stderr=[]
+E           Original form: *-*-* 02:30 Europe/Berlin
+E         Normalized form: *-*-* 02:30:00 Europe/Berlin
+E             Next elapse: Tue 2040-03-20 01:30:00 UTC
+E                Iter. #2: Wed 2040-03-21 01:30:00 UTC
+E                Iter. #3: Thu 2040-03-22 01:30:00 UTC
+E                Iter. #4: Fri 2040-03-23 01:30:00 UTC
+E                Iter. #5: Sat 2040-03-24 01:30:00 UTC
+E                Iter. #6: Sun 2040-03-25 01:30:00 UTC
+E                Iter. #7: Mon 2040-03-26 01:30:00 UTC
+E                Iter. #8: Tue 2040-03-27 01:30:00 UTC
+E         
+E         --- ['*-03-* 12:00 Europe/London'] base=2040-03-20 00:00:00 iterations=8
+E         expected rc=0 stderr=[]
+E           Original form: *-03-* 12:00 Europe/London
+E         Normalized form: *-03-* 12:00:00 Europe/London
+E             Next elapse: Tue 2040-03-20 12:00:00 UTC
+E                Iter. #2: Wed 2040-03-21 12:00:00 UTC
+E                Iter. #3: Thu 2040-03-22 12:00:00 UTC
+E                Iter. #4: Fri 2040-03-23 12:00:00 UTC
+E                Iter. #5: Sat 2040-03-24 12:00:00 UTC
+E                Iter. #6: Sun 2040-03-25 11:00:00 UTC
+E                Iter. #7: Mon 2040-03-26 11:00:00 UTC
+E                Iter. #8: Tue 2040-03-27 11:00:00 UTC
+E         got rc=0 stderr=[]
+E           Original form: *-03-* 12:00 Europe/London
+E         Normalized form: *-03-* 12:00:00 Europe/London
+E             Next elapse: Tue 2040-03-20 12:00:00 UTC
+E                Iter. #2: Wed 2040-03-21 12:00:00 UTC
+E                Iter. #3: Thu 2040-03-22 12:00:00 UTC
+E                Iter. #4: Fri 2040-03-23 12:00:00 UTC
+E                Iter. #5: Sat 2040-03-24 12:00:00 UTC
+E                Iter. #6: Sun 2040-03-25 12:00:00 UTC
+E                Iter. #7: Mon 2040-03-26 12:00:00 UTC
+E                Iter. #8: Tue 2040-03-27 12:00:00 UTC
+E         
+E         --- ['*-*-* 02:30 Europe/Helsinki'] base=2040-03-31 00:00:00 iterations=8
+E         expected rc=0 stderr=[]
+E           Original form: *-*-* 02:30 Europe/Helsinki
+E         Normalized form: *-*-* 02:30:00 Europe/Helsinki
+E             Next elapse: Sat 2040-03-31 23:30:00 UTC
+E                Iter. #2: Sun 2040-04-01 23:30:00 UTC
+E                Iter. #3: Mon 2040-04-02 23:30:00 UTC
+E                Iter. #4: Tue 2040-04-03 23:30:00 UTC
+E                Iter. #5: Wed 2040-04-04 23:30:00 UTC
+E                Iter. #6: Thu 2040-04-05 23:30:00 UTC
+E                Iter. #7: Fri 2040-04-06 23:30:00 UTC
+E                Iter. #8: Sat 2040-04-07 23:30:00 UTC
+E         got rc=0 stderr=[]
+E           Original form: *-*-* 02:30 Europe/Helsinki
+E         Normalized form: *-*-* 02:30:00 Europe/Helsinki
+E             Next elapse: Sat 2040-03-31 00:30:00 UTC
+E                Iter. #2: Sun 2040-04-01 00:30:00 UTC
+E                Iter. #3: Sun 2040-04-01 23:30:00 UTC
+E                Iter. #4: Mon 2040-04-02 23:30:00 UTC
+E                Iter. #5: Tue 2040-04-03 23:30:00 UTC
+E                Iter. #6: Wed 2040-04-04 23:30:00 UTC
+E                Iter. #7: Thu 2040-04-05 23:30:00 UTC
+E                Iter. #8: Fri 2040-04-06 23:30:00 UTC
+E         
+E         --- ['*-10-* 12:00 Europe/Berlin'] base=2043-10-20 00:00:00 iterations=8
+E         expected rc=0 stderr=[]
+E           Original form: *-10-* 12:00 Europe/Berlin
+E         Normalized form: *-10-* 12:00:00 Europe/Berlin
+E             Next elapse: Tue 2043-10-20 10:00:00 UTC
+E                Iter. #2: Wed 2043-10-21 10:00:00 UTC
+E                Iter. #3: Thu 2043-10-22 10:00:00 UTC
+E                Iter. #4: Fri 2043-10-23 10:00:00 UTC
+E                Iter. #5: Sat 2043-10-24 10:00:00 UTC
+E                Iter. #6: Sun 2043-10-25 11:00:00 UTC
+E                Iter. #7: Mon 2043-10-26 11:00:00 UTC
+E                Iter. #8: Tue 2043-10-27 11:00:00 UTC
+E         got rc=0 stderr=[]
+E           Original form: *-10-* 12:00 Europe/Berlin
+E         Normalized form: *-10-* 12:00:00 Europe/Berlin
+E             Next elapse: Tue 2043-10-20 10:00:00 UTC
+E                Iter. #2: Wed 2043-10-21 10:00:00 UTC
+E                Iter. #3: Thu 2043-10-22 10:00:00 UTC
+E                Iter. #4: Fri 2043-10-23 10:00:00 UTC
+E                Iter. #5: Sat 2043-10-24 10:00:00 UTC
+E                Iter. #6: Sun 2043-10-25 10:00:00 UTC
+E                Iter. #7: Mon 2043-10-26 10:00:00 UTC
+E                Iter. #8: Tue 2043-10-27 10:00:00 UTC
+E         
+E         --- ['*-*-* 04:00 Europe/London'] base=2043-10-31 00:00:00 iterations=8
+E         expected rc=0 stderr=[]
+E           Original form: *-*-* 04:00 Europe/London
+E         Normalized form: *-*-* 04:00:00 Europe/London
+E             Next elapse: Sat 2043-10-31 04:00:00 UTC
+E                Iter. #2: Sun 2043-11-01 04:00:00 UTC
+E                Iter. #3: Mon 2043-11-02 04:00:00 UTC
+E                Iter. #4: Tue 2043-11-03 04:00:00 UTC
+E                Iter. #5: Wed 2043-11-04 04:00:00 UTC
+E                Iter. #6: Thu 2043-11-05 04:00:00 UTC
+E                Iter. #7: Fri 2043-11-06 04:00:00 UTC
+E                Iter. #8: Sat 2043-11-07 04:00:00 UTC
+E         got rc=0 stderr=[]
+E           Original form: *-*-* 04:00 Europe/London
+E         Normalized form: *-*-* 04:00:00 Europe/London
+E             Next elapse: Sat 2043-10-31 03:00:00 UTC
+E                Iter. #2: Sun 2043-11-01 04:00:00 UTC
+E                Iter. #3: Mon 2043-11-02 04:00:00 UTC
+E                Iter. #4: Tue 2043-11-03 04:00:00 UTC
+E                Iter. #5: Wed 2043-11-04 04:00:00 UTC
+E                Iter. #6: Thu 2043-11-05 04:00:00 UTC
+E                Iter. #7: Fri 2043-11-06 04:00:00 UTC
+E                Iter. #8: Sat 2043-11-07 04:00:00 UTC
+E         
+E       assert not ["--- ['*-*-* 02:30 Europe/Berlin'] base=2040-03-20 00:00:00 iterations=8\nexpected rc=0 stderr=[]\n  Original form: *...2043-11-05 04:00:00 UTC\n       Iter. #7: Fri 2043-11-06 04:00:00 UTC\n       Iter. #8: Sat 2043-11-07 04:00:00 UTC\n"]
+
+/tests/test_outputs.py:92: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_dst_gap
+PASSED ../tests/test_outputs.py::test_dst_overlap
+PASSED ../tests/test_outputs.py::test_offset_folding
+PASSED ../tests/test_outputs.py::test_field_rollover
+PASSED ../tests/test_outputs.py::test_end_of_month
+PASSED ../tests/test_outputs.py::test_normalized_forms
+PASSED ../tests/test_outputs.py::test_two_digit_years
+PASSED ../tests/test_outputs.py::test_rejected_expressions
+PASSED ../tests/test_outputs.py::test_multi_expression_reports
+FAILED ../tests/test_outputs.py::test_far_future_rules - AssertionError: 5 of...
+========================= 1 failed, 9 passed in 1.04s ==========================

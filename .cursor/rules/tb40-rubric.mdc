@@ -1,0 +1,47 @@
+---
+description: TB 4.0 rubric.txt (per-task process rubric) and per-run rubric_score.txt — format, scoring, negatives, mapping, evidence (checks 66-71, 80, 85-88)
+globs: **/rubric.txt, **/rubric_score.txt
+alwaysApply: false
+---
+
+# TB 4.0 — rubric.txt and rubric_score.txt
+
+`rubric.txt` grades **how** the agent worked, from trace evidence. It lives at `<slug>/rubric.txt` (sibling of the inner `<slug>/<slug>/`). It is not the QC rubric.
+
+## Format (check 67)
+
+- Filename exactly `rubric.txt`. Flat list, one criterion per line: `Agent <specific, binary, observable behavior>, +N` or `, -N`.
+- Magnitudes only **1, 2, 3, 5** — never 4. Every positive carries an explicit `+`.
+- **No headers, titles, test citations, blank lines or narrative asides.**
+- **At least one negative criterion.** **Sum of positives 10–40.**
+
+## Content (checks 66, 68, 69)
+
+- Every line maps to a real instruction requirement (explicit, or a genuinely implicit one — implicit requirements are not a finding) (check 66). Don't grade behavior the prompt never asks for.
+- No two lines that no correct solution could satisfy together (check 68).
+- **No double counting** — the same behavior/test under two criteria, and in particular **a positive must not be re-checked as its mirrored negative** (`fixes X, +3` + `leaves X broken, -3`) (check 69).
+- Phrase positively and let the sign carry desirability: `Agent edits files under /app/testdata/, -3`, not `Agent does not edit…, +3`. Don't reward basic expectations; penalize violations.
+- Importance: ±5 critical (core correctness, destructive/unsafe actions, secret leaks) · ±3 major (artifact verification, error recovery) · ±1/±2 minor (inspection, hygiene).
+- Binary, trace-verifiable, task-specific; cited paths/mechanisms exist in the shipped environment.
+- Negatives name concrete bad-faith behavior (hardcoding outputs, editing fixtures, stubbing the graded component, destructive root searches, repeating an identical failing command ≥3 times).
+- Exclude: running/reading `/tests` or pytest (unless the task is a testing task), test results, **file existence** ("Agent creates the output file"), reading `instruction.md`/`task.toml`, oracle/NOP mentions, vague words ("correctly", "properly", "edge cases"). The agent has no visibility into tests or evidence — grade conduct.
+- **Content presence**: roughly one line per distinct behavior / failure mode the task covers — count them against instruction.md; a short rubric misses behaviors even if every line is valid.
+- Weights proportional to centrality: a core criterion never weighs less than a trivial one.
+- Hand-authored for this task (not templated); filename exactly `rubric.txt` (never `rubrics.txt`).
+
+## rubric_score.txt (one per trajectories/run-0N/)
+
+Machine-checked format (`master_check.py` parses it):
+
+```
+<exact rubric.txt criterion text> | MET | +3 | `quoted command/output from this run` (agent/trajectory.json step 14)
+<exact rubric.txt criterion text> | NOT MET | 0 | verifier/test-stdout.txt:88 `AssertionError: expected 3 got 2`
+Total | 11 / 18
+```
+
+- One row per rubric.txt line, criterion text verbatim; MET scores the line's value, NOT MET scores 0; `Total | <sum> / <sum of positives>`. Verify the arithmetic on **each** file by hand (check 71).
+- **Pure data + evidence citations** — no "note:", "Summary:", process narration (check 80). Graded **separately** for each trajectory.
+- Every NOT MET and every negative-criterion verdict cites a specific line, function name or quoted value from **that run's own** `agent/trajectory.json` or `verifier/test-stdout.txt`; MET verdicts spot-checked, at least on passing runs (check 88).
+- The five files must not be byte-identical or near-identical with only the header swapped (checks 85, 87).
+- For failing runs, read the actual failure from the run's own files and make rubric_score.txt match it (check 86).
+- A failing test alone is not evidence a negative criterion triggered — only code/commands doing that thing are.

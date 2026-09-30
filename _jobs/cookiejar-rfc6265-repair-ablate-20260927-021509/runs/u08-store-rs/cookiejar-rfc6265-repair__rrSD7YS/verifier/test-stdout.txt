@@ -1,0 +1,190 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 12 items
+
+../tests/test_outputs.py .......F..F.                                    [100%]
+
+=================================== FAILURES ===================================
+_______________________________ test_replacement _______________________________
+
+crumbjar = '/tmp/crumbjar-verify-target/release/crumbjar'
+
+    def test_replacement(crumbjar):
+        """Replacing a cookie keeps the old creation-time, which shows in header order and the dump."""
+>       _check_group(crumbjar, "replacement")
+
+/tests/test_outputs.py:116: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/crumbjar-verify-target/release/crumbjar', group = 'replacement'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            p = subprocess.run(
+                [binary, "replay", "-"],
+                input=case["transcript"], capture_output=True, text=True, timeout=60,
+                env={"PATH": "/usr/local/bin:/usr/bin:/bin", "LC_ALL": "C"},
+            )
+            if p.returncode != 0 or p.stdout != case["stdout"]:
+                failures.append(
+                    f"--- transcript\n{case['transcript']}"
+                    f"--- expected (exit 0)\n{case['stdout']}"
+                    f"--- got (exit {p.returncode})\n{p.stdout}{p.stderr[-500:]}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} transcripts differ:\n" + "\n".join(failures)
+E       AssertionError: 2 of 2 transcripts differ:
+E         --- transcript
+E         at 1767225600
+E         set https://mail.example.com/ z=1
+E         at 1767225660
+E         set https://mail.example.com/ b=1
+E         at 1767225720
+E         set https://mail.example.com/ z=2
+E         get https://mail.example.com/
+E         set https://mail.example.com/ z=3; Path=/inbox
+E         get https://mail.example.com/inbox
+E         dump
+E         --- expected (exit 0)
+E         https://mail.example.com/	z=2; b=1
+E         https://mail.example.com/inbox	z=3; z=2; b=1
+E         -- jar @1767225720: 3 cookie(s)
+E         mail.example.com	/	b=1	host-only	session	1767225660	1767225720
+E         mail.example.com	/	z=2	host-only	session	1767225600	1767225720
+E         mail.example.com	/inbox	z=3	host-only	session	1767225720	1767225720
+E         --- got (exit 0)
+E         https://mail.example.com/	b=1; z=2
+E         https://mail.example.com/inbox	z=3; b=1; z=2
+E         -- jar @1767225720: 3 cookie(s)
+E         mail.example.com	/	b=1	host-only	session	1767225660	1767225720
+E         mail.example.com	/	z=2	host-only	session	1767225720	1767225720
+E         mail.example.com	/inbox	z=3	host-only	session	1767225720	1767225720
+E         
+E         --- transcript
+E         at 1767225600
+E         set https://mail.example.com/ s=1
+E         at 1767225605
+E         set https://mail.example.com/ r=1
+E         at 1767225610
+E         set https://mail.example.com/ s=2; Domain=mail.example.com
+E         get https://x.mail.example.com/
+E         get https://mail.example.com/
+E         dump
+E         --- expected (exit 0)
+E         https://x.mail.example.com/	s=2
+E         https://mail.example.com/	s=2; r=1
+E         -- jar @1767225610: 2 cookie(s)
+E         mail.example.com	/	r=1	host-only	session	1767225605	1767225610
+E         mail.example.com	/	s=2	-	session	1767225600	1767225610
+E         --- got (exit 0)
+E         https://x.mail.example.com/	s=2
+E         https://mail.example.com/	r=1; s=2
+E         -- jar @1767225610: 2 cookie(s)
+E         mail.example.com	/	r=1	host-only	session	1767225605	1767225610
+E         mail.example.com	/	s=2	-	session	1767225610	1767225610
+E         
+E       assert not ['--- transcript\nat 1767225600\nset https://mail.example.com/ z=1\nat 1767225660\nset https://mail.example.com/ b=1\n...m\t/\tr=1\thost-only\tsession\t1767225605\t1767225610\nmail.example.com\t/\ts=2\t-\tsession\t1767225610\t1767225610\n']
+
+/tests/test_outputs.py:76: AssertionError
+_______________________________ test_site_limit ________________________________
+
+crumbjar = '/tmp/crumbjar-verify-target/release/crumbjar'
+
+    def test_site_limit(crumbjar):
+        """Per-site limit of docs/POLICY.md evicts the least recently accessed cookie of the site."""
+>       _check_group(crumbjar, "site_limit")
+
+/tests/test_outputs.py:131: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/crumbjar-verify-target/release/crumbjar', group = 'site_limit'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            p = subprocess.run(
+                [binary, "replay", "-"],
+                input=case["transcript"], capture_output=True, text=True, timeout=60,
+                env={"PATH": "/usr/local/bin:/usr/bin:/bin", "LC_ALL": "C"},
+            )
+            if p.returncode != 0 or p.stdout != case["stdout"]:
+                failures.append(
+                    f"--- transcript\n{case['transcript']}"
+                    f"--- expected (exit 0)\n{case['stdout']}"
+                    f"--- got (exit {p.returncode})\n{p.stdout}{p.stderr[-500:]}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} transcripts differ:\n" + "\n".join(failures)
+E       AssertionError: 1 of 2 transcripts differ:
+E         --- transcript
+E         at 1767225600
+E         set https://api.example.com/ c1=1
+E         at 1767225601
+E         set https://api.example.com/ c2=1
+E         at 1767225602
+E         set https://www.example.com/ c3=1
+E         at 1767225603
+E         set https://www.example.com/ c4=1; Domain=example.com
+E         at 1767225604
+E         set https://example.com/ c5=1
+E         at 1767225605
+E         set https://example.com/ c6=1; Max-Age=12
+E         at 1767225606
+E         set https://example.org/ o1=1
+E         at 1767225610
+E         get https://api.example.com/
+E         at 1767225620
+E         set https://www.example.com/ c7=1
+E         at 1767225621
+E         set https://example.com/ c8=1
+E         at 1767225622
+E         set https://api.example.com/ c2=2
+E         at 1767225623
+E         set https://www.example.com/ c9=1
+E         get https://www.example.com/
+E         get https://api.example.com/
+E         dump
+E         --- expected (exit 0)
+E         https://api.example.com/	c1=1; c2=1; c4=1
+E         https://www.example.com/	c4=1; c7=1; c9=1
+E         https://api.example.com/	c1=1; c2=2; c4=1
+E         -- jar @1767225623: 7 cookie(s)
+E         api.example.com	/	c1=1	host-only	session	1767225600	1767225623
+E         api.example.com	/	c2=2	host-only	session	1767225601	1767225623
+E         example.com	/	c4=1	-	session	1767225603	1767225623
+E         example.com	/	c8=1	host-only	session	1767225621	1767225621
+E         example.org	/	o1=1	host-only	session	1767225606	1767225606
+E         www.example.com	/	c7=1	host-only	session	1767225620	1767225623
+E         www.example.com	/	c9=1	host-only	session	1767225623	1767225623
+E         --- got (exit 0)
+E         https://api.example.com/	c1=1; c2=1; c4=1
+E         https://www.example.com/	c4=1; c7=1; c9=1
+E         https://api.example.com/	c1=1; c4=1; c2=2
+E         -- jar @1767225623: 7 cookie(s)
+E         api.example.com	/	c1=1	host-only	session	1767225600	1767225623
+E         api.example.com	/	c2=2	host-only	session	1767225622	1767225623
+E         example.com	/	c4=1	-	session	1767225603	1767225623
+E         example.com	/	c8=1	host-only	session	1767225621	1767225621
+E         example.org	/	o1=1	host-only	session	1767225606	1767225606
+E         www.example.com	/	c7=1	host-only	session	1767225620	1767225623
+E         www.example.com	/	c9=1	host-only	session	1767225623	1767225623
+E         
+E       assert not ['--- transcript\nat 1767225600\nset https://api.example.com/ c1=1\nat 1767225601\nset https://api.example.com/ c2=1\n...1\thost-only\tsession\t1767225620\t1767225623\nwww.example.com\t/\tc9=1\thost-only\tsession\t1767225623\t1767225623\n']
+
+/tests/test_outputs.py:76: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_default_path
+PASSED ../tests/test_outputs.py::test_path_boundary
+PASSED ../tests/test_outputs.py::test_host_only
+PASSED ../tests/test_outputs.py::test_ip_hosts
+PASSED ../tests/test_outputs.py::test_max_age_precedence
+PASSED ../tests/test_outputs.py::test_two_digit_years
+PASSED ../tests/test_outputs.py::test_invalid_dates
+PASSED ../tests/test_outputs.py::test_header_order
+PASSED ../tests/test_outputs.py::test_public_suffix
+PASSED ../tests/test_outputs.py::test_name_value_pair
+FAILED ../tests/test_outputs.py::test_replacement - AssertionError: 2 of 2 tr...
+FAILED ../tests/test_outputs.py::test_site_limit - AssertionError: 1 of 2 tra...
+========================= 2 failed, 10 passed in 1.54s =========================

@@ -1,0 +1,158 @@
+---
+description: TB 4.0 solution/solve.sh and tests/ (tests/Dockerfile separate verifier, test.sh with TBENCH_TEST_ID, test_manifest.json, pytest) — canonical shapes, sandboxing agent code, coverage, NC-01..14 negative controls (checks 27-59)
+globs: **/solution/**, **/tests/**
+alwaysApply: false
+---
+
+# TB 4.0 — solution/ and tests/ (checks 27–59)
+
+## How the separate verifier works (Harbor ≥ 0.23, verified in source)
+
+1. Agent (or oracle `solve.sh`, or NOP) works in the agent container built from `environment/`.
+2. Harbor collects every top-level `artifacts` path from that container, then **tears it down**.
+3. Harbor builds a fresh verifier image with **`tests/` as the build context** (`tests/Dockerfile`), and does **not** upload `tests/` at verify time — `tests/Dockerfile` must `COPY . /tests/`.
+4. Each artifact is re-materialized at its **original absolute path** in the verifier container (e.g. `/app`); `/logs/verifier` is bind-mounted; `/tests/test.sh` runs.
+
+So the verifier sees only: declared artifacts + what `tests/Dockerfile` bakes (+ compose sidecars). Hidden fixtures, expected values and reference data live in `tests/` and are baked there (check 45).
+
+## tests/Dockerfile (checks 37, 38, 26)
+
+```dockerfile
+FROM public.ecr.aws/docker/library/golang:1.24-bookworm@sha256:1a6d4452c65dea36aac2e2d606b01b4a029ec90cc1ae53890540ce6173ea77ac
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 python3-venv \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN python3 -m venv /opt/pytools \
+    && /opt/pytools/bin/pip install --no-cache-dir pytest==8.4.1 pytest-json-ctrf==0.3.5
+
+COPY . /tests/
+
+RUN mkdir -p /app
+
+WORKDIR /app
+```
+
+- Digest-pinned canonical `FROM` (same list as `tb40-environment.mdc`); apt unpinned, language deps pinned `==`.
+- **Every verifier dependency baked** — the toolchain needed to build/run the agent's code, pytest, ctrf, anything tests import. Nothing installed/downloaded at trial time, whatever the network mode (check 38). If the agent's project has third-party deps, vendor them in `environment/` so they arrive with the `/app` artifact.
+- `COPY . /tests/` (tests are not uploaded at verify time).
+- `mkdir -p` the **parent of every declared artifact** (check 37) — for `artifacts = ["/app"]` that's `/`, but pre-creating `/app` and setting `WORKDIR /app` keeps test.sh's `$PWD` guard happy.
+- tmux/asciinema are only required in the **agent** image.
+
+## tests/test.sh — canonical shape (check 39, 57)
+
+Use `tb40/skeleton/task/tests/test.sh` verbatim (only change paths if the verifier image differs). Shape:
+
+```bash
+#!/bin/bash
+set -uo pipefail
+
+mkdir -p /logs/verifier
+chmod 0755 /logs/verifier
+echo 0 > /logs/verifier/reward.txt
+
+if [ "$PWD" = "/" ]; then
+    echo "Error: No working directory set. Please set a WORKDIR in tests/Dockerfile before running this script."
+    exit 0
+fi
+
+PY=/opt/pytools/bin/python
+TBENCH_TEST_ID="${TBENCH_TEST_ID:-}"
+targets=(/tests/test_outputs.py)
+
+if [ -n "$TBENCH_TEST_ID" ]; then
+    selected=$("$PY" -c '...validate comma-separated ids against /tests/test_manifest.json, exit 1 on unknown...' "$TBENCH_TEST_ID")
+    if [ $? -ne 0 ]; then
+        exit 0
+    fi
+    mapfile -t targets <<< "$selected"
+fi
+
+"$PY" -m pytest --ctrf /logs/verifier/ctrf.json "${targets[@]}" -rA
+rc=$?
+
+if [ "$rc" -eq 0 ]; then
+    echo 1 > /logs/verifier/reward.txt
+else
+    echo 0 > /logs/verifier/reward.txt
+fi
+
+exit 0
+```
+
+- **No `set -e`**; reward **initialized to 0** right after `mkdir`, written on every path; **always `exit 0` at the end** (TB 4.0 reverses the old 2.1 "no trailing exit" rule).
+- **`TBENCH_TEST_ID` selector** (QC "Per-Test Manifest & TBENCH_TEST_ID"): unset → the whole suite; set (one id or comma-separated) → exactly those manifest ids; any unknown id → message + reward 0. Read with a default (`${TBENCH_TEST_ID:-}`) or `set -u` kills the reward write.
+
+## tests/test_manifest.json
+
+```json
+{"tests": [{"id": "test_outputs.py::test_rejects_empty_ledger", "description": "Empty input exits 2 with a stderr diagnostic"}]}
+```
+
+- One entry per collected test, **id = the exact CTRF name** (`<file>.py::<function>`, `<file>.py::<Class>::<method>` for classes); no extras, no missing, no duplicates. `description` matches the docstring. `tb40_check.py` enforces the 1:1 mapping.
+- Oracle evidence must show every manifest test passing; NOP evidence every manifest test failing — name each test_id's outcome per run, not "reward 0 overall".
+- Reward exactly `0` or `1` — never a fraction/ratio/weighted composite (check 57).
+- Identical logic for oracle and agent — no `/oracle`/`EVAL_IS_ORACLE`/job-name branching (check 57).
+- Never install/fetch (`pip install`, `uvx`, `npm install`, `curl`, `wget`, `git clone`, `apt-get`, `go get`/`go mod download`) (check 38).
+- `chmod 0755 /logs/verifier` so the sandbox user can't write reward/ctrf (check 54). Env vars need defaults (`TEST_DIR="${TEST_DIR:-/tests}"`).
+
+## Running agent-produced code (check 54) — mandatory helper
+
+Whenever tests build/run/import anything from the agent's artifacts, go through one helper (template in `tb40/skeleton/task/tests/test_outputs.py`):
+
+- **unprivileged** — `subprocess.Popen(..., user="nobody", group="nogroup", extra_groups=[])`;
+- **resource-bounded** — `preexec_fn` sets `RLIMIT_CPU`, `RLIMIT_FSIZE`, `RLIMIT_NPROC`, plus a wall-clock `timeout` (a bound, never a graded latency);
+- **environment-sanitized** — explicit minimal `env=` (fixed `PATH`, throwaway `HOME`/caches under `/tmp`), never `os.environ`;
+- **non-agent-writable tool paths** — absolute interpreter/toolchain paths baked in the verifier image (`/usr/local/go/bin/go`), never `/app/bin/...` or `PATH` lookups into agent dirs;
+- **process-group cleanup** — `start_new_session=True`, then `os.killpg(pid, SIGKILL)` after every run (success, failure or timeout);
+- **no write access to `/logs/verifier`** — test.sh chmods it 0755; verify with a real `touch` as the sandbox user when auditing.
+
+## tests/test_outputs.py (checks 40–59)
+
+- **All verifier tests are Python pytest**, whatever the task language — drive the program via subprocess/HTTP/files through the sandbox helper. Never delegate to `go test`/JUnit/Jest.
+- Docstring on every test; name and docstring match what the body asserts (checks 43, 51).
+- **Check the actual VALUE**, not that a well-formed file exists (check 58). Behavioral: run the code, don't grep source.
+- **NOP: zero individual tests pass** (check 40). No standalone guard tests — couple each guard with a real-behavior assertion in the same function, never delete it (checks 41, 42). No session-scoped autouse fixture that asserts before test bodies (turns NOP rows into errors — check 76).
+- **Fail-closed tests carry a positive control** in the same function (check 52).
+- **Expected values never computed by agent-editable code** (check 44); **reference fixtures baked in `tests/`**, never read from the agent artifact to compute the expected side (check 45) — tamper-test it live.
+- **Held-out scenarios genuinely change the expected outcome** vs the shipped ones — a constant output must fail (check 46).
+- Exactness literal (set/list equality) and satisfied by the reference (check 47); tolerances identical to the stated ones (check 48).
+- No string-concatenation obfuscation (check 49); no dead helpers/imports (check 50).
+- **No wall-clock latency/throughput/percentile assertions — absolute ban** (check 56). A deterministic work/score threshold only if efficiency is in the public contract, fixed before model trials from a realistic baseline, admits other correct strategies, not within ~5% of the reference without a recorded sign-off (measure it).
+- **Negative controls NC-01–14** (check 59). NOP is not anti-cheat proof. Build each shortcut submission by hand, run it through the **real** verifier, and record the rejecting manifest test in `_reports/<slug>/negative_controls.toml` (`master_check.py` validates it):
+
+  | ID | Control | When |
+  |---|---|---|
+  | NC-01 | Empty / no-op submission | mandatory |
+  | NC-02 | Format-only fake, no real content | mandatory |
+  | NC-03 | Hard-coded public/example answer | mandatory |
+  | NC-04 | Self-reported metric, no underlying work | mandatory |
+  | NC-05 | One declared artifact missing | mandatory |
+  | NC-06 | Fake reward/CTRF written from the agent side (incl. detached background writer) | mandatory |
+  | NC-07 | Naive/textbook baseline that misses the crux | obvious baseline exists |
+  | NC-08 | Primary metric passes while a second stated requirement is violated | ≥2 stated requirements |
+  | NC-09 | Correct value printed but not persisted | output is persisted state |
+  | NC-10 | Visible-size / first-N / sorted-input / boundary-only shortcut | inputs vary in size/order |
+  | NC-11 | Tamper with or replace a protected input/baseline | protected inputs exist |
+  | NC-12 | PATH shim, shadow module, or wrapper always returning success | verifier runs tools/agent code |
+  | NC-13 | Smallest-scale-only / warm-cache-only implementation | scale or caching matters |
+  | NC-14 | Fits public examples exactly, fails an unseen/metamorphic case | public examples shipped |
+
+  Each must fail through its **own** named assertion — reward 0 via a different, unplanned test is a **fail** of that control. NC-07–14 that don't apply need a specific, credible reason, not silence.
+- **Legitimate** verification: run the agent's own binary and grade its output; golden fixtures/hashes; spec-derived invariants; sealed held-out ground truth; perturbation/holdout re-runs. **Banned**: a tests/ function that maps inputs straight to the expected artifact (if deleting solution/ wouldn't change whether the test can compute the answer, the test is doing the solving); hardcoding a value the instruction says must be read from config; format-only checks.
+- Brittle exact-string matching where the contract never fixed the form → compare after normalization. Persisted state is reloaded/torn down before verification, never checked from memory or logs. Waits are wall-clock bounded with generous windows, never iteration-count bounded.
+- Rejection tests carry a positive control; precedence tests create the hostile state they defend against; accept-path fixtures satisfy the full documented format.
+- Deterministic, independent, order-independent; diagnostic assertion messages (expected vs actual). Keep the suite lean — one test per requirement.
+- Test count collected from the current `tests/` must equal every evidence/trajectory ctrf.json (check 53).
+
+## solution/solve.sh (checks 27–36)
+
+- `#!/usr/bin/env bash` + `set -euo pipefail`. Human-written. Runs in the agent container from `/solution/`; its effect reaches the verifier only through the declared `artifacts`.
+- Demonstrates the derivation — the command sequence an expert would actually run — never `echo` of the answer. Deterministic, idempotent, no network, no package installs. No dead code, commented-out branches or generator/meta commentary. Matches instruction.md's literal wording on every case, not only the tested ones.
+- Whole-file `cp`/heredoc replacement is allowed — diff solve.sh's effect file by file against environment/ (check 27); every touched file maps to a requested fix, no no-op delta (check 28), no out-of-scope change (check 29).
+- Correctness independently re-derived, not just self-consistent with tests — mandatory for named math/algorithm/stat structures (check 30).
+- **No branching on a scenario/case id** to return a constant (check 31); **no privileged knowledge** of held-out data (check 32).
+- Agent consensus vs reference: if runs agree on a different answer, check whether the reference is the outlier (check 33).
+- No orphaned files in solution/ (check 34). Per-file ablation: reverting any single fix (others kept) makes specific tests fail (check 35).
+- Oracle passes from a **cold** build, portably (check 36) — `run_baselines.py` does `--force-build` under `linux/amd64`.

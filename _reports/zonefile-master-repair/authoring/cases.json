@@ -1,0 +1,313 @@
+{
+ "groups": {
+  "owner_continuation": [
+   {
+    "name": "origin_between_records",
+    "origin": "example.com",
+    "entry": "main.zone",
+    "files": {
+     "main.zone": "$TTL 3600\n@ IN SOA ns1 hostmaster 2026092701 2h 30m 2w 5m\n    IN NS ns1\nns1  IN A 192.0.2.1\nmail IN A 192.0.2.25\n$ORIGIN lab.example.com.\n     IN AAAA 2001:db8::25\n     IN MX 10 relay\nbuild IN A 192.0.2.40\n$ORIGIN example.com.\n     IN TXT \"build box\"\n"
+    },
+    "rc": 0,
+    "stdout": "example.com.\t3600\tIN\tNS\tns1.example.com.\nexample.com.\t3600\tIN\tSOA\tns1.example.com. hostmaster.example.com. 2026092701 7200 1800 1209600 300\nbuild.lab.example.com.\t3600\tIN\tA\t192.0.2.40\nbuild.lab.example.com.\t3600\tIN\tTXT\t\"build box\"\nmail.example.com.\t3600\tIN\tA\t192.0.2.25\nmail.example.com.\t3600\tIN\tMX\t10 relay.lab.example.com.\nmail.example.com.\t3600\tIN\tAAAA\t2001:db8::25\nns1.example.com.\t3600\tIN\tA\t192.0.2.1\n",
+    "error_file": null,
+    "error_line": null
+   },
+   {
+    "name": "relative_origin_and_at",
+    "origin": "corp.example",
+    "entry": "main.zone",
+    "files": {
+     "main.zone": "$TTL 1h\n@ IN SOA ns1 hostmaster 2026092701 2h 30m 2w 5m\n  IN NS ns1\nns1 IN A 198.51.100.1\ngw  IN A 198.51.100.254\n$ORIGIN eu\n  IN TXT \"gateway for eu\"\n@ IN NS ns1\n$ORIGIN fra\n  IN A 198.51.100.100\ndb IN A 198.51.100.101\n$TTL 5m\n  IN AAAA 2001:db8:e0::101\n"
+    },
+    "rc": 0,
+    "stdout": "corp.example.\t3600\tIN\tNS\tns1.corp.example.\ncorp.example.\t3600\tIN\tSOA\tns1.corp.example. hostmaster.corp.example. 2026092701 7200 1800 1209600 300\neu.corp.example.\t3600\tIN\tA\t198.51.100.100\neu.corp.example.\t3600\tIN\tNS\tns1.eu.corp.example.\ndb.fra.eu.corp.example.\t3600\tIN\tA\t198.51.100.101\ndb.fra.eu.corp.example.\t300\tIN\tAAAA\t2001:db8:e0::101\ngw.corp.example.\t3600\tIN\tA\t198.51.100.254\ngw.corp.example.\t3600\tIN\tTXT\t\"gateway for eu\"\nns1.corp.example.\t3600\tIN\tA\t198.51.100.1\n",
+    "error_file": null,
+    "error_line": null
+   }
+  ],
+  "default_ttl": [
+   {
+    "name": "dollar_ttl_beats_record_ttl",
+    "origin": "example.org",
+    "entry": "main.zone",
+    "files": {
+     "main.zone": "@ 86400 IN SOA ns1 hostmaster 1 1h 15m 1w 1h\n$TTL 300\n      IN NS ns1\nns1   3600 IN A 192.0.2.1\nwww   IN A 192.0.2.2\napi   IN 120 A 192.0.2.3\ncdn   IN A 192.0.2.4\n"
+    },
+    "rc": 0,
+    "stdout": "example.org.\t300\tIN\tNS\tns1.example.org.\nexample.org.\t86400\tIN\tSOA\tns1.example.org. hostmaster.example.org. 1 3600 900 604800 3600\napi.example.org.\t120\tIN\tA\t192.0.2.3\ncdn.example.org.\t300\tIN\tA\t192.0.2.4\nns1.example.org.\t3600\tIN\tA\t192.0.2.1\nwww.example.org.\t300\tIN\tA\t192.0.2.2\n",
+    "error_file": null,
+    "error_line": null
+   },
+   {
+    "name": "last_record_ttl_then_dollar",
+    "origin": "example.org",
+    "entry": "main.zone",
+    "files": {
+     "main.zone": "@ IN SOA ns1 hostmaster 1 1h 15m 1w 600\n      IN NS ns1\nns1   7200 IN A 192.0.2.11\nns2   IN A 192.0.2.12\n$TTL 1d\nns3   IN A 192.0.2.13\nns4   60 IN A 192.0.2.14\nns5   IN A 192.0.2.15\n"
+    },
+    "rc": 0,
+    "stdout": "example.org.\t600\tIN\tNS\tns1.example.org.\nexample.org.\t600\tIN\tSOA\tns1.example.org. hostmaster.example.org. 1 3600 900 604800 600\nns1.example.org.\t7200\tIN\tA\t192.0.2.11\nns2.example.org.\t7200\tIN\tA\t192.0.2.12\nns3.example.org.\t86400\tIN\tA\t192.0.2.13\nns4.example.org.\t60\tIN\tA\t192.0.2.14\nns5.example.org.\t86400\tIN\tA\t192.0.2.15\n",
+    "error_file": null,
+    "error_line": null
+   },
+   {
+    "name": "no_ttl_before_soa",
+    "origin": "example.org",
+    "entry": "main.zone",
+    "files": {
+     "main.zone": "www IN A 192.0.2.80\n@ IN SOA ns1 hostmaster 1 1h 15m 1w 600\n"
+    },
+    "rc": 1,
+    "stdout": "",
+    "error_file": "main.zone",
+    "error_line": 1
+   }
+  ],
+  "include_scope": [
+   {
+    "name": "dollar_ttl_inside_include",
+    "origin": "example.net",
+    "entry": "main.zone",
+    "files": {
+     "main.zone": "$TTL 1h\n@ IN SOA ns1 hostmaster 2026092701 2h 30m 2w 5m\n    IN NS ns1\n$INCLUDE lab.inc lab\nns1 IN A 192.0.2.1\n    IN TXT \"after include\"\nwww IN A 192.0.2.8\n$INCLUDE more.inc\n    IN AAAA 2001:db8::8\n",
+     "lab.inc": "$TTL 60\n@  IN A 192.0.2.100\ndb IN A 192.0.2.101\n",
+     "more.inc": "api 120 IN A 192.0.2.9\n    IN TXT \"api\"\n"
+    },
+    "rc": 0,
+    "stdout": "example.net.\t3600\tIN\tNS\tns1.example.net.\nexample.net.\t3600\tIN\tSOA\tns1.example.net. hostmaster.example.net. 2026092701 7200 1800 1209600 300\napi.example.net.\t120\tIN\tA\t192.0.2.9\napi.example.net.\t3600\tIN\tTXT\t\"api\"\nlab.example.net.\t60\tIN\tA\t192.0.2.100\ndb.lab.example.net.\t60\tIN\tA\t192.0.2.101\nns1.example.net.\t3600\tIN\tA\t192.0.2.1\nns1.example.net.\t3600\tIN\tTXT\t\"after include\"\nwww.example.net.\t3600\tIN\tA\t192.0.2.8\nwww.example.net.\t3600\tIN\tAAAA\t2001:db8::8\n",
+    "error_file": null,
+    "error_line": null
+   },
+   {
+    "name": "record_ttl_inside_include",
+    "origin": "example.net",
+    "entry": "main.zone",
+    "files": {
+     "main.zone": "@ 3600 IN SOA ns1 hostmaster 7 1h 15m 1w 300\n   IN NS ns1\n$INCLUDE hosts.inc\nns1 IN A 192.0.2.1\n$ORIGIN svc\nmq  IN A 192.0.2.50\n",
+     "hosts.inc": "  IN MX 5 mail\nmail 30 IN A 192.0.2.30\n$ORIGIN internal.example.net.\nldap IN A 10.0.0.5\n"
+    },
+    "rc": 0,
+    "stdout": "example.net.\t3600\tIN\tNS\tns1.example.net.\nexample.net.\t3600\tIN\tSOA\tns1.example.net. hostmaster.example.net. 7 3600 900 604800 300\nexample.net.\t3600\tIN\tMX\t5 mail.example.net.\nldap.internal.example.net.\t30\tIN\tA\t10.0.0.5\nmail.example.net.\t30\tIN\tA\t192.0.2.30\nns1.example.net.\t3600\tIN\tA\t192.0.2.1\nmq.svc.example.net.\t3600\tIN\tA\t192.0.2.50\n",
+    "error_file": null,
+    "error_line": null
+   }
+  ],
+  "include_paths": [
+   {
+    "name": "nested_relative_includes",
+    "origin": "example.com",
+    "entry": "zones/main.zone",
+    "files": {
+     "zones/main.zone": "$TTL 1h\n@ IN SOA ns1 hostmaster 2026092701 2h 30m 2w 5m\n$INCLUDE common/ns.inc\nwww IN A 192.0.2.80\n$INCLUDE ../shared/mx.inc\n",
+     "zones/common/ns.inc": "@ IN NS ns1\n@ IN NS ns2\n$INCLUDE glue.inc\n",
+     "zones/common/glue.inc": "ns1 IN A 192.0.2.53\nns2 IN A 192.0.2.54\n",
+     "shared/mx.inc": "@ IN MX 10 mx1\nmx1 IN A 192.0.2.25\n"
+    },
+    "rc": 0,
+    "stdout": "example.com.\t3600\tIN\tNS\tns1.example.com.\nexample.com.\t3600\tIN\tNS\tns2.example.com.\nexample.com.\t3600\tIN\tSOA\tns1.example.com. hostmaster.example.com. 2026092701 7200 1800 1209600 300\nexample.com.\t3600\tIN\tMX\t10 mx1.example.com.\nmx1.example.com.\t3600\tIN\tA\t192.0.2.25\nns1.example.com.\t3600\tIN\tA\t192.0.2.53\nns2.example.com.\t3600\tIN\tA\t192.0.2.54\nwww.example.com.\t3600\tIN\tA\t192.0.2.80\n",
+    "error_file": null,
+    "error_line": null
+   },
+   {
+    "name": "error_in_nested_include",
+    "origin": "example.com",
+    "entry": "zones/main.zone",
+    "files": {
+     "zones/main.zone": "$TTL 1h\n@ IN SOA ns1 hostmaster 2026092701 2h 30m 2w 5m\n$INCLUDE common/ns.inc\n",
+     "zones/common/ns.inc": "@ IN NS ns1\n$INCLUDE glue.inc\n",
+     "zones/common/glue.inc": "; glue records\nns1 IN A 192.0.2.53\nns2 IN A 192.0.2.300\n"
+    },
+    "rc": 1,
+    "stdout": "",
+    "error_file": "zones/common/glue.inc",
+    "error_line": 3
+   }
+  ],
+  "quoted_parentheses": [
+   {
+    "name": "parens_and_semicolons_in_strings",
+    "origin": "example.com",
+    "entry": "main.zone",
+    "files": {
+     "main.zone": "$TTL 1h\n@ IN SOA ns1 hostmaster (\n        2026092701 ; serial\n        2h 30m 2w 5m )\n  IN NS ns1\nns1   IN A 192.0.2.1\nsmile IN TXT \"ok :-)\" \"(beta)\"\nmulti IN TXT ( \"first; not a comment\" ; a real comment\n               \"second (part\" )\ncaa   IN CAA 0 iodef \"mailto:dns@example.com;(24h)\"\nesc   IN TXT \"a \\\"quoted\\\" word\" \\(bare\\)\n"
+    },
+    "rc": 0,
+    "stdout": "example.com.\t3600\tIN\tNS\tns1.example.com.\nexample.com.\t3600\tIN\tSOA\tns1.example.com. hostmaster.example.com. 2026092701 7200 1800 1209600 300\ncaa.example.com.\t3600\tIN\tCAA\t0 iodef \"mailto:dns@example.com;(24h)\"\nesc.example.com.\t3600\tIN\tTXT\t\"a \\\"quoted\\\" word\" \"(bare)\"\nmulti.example.com.\t3600\tIN\tTXT\t\"first; not a comment\" \"second (part\"\nns1.example.com.\t3600\tIN\tA\t192.0.2.1\nsmile.example.com.\t3600\tIN\tTXT\t\"ok :-)\" \"(beta)\"\n",
+    "error_file": null,
+    "error_line": null
+   },
+   {
+    "name": "unbalanced_parenthesis",
+    "origin": "example.com",
+    "entry": "main.zone",
+    "files": {
+     "main.zone": "$TTL 1h\n@ IN SOA ns1 hostmaster 1 2h 30m 2w 5m\n  IN NS ns1\nns1 IN A 192.0.2.1\nnote IN TXT \"fine (really)\"\nbad IN TXT ( \"never closed\"\n"
+    },
+    "rc": 1,
+    "stdout": "",
+    "error_file": "main.zone",
+    "error_line": 6
+   }
+  ],
+  "escaped_case": [
+   {
+    "name": "decimal_escapes_fold_case",
+    "origin": "example.com",
+    "entry": "main.zone",
+    "files": {
+     "main.zone": "$TTL 1h\n@ IN SOA ns1 hostmaster 1 2h 30m 2w 5m\n  IN NS NS1\n\\078\\083\\049 IN A 192.0.2.1\n\\065pex IN A 192.0.2.10\napex IN A 192.0.2.10\nAPEX IN A 192.0.2.11\nalias IN CNAME \\066ACK\\069nd.Example.COM.\nbackend IN A 192.0.2.12\nhost\\.one IN A 192.0.2.13\n_srv._tcp IN SRV 0 5 443 \\066ackend\n"
+    },
+    "rc": 0,
+    "stdout": "example.com.\t3600\tIN\tNS\tns1.example.com.\nexample.com.\t3600\tIN\tSOA\tns1.example.com. hostmaster.example.com. 1 7200 1800 1209600 300\n_srv._tcp.example.com.\t3600\tIN\tSRV\t0 5 443 backend.example.com.\nalias.example.com.\t3600\tIN\tCNAME\tbackend.example.com.\napex.example.com.\t3600\tIN\tA\t192.0.2.10\napex.example.com.\t3600\tIN\tA\t192.0.2.11\nbackend.example.com.\t3600\tIN\tA\t192.0.2.12\nhost\\.one.example.com.\t3600\tIN\tA\t192.0.2.13\nns1.example.com.\t3600\tIN\tA\t192.0.2.1\n",
+    "error_file": null,
+    "error_line": null
+   }
+  ],
+  "escaped_label_length": [
+   {
+    "name": "sixty_three_octet_labels",
+    "origin": "example.com",
+    "entry": "main.zone",
+    "files": {
+     "main.zone": "$TTL 1h\n@ IN SOA ns1 hostmaster 1 2h 30m 2w 5m\n  IN NS ns1\nns1 IN A 192.0.2.1\n\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb IN A 192.0.2.63\n\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.ccccccccccccccccccccccc IN TXT \"dots\"\nlink IN CNAME \\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\n"
+    },
+    "rc": 0,
+    "stdout": "example.com.\t3600\tIN\tNS\tns1.example.com.\nexample.com.\t3600\tIN\tSOA\tns1.example.com. hostmaster.example.com. 1 7200 1800 1209600 300\n\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.\\.ccccccccccccccccccccccc.example.com.\t3600\tIN\tTXT\t\"dots\"\naaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.example.com.\t3600\tIN\tA\t192.0.2.63\nlink.example.com.\t3600\tIN\tCNAME\taaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.example.com.\nns1.example.com.\t3600\tIN\tA\t192.0.2.1\n",
+    "error_file": null,
+    "error_line": null
+   },
+   {
+    "name": "sixty_four_octet_label",
+    "origin": "example.com",
+    "entry": "main.zone",
+    "files": {
+     "main.zone": "$TTL 1h\n@ IN SOA ns1 hostmaster 1 2h 30m 2w 5m\n  IN NS ns1\nns1 IN A 192.0.2.1\n\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb IN A 192.0.2.63\ndddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd IN A 192.0.2.64\n"
+    },
+    "rc": 1,
+    "stdout": "",
+    "error_file": "main.zone",
+    "error_line": 6
+   }
+  ],
+  "canonical_order": [
+   {
+    "name": "rfc4034_name_order",
+    "origin": "example",
+    "entry": "main.zone",
+    "files": {
+     "main.zone": "$TTL 1h\nz.a     IN A 192.0.2.1\nyljkjljk.a IN A 192.0.2.2\nZ.a     IN TXT \"same owner as z.a\"\n@       IN SOA ns1 hostmaster 1 2h 30m 2w 5m\n@       IN NS ns1\na-b     IN A 192.0.2.3\na       IN A 192.0.2.4\n*.z.a   IN A 192.0.2.5\n\\200.z.a IN A 192.0.2.6\nzabc.a  IN A 192.0.2.7\nb       IN A 192.0.2.8\nns1     IN A 192.0.2.9\n\\001.z.a IN A 192.0.2.10\n"
+    },
+    "rc": 0,
+    "stdout": "example.\t3600\tIN\tNS\tns1.example.\nexample.\t3600\tIN\tSOA\tns1.example. hostmaster.example. 1 7200 1800 1209600 300\na.example.\t3600\tIN\tA\t192.0.2.4\nyljkjljk.a.example.\t3600\tIN\tA\t192.0.2.2\nz.a.example.\t3600\tIN\tA\t192.0.2.1\nz.a.example.\t3600\tIN\tTXT\t\"same owner as z.a\"\n\\001.z.a.example.\t3600\tIN\tA\t192.0.2.10\n*.z.a.example.\t3600\tIN\tA\t192.0.2.5\n\\200.z.a.example.\t3600\tIN\tA\t192.0.2.6\nzabc.a.example.\t3600\tIN\tA\t192.0.2.7\na-b.example.\t3600\tIN\tA\t192.0.2.3\nb.example.\t3600\tIN\tA\t192.0.2.8\nns1.example.\t3600\tIN\tA\t192.0.2.9\n",
+    "error_file": null,
+    "error_line": null
+   },
+   {
+    "name": "type_and_rdata_order",
+    "origin": "example.net",
+    "entry": "main.zone",
+    "files": {
+     "main.zone": "$TTL 1h\n@ IN CAA 0 issue \"ca.example\"\n@ IN TXT \"aaa\"\n@ IN TXT \"zz\"\n@ IN AAAA 2001:db8::1\n@ IN MX 20 mx\n@ IN MX 5 mx\n@ IN SOA ns1 hostmaster 1 2h 30m 2w 5m\n@ IN NS ns2\n@ IN NS ns1\n@ IN A 192.0.2.10\n@ IN A 192.0.2.9\nmx IN A 192.0.2.25\nns1 IN A 192.0.2.53\nns2 IN A 192.0.2.54\n"
+    },
+    "rc": 0,
+    "stdout": "example.net.\t3600\tIN\tA\t192.0.2.9\nexample.net.\t3600\tIN\tA\t192.0.2.10\nexample.net.\t3600\tIN\tNS\tns1.example.net.\nexample.net.\t3600\tIN\tNS\tns2.example.net.\nexample.net.\t3600\tIN\tSOA\tns1.example.net. hostmaster.example.net. 1 7200 1800 1209600 300\nexample.net.\t3600\tIN\tMX\t5 mx.example.net.\nexample.net.\t3600\tIN\tMX\t20 mx.example.net.\nexample.net.\t3600\tIN\tTXT\t\"zz\"\nexample.net.\t3600\tIN\tTXT\t\"aaa\"\nexample.net.\t3600\tIN\tAAAA\t2001:db8::1\nexample.net.\t3600\tIN\tCAA\t0 issue \"ca.example\"\nmx.example.net.\t3600\tIN\tA\t192.0.2.25\nns1.example.net.\t3600\tIN\tA\t192.0.2.53\nns2.example.net.\t3600\tIN\tA\t192.0.2.54\n",
+    "error_file": null,
+    "error_line": null
+   }
+  ],
+  "rrset_ttl": [
+   {
+    "name": "first_record_sets_rrset_ttl",
+    "origin": "example.com",
+    "entry": "main.zone",
+    "files": {
+     "main.zone": "$TTL 1h\n@ IN SOA ns1 hostmaster 1 2h 30m 2w 5m\n  IN NS ns1\n  60 IN NS ns2\nns1 IN A 192.0.2.53\nns2 IN A 192.0.2.54\nwww 600 IN A 192.0.2.1\nwww 60 IN A 192.0.2.2\nwww IN AAAA 2001:db8::1\napi IN A 192.0.2.3\napi 30 IN A 192.0.2.4\napi 30 IN A 192.0.2.3\n"
+    },
+    "rc": 0,
+    "stdout": "example.com.\t3600\tIN\tNS\tns1.example.com.\nexample.com.\t3600\tIN\tNS\tns2.example.com.\nexample.com.\t3600\tIN\tSOA\tns1.example.com. hostmaster.example.com. 1 7200 1800 1209600 300\napi.example.com.\t3600\tIN\tA\t192.0.2.3\napi.example.com.\t3600\tIN\tA\t192.0.2.4\nns1.example.com.\t3600\tIN\tA\t192.0.2.53\nns2.example.com.\t3600\tIN\tA\t192.0.2.54\nwww.example.com.\t600\tIN\tA\t192.0.2.1\nwww.example.com.\t600\tIN\tA\t192.0.2.2\nwww.example.com.\t3600\tIN\tAAAA\t2001:db8::1\n",
+    "error_file": null,
+    "error_line": null
+   },
+   {
+    "name": "rrset_split_across_include",
+    "origin": "example.com",
+    "entry": "main.zone",
+    "files": {
+     "main.zone": "$TTL 1h\n@ IN SOA ns1 hostmaster 1 2h 30m 2w 5m\n  IN NS ns1\nns1 IN A 192.0.2.53\n$INCLUDE web.inc\nweb 90 IN A 192.0.2.81\n",
+     "web.inc": "web 7200 IN A 192.0.2.80\nweb 45 IN TXT \"edge\"\n"
+    },
+    "rc": 0,
+    "stdout": "example.com.\t3600\tIN\tNS\tns1.example.com.\nexample.com.\t3600\tIN\tSOA\tns1.example.com. hostmaster.example.com. 1 7200 1800 1209600 300\nns1.example.com.\t3600\tIN\tA\t192.0.2.53\nweb.example.com.\t7200\tIN\tA\t192.0.2.80\nweb.example.com.\t7200\tIN\tA\t192.0.2.81\nweb.example.com.\t45\tIN\tTXT\t\"edge\"\n",
+    "error_file": null,
+    "error_line": null
+   }
+  ],
+  "zonemd": [
+   {
+    "name": "digest_uses_listing_ttls_and_soa_serial",
+    "origin": "example.org",
+    "entry": "main.zone",
+    "files": {
+     "main.zone": "$TTL 1h\n@ IN SOA ns1 hostmaster 2026092705 2h 30m 2w 5m\n  IN NS ns1\n  IN ZONEMD 1 1 1 000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\nns1 IN A 192.0.2.53\nwww 600 IN A 192.0.2.80\nwww 60 IN A 192.0.2.81\n"
+    },
+    "rc": 0,
+    "stdout": "example.org.\t3600\tIN\tNS\tns1.example.org.\nexample.org.\t3600\tIN\tSOA\tns1.example.org. hostmaster.example.org. 2026092705 7200 1800 1209600 300\nexample.org.\t3600\tIN\tZONEMD\t2026092705 1 1 8387E561481CBECF87F0B57B9411DDC8788CA347989D96D25EE12C7FEFEFDA8958E804C43207A79E1AE65125CF6098C0\nns1.example.org.\t3600\tIN\tA\t192.0.2.53\nwww.example.org.\t600\tIN\tA\t192.0.2.80\nwww.example.org.\t600\tIN\tA\t192.0.2.81\n",
+    "error_file": null,
+    "error_line": null
+   },
+   {
+    "name": "zonemd_below_apex_is_data",
+    "origin": "example.org",
+    "entry": "main.zone",
+    "files": {
+     "main.zone": "$TTL 1h\n@ IN SOA ns1 hostmaster 2026092704 2h 30m 2w 5m\n  IN NS ns1\n  IN ZONEMD 2026092704 1 1 ( 000000000000000000000000000000000000000000000000\n                             000000000000000000000000000000000000000000000000 )\nns1 IN A 192.0.2.53\narchive IN TXT \"digest of the retired zone\"\narchive IN ZONEMD 2025010101 1 1 9F3C0E5A7B21D4C8E6F0A1B2C3D4E5F60718293A4B5C6D7E8F90A1B2C3D4E5F60718293A4B5C6D7E8F90A1B2C3D4E5F6\n"
+    },
+    "rc": 0,
+    "stdout": "example.org.\t3600\tIN\tNS\tns1.example.org.\nexample.org.\t3600\tIN\tSOA\tns1.example.org. hostmaster.example.org. 2026092704 7200 1800 1209600 300\nexample.org.\t3600\tIN\tZONEMD\t2026092704 1 1 7EF0AF70529021E42BFBB271A1C1D6E719BDA67F7B67E7E0CA783AB6F9B0BEF8CAF2CAFC9BBA58BA7950172E56D22DCF\narchive.example.org.\t3600\tIN\tTXT\t\"digest of the retired zone\"\narchive.example.org.\t3600\tIN\tZONEMD\t2025010101 1 1 9F3C0E5A7B21D4C8E6F0A1B2C3D4E5F60718293A4B5C6D7E8F90A1B2C3D4E5F60718293A4B5C6D7E8F90A1B2C3D4E5F6\nns1.example.org.\t3600\tIN\tA\t192.0.2.53\n",
+    "error_file": null,
+    "error_line": null
+   },
+   {
+    "name": "digest_input_near_block_end",
+    "origin": "example.org",
+    "entry": "main.zone",
+    "files": {
+     "main.zone": "$TTL 1h\n@ IN SOA ns1 hostmaster 2026092706 2h 30m 2w 5m\n  IN NS ns1\n  IN ZONEMD 2026092706 1 1 000000000000000000000000000000000000000000000000 000000000000000000000000000000000000000000000000\nns1 IN A 192.0.2.53\nmail IN A 192.0.2.25\n  IN TXT \"v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDwq7ve1Hc9Lr2MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDwq7ve1Hc9Lr2MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBg\"\n"
+    },
+    "rc": 0,
+    "stdout": "example.org.\t3600\tIN\tNS\tns1.example.org.\nexample.org.\t3600\tIN\tSOA\tns1.example.org. hostmaster.example.org. 2026092706 7200 1800 1209600 300\nexample.org.\t3600\tIN\tZONEMD\t2026092706 1 1 880977E80C2B78B35D39EFDF8778FFC95DED0E387B0645CC7D6EA5130A9C2FEB188EE5B2A42C353B3BB90B43D1FD9795\nmail.example.org.\t3600\tIN\tA\t192.0.2.25\nmail.example.org.\t3600\tIN\tTXT\t\"v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDwq7ve1Hc9Lr2MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDwq7ve1Hc9Lr2MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBg\"\nns1.example.org.\t3600\tIN\tA\t192.0.2.53\n",
+    "error_file": null,
+    "error_line": null
+   },
+   {
+    "name": "apex_zonemd_sha512_rejected",
+    "origin": "example.org",
+    "entry": "main.zone",
+    "files": {
+     "main.zone": "$TTL 1h\n@ IN SOA ns1 hostmaster 2026092707 2h 30m 2w 5m\n  IN NS ns1\nns1 IN A 192.0.2.53\n@ IN ZONEMD 2026092707 1 2 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000\n"
+    },
+    "rc": 1,
+    "stdout": "",
+    "error_file": "main.zone",
+    "error_line": 5
+   }
+  ],
+  "reference_zone": [
+   {
+    "name": "production_like_zone",
+    "origin": "shop.example",
+    "entry": "db/shop.example.zone",
+    "files": {
+     "db/shop.example.zone": "; shop.example - production\n$TTL 4h\n@   IN SOA ns1.shop.example. hostmaster.shop.example. (\n            2026092703 ; serial\n            1h         ; refresh\n            15m        ; retry\n            2w         ; expire\n            10m )      ; minimum\n    IN NS   ns1\n    IN NS   NS2.Provider.example.\n    IN MX   10 mx1\n    IN MX   20 mx2\n    IN TXT  \"v=spf1 mx include:_spf.provider.example ~all\"\n    IN CAA  0 issue \"letsencrypt.org\"\n    IN CAA  128 iodef \"mailto:security@shop.example\"\n    IN ZONEMD 0 1 1 ( 000000000000000000000000000000000000000000000000\n                      000000000000000000000000000000000000000000000000 )\nns1 IN A    203.0.113.53\n    IN AAAA 2001:DB8:0:0:1:0:0:53\nmx1 IN A    203.0.113.25\nmx2 IN A    203.0.113.26\nwww 300 IN CNAME cdn.provider.example.\n$INCLUDE ../fragments/api.inc api\n$ORIGIN _tcp.shop.example.\n_imaps IN SRV 0 1 993 mx1.shop.example.\n_submission IN SRV 0 1 587 mx1.shop.example.\n_imaps IN SRV 10 1 993 mx2.shop.example.\n$ORIGIN shop.example.\n    IN TXT \"imaps fallback on mx2\"\nStatus IN A 203.0.113.99\nstatus IN A 203.0.113.99\n",
+     "fragments/api.inc": "$TTL 5m\n@     IN A    203.0.113.80\n      IN A    203.0.113.81\nv2    IN CNAME @\ndocs  IN TXT  ( \"api v2 (beta); see\"\n                \"https://shop.example/docs\" )\n$INCLUDE internal/hosts.inc internal\n",
+     "fragments/internal/hosts.inc": "\\068B01 IN A 10.20.0.11\ndb01  3600 IN TXT \"primary\"\ndb02  IN A    10.20.0.12\n"
+    },
+    "rc": 0,
+    "stdout": "shop.example.\t14400\tIN\tNS\tns1.shop.example.\nshop.example.\t14400\tIN\tNS\tns2.provider.example.\nshop.example.\t14400\tIN\tSOA\tns1.shop.example. hostmaster.shop.example. 2026092703 3600 900 1209600 600\nshop.example.\t14400\tIN\tMX\t10 mx1.shop.example.\nshop.example.\t14400\tIN\tMX\t20 mx2.shop.example.\nshop.example.\t14400\tIN\tTXT\t\"v=spf1 mx include:_spf.provider.example ~all\"\nshop.example.\t14400\tIN\tZONEMD\t2026092703 1 1 D40FCFF2AF3CCE52A1F0C2F6C7B0D6EF85D14681F4844839D7184D1FC7B94049D78AF379283100F74BF7D62D325A1ECB\nshop.example.\t14400\tIN\tCAA\t0 issue \"letsencrypt.org\"\nshop.example.\t14400\tIN\tCAA\t128 iodef \"mailto:security@shop.example\"\n_imaps._tcp.shop.example.\t14400\tIN\tTXT\t\"imaps fallback on mx2\"\n_imaps._tcp.shop.example.\t14400\tIN\tSRV\t0 1 993 mx1.shop.example.\n_imaps._tcp.shop.example.\t14400\tIN\tSRV\t10 1 993 mx2.shop.example.\n_submission._tcp.shop.example.\t14400\tIN\tSRV\t0 1 587 mx1.shop.example.\napi.shop.example.\t300\tIN\tA\t203.0.113.80\napi.shop.example.\t300\tIN\tA\t203.0.113.81\ndocs.api.shop.example.\t300\tIN\tTXT\t\"api v2 (beta); see\" \"https://shop.example/docs\"\ndb01.internal.api.shop.example.\t300\tIN\tA\t10.20.0.11\ndb01.internal.api.shop.example.\t3600\tIN\tTXT\t\"primary\"\ndb02.internal.api.shop.example.\t300\tIN\tA\t10.20.0.12\nv2.api.shop.example.\t300\tIN\tCNAME\tapi.shop.example.\nmx1.shop.example.\t14400\tIN\tA\t203.0.113.25\nmx2.shop.example.\t14400\tIN\tA\t203.0.113.26\nns1.shop.example.\t14400\tIN\tA\t203.0.113.53\nns1.shop.example.\t14400\tIN\tAAAA\t2001:db8::1:0:0:53\nstatus.shop.example.\t14400\tIN\tA\t203.0.113.99\nwww.shop.example.\t300\tIN\tCNAME\tcdn.provider.example.\n",
+    "error_file": null,
+    "error_line": null
+   }
+  ]
+ }
+}

@@ -1,0 +1,28 @@
+host tunnel
+user deploy
+hostname tunnel
+port 22
+batchmode no
+controlmaster false
+identitiesonly no
+stricthostkeychecking ask
+serveralivecountmax 3
+serveraliveinterval 0
+loglevel INFO
+dynamicforward 1080
+localforward 15432 [db.internal]:5432
+remoteforward 18080 [localhost]:8080
+identityfile ~/.ssh/id_rsa
+identityfile ~/.ssh/id_ecdsa
+identityfile ~/.ssh/id_ecdsa_sk
+identityfile ~/.ssh/id_ed25519
+identityfile ~/.ssh/id_ed25519_sk
+identityfile ~/.ssh/id_xmss
+identityfile ~/.ssh/id_dsa
+userknownhostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2
+sendenv LANG
+sendenv LC_*
+setenv TEAM=infra
+forwardagent no
+connecttimeout none
+controlpersist no

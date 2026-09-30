@@ -1,0 +1,486 @@
+[step 2] find . -maxdepth 3 -type f -print | sort
+[step 2] printf '%s\n' '--- Cargo.toml ---'; cat Cargo.toml; printf '%s\n' '--- docs ---'; for f in docs/*; do echo "### $f"; cat "$f"; done
+[step 2] printf '%s\n' '--- source ---'; for f in src/*.rs; do echo "### $f"; sed -n '1,260p' "$f"; done
+[step 2] cargo test
+[step 3] for f in $(find src -type f -name '*.rs' | sort); do echo "### $f"; cat "$f"; done
+[step 3] cat README.md; printf '\n--- toolchain ---\n'; command -v cargo || true; command -v rustc || true; find /root /usr/local /opt -maxdepth 4 -type f \( -name cargo -o -name rustc \) 2>/dev/null | head -30
+[step 4] cat > src/ignore/lines.rs <<'EOF'
+//! Splitting a pattern file into candidate lines.
+
+#[derive(Debug, Clone)]
+pub struct RawLine {
+    pub number: usize,
+    pub text: Vec<u8>,
+}
+
+/// Split on LF, remove a CR immediately preceding LF (or EOF), and skip a
+/// UTF-8 BOM at the beginning. Line numbers include comments and blanks.
+pub fn split(buf: &[u8]) -> Vec<RawLine> {
+    let buf = buf.strip_prefix(&[0xef, 0xbb, 0xbf]).unwrap_or(buf);
+    let mut out = Vec::new();
+    for (index, raw) in buf.split(|&b| b == b'\n').enumerate() {
+        let line = raw.strip_suffix(b"\r").unwrap_or(raw);
+        if line.is_empty() || line[0] == b'#' {
+            continue;
+        }
+        out.push(RawLine { number: index + 1, text: line.to_vec() });
+    }
+    out
+}
+EOF
+cat > src/ignore/parse.rs <<'EOF'
+//! Turning one line of a pattern file into a pattern.
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Parsed {
+    pub text: Vec<u8>,
+    pub body: Vec<u8>,
+    pub negative: bool,
+    pub dir_only: bool,
+    pub basename_only: bool,
+}
+
+/// Remove only unescaped trailing space characters. In a run of backslashes,
+/// an odd final backslash escapes the following space.
+pub fn trim_trailing_spaces(line: &[u8]) -> &[u8] {
+    let mut end = line.len();
+    while end > 0 && line[end - 1] == b' ' {
+        let mut slashes = 0;
+        let mut i = end - 1;
+        while i > 0 && line[i - 1] == b'\\' {
+            slashes += 1;
+            i -= 1;
+        }
+        if slashes % 2 == 1 {
+            break;
+        }
+        end -= 1;
+    }
+    &line[..end]
+}
+
+pub fn parse_line(line: &[u8]) -> Option<Parsed> {
+    let text = trim_trailing_spaces(line);
+    if text.is_empty() {
+        return None;
+    }
+    let mut body = text;
+    let escaped_leader = body.len() > 1 && body[0] == b'\\' && matches!(body[1], b'!' | b'#');
+    let negative = !escaped_leader && body.first() == Some(&b'!');
+    if negative {
+        body = &body[1..];
+    }
+    if body.is_empty() {
+        return None;
+    }
+    let dir_only = body.last() == Some(&b'/');
+    if dir_only {
+        body = &body[..body.len() - 1];
+    }
+    if body.is_empty() {
+        return None;
+    }
+    let basename_only = !body.contains(&b'/');
+    Some(Parsed {
+        text: text.to_vec(),
+        body: body.to_vec(),
+        negative,
+        dir_only,
+        basename_only,
+    })
+}
+EOF
+cat > src/ignore/pattern.rs <<'EOF'
+use super::lines;
+use super::parse::parse_line;
+use super::wildmatch::wildmatch;
+
+#[derive(Debug, Clone)]
+p...[+2078 chars]
+[step 4] python3 - <<'PY'
+p='src/config/gitconfig.rs'
+s=open(p).read()
+s=s.replace('key: key.to_string(),', 'key: key.to_ascii_lowercase(),')
+s=s.replace('&& e.key == key)', '&& e.key.eq_ignore_ascii_case(key))')
+open(p,'w').write(s)
+PY
+cat > src/config/paths.rs <<'EOF'
+use std::env;
+
+fn home() -> Option<String> {
+    env::var("HOME").ok()
+}
+
+pub fn expand_user(value: &str) -> Option<String> {
+    if value == "~" {
+        return home();
+    }
+    match value.strip_prefix("~/") {
+        Some(rest) => home().map(|h| format!("{h}/{rest}")),
+        None => Some(value.to_string()),
+    }
+}
+
+pub fn default_excludes_file() -> Option<String> {
+    match env::var("XDG_CONFIG_HOME") {
+        Ok(xdg) if !xdg.is_empty() => Some(format!("{xdg}/git/ignore")),
+        _ => home().map(|h| format!("{h}/.config/git/ignore")),
+    }
+}
+EOF
+python3 - <<'PY'
+p='src/ignore/sources.rs'
+s=open(p).read()
+old='''        if let Some(name) = &self.excludes_file {
+            let path = resolve(root, name);
+            if let Some(list) = read_optional(&path, name)? {
+                lists.push(list);
+            }
+        }
+        if let Some(list) = read_optional(&root.join(INFO_EXCLUDE), INFO_EXCLUDE)? {
+            lists.push(list);
+        }'''
+new='''        if let Some(list) = read_optional(&root.join(INFO_EXCLUDE), INFO_EXCLUDE)? {
+            lists.push(list);
+        }
+        if let Some(name) = &self.excludes_file {
+            let path = resolve(root, name);
+            if let Some(list) = read_optional(&path, name)? {
+                lists.push(list);
+            }
+        }'''
+assert old in s
+s=s.replace(old,new)
+open(p,'w').write(s)
+PY
+python3 - <<'PY'
+p='src/ignore/stack.rs'
+s=open(p).read()
+s=s.replace('''pub fn resolve(inherited: Option<Hit>, own: Option<Hit>) -> Option<Hit> {
+    match own {
+        Some(h) if h.negative => Some(h),
+        own => inherited.or(own),
+    }
+}''','''pub fn resolve(inherited: Option<Hit>, own: Option<Hit>) -> Option<Hit> {
+    inherited.or(own)
+}''')
+s=s.replace('''        stack
+            .iter()
+            .chain(self.globals.iter())''','''        stack
+            .iter()
+            .rev()
+            .chain(self.globals.iter())''')
+old='''            let own = self.classify(&stack, &prefix, true);
+            inherited = inherit(&resolve(inherited, own));
+            stack.push(self.dir_list(&prefix)?);'''
+new='''            let own = self.classify(&stack, &prefix, true);
+            let resolved = resolve(inherited, own);
+          ...[+920 chars]
+[step 4] cat > src/ignore/charclass.rs <<'EOF'
+//! Bracket expressions: `[abc]`, `[a-z]`, `[!x]`, `[[:digit:]]`.
+
+pub(super) fn bracket(pat: &[u8], mut p: usize, tc: u8) -> Option<(bool, usize)> {
+    let negated = matches!(pat.get(p), Some(b'!') | Some(b'^'));
+    if negated { p += 1; }
+    let mut matched = false;
+    let mut first = true;
+    let mut previous: Option<u8> = None;
+
+    loop {
+        let c = *pat.get(p)?;
+        if c == b']' && !first {
+            return Some((matched != negated, p));
+        }
+        first = false;
+
+        if c == b'[' && pat.get(p + 1) == Some(&b':') {
+            let mut q = p + 2;
+            while q + 1 < pat.len() && !(pat[q] == b':' && pat[q + 1] == b']') { q += 1; }
+            if q + 1 >= pat.len() { return None; }
+            if posix_class(&pat[p + 2..q], tc)? { matched = true; }
+            previous = None;
+            p = q + 2;
+            continue;
+        }
+
+        let (value, next) = if c == b'\\' {
+            (pat.get(p + 1).copied()?, p + 2)
+        } else {
+            (c, p + 1)
+        };
+
+        if value == b'-' && previous.is_some() && pat.get(next) != Some(&b']') {
+            let mut end_at = next;
+            let end = if pat.get(end_at) == Some(&b'\\') {
+                end_at += 1;
+                let v = pat.get(end_at).copied()?;
+                end_at += 1;
+                v
+            } else {
+                let v = pat.get(end_at).copied()?;
+                end_at += 1;
+                v
+            };
+            let start = previous.unwrap();
+            if start <= tc && tc <= end { matched = true; }
+            previous = Some(end);
+            p = end_at;
+        } else {
+            if tc == value { matched = true; }
+            previous = Some(value);
+            p = next;
+        }
+    }
+}
+
+fn posix_class(name: &[u8], c: u8) -> Option<bool> {
+    Some(match name {
+        b"alnum" => c.is_ascii_alphanumeric(), b"alpha" => c.is_ascii_alphabetic(),
+        b"blank" => c == b' ' || c == b'\t', b"cntrl" => c.is_ascii_control(),
+        b"digit" => c.is_ascii_digit(), b"graph" => c.is_ascii_graphic(),
+        b"lower" => c.is_ascii_lowercase(), b"print" => c.is_ascii_graphic() || c == b' ',
+        b"punct" => c.is_ascii_punctuation(), b"space" => c.is_ascii_whitespace(),
+        b"upper" => c.is_ascii_uppercase(), b"xdigit" => c.is_ascii_hexdigit(),
+        _ => return None,
+    })
+}
+EOF
+cat > src/ignore/wildmatch.rs <<'EOF'
+//! Git-style byte-oriented wildmatch.
+
+use std::collections...[+2331 chars]
+[step 4] sed -n '1,260p' src/ignore/stack.rs; sed -n '1,180p' src/walk/tree.rs; grep -R "excludesFile\|e.key" -n src/config src/ignore; git diff -- src 2>/dev/null || true
+[step 5] python3 - <<'PY'
+p='src/config/gitconfig.rs'
+s=open(p).read()
+s=s.replace('''    pub fn parse(text: &str) -> GitConfig {
+        let mut entries = Vec::new();''','''    pub fn parse(text: &str) -> GitConfig {
+        let text = text.strip_prefix('\\u{feff}').unwrap_or(text);
+        let mut entries = Vec::new();''')
+start=s.index('fn logical_lines(text: &str) -> Vec<String> {')
+end=s.index('\nfn parse_header', start)
+new='''fn logical_lines(text: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut current = String::new();
+    for raw in text.split('\\n') {
+        let raw = raw.strip_suffix('\\r').unwrap_or(raw);
+        let slashes = raw.as_bytes().iter().rev().take_while(|&&b| b == b'\\\\').count();
+        if slashes % 2 == 1 {
+            current.push_str(&raw[..raw.len() - 1]);
+            continue;
+        }
+        current.push_str(raw);
+        out.push(std::mem::take(&mut current));
+    }
+    if !current.is_empty() {
+        out.push(current);
+    }
+    out
+}
+'''
+s=s[:start]+new+s[end:]
+open(p,'w').write(s)
+PY
+python3 - <<'PY'
+p='src/ignore/stack.rs'
+s=open(p).read()
+s=s.replace('''/// Combines the decision inherited from an excluded parent directory with
+/// the path's own last matching pattern.
+pub fn resolve(inherited: Option<Hit>, own: Option<Hit>) -> Option<Hit> {
+    inherited.or(own)
+}
+
+/// What an excluded directory passes on to its entries.
+pub fn inherit(resolved: &Option<Hit>) -> Option<Hit> {
+    match resolved {
+        Some(h) if !h.negative => Some(h.clone()),
+        _ => None,
+    }
+}
+
+''','')
+s=s.replace('''        let mut inherited: Option<Hit> = None;
+''','')
+s=s.replace('''            let resolved = resolve(inherited, own);
+            if matches!(&resolved, Some(h) if !h.negative) {
+                return Ok(Verdict::Matched(resolved.unwrap()));
+            }
+            inherited = None;
+''','''            if matches!(&own, Some(h) if !h.negative) {
+                return Ok(Verdict::Matched(own.unwrap()));
+            }
+''')
+s=s.replace('''        Ok(match resolve(inherited, own) {
+''','''        Ok(match own {
+''')
+open(p,'w').write(s)
+
+p='src/ignore/mod.rs'
+s=open(p).read().replace('pub use stack::{inherit, resolve, Hit, Matcher, Verdict};','pub use stack::{Hit, Matcher, Verdict};')
+open(p,'w').write(s)
+
+p='src/walk/tree.rs'
+s=open(p).read()
+s=s.replace('use crate::ignore::{Hit, Matcher, PatternList};','use crate::ignore::{Matcher, PatternList};')
+s=s.replace('''    visit(matcher, "", None, &mut stack, &mut o...[+624 chars]
+[step 5] apt-cache policy cargo rustc 2>/dev/null | head -30; ls -la /root/.cargo /usr/local/cargo/bin 2>/dev/null || true
+[step 6] export PATH=/usr/local/cargo/bin:$PATH; rustup show; rustc --version; cargo --version
+[step 6] export PATH=/usr/local/cargo/bin:$PATH; cargo test
+[step 6] export PATH=/usr/local/cargo/bin:$PATH; cargo build --release
+[step 7] python3 - <<'PY'
+p='src/ignore/sources.rs'
+s=open(p).read()
+start=s.index('pub fn read_optional(')
+new='''pub fn read_optional(path: &Path, source: &str) -> Result<Option<PatternList>> {
+    let metadata = match fs::symlink_metadata(path) {
+        Ok(metadata) => metadata,
+        Err(e) if matches!(e.kind(), io::ErrorKind::NotFound | io::ErrorKind::NotADirectory) => {
+            return Ok(None);
+        }
+        Err(e) => return Err(Error::io(path, e)),
+    };
+    if !metadata.file_type().is_file() {
+        return Ok(None);
+    }
+    let buf = fs::read(path).map_err(|e| Error::io(path, e))?;
+    Ok(Some(PatternList::from_bytes(source, "", &buf)))
+}
+'''
+s=s[:start]+new
+open(p,'w').write(s)
+PY
+export PATH=/usr/local/cargo/bin:$PATH; cargo test && cargo build --release
+[step 7] rm -rf /tmp/gleaner-case; mkdir -p /tmp/gleaner-case/{build,one/build,sub,ignored,.git/info}; touch /tmp/gleaner-case/build/top /tmp/gleaner-case/one/build/deep /tmp/gleaner-case/root.tmp /tmp/gleaner-case/sub/drop.tmp /tmp/gleaner-case/sub/keep.tmp /tmp/gleaner-case/ignored/revive.txt /tmp/gleaner-case/plain; printf '\357\273\277build\r\n*.tmp\r\nignored/\r\n!ignored/revive.txt\r\n' > /tmp/gleaner-case/.gitignore; printf '!keep.tmp\r\n' > /tmp/gleaner-case/sub/.gitignore; echo '--- list'; ./target/release/gleaner --root /tmp/gleaner-case list; echo '--- check'; ./target/release/gleaner --root /tmp/gleaner-case check build/top one/build/deep root.tmp sub/drop.tmp sub/keep.tmp ignored/revive.txt plain; echo status=$?
+[step 7] command -v git || true
+[step 8] set -eu
+G=./target/release/gleaner
+T=/tmp/gleaner-more
+rm -rf "$T"; mkdir -p "$T"/{a/x,a/doc,sub/doc,sub/a/doc,.git/info,cfg}
+touch "$T"/a-b "$T"/a/x/f "$T"/a0 "$T"/a/doc/frotz "$T"/sub/doc/frotz "$T"/sub/a/doc/frotz "$T"/'space ' "$T"/'tab	' "$T"/'!important' "$T"/'#notes' "$T"/deep.tmp
+printf 'global-only\ncommon\n' > "$T/cfg/global"
+printf '[Core]\n  ExcludesFile = cfg/global\n' > "$T/.git/config"
+printf 'info-only\n!common\n' > "$T/.git/info/exclude"
+printf '# comment\n/common\na/**/f\n\\!important\n\\#notes\nspace\\ \ntab\t\n' > "$T/.gitignore"
+printf 'doc/frotz\n*.tmp\n' > "$T/sub/.gitignore"
+printf '!deep.tmp\n' > "$T/sub/a/.gitignore"
+touch "$T"/global-only "$T"/info-only "$T"/common "$T"/sub/a/deep.tmp
+printf '%s\n' '--- extended list ---'; "$G" --root "$T" list
+printf '%s\n' '--- extended check ---'; "$G" --root "$T" check common global-only info-only a/doc/frotz sub/doc/frotz sub/a/doc/frotz sub/a/deep.tmp 'space ' $'tab\t' '!important' '#notes'; echo check_status=$?
+[step 8] T=/tmp/gleaner-sort; rm -rf "$T"; mkdir -p "$T/a"; touch "$T/a-b" "$T/a/b" "$T/a0"; printf '%s\n' '--- sort ---'; ./target/release/gleaner --root "$T" list
+T=/tmp/gleaner-status; rm -rf "$T"; mkdir -p "$T"; printf '*.tmp\n!keep.tmp\n' > "$T/.gitignore"; ./target/release/gleaner --root "$T" check keep.tmp >/tmp/out; s=$?; cat /tmp/out; echo negation_status=$s; ./target/release/gleaner --root "$T" check other >/tmp/out; s=$?; cat /tmp/out; echo nomatch_status=$s
+[step 8] export PATH=/usr/local/cargo/bin:$PATH; cargo fmt -- --check && cargo test && cargo build --release
+[step 9] python3 - <<'PY'
+p='src/ignore/pattern.rs'
+s=open(p).read()
+s=s.replace('pub text: String,','pub text: Vec<u8>,')
+s=s.replace('text: String::from_utf8_lossy(&p.text).into_owned(),','text: p.text,')
+open(p,'w').write(s)
+
+p='src/ignore/stack.rs'
+s=open(p).read().replace('pub text: String,','pub text: Vec<u8>,')
+open(p,'w').write(s)
+
+p='src/report/mod.rs'
+s=open(p).read()
+start=s.index('pub fn check_line')
+end=s.index('\npub fn list_lines', start)
+new='''pub fn check_line(path: &str, verdict: &Verdict) -> Vec<u8> {
+    let mut out = Vec::new();
+    match verdict {
+        Verdict::Matched(hit) => {
+            out.extend_from_slice(hit.source.as_bytes());
+            out.push(b':');
+            out.extend_from_slice(hit.line.to_string().as_bytes());
+            out.push(b':');
+            out.extend_from_slice(&hit.text);
+            out.push(b'\\t');
+        }
+        Verdict::NoMatch => out.extend_from_slice(b"::\\t"),
+    }
+    out.extend_from_slice(path.as_bytes());
+    out.push(b'\\n');
+    out
+}
+'''
+s=s[:start]+new+s[end:]
+open(p,'w').write(s)
+
+p='src/cli/check.rs'
+s=open(p).read()
+s=s.replace('let mut out = String::new();','let mut out = Vec::new();')
+s=s.replace('out.push_str(&report::check_line(path, &verdict));','out.extend_from_slice(&report::check_line(path, &verdict));')
+s=s.replace('.write_all(out.as_bytes())','.write_all(&out)')
+open(p,'w').write(s)
+PY
+export PATH=/usr/local/cargo/bin:$PATH; cargo test && cargo build --release
+[step 9] set +e
+T=/tmp/gleaner-status; rm -rf "$T"; mkdir -p "$T"; printf '*.tmp\n!keep.tmp\n' > "$T/.gitignore"
+./target/release/gleaner --root "$T" check keep.tmp >/tmp/out; s=$?; cat /tmp/out; echo negation_status=$s
+./target/release/gleaner --root "$T" check other >/tmp/out; s=$?; cat /tmp/out; echo nomatch_status=$s
+./target/release/gleaner --root "$T" check drop.tmp >/tmp/out; s=$?; cat /tmp/out; echo ignored_status=$s
+T=/tmp/gleaner-bytes; rm -rf "$T"; mkdir -p "$T"; printf 'bad\377\n' > "$T/.gitignore"; touch "$T"/$'bad\377'; ./target/release/gleaner --root "$T" check $'bad\377' > /tmp/byteout; echo byte_status=$?; od -An -tx1 /tmp/byteout
+[step 9] export PATH=/usr/local/cargo/bin:$PATH; cargo test && cargo build --release
+[step 9] {}
+[step 10] python3 - <<'PY'
+p='src/ignore/wildmatch.rs'
+s=open(p).read()
+old='''                        if end < pat.len() { // `**/`: zero or more components
+                            go(pat, text, pathname, end + 1, t, memo)
+                                || (t < text.len() && go(pat, text, pathname, p, t + 1, memo))
+                        } else { // trailing `**`
+'''
+new='''                        if end < pat.len() { // `**/`: zero or more complete components
+                            go(pat, text, pathname, end + 1, t, memo)
+                                || text[t..]
+                                    .iter()
+                                    .position(|&c| c == b'/')
+                                    .map_or(false, |slash| {
+                                        go(pat, text, pathname, p, t + slash + 1, memo)
+                                    })
+                        } else { // trailing `**`
+'''
+assert old in s
+s=s.replace(old,new)
+s += r'''
+
+#[cfg(test)]
+mod tests {
+    use super::wildmatch;
+
+    fn path(pattern: &str, text: &str) -> bool {
+        wildmatch(pattern.as_bytes(), text.as_bytes(), true)
+    }
+
+    #[test]
+    fn globstar_is_whole_components() {
+        assert!(path("**/name", "name"));
+        assert!(path("**/name", "a/b/name"));
+        assert!(path("a/**/b", "a/b"));
+        assert!(path("a/**/b", "a/x/y/b"));
+        assert!(!path("a/**/b", "a/xb"));
+        assert!(!path("a/**/b", "a/x/yb"));
+        assert!(path("a/**", "a/x/y"));
+    }
+
+    #[test]
+    fn non_component_double_star_is_an_ordinary_star() {
+        assert!(path("logs/202?**/raw", "logs/2024/raw"));
+        assert!(!path("logs/202?**/raw", "logs/2024/x/raw"));
+        assert!(path("**z/q", "abz/q"));
+        assert!(!path("**z/q", "a/bz/q"));
+    }
+
+    #[test]
+    fn ordinary_wildcards_do_not_cross_slashes() {
+        assert!(path("a/*/c", "a/b/c"));
+        assert!(!path("a/*/c", "a/b/x/c"));
+        assert!(path("a/?/c", "a/b/c"));
+        assert!(!path("a/?/c", "a/bb/c"));
+    }
+}
+'''
+open(p,'w').write(s)
+PY
+export PATH=/usr/local/cargo/bin:$PATH; cargo test && cargo build --release
+[step 11] {}
+[step 12] {}

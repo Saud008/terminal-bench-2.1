@@ -1,0 +1,14 @@
+at 1767225600
+set https://a.b.example.com/ab A=3; SameSite=Lax; Secure; HttpOnly; Max-Age=0
+dump
+set http://foo.test/a/bc/d z=8
+get https://foo.test/
+set http://a.b.example.com/ b=2; Max-Age=0
+set http://github.io/ a=0; Expires=29 Feb 2100 00:00:00
+set http://shop.example.co.uk/ b=0; Expires=junk; Max-Age=60; Domain=10.1.2.3
+set http://x.co.uk a=0; HttpOnly; HttpOnly; HttpOnly; Max-Age=-0
+set http://x.co.uk/x/y?q=/z sid=5; Domain=alice.github.io; Secure
+at 1767225700
+at 1767229700
+get http://shop.example.co.uk/a
+dump

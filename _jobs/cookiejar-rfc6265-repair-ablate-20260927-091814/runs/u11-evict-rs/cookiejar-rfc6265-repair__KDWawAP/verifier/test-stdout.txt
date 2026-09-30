@@ -1,0 +1,109 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 12 items
+
+../tests/test_outputs.py ..........F.                                    [100%]
+
+=================================== FAILURES ===================================
+_______________________________ test_site_limit ________________________________
+
+crumbjar = '/tmp/crumbjar-verify-target/release/crumbjar'
+
+    def test_site_limit(crumbjar):
+        """Per-site limit of docs/POLICY.md evicts the least recently accessed cookie of the site."""
+>       _check_group(crumbjar, "site_limit")
+
+/tests/test_outputs.py:131: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/crumbjar-verify-target/release/crumbjar', group = 'site_limit'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            p = subprocess.run(
+                [binary, "replay", "-"],
+                input=case["transcript"], capture_output=True, text=True, timeout=60,
+                env={"PATH": "/usr/local/bin:/usr/bin:/bin", "LC_ALL": "C"},
+            )
+            if p.returncode != 0 or p.stdout != case["stdout"]:
+                failures.append(
+                    f"--- transcript\n{case['transcript']}"
+                    f"--- expected (exit 0)\n{case['stdout']}"
+                    f"--- got (exit {p.returncode})\n{p.stdout}{p.stderr[-500:]}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} transcripts differ:\n" + "\n".join(failures)
+E       AssertionError: 1 of 2 transcripts differ:
+E         --- transcript
+E         at 1767225600
+E         set https://api.example.com/ c1=1
+E         at 1767225601
+E         set https://api.example.com/ c2=1
+E         at 1767225602
+E         set https://www.example.com/ c3=1
+E         at 1767225603
+E         set https://www.example.com/ c4=1; Domain=example.com
+E         at 1767225604
+E         set https://example.com/ c5=1
+E         at 1767225605
+E         set https://example.com/ c6=1; Max-Age=12
+E         at 1767225606
+E         set https://example.org/ o1=1
+E         at 1767225610
+E         get https://api.example.com/
+E         at 1767225620
+E         set https://www.example.com/ c7=1
+E         at 1767225621
+E         set https://example.com/ c8=1
+E         at 1767225622
+E         set https://api.example.com/ c2=2
+E         at 1767225623
+E         set https://www.example.com/ c9=1
+E         get https://www.example.com/
+E         get https://api.example.com/
+E         dump
+E         --- expected (exit 0)
+E         https://api.example.com/	c1=1; c2=1; c4=1
+E         https://www.example.com/	c4=1; c7=1; c9=1
+E         https://api.example.com/	c1=1; c2=2; c4=1
+E         -- jar @1767225623: 7 cookie(s)
+E         api.example.com	/	c1=1	host-only	session	1767225600	1767225623
+E         api.example.com	/	c2=2	host-only	session	1767225601	1767225623
+E         example.com	/	c4=1	-	session	1767225603	1767225623
+E         example.com	/	c8=1	host-only	session	1767225621	1767225621
+E         example.org	/	o1=1	host-only	session	1767225606	1767225606
+E         www.example.com	/	c7=1	host-only	session	1767225620	1767225623
+E         www.example.com	/	c9=1	host-only	session	1767225623	1767225623
+E         --- got (exit 0)
+E         https://api.example.com/	c1=1; c2=1; c4=1
+E         https://www.example.com/	c3=1; c4=1; c7=1; c9=1
+E         https://api.example.com/	c4=1
+E         -- jar @1767225623: 7 cookie(s)
+E         example.com	/	c4=1	-	session	1767225603	1767225623
+E         example.com	/	c5=1	host-only	session	1767225604	1767225604
+E         example.com	/	c8=1	host-only	session	1767225621	1767225621
+E         example.org	/	o1=1	host-only	session	1767225606	1767225606
+E         www.example.com	/	c3=1	host-only	session	1767225602	1767225623
+E         www.example.com	/	c7=1	host-only	session	1767225620	1767225623
+E         www.example.com	/	c9=1	host-only	session	1767225623	1767225623
+E         
+E       assert not ['--- transcript\nat 1767225600\nset https://api.example.com/ c1=1\nat 1767225601\nset https://api.example.com/ c2=1\n...1\thost-only\tsession\t1767225620\t1767225623\nwww.example.com\t/\tc9=1\thost-only\tsession\t1767225623\t1767225623\n']
+
+/tests/test_outputs.py:76: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_default_path
+PASSED ../tests/test_outputs.py::test_path_boundary
+PASSED ../tests/test_outputs.py::test_host_only
+PASSED ../tests/test_outputs.py::test_ip_hosts
+PASSED ../tests/test_outputs.py::test_max_age_precedence
+PASSED ../tests/test_outputs.py::test_two_digit_years
+PASSED ../tests/test_outputs.py::test_invalid_dates
+PASSED ../tests/test_outputs.py::test_replacement
+PASSED ../tests/test_outputs.py::test_header_order
+PASSED ../tests/test_outputs.py::test_public_suffix
+PASSED ../tests/test_outputs.py::test_name_value_pair
+FAILED ../tests/test_outputs.py::test_site_limit - AssertionError: 1 of 2 tra...
+========================= 1 failed, 11 passed in 1.13s =========================

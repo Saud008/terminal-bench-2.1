@@ -1,0 +1,158 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 15,
+            "passed": 14,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790457333.7631884,
+            "stop": 1790457341.13945
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_caret_ranges",
+                "status": "passed",
+                "duration": 7.06547827400027,
+                "start": 1790457333.7792566,
+                "stop": 1790457340.8461316,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_tilde_ranges",
+                "status": "passed",
+                "duration": 0.029890947999774653,
+                "start": 1790457340.846397,
+                "stop": 1790457340.8774815,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_partial_version_comparators",
+                "status": "passed",
+                "duration": 0.04015397000011944,
+                "start": 1790457340.8778918,
+                "stop": 1790457340.9193587,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_hyphen_ranges",
+                "status": "passed",
+                "duration": 0.024703215999579697,
+                "start": 1790457340.9196239,
+                "stop": 1790457340.9452748,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_prerelease_admission",
+                "status": "passed",
+                "duration": 0.025382372000422038,
+                "start": 1790457340.9455001,
+                "stop": 1790457340.9718008,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_union_and_operator_spacing",
+                "status": "passed",
+                "duration": 0.02006721199995809,
+                "start": 1790457340.9720154,
+                "stop": 1790457340.9932334,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_build_metadata_ignored",
+                "status": "passed",
+                "duration": 0.013883118000194372,
+                "start": 1790457340.9934847,
+                "stop": 1790457341.0083134,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_prerelease_precedence",
+                "status": "passed",
+                "duration": 0.024911142000291875,
+                "start": 1790457341.0085537,
+                "stop": 1790457341.0343902,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_invalid_input_rejected",
+                "status": "passed",
+                "duration": 0.05183465599975534,
+                "start": 1790457341.0345986,
+                "stop": 1790457341.0875823,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_lock_drops_packages_no_longer_required",
+                "status": "passed",
+                "duration": 0.004832949000046938,
+                "start": 1790457341.087849,
+                "stop": 1790457341.093518,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_lock_applies_overrides",
+                "status": "passed",
+                "duration": 0.003071831999477581,
+                "start": 1790457341.0937061,
+                "stop": 1790457341.0975292,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_lock_yanked_releases",
+                "status": "passed",
+                "duration": 0.003806318000442843,
+                "start": 1790457341.097696,
+                "stop": 1790457341.1024632,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_lock_prefer_lowest_and_ties",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.0046971999995548686,
+                "start": 1790457341.1026764,
+                "stop": 1790457341.1227,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\ntmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_prefer_lowest_and_ti0')\n\n    def test_lock_prefer_lowest_and_ties(pinwheel, tmp_path):\n        \"\"\"prefer=lowest picks lowest releases; equal-precedence ties go to latest published, then file order.\"\"\"\n>       _check_lock(pinwheel, \"lowest\", tmp_path)\n\n/tests/test_outputs.py:192: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/pinwheel-verify/pinwheel', name = 'lowest'\ntmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_prefer_lowest_and_ti0')\n\n    def _check_lock(binary, name, tmp_path):\n        expected = (FIXTURES / \"expected\" / f\"{name}.lock\").read_text(encoding=\"utf-8\")\n        count = len(json.loads(expected)[\"packages\"])\n        rc, out, err, lock = _resolve(binary, name, tmp_path)\n        assert rc == 0, f\"resolve {name}: exit {rc}, stderr: {err.strip()}\"\n        assert out == f\"resolved {count} packages\\n\", f\"resolve {name}: stdout {out!r}\"\n        assert lock.is_file(), f\"resolve {name}: no pin.lock written\"\n        actual = lock.read_text(encoding=\"utf-8\")\n        diff = \"\".join(difflib.unified_diff(\n            expected.splitlines(True), actual.splitlines(True), \"expected pin.lock\", \"actual pin.lock\"))\n>       assert actual == expected, f\"resolve {name}: lock differs\\n{diff}\"\nE       AssertionError: resolve lowest: lock differs\nE         --- expected pin.lock\nE         +++ actual pin.lock\nE         @@ -10,7 +10,7 @@\nE                \"dependencies\": {}\nE              },\nE              \"dune-parse\": {\nE         -      \"version\": \"1.0.0+build.2\",\nE         +      \"version\": \"1.0.0+build.1\",\nE                \"requiredBy\": [\nE                  \"<root>\"\nE                ],\nE         @@ -24,7 +24,7 @@\nE                \"dependencies\": {}\nE              },\nE              \"iris-fmt\": {\nE         -      \"version\": \"0.3.0+r2\",\nE         +      \"version\": \"0.3.0+r1\",\nE                \"requiredBy\": [\nE                  \"<root>\"\nE                ],\nE         \nE       assert '{\\n  \"lockfi...  }\\n  }\\n}\\n' == '{\\n  \"lockfi...  }\\n  }\\n}\\n'\nE         \nE         Skipping 234 identical leading characters in diff, use -v to show\nE         Skipping 277 identical trailing characters in diff, use -v to show\nE         - 0.0+build.2\",\nE         ?           ^\nE         + 0.0+build.1\",\nE         ?           ^...\nE         \nE         ...Full output truncated (18 lines hidden), use '-vv' to show\n\n/tests/test_outputs.py:107: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_lock_mixed_range_forms",
+                "status": "passed",
+                "duration": 0.004158506000294437,
+                "start": 1790457341.1229258,
+                "stop": 1790457341.1281352,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_resolution_failures",
+                "status": "passed",
+                "duration": 0.008959441000115476,
+                "start": 1790457341.1284025,
+                "stop": 1790457341.1385403,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

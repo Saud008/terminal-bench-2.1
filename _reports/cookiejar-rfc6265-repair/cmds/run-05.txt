@@ -1,0 +1,717 @@
+### step 2 call_0_1
+find . -maxdepth 3 -type f -print | sort
+
+### step 2 call_0_2
+printf '%s\n' '--- POLICY ---'; cat docs/POLICY.md; printf '%s\n' '--- CLI ---'; cat docs/cli.md; for f in docs/*; do case "$f" in docs/POLICY.md|docs/cli.md) ;; *) echo "--- $f ---"; cat "$f";; esac; done
+
+### step 2 call_0_3
+printf '%s\n' '--- Cargo.toml ---'; cat Cargo.toml; printf '%s\n' '--- source ---'; for f in $(find src -type f -print | sort); do echo "--- $f ---"; sed -n '1,260p' "$f"; done
+
+### step 2 call_0_4
+cargo test
+
+### step 3 call_1_1
+cat > src/cookie/path.rs <<'EOF'
+//! Paths and path-match (RFC 6265 section 5.1.4).
+
+/// Computes the default-path from a request-uri path.
+pub fn default_path(uri_path: &str) -> String {
+    if !uri_path.starts_with('/') {
+        return "/".to_string();
+    }
+    match uri_path.rfind('/') {
+        Some(i) if i > 0 => uri_path[..i].to_string(),
+        _ => "/".to_string(),
+    }
+}
+
+pub fn path_match(request_path: &str, cookie_path: &str) -> bool {
+    request_path == cookie_path
+        || (request_path.starts_with(cookie_path)
+            && (cookie_path.ends_with('/')
+                || request_path.as_bytes().get(cookie_path.len()) == Some(&b'/')))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn defaults_exclude_the_rightmost_slash() {
+        assert_eq!(default_path("/kb/articles/123"), "/kb/articles");
+        assert_eq!(default_path("/kb/articles/"), "/kb/articles");
+        assert_eq!(default_path("/one"), "/");
+        assert_eq!(default_path("/"), "/");
+    }
+
+    #[test]
+    fn path_matching_observes_segment_boundaries() {
+        assert!(path_match("/docs", "/docs"));
+        assert!(path_match("/docs/a", "/docs"));
+        assert!(path_match("/docs/a", "/docs/"));
+        assert!(!path_match("/docsets", "/docs"));
+    }
+}
+EOF
+
+cat > src/cookie/expiry.rs <<'EOF'
+use super::parse::Attr;
+
+pub enum Lifetime {
+    Session,
+    Persistent(i64),
+}
+
+/// Lifetime of a new cookie from its attribute list (RFC 6265 section 5.3,
+/// step 3). Max-Age has precedence over Expires regardless of attribute order;
+/// the last occurrence of the chosen attribute is used.
+pub fn resolve(attrs: &[Attr]) -> Lifetime {
+    let max_age = attrs.iter().rev().find_map(|a| match a {
+        Attr::MaxAge(t) => Some(*t),
+        _ => None,
+    });
+    let expires = attrs.iter().rev().find_map(|a| match a {
+        Attr::Expires(t) => Some(*t),
+        _ => None,
+    });
+    max_age
+        .or(expires)
+        .map_or(Lifetime::Session, Lifetime::Persistent)
+}
+EOF
+
+cat > src/cookie/domain.rs <<'EOF'
+//! Which hosts a new cookie is scoped to (RFC 6265 section 5.3, steps 4-6).
+
+use super::parse::Attr;
+use crate::host::domain_match;
+use crate::psl::List;
+
+pub enum Scope {
+    /// Only sent back to exactly this host.
+    HostOnly(String),
+    /// Sent to this domain and every subdomain of it.
+    Domain(String),
+}
+
+/// `None` means the cookie must be ignored.
+pub fn resolve(attrs: &[Attr], host: &str, psl: &List) -> Option<Scope> {
+    let domain = attrs.iter().rev().find_map(|a| match a {
+        Attr::Domain(d) => Some(d.as_str()),
+        _ => None,
+    });
+
+    let Some(domain) = domain else {
+        return Some(Scope::HostOnly(host.to_string()));
+    };
+
+    // RFC 6265 5.3 step 5: a public suffix equal to the request host is
+    // treated as though the Domain attribute were empty; other public
+    // suffix Domain attributes reject the cookie.
+    if psl.is_public_suffix(domain) {
+        return if domain == host {
+            Some(Scope::HostOnly(host.to_string()))
+        } else {
+            None
+        };
+    }
+
+    if !domain_match(host, domain) {
+        return None;
+    }
+    Some(Scope::Domain(domain.to_string()))
+}
+EOF
+
+cat > src/jar/order.rs <<'EOF'
+use super::Cookie;
+
+/// RFC 6265 section 5.4 ordering: longer paths first, then earlier creation.
+pub fn sort(hits: &mut [usize], cookies: &[Cookie]) {
+    hits.sort_by(|&a, &b| {
+        let (a, b) = (&cookies[a], &cookies[b]);
+        b.path.len().cmp(&a.path.len()).then_with(|| a.created.cmp(&b.created))
+    });
+}
+EOF
+
+cat > src/jar/evict.rs <<'EOF'
+//! Removing cookies: expiry, and the per-site limit from docs/POLICY.md.
+
+use super::Jar;
+
+pub const MAX_COOKIES_PER_SITE: usize = 6;
+
+impl Jar {
+    pub(super) fn purge_expired(&mut self) {
+        let now = self.clock;
+        self.cookies.retain(|c| !c.is_expired(now));
+    }
+
+    /// Evicts cookies of `site` until it is back within the limit.
+    pub(super) fn enforce_site_limit(&mut self, site: &str) {
+        loop {
+            let members: Vec<usize> = (0..self.cookies.len())
+                .filter(|&i| self.psl.registrable_domain(&self.cookies[i].domain) == site)
+                .collect();
+            if members.len() <= MAX_COOKIES_PER_SITE {
+                return;
+            }
+            let victim = members
+                .into_iter()
+                .min_by_key(|&i| (self.cookies[i].accessed, self.cookies[i].created))
+                .expect("site has members");
+            self.cookies.remove(victim);
+        }
+    }
+}
+EOF
+
+cat > src/jar/select.rs <<'EOF'
+//! Building the Cookie header (RFC 6265 section 5.4).
+
+use super::{order, Cookie, Jar};
+use crate::cookie::path::path_match;
+use crate::host::domain_match;
+use crate::url::Url;
+
+fn applies_to(c: &Cookie, url: &Url) -> bool {
+    let domain_ok = if c.host_only {
+        url.host == c.domain
+    } else {
+        domain_match(&url.host, &c.domain)
+    };
+    domain_ok && path_match(&url.path, &c.path) && (!c.secure || url.secure)
+}
+
+impl Jar {
+    /// The Cookie header value for an HTTP request to `url` (empty when no
+    /// cookie applies). Updates the last-access-time of every cookie sent.
+    pub fn cookie_header(&mut self, url: &Url) -> String {
+        self.purge_expired();
+        let stamp = self.stamp();
+
+        let mut hits: Vec<usize> = (0..self.cookies.len())
+            .filter(|&i| applies_to(&self.cookies[i], url))
+            .collect();
+        order::sort(&mut hits, &self.cookies);
+
+        let mut parts = Vec::with_capacity(hits.len());
+        for &i in &hits {
+            let c = &mut self.cookies[i];
+            c.accessed = stamp;
+            parts.push(format!("{}={}", c.name, c.value));
+        }
+        parts.join("; ")
+    }
+}
+EOF
+
+### step 3 call_1_2
+cat > src/jar/store.rs <<'EOF'
+//! Storage model (RFC 6265 section 5.3).
+
+use super::{Cookie, Jar};
+use crate::cookie::domain::{self, Scope};
+use crate::cookie::expiry::{self, Lifetime};
+use crate::cookie::parse::{self, Attr};
+use crate::cookie::path::default_path;
+use crate::url::Url;
+
+impl Jar {
+    /// Handles a Set-Cookie header received in the response to `url`.
+    pub fn set_cookie(&mut self, url: &Url, header: &str) {
+        // Project policy requires expired cookies to be removed before store.
+        self.purge_expired();
+
+        let Some(sc) = parse::parse(header, url, self.clock) else {
+            return;
+        };
+        let Some(scope) = domain::resolve(&sc.attrs, &url.host, &self.psl) else {
+            return;
+        };
+        let (domain, host_only) = match scope {
+            Scope::HostOnly(h) => (h, true),
+            Scope::Domain(d) => (d, false),
+        };
+        let path = sc
+            .attrs
+            .iter()
+            .rev()
+            .find_map(|a| match a {
+                Attr::Path(p) => Some(p.clone()),
+                _ => None,
+            })
+            .unwrap_or_else(|| default_path(&url.path));
+        let expiry = match expiry::resolve(&sc.attrs) {
+            Lifetime::Session => None,
+            Lifetime::Persistent(t) => Some(t),
+        };
+        let secure = sc.attrs.iter().any(|a| matches!(a, Attr::Secure));
+        let http_only = sc.attrs.iter().any(|a| matches!(a, Attr::HttpOnly));
+
+        let stamp = self.stamp();
+        let site = self.psl.registrable_domain(&domain);
+        let old = self
+            .cookies
+            .iter()
+            .position(|c| c.name == sc.name && c.domain == domain && c.path == path);
+        let created = old.map_or(stamp, |i| self.cookies[i].created);
+        if let Some(i) = old {
+            self.cookies.remove(i);
+        }
+
+        self.cookies.push(Cookie {
+            name: sc.name,
+            value: sc.value,
+            domain,
+            path,
+            expiry,
+            host_only,
+            secure,
+            http_only,
+            created,
+            accessed: stamp,
+        });
+
+        self.purge_expired();
+        self.enforce_site_limit(&site);
+    }
+}
+EOF
+
+# Apply the small parser/calendar fixes.
+perl -0pi -e 's/if name\.is_empty\(\) && value\.is_empty\(\) \{/if !pair.contains(q{=}) || (name.is_empty() \&\& value.is_empty()) {/g; s/Some\(now\.saturating_add\(delta\)\.min\(LATEST\)\)/Some(now.saturating_add(delta).clamp(EARLIEST, LATEST))/g' src/cookie/parse.rs
+perl -0pi -e 's/year % 100 != 0 \|\| year % 400 != 0/year % 100 != 0 || year % 400 == 0/' src/time/civil.rs
+perl -0pi -e 's/\(0x7b\.\.=0x7e\)\.contains\(&b\)/b >= 0x7b/' src/time/date.rs
+
+# IP addresses only domain-match by exact equality under RFC 6265.
+perl -0pi -e 's/    string\.len\(\) > domain\.len\(\)/    !is_ip_address(string)\n        \&\& string.len() > domain.len()/g' src/host.rs
+
+# Verify the edits around mechanically changed expressions.
+grep -n -C 3 -E 'pair.contains|saturating_add|is_leap|b >=|is_ip_address' src/cookie/parse.rs src/time/civil.rs src/time/date.rs src/host.rs
+
+### step 3 call_1_3
+cat >> src/jar/mod.rs <<'EOF'
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::url::Url;
+
+    fn url(s: &str) -> Url {
+        Url::parse(s).unwrap()
+    }
+
+    #[test]
+    fn host_only_cookie_does_not_leak_to_subdomain() {
+        let mut j = Jar::new(List::builtin());
+        j.set_cookie(&url("https://example.com/"), "sid=root");
+        assert_eq!(j.cookie_header(&url("https://api.example.com/")), "");
+        assert_eq!(j.cookie_header(&url("https://example.com/")), "sid=root");
+    }
+
+    #[test]
+    fn default_path_and_boundary_matching() {
+        let mut j = Jar::new(List::builtin());
+        j.set_cookie(&url("https://help.example.net/kb/articles/123"), "a=1");
+        assert_eq!(j.cookie_header(&url("https://help.example.net/kb/articles")), "a=1");
+        assert_eq!(j.cookie_header(&url("https://help.example.net/kb/articles2")), "");
+    }
+
+    #[test]
+    fn max_age_wins_over_expires_in_either_order() {
+        let mut j = Jar::new(List::builtin());
+        j.set_clock(100);
+        j.set_cookie(&url("https://example.com/"), "a=1; Max-Age=10; Expires=Thu, 01 Jan 1970 00:00:00 GMT");
+        j.set_cookie(&url("https://example.com/"), "b=1; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=10");
+        assert_eq!(j.cookie_header(&url("https://example.com/")), "a=1; b=1");
+    }
+
+    #[test]
+    fn replacement_preserves_creation_and_header_position() {
+        let mut j = Jar::new(List::builtin());
+        let u = url("https://example.com/");
+        j.set_cookie(&u, "a=old; Path=/");
+        j.set_cookie(&u, "b=two; Path=/");
+        j.set_cookie(&u, "a=new; Path=/");
+        assert_eq!(j.cookie_header(&u), "a=new; b=two");
+    }
+
+    #[test]
+    fn eviction_uses_access_then_creation() {
+        let mut j = Jar::new(List::builtin());
+        for name in ["a", "b", "c", "d", "e", "f"] {
+            j.set_cookie(&url(&format!("https://{name}.example.com/")), &format!("{name}=1; Domain=example.com; Path=/{name}"));
+        }
+        // Refresh access for a; b remains the least-recently-used oldest.
+        j.cookie_header(&url("https://example.com/a"));
+        j.set_cookie(&url("https://example.com/"), "g=1; Domain=example.com; Path=/g");
+        assert!(j.cookies.iter().any(|c| c.name == "a"));
+        assert!(!j.cookies.iter().any(|c| c.name == "b"));
+    }
+}
+EOF
+
+cat >> src/time/civil.rs <<'EOF'
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn gregorian_leap_years() {
+        assert!(is_leap(2000));
+        assert!(!is_leap(1900));
+        assert!(is_leap(2024));
+        assert!(!is_leap(2023));
+    }
+}
+EOF
+
+cargo fmt -- --check || cargo fmt
+cargo test
+
+### step 4 call_2_1
+python3 - <<'PY'
+p='src/cookie/parse.rs'
+s=open(p).read().replace("pair.contains(q{=})", "pair.contains('=')")
+s=s.replace("if digits.is_empty() || !digits.bytes().all(|b| b.is_ascii_digit()) {", "if digits.is_empty() || !digits.bytes().all(|b| b.is_ascii_digit()) {")
+open(p,'w').write(s)
+PY
+cargo test
+
+### step 4 call_2_2
+cat >> src/time/date.rs <<'EOF'
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::time::{EARLIEST, LATEST};
+
+    #[test]
+    fn parses_standard_and_far_future_dates() {
+        assert_eq!(
+            parse_cookie_date("Thu, 31 Dec 9999 23:59:59 GMT"),
+            Some(LATEST)
+        );
+        assert_eq!(
+            parse_cookie_date("Mon, 01 Jan 0001 00:00:00 GMT"),
+            None // RFC 6265 rejects years before 1601
+        );
+        assert!(EARLIEST < 0);
+    }
+
+    #[test]
+    fn validates_gregorian_century_dates() {
+        assert!(parse_cookie_date("Tue, 29 Feb 2000 00:00:00 GMT").is_some());
+        assert!(parse_cookie_date("Thu, 29 Feb 1900 00:00:00 GMT").is_none());
+    }
+
+    #[test]
+    fn accepts_rfc_high_byte_delimiters() {
+        assert!(parse_cookie_date("01\u{80}Jan\u{80}2030\u{80}00:00:00").is_some());
+    }
+}
+EOF
+
+cat >> src/cookie/parse.rs <<'EOF'
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn url() -> Url {
+        Url::parse("https://example.com/a/b").unwrap()
+    }
+
+    #[test]
+    fn rejects_a_string_without_a_cookie_pair_equals_sign() {
+        assert!(parse("just-a-value", &url(), 0).is_none());
+        assert!(parse("=value", &url(), 0).is_some());
+        assert!(parse("name=", &url(), 0).is_some());
+        assert!(parse("=", &url(), 0).is_none());
+    }
+
+    #[test]
+    fn positive_max_age_is_clamped() {
+        let parsed = parse("a=1; Max-Age=999999999999999999999999999999", &url(), i64::MAX).unwrap();
+        assert!(parsed.attrs.iter().any(|a| matches!(a, Attr::MaxAge(t) if *t == LATEST)));
+    }
+}
+EOF
+
+cat >> src/cookie/domain.rs <<'EOF'
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn public_suffix_equal_to_request_host_becomes_host_only() {
+        let psl = List::builtin();
+        let attrs = vec![Attr::Domain("com".to_string())];
+        assert!(matches!(resolve(&attrs, "com", &psl), Some(Scope::HostOnly(_))));
+        assert!(resolve(&attrs, "example.com", &psl).is_none());
+    }
+}
+EOF
+
+cargo test
+cargo build --release
+
+### step 4 call_2_3
+cat >/tmp/regression.txt <<'EOF'
+at 1700000000
+set https://example.com/ sid=host
+get https://api.example.com/
+set https://help.example.net/kb/articles/123 kb=yes
+get https://help.example.net/kb/articles
+set https://example.com/ old=valid; Expires=Thu, 31 Dec 9999 23:59:59 GMT
+set https://example.com/ a=first; Path=/
+set https://example.com/ b=second; Path=/
+set https://example.com/ a=refreshed; Path=/
+get https://example.com/
+dump
+EOF
+./target/release/crumbjar replay /tmp/regression.txt
+
+### step 5 call_3_1
+python3 - <<'PY'
+p = 'src/time/date.rs'
+s = open(p).read()
+s = s.replace('|| b >= 0x7b', '|| (0x7b..=0x7e).contains(&b)')
+start = s.index('\n#[cfg(test)]\nmod tests {')
+s = s[:start] + r'''
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::time::LATEST;
+
+    #[test]
+    fn parses_standard_and_far_future_dates() {
+        assert_eq!(
+            parse_cookie_date("Thu, 31 Dec 9999 23:59:59 GMT"),
+            Some(LATEST)
+        );
+        // RFC 6265 adjusts all parsed years in 0..=69 by adding 2000.
+        assert_eq!(
+            parse_cookie_date("Mon, 01 Jan 0001 00:00:00 GMT"),
+            parse_cookie_date("Mon, 01 Jan 2001 00:00:00 GMT")
+        );
+    }
+
+    #[test]
+    fn validates_gregorian_century_dates() {
+        assert!(parse_cookie_date("Tue, 29 Feb 2000 00:00:00 GMT").is_some());
+        assert!(parse_cookie_date("Thu, 29 Feb 1900 00:00:00 GMT").is_none());
+    }
+
+    #[test]
+    fn high_bytes_are_not_rfc_delimiters() {
+        assert!(parse_cookie_date("01\u{80}Jan 2030 00:00:00").is_none());
+    }
+}
+'''
+open(p, 'w').write(s)
+PY
+cargo test
+
+### step 5 call_3_2
+git diff --check 2>/dev/null || true; git diff --stat 2>/dev/null || true; git diff -- src/cookie src/jar src/host.rs src/time 2>/dev/null | sed -n '1,320p'
+
+### step 5 call_3_3
+cargo build --release && for f in examples/*.txt; do echo "--- $f ---"; ./target/release/crumbjar replay "$f"; done
+
+### step 6 call_4_1
+python3 - <<'PY'
+p = 'src/cookie/parse.rs'
+s = open(p).read()
+s = s.replace("if !pair.contains('=') || (name.is_empty() && value.is_empty()) {", "if !pair.contains('=') || name.is_empty() {")
+s = s.replace('assert!(parse("=value", &url(), 0).is_some());', 'assert!(parse("=value", &url(), 0).is_none());')
+open(p, 'w').write(s)
+
+p = 'src/time/date.rs'
+s = open(p).read()
+s = s.replace(
+'''    if tok.len() < 3 {
+        return None;
+    }
+    let head = tok[..3].to_ascii_lowercase();''',
+'''    if tok.len() < 3 || tok.get(3).is_some_and(u8::is_ascii_digit) {
+        return None;
+    }
+    let head = tok[..3].to_ascii_lowercase();''')
+s = s.replace(
+'''    fn high_bytes_are_not_rfc_delimiters() {
+        assert!(parse_cookie_date("01\\u{80}Jan 2030 00:00:00").is_none());
+    }''',
+'''    fn high_bytes_are_not_rfc_delimiters() {
+        assert!(parse_cookie_date("01\\u{80}Jan 2030 00:00:00").is_none());
+    }
+
+    #[test]
+    fn month_requires_a_non_digit_after_its_name() {
+        assert!(parse_cookie_date("01 Jan 2030 00:00:00").is_some());
+        assert!(parse_cookie_date("01 January 2030 00:00:00").is_some());
+        assert!(parse_cookie_date("01 Jan1 2030 00:00:00").is_none());
+    }''')
+open(p, 'w').write(s)
+PY
+cargo test && cargo build --release
+
+### step 6 call_4_2
+cat >/tmp/parser-smoke.txt <<'EOF'
+set https://example.com/ =bad
+set https://example.com/ no-equals
+set https://example.com/ empty=
+set https://example.com/ bad-date=1; Expires=Tue, 01 Jan1 2030 00:00:00 GMT
+get https://example.com/
+dump
+EOF
+./target/release/crumbjar replay /tmp/parser-smoke.txt
+
+### step 7 call_5_1
+python3 - <<'PY'
+p = 'src/cookie/parse.rs'
+s = open(p).read()
+s = s.replace("if !pair.contains('=') || name.is_empty() {", "if !pair.contains('=') || (name.is_empty() && value.is_empty()) {")
+s = s.replace('assert!(parse("=value", &url(), 0).is_none());', 'assert!(parse("=value", &url(), 0).is_some());')
+open(p, 'w').write(s)
+PY
+cargo test && cargo build --release
+
+### step 7 call_5_2
+printf '%s\n' 'set https://example.com/ no-equals' 'set https://example.com/ =' 'set https://example.com/ =value' 'get https://example.com/' | ./target/release/crumbjar replay -
+
+### step 8 call_6_task_complete
+{}
+### step 9 call_7_1
+python3 - <<'PY'
+p = 'src/time/date.rs'
+s = open(p).read()
+s = s.replace("if tok.len() < 3 || tok.get(3).is_some_and(u8::is_ascii_digit) {", "if tok.len() != 3 {")
+s = s.replace('assert!(parse_cookie_date("01 January 2030 00:00:00").is_some());', 'assert!(parse_cookie_date("01 January 2030 00:00:00").is_none());')
+open(p, 'w').write(s)
+PY
+cargo test && cargo build --release
+
+### step 10 call_8_1
+python3 - <<'PY'
+p = 'src/time/date.rs'
+s = open(p).read()
+s = s.replace("if tok.len() != 3 {", "if tok.len() < 3 || tok.get(3).is_some_and(u8::is_ascii_digit) {")
+s = s.replace('assert!(parse_cookie_date("01 January 2030 00:00:00").is_none());', 'assert!(parse_cookie_date("01 January 2030 00:00:00").is_some());')
+open(p, 'w').write(s)
+PY
+cargo test && cargo build --release
+
+### step 11 call_9_1
+python3 - <<'PY'
+p = 'src/cookie/parse.rs'
+s = open(p).read()
+old = '''    if digits.is_empty() || !digits.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    let delta = digits'''
+new = '''    if digits.is_empty()
+        || digits.as_bytes()[0] == b'0'
+        || !digits.bytes().all(|b| b.is_ascii_digit())
+    {
+        return None;
+    }
+    let delta = digits'''
+assert old in s
+s = s.replace(old, new)
+needle = '''    fn positive_max_age_is_clamped() {
+        let parsed = parse("a=1; Max-Age=999999999999999999999999999999", &url(), i64::MAX).unwrap();
+        assert!(parsed.attrs.iter().any(|a| matches!(a, Attr::MaxAge(t) if *t == LATEST)));
+    }
+'''
+replacement = '''    fn positive_max_age_is_clamped() {
+        let parsed = parse("a=1; Max-Age=999999999999999999999999999999", &url(), i64::MAX).unwrap();
+        assert!(parsed.attrs.iter().any(|a| matches!(a, Attr::MaxAge(t) if *t == LATEST)));
+    }
+
+    #[test]
+    fn max_age_uses_the_rfc_nonzero_digit_grammar() {
+        for value in ["0", "01", "-0", "-01", "+1", "--1"] {
+            let parsed = parse(&format!("a=1; Max-Age={value}"), &url(), 100).unwrap();
+            assert!(!parsed.attrs.iter().any(|a| matches!(a, Attr::MaxAge(_))));
+        }
+        let positive = parse("a=1; Max-Age=1", &url(), 100).unwrap();
+        assert!(positive.attrs.iter().any(|a| matches!(a, Attr::MaxAge(101))));
+        let negative = parse("a=1; Max-Age=-1", &url(), 100).unwrap();
+        assert!(negative.attrs.iter().any(|a| matches!(a, Attr::MaxAge(t) if *t == EARLIEST)));
+    }
+'''
+assert needle in s
+s = s.replace(needle, replacement)
+open(p, 'w').write(s)
+PY
+cargo test && cargo build --release
+
+### step 12 call_10_task_complete
+{}
+### step 13 call_11_1
+python3 - <<'PY'
+p = 'src/cookie/parse.rs'
+s = open(p).read()
+s = s.replace('''    if digits.is_empty()
+        || digits.as_bytes()[0] == b'0'
+        || !digits.bytes().all(|b| b.is_ascii_digit())
+    {''', '''    if digits.is_empty() || !digits.bytes().all(|b| b.is_ascii_digit()) {''')
+start = s.index('    #[test]\n    fn max_age_uses_the_rfc_nonzero_digit_grammar()')
+end = s.index('\n    }', start) + len('\n    }')
+replacement = '''    #[test]
+    fn max_age_uses_the_rfc_user_agent_algorithm() {
+        for value in ["0", "-0", "-1", "-01"] {
+            let parsed = parse(&format!("a=1; Max-Age={value}"), &url(), 100).unwrap();
+            assert!(parsed
+                .attrs
+                .iter()
+                .any(|a| matches!(a, Attr::MaxAge(t) if *t == EARLIEST)));
+        }
+        for (value, expected) in [("1", 101), ("01", 101)] {
+            let parsed = parse(&format!("a=1; Max-Age={value}"), &url(), 100).unwrap();
+            assert!(parsed
+                .attrs
+                .iter()
+                .any(|a| matches!(a, Attr::MaxAge(t) if *t == expected)));
+        }
+        for value in ["+1", "--1", "-"] {
+            let parsed = parse(&format!("a=1; Max-Age={value}"), &url(), 100).unwrap();
+            assert!(!parsed.attrs.iter().any(|a| matches!(a, Attr::MaxAge(_))));
+        }
+    }'''
+s = s[:start] + replacement + s[end:]
+open(p, 'w').write(s)
+PY
+cargo test && cargo build --release
+
+### step 14 call_12_1
+python3 - <<'PY'
+p = 'src/cookie/parse.rs'
+s = open(p).read()
+s = s.replace("if !pair.contains('=') || (name.is_empty() && value.is_empty()) {", "if name.is_empty() && value.is_empty() {")
+s = s.replace('assert!(parse("just-a-value", &url(), 0).is_none());', 'assert!(parse("just-a-value", &url(), 0).is_some());')
+s = s.replace('fn rejects_a_string_without_a_cookie_pair_equals_sign()', 'fn parses_cookie_pairs_per_rfc_section_5_2()')
+open(p, 'w').write(s)
+
+p = 'src/time/date.rs'
+s = open(p).read()
+s = s.replace("if tok.len() < 3 || tok.get(3).is_some_and(u8::is_ascii_digit) {", "if tok.len() < 3 {")
+s = s.replace('fn month_requires_a_non_digit_after_its_name()', 'fn month_allows_trailing_octets()')
+s = s.replace('assert!(parse_cookie_date("01 Jan1 2030 00:00:00").is_none());', 'assert!(parse_cookie_date("01 Jan1 2030 00:00:00").is_some());')
+open(p, 'w').write(s)
+PY
+cargo test && cargo build --release
+
+### step 14 call_12_2
+printf '%s\n' 'set https://example.com/ bare-value' 'get https://example.com/' | ./target/release/crumbjar replay -
+
+### step 15 call_13_task_complete
+{}
+### step 16 call_14_task_complete
+{}

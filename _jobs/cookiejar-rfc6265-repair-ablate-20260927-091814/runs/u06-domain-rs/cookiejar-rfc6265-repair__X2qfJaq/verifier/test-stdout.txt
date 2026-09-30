@@ -1,0 +1,102 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 12 items
+
+../tests/test_outputs.py .........F..                                    [100%]
+
+=================================== FAILURES ===================================
+______________________________ test_public_suffix ______________________________
+
+crumbjar = '/tmp/crumbjar-verify-target/release/crumbjar'
+
+    def test_public_suffix(crumbjar):
+        """Domain attributes naming a public suffix are refused, except when it is the request host itself."""
+>       _check_group(crumbjar, "public_suffix")
+
+/tests/test_outputs.py:126: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/crumbjar-verify-target/release/crumbjar', group = 'public_suffix'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            p = subprocess.run(
+                [binary, "replay", "-"],
+                input=case["transcript"], capture_output=True, text=True, timeout=60,
+                env={"PATH": "/usr/local/bin:/usr/bin:/bin", "LC_ALL": "C"},
+            )
+            if p.returncode != 0 or p.stdout != case["stdout"]:
+                failures.append(
+                    f"--- transcript\n{case['transcript']}"
+                    f"--- expected (exit 0)\n{case['stdout']}"
+                    f"--- got (exit {p.returncode})\n{p.stdout}{p.stderr[-500:]}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} transcripts differ:\n" + "\n".join(failures)
+E       AssertionError: 2 of 2 transcripts differ:
+E         --- transcript
+E         at 1767225600
+E         set https://github.io/ gh=1; Domain=github.io
+E         set https://alice.github.io/ steal=1; Domain=github.io
+E         set https://alice.github.io/ own=1; Domain=alice.github.io
+E         get https://github.io/
+E         get https://alice.github.io/
+E         get https://bob.github.io/
+E         dump
+E         --- expected (exit 0)
+E         https://github.io/	gh=1
+E         https://alice.github.io/	own=1
+E         https://bob.github.io/	
+E         -- jar @1767225600: 2 cookie(s)
+E         alice.github.io	/	own=1	-	session	1767225600	1767225600
+E         github.io	/	gh=1	host-only	session	1767225600	1767225600
+E         --- got (exit 0)
+E         https://github.io/	
+E         https://alice.github.io/	own=1
+E         https://bob.github.io/	
+E         -- jar @1767225600: 1 cookie(s)
+E         alice.github.io	/	own=1	-	session	1767225600	1767225600
+E         
+E         --- transcript
+E         at 1767225600
+E         set https://www.example.co.uk/ wide=1; Domain=co.uk
+E         set https://www.example.co.uk/ site=1; Domain=example.co.uk
+E         set https://co.uk/ odd=1; Domain=CO.UK
+E         get https://www.example.co.uk/
+E         get https://co.uk/
+E         get https://x.co.uk/
+E         dump
+E         --- expected (exit 0)
+E         https://www.example.co.uk/	site=1
+E         https://co.uk/	odd=1
+E         https://x.co.uk/	
+E         -- jar @1767225600: 2 cookie(s)
+E         co.uk	/	odd=1	host-only	session	1767225600	1767225600
+E         example.co.uk	/	site=1	-	session	1767225600	1767225600
+E         --- got (exit 0)
+E         https://www.example.co.uk/	site=1
+E         https://co.uk/	
+E         https://x.co.uk/	
+E         -- jar @1767225600: 1 cookie(s)
+E         example.co.uk	/	site=1	-	session	1767225600	1767225600
+E         
+E       assert not ['--- transcript\nat 1767225600\nset https://github.io/ gh=1; Domain=github.io\nset https://alice.github.io/ steal=1; ...\nhttps://x.co.uk/\t\n-- jar @1767225600: 1 cookie(s)\nexample.co.uk\t/\tsite=1\t-\tsession\t1767225600\t1767225600\n']
+
+/tests/test_outputs.py:76: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_default_path
+PASSED ../tests/test_outputs.py::test_path_boundary
+PASSED ../tests/test_outputs.py::test_host_only
+PASSED ../tests/test_outputs.py::test_ip_hosts
+PASSED ../tests/test_outputs.py::test_max_age_precedence
+PASSED ../tests/test_outputs.py::test_two_digit_years
+PASSED ../tests/test_outputs.py::test_invalid_dates
+PASSED ../tests/test_outputs.py::test_replacement
+PASSED ../tests/test_outputs.py::test_header_order
+PASSED ../tests/test_outputs.py::test_site_limit
+PASSED ../tests/test_outputs.py::test_name_value_pair
+FAILED ../tests/test_outputs.py::test_public_suffix - AssertionError: 2 of 2 ...
+========================= 1 failed, 11 passed in 1.10s =========================

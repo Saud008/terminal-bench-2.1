@@ -1,0 +1,200 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 15,
+            "passed": 0,
+            "failed": 15,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790456951.1510096,
+            "stop": 1790456961.0657344
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_caret_ranges",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 9.231947939999827,
+                "start": 1790456951.1698072,
+                "stop": 1790456960.4172409,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\n\n    def test_caret_ranges(pinwheel):\n        \"\"\"Caret ranges, including 0.x and 0.0.x versions, partials and prereleases, match node-semver.\"\"\"\n>       _check_satisfies(pinwheel, \"caret\")\n\n/tests/test_outputs.py:112: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/pinwheel-verify/pinwheel', group = 'caret'\n\n    def _check_satisfies(binary, group):\n        rows = CASES[\"satisfies\"][group]\n        failures = []\n        for version, rng, want in rows:\n            rc, out, err = _run(binary, \"satisfies\", version, rng)\n            expected = \"true\\n\" if want else \"false\\n\"\n            if (rc, out) != (0, expected):\n                failures.append(\n                    f\"satisfies {version!r} {rng!r}: expected rc=0 {expected.strip()}, \"\n                    f\"got rc={rc} stdout={out.strip()!r} stderr={err.strip()!r}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(rows)} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 9 of 26 cases differ:\nE         satisfies '0.3.0' '^0.2.3': expected rc=0 false, got rc=0 stdout='true' stderr=''\nE         satisfies '0.0.4' '^0.0.3': expected rc=0 false, got rc=0 stdout='true' stderr=''\nE         satisfies '0.1.0' '^0.0': expected rc=0 false, got rc=0 stdout='true' stderr=''\nE         satisfies '0.6.0' '^0.5': expected rc=0 false, got rc=0 stdout='true' stderr=''\nE         satisfies '0.0.4' '^0.0.3-rc.1': expected rc=0 false, got rc=0 stdout='true' stderr=''\nE         satisfies '0.4.0' '^0.3.0': expected rc=0 false, got rc=0 stdout='true' stderr=''\nE         satisfies '0.4.0' '^0.3.x': expected rc=0 false, got rc=0 stdout='true' stderr=''\nE         satisfies '0.8.0' '^0.7.1+build.3': expected rc=0 false, got rc=0 stdout='true' stderr=''\nE         satisfies '0.0.1' '^0.0.0': expected rc=0 false, got rc=0 stdout='true' stderr=''\nE       assert not [\"satisfies '0.3.0' '^0.2.3': expected rc=0 false, got rc=0 stdout='true' stderr=''\", \"satisfies '0.0.4' '^0.0.3': exp...c=0 stdout='true' stderr=''\", \"satisfies '0.4.0' '^0.3.0': expected rc=0 false, got rc=0 stdout='true' stderr=''\", ...]\n\n/tests/test_outputs.py:75: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_tilde_ranges",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.030564625000351953,
+                "start": 1790456960.4175448,
+                "stop": 1790456960.4555793,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\n\n    def test_tilde_ranges(pinwheel):\n        \"\"\"Tilde ranges (~, ~>, major-only and major.minor forms) match node-semver.\"\"\"\n>       _check_satisfies(pinwheel, \"tilde\")\n\n/tests/test_outputs.py:117: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/pinwheel-verify/pinwheel', group = 'tilde'\n\n    def _check_satisfies(binary, group):\n        rows = CASES[\"satisfies\"][group]\n        failures = []\n        for version, rng, want in rows:\n            rc, out, err = _run(binary, \"satisfies\", version, rng)\n            expected = \"true\\n\" if want else \"false\\n\"\n            if (rc, out) != (0, expected):\n                failures.append(\n                    f\"satisfies {version!r} {rng!r}: expected rc=0 {expected.strip()}, \"\n                    f\"got rc={rc} stdout={out.strip()!r} stderr={err.strip()!r}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(rows)} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 5 of 16 cases differ:\nE         satisfies '1.9.0' '~1': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE         satisfies '1.4.0' '~>1': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE         satisfies '2.7.1' '~2': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE         satisfies '1.5.2' '~1.x': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE         satisfies '0.9.0' '~0': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE       assert not [\"satisfies '1.9.0' '~1': expected rc=0 true, got rc=0 stdout='false' stderr=''\", \"satisfies '1.4.0' '~>1': expected r...e, got rc=0 stdout='false' stderr=''\", \"satisfies '0.9.0' '~0': expected rc=0 true, got rc=0 stdout='false' stderr=''\"]\n\n/tests/test_outputs.py:75: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_partial_version_comparators",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.047882096999728674,
+                "start": 1790456960.4558368,
+                "stop": 1790456960.511613,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\n\n    def test_partial_version_comparators(pinwheel):\n        \"\"\"Operators applied to partial versions (>1.2, <=1, <1.2, 1.x, *) match node-semver.\"\"\"\n>       _check_satisfies(pinwheel, \"partial_comparators\")\n\n/tests/test_outputs.py:122: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/pinwheel-verify/pinwheel', group = 'partial_comparators'\n\n    def _check_satisfies(binary, group):\n        rows = CASES[\"satisfies\"][group]\n        failures = []\n        for version, rng, want in rows:\n            rc, out, err = _run(binary, \"satisfies\", version, rng)\n            expected = \"true\\n\" if want else \"false\\n\"\n            if (rc, out) != (0, expected):\n                failures.append(\n                    f\"satisfies {version!r} {rng!r}: expected rc=0 {expected.strip()}, \"\n                    f\"got rc={rc} stdout={out.strip()!r} stderr={err.strip()!r}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(rows)} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 8 of 24 cases differ:\nE         satisfies '1.2.5' '>1.2': expected rc=0 false, got rc=0 stdout='true' stderr=''\nE         satisfies '1.9.9' '>1': expected rc=0 false, got rc=0 stdout='true' stderr=''\nE         satisfies '1.2.5' '<=1.2': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE         satisfies '1.9.0' '<=1': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE         satisfies '1.2.5' '>1.2 <=1.4': expected rc=0 false, got rc=0 stdout='true' stderr=''\nE         satisfies '1.4.8' '>1.2 <=1.4': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE         satisfies '3.1.0' '>=2.x <=3': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE         satisfies '0.2.9' '>0.2 <0.4': expected rc=0 false, got rc=0 stdout='true' stderr=''\nE       assert not [\"satisfies '1.2.5' '>1.2': expected rc=0 false, got rc=0 stdout='true' stderr=''\", \"satisfies '1.9.9' '>1': expected ...stdout='true' stderr=''\", \"satisfies '1.4.8' '>1.2 <=1.4': expected rc=0 true, got rc=0 stdout='false' stderr=''\", ...]\n\n/tests/test_outputs.py:75: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_hyphen_ranges",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.06114038199939387,
+                "start": 1790456960.5118995,
+                "stop": 1790456960.5849612,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\n\n    def test_hyphen_ranges(pinwheel):\n        \"\"\"Hyphen ranges with full and partial ends match node-semver.\"\"\"\n>       _check_satisfies(pinwheel, \"hyphen\")\n\n/tests/test_outputs.py:127: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/pinwheel-verify/pinwheel', group = 'hyphen'\n\n    def _check_satisfies(binary, group):\n        rows = CASES[\"satisfies\"][group]\n        failures = []\n        for version, rng, want in rows:\n            rc, out, err = _run(binary, \"satisfies\", version, rng)\n            expected = \"true\\n\" if want else \"false\\n\"\n            if (rc, out) != (0, expected):\n                failures.append(\n                    f\"satisfies {version!r} {rng!r}: expected rc=0 {expected.strip()}, \"\n                    f\"got rc={rc} stdout={out.strip()!r} stderr={err.strip()!r}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(rows)} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 5 of 15 cases differ:\nE         satisfies '2.3.9' '1.2 - 2.3': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE         satisfies '2.9.0' '1.2.3 - 2': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE         satisfies '2.5.0' '1 - 2': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE         satisfies '2.3.1' '1.2.3 - 2.3': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE         satisfies '0.4.2' '0.3 - 0.4': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE       assert not [\"satisfies '2.3.9' '1.2 - 2.3': expected rc=0 true, got rc=0 stdout='false' stderr=''\", \"satisfies '2.9.0' '1.2.3 - 2...rc=0 stdout='false' stderr=''\", \"satisfies '0.4.2' '0.3 - 0.4': expected rc=0 true, got rc=0 stdout='false' stderr=''\"]\n\n/tests/test_outputs.py:75: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_prerelease_admission",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.056890701000156696,
+                "start": 1790456960.5855312,
+                "stop": 1790456960.6546032,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\n\n    def test_prerelease_admission(pinwheel):\n        \"\"\"Prereleases only match a set naming a prerelease of the same major.minor.patch.\"\"\"\n>       _check_satisfies(pinwheel, \"prerelease_admission\")\n\n/tests/test_outputs.py:132: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/pinwheel-verify/pinwheel', group = 'prerelease_admission'\n\n    def _check_satisfies(binary, group):\n        rows = CASES[\"satisfies\"][group]\n        failures = []\n        for version, rng, want in rows:\n            rc, out, err = _run(binary, \"satisfies\", version, rng)\n            expected = \"true\\n\" if want else \"false\\n\"\n            if (rc, out) != (0, expected):\n                failures.append(\n                    f\"satisfies {version!r} {rng!r}: expected rc=0 {expected.strip()}, \"\n                    f\"got rc={rc} stdout={out.strip()!r} stderr={err.strip()!r}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(rows)} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 6 of 16 cases differ:\nE         satisfies '1.5.0-beta' '^1.2.3': expected rc=0 false, got rc=0 stdout='true' stderr=''\nE         satisfies '1.3.0-beta' '^1.2.3-beta.2': expected rc=0 false, got rc=0 stdout='true' stderr=''\nE         satisfies '1.5.0-rc.1' '>=1.2.0-rc.1 <2': expected rc=0 false, got rc=0 stdout='true' stderr=''\nE         satisfies '1.9.0-rc.2' '^1.4.0': expected rc=0 false, got rc=0 stdout='true' stderr=''\nE         satisfies '1.0.1-beta' '>=1.0.0-beta <2': expected rc=0 false, got rc=0 stdout='true' stderr=''\nE         satisfies '0.3.1-rc.1' '~0.3.0-rc.0': expected rc=0 false, got rc=0 stdout='true' stderr=''\nE       assert not [\"satisfies '1.5.0-beta' '^1.2.3': expected rc=0 false, got rc=0 stdout='true' stderr=''\", \"satisfies '1.3.0-beta' '^1...tdout='true' stderr=''\", \"satisfies '0.3.1-rc.1' '~0.3.0-rc.0': expected rc=0 false, got rc=0 stdout='true' stderr=''\"]\n\n/tests/test_outputs.py:75: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_union_and_operator_spacing",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.04134897599942633,
+                "start": 1790456960.6553628,
+                "stop": 1790456960.7073197,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\n\n    def test_union_and_operator_spacing(pinwheel):\n        \"\"\"'||' with or without surrounding spaces, spaces after operators and the empty range.\"\"\"\n>       _check_satisfies(pinwheel, \"unions_and_spacing\")\n\n/tests/test_outputs.py:137: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/pinwheel-verify/pinwheel', group = 'unions_and_spacing'\n\n    def _check_satisfies(binary, group):\n        rows = CASES[\"satisfies\"][group]\n        failures = []\n        for version, rng, want in rows:\n            rc, out, err = _run(binary, \"satisfies\", version, rng)\n            expected = \"true\\n\" if want else \"false\\n\"\n            if (rc, out) != (0, expected):\n                failures.append(\n                    f\"satisfies {version!r} {rng!r}: expected rc=0 {expected.strip()}, \"\n                    f\"got rc={rc} stdout={out.strip()!r} stderr={err.strip()!r}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(rows)} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 6 of 12 cases differ:\nE         satisfies '2.6.0' '1.x||>=2.5.0': expected rc=0 true, got rc=2 stdout='' stderr='pinwheel: invalid range \"1.x||>=2.5.0\"'\nE         satisfies '1.4.0' '1.x||>=2.5.0': expected rc=0 true, got rc=2 stdout='' stderr='pinwheel: invalid range \"1.x||>=2.5.0\"'\nE         satisfies '2.1.0' '1.x||>=2.5.0': expected rc=0 false, got rc=2 stdout='' stderr='pinwheel: invalid range \"1.x||>=2.5.0\"'\nE         satisfies '3.0.1' '^1.0.0||^3.0.0': expected rc=0 true, got rc=2 stdout='' stderr='pinwheel: invalid range \"^1.0.0||^3.0.0\"'\nE         satisfies '0.8.0' '~0.7.0||~0.8.0||~0.9.0': expected rc=0 true, got rc=2 stdout='' stderr='pinwheel: invalid range \"~0.7.0||~0.8.0||~0.9.0\"'\nE         satisfies '1.1.0' '1.0.x ||1.2.x': expected rc=0 false, got rc=2 stdout='' stderr='pinwheel: invalid range \"1.0.x ||1.2.x\"'\nE       assert not ['satisfies \\'2.6.0\\' \\'1.x||>=2.5.0\\': expected rc=0 true, got rc=2 stdout=\\'\\' stderr=\\'pinwheel: invalid range \"1.x...1.0\\' \\'1.0.x ||1.2.x\\': expected rc=0 false, got rc=2 stdout=\\'\\' stderr=\\'pinwheel: invalid range \"1.0.x ||1.2.x\"\\'']\n\n/tests/test_outputs.py:75: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_build_metadata_ignored",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.02251888900036647,
+                "start": 1790456960.707746,
+                "stop": 1790456960.7417536,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\n\n    def test_build_metadata_ignored(pinwheel):\n        \"\"\"Build metadata affects neither range matching nor compare output.\"\"\"\n>       _check_satisfies(pinwheel, \"build_metadata\")\n\n/tests/test_outputs.py:142: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/pinwheel-verify/pinwheel', group = 'build_metadata'\n\n    def _check_satisfies(binary, group):\n        rows = CASES[\"satisfies\"][group]\n        failures = []\n        for version, rng, want in rows:\n            rc, out, err = _run(binary, \"satisfies\", version, rng)\n            expected = \"true\\n\" if want else \"false\\n\"\n            if (rc, out) != (0, expected):\n                failures.append(\n                    f\"satisfies {version!r} {rng!r}: expected rc=0 {expected.strip()}, \"\n                    f\"got rc={rc} stdout={out.strip()!r} stderr={err.strip()!r}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(rows)} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 4 of 7 cases differ:\nE         satisfies '1.2.3+build.7' '1.2.3': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE         satisfies '1.2.3+build.7' '=1.2.3': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE         satisfies '1.2.3+a' '1.2.3+b': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE         satisfies '2.0.0+exp.sha.5114f85' '2.0.0 || 3.0.0': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE       assert not [\"satisfies '1.2.3+build.7' '1.2.3': expected rc=0 true, got rc=0 stdout='false' stderr=''\", \"satisfies '1.2.3+build.7...tderr=''\", \"satisfies '2.0.0+exp.sha.5114f85' '2.0.0 || 3.0.0': expected rc=0 true, got rc=0 stdout='false' stderr=''\"]\n\n/tests/test_outputs.py:75: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_prerelease_precedence",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.055330846999822825,
+                "start": 1790456960.742198,
+                "stop": 1790456960.8094702,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\n\n    def test_prerelease_precedence(pinwheel):\n        \"\"\"compare orders prereleases by SemVer 2.0.0 precedence (numeric ids, longer sets, v prefix).\"\"\"\n>       _check_compare(pinwheel, \"precedence\")\n\n/tests/test_outputs.py:148: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/pinwheel-verify/pinwheel', group = 'precedence'\n\n    def _check_compare(binary, group):\n        rows = CASES[\"compare\"][group]\n        failures = []\n        for a, b, want in rows:\n            rc, out, err = _run(binary, \"compare\", a, b)\n            if (rc, out) != (0, f\"{want}\\n\"):\n                failures.append(\n                    f\"compare {a!r} {b!r}: expected rc=0 {want}, got rc={rc} stdout={out.strip()!r} stderr={err.strip()!r}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(rows)} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 7 of 16 cases differ:\nE         compare '1.3.0-beta.11' '1.3.0-beta.2': expected rc=0 1, got rc=0 stdout='-1' stderr=''\nE         compare '1.0.0-alpha' '1.0.0-alpha.1': expected rc=0 -1, got rc=0 stdout='0' stderr=''\nE         compare '1.0.0-beta' '1.0.0-beta.2': expected rc=0 -1, got rc=0 stdout='0' stderr=''\nE         compare '1.0.0-beta.2' '1.0.0-beta.11': expected rc=0 -1, got rc=0 stdout='1' stderr=''\nE         compare '1.0.0-rc.1.2' '1.0.0-rc.1': expected rc=0 1, got rc=0 stdout='0' stderr=''\nE         compare '1.0.0-9' '1.0.0-10': expected rc=0 -1, got rc=0 stdout='1' stderr=''\nE         compare '1.0.0-alpha.9.1' '1.0.0-alpha.10': expected rc=0 -1, got rc=0 stdout='1' stderr=''\nE       assert not [\"compare '1.3.0-beta.11' '1.3.0-beta.2': expected rc=0 1, got rc=0 stdout='-1' stderr=''\", \"compare '1.0.0-alpha' '1...., got rc=0 stdout='0' stderr=''\", \"compare '1.0.0-9' '1.0.0-10': expected rc=0 -1, got rc=0 stdout='1' stderr=''\", ...]\n\n/tests/test_outputs.py:87: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_invalid_input_rejected",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.12122623599952931,
+                "start": 1790456960.8098886,
+                "stop": 1790456960.9409032,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\n\n    def test_invalid_input_rejected(pinwheel):\n        \"\"\"Strictly invalid versions and ranges exit 2 with the documented message; valid ones are accepted.\"\"\"\n        inv = CASES[\"invalid\"]\n        failures = []\n        for v in inv[\"versions\"]:\n            for args in ([\"satisfies\", v, \"*\"], [\"compare\", v, \"1.0.0\"]):\n                rc, out, err = _run(pinwheel, *args)\n                if rc != 2 or out or not err.startswith(f'pinwheel: invalid version \"{v}\"'):\n                    failures.append(f\"{args}: expected exit 2 invalid version, got rc={rc} stdout={out!r} stderr={err.strip()!r}\")\n        for r in inv[\"ranges\"]:\n            rc, out, err = _run(pinwheel, \"satisfies\", \"1.0.0\", r)\n            if rc != 2 or out or not err.startswith(f'pinwheel: invalid range \"{r}\"'):\n                failures.append(f\"satisfies 1.0.0 {r!r}: expected exit 2 invalid range, got rc={rc} stdout={out!r} stderr={err.strip()!r}\")\n        for v in inv[\"valid_versions\"]:\n            rc, out, err = _run(pinwheel, \"satisfies\", v, \"*\")\n            if rc != 0 or out not in (\"true\\n\", \"false\\n\"):\n                failures.append(f\"satisfies {v!r} '*': valid version rejected, rc={rc} stderr={err.strip()!r}\")\n        for r in inv[\"valid_ranges\"]:\n            rc, out, err = _run(pinwheel, \"satisfies\", \"1.0.0\", r)\n            if rc != 0 or out not in (\"true\\n\", \"false\\n\"):\n                failures.append(f\"satisfies 1.0.0 {r!r}: valid range rejected, rc={rc} stderr={err.strip()!r}\")\n>       assert not failures, \"\\n\".join(failures)\nE       AssertionError: ['satisfies', '1.2.3-01', '*']: expected exit 2 invalid version, got rc=0 stdout='false\\n' stderr=''\nE         ['compare', '1.2.3-01', '1.0.0']: expected exit 2 invalid version, got rc=0 stdout='1\\n' stderr=''\nE         ['satisfies', '1.2.3-beta.007', '*']: expected exit 2 invalid version, got rc=0 stdout='false\\n' stderr=''\nE         ['compare', '1.2.3-beta.007', '1.0.0']: expected exit 2 invalid version, got rc=0 stdout='1\\n' stderr=''\nE         satisfies 1.0.0 '>=1.2.3-01': expected exit 2 invalid range, got rc=0 stdout='false\\n' stderr=''\nE         satisfies 1.0.0 '^1.0.0||^2.0.0': valid range rejected, rc=2 stderr='pinwheel: invalid range \"^1.0.0||^2.0.0\"'\nE       assert not [\"['satisfies', '1.2.3-01', '*']: expected exit 2 invalid version, got rc=0 stdout='false\\\\n' stderr=''\", \"['compare',..., 'satisfies 1.0.0 \\'^1.0.0||^2.0.0\\': valid range rejected, rc=2 stderr=\\'pinwheel: invalid range \"^1.0.0||^2.0.0\"\\'']\n\n/tests/test_outputs.py:172: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_lock_drops_packages_no_longer_required",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.009281263999582734,
+                "start": 1790456960.9413846,
+                "stop": 1790456960.961596,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\ntmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_drops_packages_no_lo0')\n\n    def test_lock_drops_packages_no_longer_required(pinwheel, tmp_path):\n        \"\"\"Packages no longer required after a later round downgrades a release are dropped from the lock.\"\"\"\n>       _check_lock(pinwheel, \"prune\", tmp_path)\n\n/tests/test_outputs.py:177: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/pinwheel-verify/pinwheel', name = 'prune'\ntmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_drops_packages_no_lo0')\n\n    def _check_lock(binary, name, tmp_path):\n        expected = (FIXTURES / \"expected\" / f\"{name}.lock\").read_text(encoding=\"utf-8\")\n        count = len(json.loads(expected)[\"packages\"])\n        rc, out, err, lock = _resolve(binary, name, tmp_path)\n        assert rc == 0, f\"resolve {name}: exit {rc}, stderr: {err.strip()}\"\n>       assert out == f\"resolved {count} packages\\n\", f\"resolve {name}: stdout {out!r}\"\nE       AssertionError: resolve prune: stdout 'resolved 6 packages\\n'\nE       assert 'resolved 6 packages\\n' == 'resolved 4 packages\\n'\nE         \nE         - resolved 4 packages\nE         ?          ^\nE         + resolved 6 packages\nE         ?          ^\n\n/tests/test_outputs.py:102: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_lock_applies_overrides",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.005995733000418113,
+                "start": 1790456960.9619155,
+                "stop": 1790456960.9896162,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\ntmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_applies_overrides0')\n\n    def test_lock_applies_overrides(pinwheel, tmp_path):\n        \"\"\"An override replaces the dependents' ranges and never adds a package by itself.\"\"\"\n>       _check_lock(pinwheel, \"overrides\", tmp_path)\n\n/tests/test_outputs.py:182: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/pinwheel-verify/pinwheel', name = 'overrides'\ntmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_applies_overrides0')\n\n    def _check_lock(binary, name, tmp_path):\n        expected = (FIXTURES / \"expected\" / f\"{name}.lock\").read_text(encoding=\"utf-8\")\n        count = len(json.loads(expected)[\"packages\"])\n        rc, out, err, lock = _resolve(binary, name, tmp_path)\n>       assert rc == 0, f\"resolve {name}: exit {rc}, stderr: {err.strip()}\"\nE       AssertionError: resolve overrides: exit 3, stderr: pinwheel: no version of gale-queue satisfies \"^1.4.0\" (from jade-cli), \">=1.0.0 <3\" (from kelp-cache), \"2.1.x\" (from <overrides>)\nE       assert 3 == 0\n\n/tests/test_outputs.py:101: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_lock_yanked_releases",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.006424787000014476,
+                "start": 1790456960.9898882,
+                "stop": 1790456961.0085726,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\ntmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_yanked_releases0')\n\n    def test_lock_yanked_releases(pinwheel, tmp_path):\n        \"\"\"Yanked releases are skipped unless an exact pin (bare or '=') names them.\"\"\"\n>       _check_lock(pinwheel, \"yanked\", tmp_path)\n\n/tests/test_outputs.py:187: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/pinwheel-verify/pinwheel', name = 'yanked'\ntmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_yanked_releases0')\n\n    def _check_lock(binary, name, tmp_path):\n        expected = (FIXTURES / \"expected\" / f\"{name}.lock\").read_text(encoding=\"utf-8\")\n        count = len(json.loads(expected)[\"packages\"])\n        rc, out, err, lock = _resolve(binary, name, tmp_path)\n>       assert rc == 0, f\"resolve {name}: exit {rc}, stderr: {err.strip()}\"\nE       AssertionError: resolve yanked: exit 3, stderr: pinwheel: no version of nettle-crypto satisfies \"3.2.1\" (from <root>)\nE       assert 3 == 0\n\n/tests/test_outputs.py:101: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_lock_prefer_lowest_and_ties",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.010674404999917897,
+                "start": 1790456961.0092163,
+                "stop": 1790456961.0315588,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\ntmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_prefer_lowest_and_ti0')\n\n    def test_lock_prefer_lowest_and_ties(pinwheel, tmp_path):\n        \"\"\"prefer=lowest picks lowest releases; equal-precedence ties go to latest published, then file order.\"\"\"\n>       _check_lock(pinwheel, \"lowest\", tmp_path)\n\n/tests/test_outputs.py:192: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/pinwheel-verify/pinwheel', name = 'lowest'\ntmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_prefer_lowest_and_ti0')\n\n    def _check_lock(binary, name, tmp_path):\n        expected = (FIXTURES / \"expected\" / f\"{name}.lock\").read_text(encoding=\"utf-8\")\n        count = len(json.loads(expected)[\"packages\"])\n        rc, out, err, lock = _resolve(binary, name, tmp_path)\n        assert rc == 0, f\"resolve {name}: exit {rc}, stderr: {err.strip()}\"\n        assert out == f\"resolved {count} packages\\n\", f\"resolve {name}: stdout {out!r}\"\n        assert lock.is_file(), f\"resolve {name}: no pin.lock written\"\n        actual = lock.read_text(encoding=\"utf-8\")\n        diff = \"\".join(difflib.unified_diff(\n            expected.splitlines(True), actual.splitlines(True), \"expected pin.lock\", \"actual pin.lock\"))\n>       assert actual == expected, f\"resolve {name}: lock differs\\n{diff}\"\nE       AssertionError: resolve lowest: lock differs\nE         --- expected pin.lock\nE         +++ actual pin.lock\nE         @@ -10,9 +10,9 @@\nE                \"dependencies\": {}\nE              },\nE              \"dune-parse\": {\nE         -      \"version\": \"1.0.0+build.2\",\nE         +      \"version\": \"1.0.0+build.1\",\nE                \"requiredBy\": [\nE         -        \"<root>\"\nE         +        \"\\u003croot\\u003e\"\nE                ],\nE                \"dependencies\": {}\nE              },\nE         @@ -24,20 +24,20 @@\nE                \"dependencies\": {}\nE              },\nE              \"iris-fmt\": {\nE         -      \"version\": \"0.3.0+r2\",\nE         +      \"version\": \"0.3.0+r1\",\nE                \"requiredBy\": [\nE         -        \"<root>\"\nE         +        \"\\u003croot\\u003e\"\nE                ],\nE                \"dependencies\": {}\nE              },\nE              \"kelp-cache\": {\nE                \"version\": \"2.2.0\",\nE                \"requiredBy\": [\nE         -        \"<root>\"\nE         +        \"\\u003croot\\u003e\"\nE                ],\nE                \"dependencies\": {\nE                  \"brook-io\": \"^1.0.0\",\nE         -        \"gale-queue\": \">=1.0.0 <3\"\nE         +        \"gale-queue\": \"\\u003e=1.0.0 \\u003c3\"\nE                }\nE              }\nE            }\nE         \nE       assert '{\\n  \"lockfi...  }\\n  }\\n}\\n' == '{\\n  \"lockfi...  }\\n  }\\n}\\n'\nE         \nE         Skipping 234 identical leading characters in diff, use -v to show\nE         - 0.0+build.2\",\nE         ?           ^\nE         + 0.0+build.1\",\nE         ?           ^\nE                 \"requiredBy\": [...\nE         \nE         ...Full output truncated (39 lines hidden), use '-vv' to show\n\n/tests/test_outputs.py:107: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_lock_mixed_range_forms",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.0050095709998458915,
+                "start": 1790456961.03212,
+                "stop": 1790456961.0459082,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\ntmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_mixed_range_forms0')\n\n    def test_lock_mixed_range_forms(pinwheel, tmp_path):\n        \"\"\"A project using caret, tilde, hyphen, partial, union, prerelease and build-metadata ranges locks correctly.\"\"\"\n>       _check_lock(pinwheel, \"mixed\", tmp_path)\n\n/tests/test_outputs.py:197: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/pinwheel-verify/pinwheel', name = 'mixed'\ntmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_mixed_range_forms0')\n\n    def _check_lock(binary, name, tmp_path):\n        expected = (FIXTURES / \"expected\" / f\"{name}.lock\").read_text(encoding=\"utf-8\")\n        count = len(json.loads(expected)[\"packages\"])\n        rc, out, err, lock = _resolve(binary, name, tmp_path)\n>       assert rc == 0, f\"resolve {name}: exit {rc}, stderr: {err.strip()}\"\nE       AssertionError: resolve mixed: exit 2, stderr: pinwheel: manifest: dependencies.umber-ui: invalid range \"^2.0.0||^3.0.0\"\nE       assert 2 == 0\n\n/tests/test_outputs.py:101: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_resolution_failures",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.008664375000535074,
+                "start": 1790456961.046179,
+                "stop": 1790456961.0641503,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\ntmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_resolution_failures0')\n\n    def test_resolution_failures(pinwheel, tmp_path):\n        \"\"\"Unsatisfiable and unknown packages exit 3 with the documented message and leave pin.lock alone.\"\"\"\n>       _check_lock(pinwheel, \"small\", tmp_path)\n\n/tests/test_outputs.py:202: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/pinwheel-verify/pinwheel', name = 'small'\ntmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_resolution_failures0')\n\n    def _check_lock(binary, name, tmp_path):\n        expected = (FIXTURES / \"expected\" / f\"{name}.lock\").read_text(encoding=\"utf-8\")\n        count = len(json.loads(expected)[\"packages\"])\n        rc, out, err, lock = _resolve(binary, name, tmp_path)\n        assert rc == 0, f\"resolve {name}: exit {rc}, stderr: {err.strip()}\"\n        assert out == f\"resolved {count} packages\\n\", f\"resolve {name}: stdout {out!r}\"\n        assert lock.is_file(), f\"resolve {name}: no pin.lock written\"\n        actual = lock.read_text(encoding=\"utf-8\")\n        diff = \"\".join(difflib.unified_diff(\n            expected.splitlines(True), actual.splitlines(True), \"expected pin.lock\", \"actual pin.lock\"))\n>       assert actual == expected, f\"resolve {name}: lock differs\\n{diff}\"\nE       AssertionError: resolve small: lock differs\nE         --- expected pin.lock\nE         +++ actual pin.lock\nE         @@ -5,14 +5,14 @@\nE              \"moss-trace\": {\nE                \"version\": \"1.3.0\",\nE                \"requiredBy\": [\nE         -        \"<root>\"\nE         +        \"\\u003croot\\u003e\"\nE                ],\nE                \"dependencies\": {}\nE              },\nE              \"rune-cli\": {\nE                \"version\": \"1.9.1\",\nE                \"requiredBy\": [\nE         -        \"<root>\"\nE         +        \"\\u003croot\\u003e\"\nE                ],\nE                \"dependencies\": {}\nE              }\nE         \nE       assert '{\\n  \"lockfi...  }\\n  }\\n}\\n' == '{\\n  \"lockfi...  }\\n  }\\n}\\n'\nE         \nE         Skipping 132 identical leading characters in diff, use -v to show\nE           \nE         -         \"<root>\"\nE         +         \"\\u003croot\\u003e\"\nE                 ],\nE                 \"dependencies\": {}...\nE         \nE         ...Full output truncated (11 lines hidden), use '-vv' to show\n\n/tests/test_outputs.py:107: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            }
+        ]
+    }
+}

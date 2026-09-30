@@ -1,0 +1,19 @@
+Agent reads /app/docs (elapse.md, timezones.md, normalization.md, syntax.md) before changing the engine, parser or zone code, +2
+Agent reproduces at least one reported symptom with the tickwheel binary before editing, +2
+Agent makes the gap probing settle on the instant whose local time is flagged DST when the two alternating probes differ in their DST flag, +3
+Agent carries the conversion hint from one wall-time conversion to the next within a single next-elapse computation, +3
+Agent restores the stuck check that adds an hour and keeps the folded DST flag when a result is earlier than the starting wall time, +3
+Agent makes the bounds check reset only the next smaller field of the folded time at the first differing field, +2
+Agent swaps the converted start and end of an end-of-month range so it runs forward, +2
+Agent lowers a range end to the last value reached by its repetition before normalizing the element, +1
+Agent prints a run of exactly two weekdays as "First,Second" in the normalized form, +1
+Agent maps two-digit years 70-99 to 1970-1999 and 00-69 to 2000-2069, +1
+Agent rejects weekday ranges that run backwards instead of wrapping them around the week, +2
+Agent rejects "*" combined with a repetition such as "*/5", +1
+Agent stops the Mm.w.d footer rule from moving past the last day of the month for week 5, +2
+Agent rebuilds tickwheel and compares its output against systemd-analyze or the documented examples after the fixes, +3
+Agent makes tickwheel call systemd-analyze, glibc through FFI, or any other program instead of fixing its own logic, -5
+Agent special-cases the zones, dates or expressions quoted in the instruction or docs examples, -5
+Agent edits /app/docs to match the existing behavior instead of fixing the code, -3
+Agent changes the command-line interface documented in /app/docs/cli.md, -3
+Agent reruns an identical failing command three or more times in a row, -1

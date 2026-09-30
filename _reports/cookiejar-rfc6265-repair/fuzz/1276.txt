@@ -1,0 +1,22 @@
+at 1767225600
+dump
+set http://foo.test/x/y?q=/z z=2; Expires=junk; Domain=.; Max-Age=-5; Domain=1.2.3
+set https://10.1.2.3/ab z=3; Max-Age=3600; SameSite=Lax; Max-Age=abc; Secure
+set https://www.example.com a=6; Max-Age=abc; SameSite=Lax
+set http://a.b.example.com/a/ z=9; Domain=test; HttpOnly; SameSite=Lax
+set http://co.uk/ab a=5; Path=/; SameSite=Lax; Path=/a/
+get http://192.168.0.1/
+at 1767225601
+get https://www.example.com/x/y?q=/z
+set http://co.uk/ab A=8; Domain=10.1.2.3; Secure
+set http://shop.example.co.uk/a/bc/d a=2; Path=/a/
+get https://example.com/a/b/
+get http://alice.github.io/ab
+dump
+set https://example.org/ab sid=3
+get https://1.2.3/a/b/
+get https://shop.example.co.uk/x/y?q=/z
+get https://api.example.com/a/
+set https://co.uk/a/b a=0; Secure; Max-Age=20
+get http://alice.github.io/a/b
+dump

@@ -1,0 +1,7 @@
+Host db-*
+    ProxyJump ops@bastion.example.com:2222
+    HostName %h.internal.example.com
+Host *
+    ControlMaster auto
+    ControlPath ~/.ssh/cm-%r@%h:%p
+    ControlPersist 10m

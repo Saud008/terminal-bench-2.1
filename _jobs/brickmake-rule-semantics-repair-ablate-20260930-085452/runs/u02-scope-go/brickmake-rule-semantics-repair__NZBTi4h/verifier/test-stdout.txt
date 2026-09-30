@@ -1,0 +1,123 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 6 items
+
+../tests/test_outputs.py F...FF                                          [100%]
+
+=================================== FAILURES ===================================
+_________________________ test_cli_builds_and_rebuilds _________________________
+
+    def test_cli_builds_and_rebuilds():
+        """/app/cmd/brickmake compiles with the standard library only, runs a default-goal
+        build whose recipes create the objects on disk, and rebuilds only what was removed."""
+>       replay("smoke")
+
+/tests/test_outputs.py:41: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+group = 'smoke'
+
+    def replay(group):
+        binary = brickmake()
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], binary)
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: smoke/smoke_layered_flags_and_rerun result #0
+E           expected: {'stdout': 'cc -O1 -Iinclude -c src/main.c -o out/main.o\ncc -O1 -Iinclude -DUTIL -c src/util/str.c -o out/util/str.o\nlinked 2 objects\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'cc -O1 -c src/main.c -o out/main.o\ncc -O1 -c src/util/str.c -o out/util/str.o\nlinked 2 objects\n', 'stderr': '', 'code': 0}
+E         smoke/smoke_layered_flags_and_rerun result #3
+E           expected: {'stdout': 'cc -O1 -Iinclude -c src/main.c -o out/main.o\nlinked 2 objects\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'cc -O1 -c src/main.c -o out/main.o\nlinked 2 objects\n', 'stderr': '', 'code': 0}
+E       assert not ["smoke/smoke_layered_flags_and_rerun result #0\n  expected: {'stdout': 'cc -O1 -Iinclude -c src/main.c -o out/main.o\...ode': 0}\n  actual:   {'stdout': 'cc -O1 -c src/main.c -o out/main.o\\nlinked 2 objects\\n', 'stderr': '', 'code': 0}"]
+
+/tests/test_outputs.py:35: AssertionError
+_____________________ test_pattern_specific_variable_order _____________________
+
+    def test_pattern_specific_variable_order():
+        """Pattern-specific variables from all matching patterns apply from the shortest
+        pattern to the longest, equal lengths in definition order; command-line values win."""
+>       replay("patvars")
+
+/tests/test_outputs.py:65: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+group = 'patvars'
+
+    def replay(group):
+        binary = brickmake()
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], binary)
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: patvars/more_specific_pattern_applies_last result #0
+E           expected: {'stdout': 'cc -O2 -g -fPIC -DNET net/sock.c\ncc -O2 -g -fPIC main.c\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'cc -O2 -DNET -fPIC -g net/sock.c\ncc -O2 -fPIC -g main.c\n', 'stderr': '', 'code': 0}
+E         patvars/equal_length_patterns_later_wins result #0
+E           expected: {'stdout': 'lib/a.o OPT=[lib] V=[]\nb.o OPT=[generic] V=[]\nxay OPT=[] V=[ypat]\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'lib/a.o OPT=[generic] V=[]\nb.o OPT=[generic] V=[]\nxay OPT=[] V=[ypat]\n', 'stderr': '', 'code': 0}
+E       assert not ["patvars/more_specific_pattern_applies_last result #0\n  expected: {'stdout': 'cc -O2 -g -fPIC -DNET net/sock.c\\ncc ...  {'stdout': 'lib/a.o OPT=[generic] V=[]\\nb.o OPT=[generic] V=[]\\nxay OPT=[] V=[ypat]\\n', 'stderr': '', 'code': 0}"]
+
+/tests/test_outputs.py:35: AssertionError
+_____________________________ test_project_builds ______________________________
+
+    def test_project_builds():
+        """Multi-step incremental builds of small projects produce the same commands,
+        messages and files left on disk as GNU make across edits and rebuilds."""
+>       replay("project")
+
+/tests/test_outputs.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+group = 'project'
+
+    def replay(group):
+        binary = brickmake()
+        names = [n for n, c in CASES.items() if c["group"] == group]
+        assert names, f"no scenarios for {group}"
+        failures = []
+        for name in names:
+            case = CASES[name]
+            got = play(case["steps"], binary)
+            for i, (g, want) in enumerate(zip(got, case["expect"])):
+                if g != want:
+                    failures.append(f"{name} result #{i}\n  expected: {want!r}\n  actual:   {g!r}")
+            if len(got) != len(case["expect"]):
+                failures.append(f"{name}: expected {len(case['expect'])} results, got {len(got)}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: project/incremental_builds result #0
+E           expected: {'stdout': 'mkdir build\ncc-lib -O1 -fPIC -c lib/fmt/print.c -o build/lib/fmt/print.o\ncc-lib -O1 -fPIC -DNET -c lib/net/sock.c -o build/lib/net/sock.o\ncc -O1  -c src/main.c -o build/src/main.o\ncc -O1  -c src/util.c -o build/src/util.o\nlink build/app <- [build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o] |[build] ?[build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o]\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'mkdir build\ncc-lib -O1 -fPIC -c lib/fmt/print.c -o build/lib/fmt/print.o\ncc-lib -O1 -DNET -fPIC -c lib/net/sock.c -o build/lib/net/sock.o\ncc -O1  -c src/main.c -o build/src/main.o\ncc -O1  -c src/util.c -o build/src/util.o\nlink build/app <- [build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o] |[build] ?[build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o]\n', 'stderr': '', 'code': 0}
+E         project/incremental_builds result #2
+E           expected: {'stdout': 'cc-lib -O3 -DNDEBUG -fPIC -c lib/fmt/print.c -o build/lib/fmt/print.o\ncc-lib -O3 -DNDEBUG -fPIC -DNET -c lib/net/sock.c -o build/lib/net/sock.o\nlink build/app <- [build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o] |[build] ?[build/lib/fmt/print.o build/lib/net/sock.o]\n', 'stderr': '', 'code': 0}
+E           actual:   {'stdout': 'cc-lib -O3 -DNDEBUG -fPIC -c lib/fmt/print.c -o build/lib/fmt/print.o\ncc-lib -O3 -DNDEBUG -DNET -fPIC -c lib/net/sock.c -o build/lib/net/sock.o\nlink build/app <- [build/lib/fmt/print.o build/lib/net/sock.o build/src/main.o build/src/util.o] |[build] ?[build/lib/fmt/print.o build/lib/net/sock.o]\n', 'stderr': '', 'code': 0}
+E       assert not ["project/incremental_builds result #0\n  expected: {'stdout': 'mkdir build\\ncc-lib -O1 -fPIC -c lib/fmt/print.c -o b...ild/src/main.o build/src/util.o] |[build] ?[build/lib/fmt/print.o build/lib/net/sock.o]\\n', 'stderr': '', 'code': 0}"]
+
+/tests/test_outputs.py:35: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_shortest_stem_selection
+PASSED ../tests/test_outputs.py::test_directory_relative_prerequisites
+PASSED ../tests/test_outputs.py::test_mentioned_prerequisite_ought_to_exist
+FAILED ../tests/test_outputs.py::test_cli_builds_and_rebuilds - AssertionErro...
+FAILED ../tests/test_outputs.py::test_pattern_specific_variable_order - Asser...
+FAILED ../tests/test_outputs.py::test_project_builds - AssertionError: projec...
+========================= 3 failed, 3 passed in 6.32s ==========================

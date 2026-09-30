@@ -1,0 +1,75 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 11 items
+
+../tests/test_outputs.py ........F..                                     [100%]
+
+=================================== FAILURES ===================================
+_____________________________ test_proxy_settings ______________________________
+
+hopcfg = '/tmp/hopcfg-verify-w51hg9uz/hopcfg'
+
+    def test_proxy_settings(hopcfg):
+        """ProxyJump/ProxyCommand interplay, jump host formatting and jump host loop rejection."""
+>       _check(hopcfg, "proxy_settings")
+
+/tests/test_outputs.py:160: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/hopcfg-verify-w51hg9uz/hopcfg', groups = ('proxy_settings',)
+failures = ["[proxy_settings] args=['-F', '/root/.ssh/config', 'legacy'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -22,2...0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -22,2 +22,2 @@\n controlpersist no\n-proxycommand nc %h 22\n+proxyjump later\n"]
+total = 10, group = 'proxy_settings'
+
+    def _check(binary, *groups):
+        failures = []
+        total = 0
+        for group in groups:
+            for case in GROUPS[group]:
+                total += 1
+                rc, out = _run(binary, case)
+                if (rc, out) == (case["rc"], case["stdout"]):
+                    continue
+                diff = "".join(difflib.unified_diff(
+                    case["stdout"].splitlines(True), out.splitlines(True),
+                    "ssh -G", "hopcfg", n=1))
+                failures.append(f"[{group}] args={case['args']} expected rc={case['rc']} "
+                                f"got rc={rc}\n{diff}")
+        assert total > 0
+>       assert not failures, (f"{len(failures)}/{total} cases differ from ssh -G:\n"
+                              + "\n".join(failures[:4]))
+E       AssertionError: 2/10 cases differ from ssh -G:
+E         [proxy_settings] args=['-F', '/root/.ssh/config', 'legacy'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -22,2 +22,2 @@
+E          controlpersist no
+E         -proxycommand /usr/bin/nc -X connect -x proxy:3128 %h %p # corp proxy
+E         +proxyjump jump9
+E         
+E         [proxy_settings] args=['-F', '/root/.ssh/config', 'first-cmd'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -22,2 +22,2 @@
+E          controlpersist no
+E         -proxycommand nc %h 22
+E         +proxyjump later
+E         
+E       assert not ["[proxy_settings] args=['-F', '/root/.ssh/config', 'legacy'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -22,2...0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -22,2 +22,2 @@\n controlpersist no\n-proxycommand nc %h 22\n+proxyjump later\n"]
+
+/tests/test_outputs.py:114: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_host_line_patterns
+PASSED ../tests/test_outputs.py::test_match_criteria
+PASSED ../tests/test_outputs.py::test_final_pass
+PASSED ../tests/test_outputs.py::test_include_scoping
+PASSED ../tests/test_outputs.py::test_include_paths
+PASSED ../tests/test_outputs.py::test_precedence_and_lists
+PASSED ../tests/test_outputs.py::test_sendenv_setenv
+PASSED ../tests/test_outputs.py::test_time_values
+PASSED ../tests/test_outputs.py::test_token_expansion
+PASSED ../tests/test_outputs.py::test_syntax_and_rejections
+FAILED ../tests/test_outputs.py::test_proxy_settings - AssertionError: 2/10 c...
+========================= 1 failed, 10 passed in 1.44s =========================

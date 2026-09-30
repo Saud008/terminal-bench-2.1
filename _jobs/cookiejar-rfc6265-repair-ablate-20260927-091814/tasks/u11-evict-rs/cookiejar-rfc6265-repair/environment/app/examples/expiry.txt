@@ -1,0 +1,11 @@
+# Expiry handling: Expires, Max-Age and deletion.
+at 1767225600
+set https://news.example.net/ consent=yes; Expires=Thu, 01 Jan 2032 00:00:00 GMT
+set https://news.example.net/ visit=1; Max-Age=600
+set https://news.example.net/ promo=spring; Expires=Sun, 06 Nov 1994 08:49:37 GMT
+get https://news.example.net/
+at 1767226300
+get https://news.example.net/
+set https://news.example.net/ consent=; Max-Age=0
+get https://news.example.net/
+dump

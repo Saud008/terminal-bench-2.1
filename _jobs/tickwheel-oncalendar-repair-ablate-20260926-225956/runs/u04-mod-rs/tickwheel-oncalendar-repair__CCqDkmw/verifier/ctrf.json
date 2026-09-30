@@ -1,0 +1,113 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 10,
+            "passed": 9,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790443958.1923537,
+            "stop": 1790443959.3679512
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_dst_gap",
+                "status": "passed",
+                "duration": 1.0603746439737733,
+                "start": 1790443958.203171,
+                "stop": 1790443959.2650774,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_dst_overlap",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.006429744011256844,
+                "start": 1790443959.2653394,
+                "stop": 1790443959.2852814,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "tickwheel = '/tmp/tickwheel-verify-target/release/tickwheel'\n\n    def test_dst_overlap(tickwheel):\n        \"\"\"Wall times that occur twice when clocks go back resolve to the right occurrence.\"\"\"\n>       _check_group(tickwheel, \"dst_overlap\")\n\n/tests/test_outputs.py:87: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/tickwheel-verify-target/release/tickwheel', group = 'dst_overlap'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            rc, out, err = _run_case(binary, case)\n            if (rc, out, err) != (case[\"rc\"], case[\"stdout\"], case[\"stderr\"]):\n                failures.append(\n                    f\"--- {case['exprs']} base={case['base']} iterations={case['iterations']}\\n\"\n                    f\"expected rc={case['rc']} stderr={case['stderr']}\\n{case['stdout']}\"\n                    f\"got rc={rc} stderr={err}\\n{out}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 6 of 6 cases differ:\nE         --- ['*-*-* 02:30 Europe/Berlin'] base=2026-10-24 20:00:00 iterations=6\nE         expected rc=0 stderr=[]\nE           Original form: *-*-* 02:30 Europe/Berlin\nE         Normalized form: *-*-* 02:30:00 Europe/Berlin\nE             Next elapse: Sun 2026-10-25 00:30:00 UTC\nE                Iter. #2: Mon 2026-10-26 01:30:00 UTC\nE                Iter. #3: Tue 2026-10-27 01:30:00 UTC\nE                Iter. #4: Wed 2026-10-28 01:30:00 UTC\nE                Iter. #5: Thu 2026-10-29 01:30:00 UTC\nE                Iter. #6: Fri 2026-10-30 01:30:00 UTC\nE         got rc=0 stderr=[]\nE           Original form: *-*-* 02:30 Europe/Berlin\nE         Normalized form: *-*-* 02:30:00 Europe/Berlin\nE             Next elapse: Sun 2026-10-25 01:30:00 UTC\nE                Iter. #2: Mon 2026-10-26 01:30:00 UTC\nE                Iter. #3: Tue 2026-10-27 01:30:00 UTC\nE                Iter. #4: Wed 2026-10-28 01:30:00 UTC\nE                Iter. #5: Thu 2026-10-29 01:30:00 UTC\nE                Iter. #6: Fri 2026-10-30 01:30:00 UTC\nE         \nE         --- ['*:15,45 America/New_York'] base=2026-11-01 06:05:00 iterations=6\nE         expected rc=0 stderr=[]\nE           Original form: *:15,45 America/New_York\nE         Normalized form: *-*-* *:15,45:00 America/New_York\nE             Next elapse: Sun 2026-11-01 06:15:00 UTC\nE                Iter. #2: Sun 2026-11-01 06:45:00 UTC\nE                Iter. #3: Sun 2026-11-01 07:15:00 UTC\nE                Iter. #4: Sun 2026-11-01 07:45:00 UTC\nE                Iter. #5: Sun 2026-11-01 08:15:00 UTC\nE                Iter. #6: Sun 2026-11-01 08:45:00 UTC\nE         got rc=0 stderr=[]\nE           Original form: *:15,45 America/New_York\nE         Normalized form: *-*-* *:15,45:00 America/New_York\nE             Next elapse: Sun 2026-11-01 05:15:00 UTC\nE                Iter. #2: Sun 2026-11-01 05:45:00 UTC\nE                Iter. #3: Sun 2026-11-01 07:15:00 UTC\nE                Iter. #4: Sun 2026-11-01 07:45:00 UTC\nE                Iter. #5: Sun 2026-11-01 08:15:00 UTC\nE                Iter. #6: Sun 2026-11-01 08:45:00 UTC\nE         \nE         --- ['*-*-* 02:30 Australia/Sydney'] base=2026-04-04 14:50:00 iterations=6\nE         expected rc=0 stderr=[]\nE           Original form: *-*-* 02:30 Australia/Sydney\nE         Normalized form: *-*-* 02:30:00 Australia/Sydney\nE             Next elapse: Sat 2026-04-04 15:30:00 UTC\nE                Iter. #2: Sun 2026-04-05 16:30:00 UTC\nE                Iter. #3: Mon 2026-04-06 16:30:00 UTC\nE                Iter. #4: Tue 2026-04-07 16:30:00 UTC\nE                Iter. #5: Wed 2026-04-08 16:30:00 UTC\nE                Iter. #6: Thu 2026-04-09 16:30:00 UTC\nE         got rc=0 stderr=[]\nE           Original form: *-*-* 02:30 Australia/Sydney\nE         Normalized form: *-*-* 02:30:00 Australia/Sydney\nE             Next elapse: Sat 2026-04-04 16:30:00 UTC\nE                Iter. #2: Sun 2026-04-05 16:30:00 UTC\nE                Iter. #3: Mon 2026-04-06 16:30:00 UTC\nE                Iter. #4: Tue 2026-04-07 16:30:00 UTC\nE                Iter. #5: Wed 2026-04-08 16:30:00 UTC\nE                Iter. #6: Thu 2026-04-09 16:30:00 UTC\nE         \nE         --- ['*:30 Pacific/Chatham'] base=2026-04-04 12:50:00 iterations=6\nE         expected rc=0 stderr=[]\nE           Original form: *:30 Pacific/Chatham\nE         Normalized form: *-*-* *:30:00 Pacific/Chatham\nE             Next elapse: Sat 2026-04-04 13:45:00 UTC\nE                Iter. #2: Sat 2026-04-04 15:45:00 UTC\nE                Iter. #3: Sat 2026-04-04 16:45:00 UTC\nE                Iter. #4: Sat 2026-04-04 17:45:00 UTC\nE                Iter. #5: Sat 2026-04-04 18:45:00 UTC\nE                Iter. #6: Sat 2026-04-04 19:45:00 UTC\nE         got rc=0 stderr=[]\nE           Original form: *:30 Pacific/Chatham\nE         Normalized form: *-*-* *:30:00 Pacific/Chatham\nE             Next elapse: Sat 2026-04-04 14:45:00 UTC\nE                Iter. #2: Sat 2026-04-04 15:45:00 UTC\nE                Iter. #3: Sat 2026-04-04 16:45:00 UTC\nE                Iter. #4: Sat 2026-04-04 17:45:00 UTC\nE                Iter. #5: Sat 2026-04-04 18:45:00 UTC\nE                Iter. #6: Sat 2026-04-04 19:45:00 UTC\nE         \nE         --- ['*:0/20 America/St_Johns'] base=2026-11-01 04:35:00 iterations=6\nE         expected rc=0 stderr=[]\nE           Original form: *:0/20 America/St_Johns\nE         Normalized form: *-*-* *:00/20:00 America/St_Johns\nE             Next elapse: Sun 2026-11-01 04:50:00 UTC\nE                Iter. #2: Sun 2026-11-01 05:10:00 UTC\nE                Iter. #3: Sun 2026-11-01 05:30:00 UTC\nE                Iter. #4: Sun 2026-11-01 05:50:00 UTC\nE                Iter. #5: Sun 2026-11-01 06:10:00 UTC\nE                Iter. #6: Sun 2026-11-01 06:30:00 UTC\nE         got rc=0 stderr=[]\nE           Original form: *:0/20 America/St_Johns\nE         Normalized form: *-*-* *:00/20:00 America/St_Johns\nE             Next elapse: Sun 2026-11-01 03:50:00 UTC\nE                Iter. #2: Sun 2026-11-01 04:10:00 UTC\nE                Iter. #3: Sun 2026-11-01 05:30:00 UTC\nE                Iter. #4: Sun 2026-11-01 05:50:00 UTC\nE                Iter. #5: Sun 2026-11-01 06:10:00 UTC\nE                Iter. #6: Sun 2026-11-01 06:30:00 UTC\nE         \nE         --- ['*:30 Australia/Lord_Howe'] base=2026-04-04 13:50:00 iterations=6\nE         expected rc=0 stderr=[]\nE           Original form: *:30 Australia/Lord_Howe\nE         Normalized form: *-*-* *:30:00 Australia/Lord_Howe\nE             Next elapse: Sat 2026-04-04 14:30:00 UTC\nE                Iter. #2: Sat 2026-04-04 16:00:00 UTC\nE                Iter. #3: Sat 2026-04-04 17:00:00 UTC\nE                Iter. #4: Sat 2026-04-04 18:00:00 UTC\nE                Iter. #5: Sat 2026-04-04 19:00:00 UTC\nE                Iter. #6: Sat 2026-04-04 20:00:00 UTC\nE         got rc=0 stderr=[]\nE           Original form: *:30 Australia/Lord_Howe\nE         Normalized form: *-*-* *:30:00 Australia/Lord_Howe\nE             Next elapse: Sat 2026-04-04 15:00:00 UTC\nE                Iter. #2: Sat 2026-04-04 16:00:00 UTC\nE                Iter. #3: Sat 2026-04-04 17:00:00 UTC\nE                Iter. #4: Sat 2026-04-04 18:00:00 UTC\nE                Iter. #5: Sat 2026-04-04 19:00:00 UTC\nE                Iter. #6: Sat 2026-04-04 20:00:00 UTC\nE         \nE       assert not [\"--- ['*-*-* 02:30 Europe/Berlin'] base=2026-10-24 20:00:00 iterations=6\\nexpected rc=0 stderr=[]\\n  Original form: *...2026-04-04 18:00:00 UTC\\n       Iter. #5: Sat 2026-04-04 19:00:00 UTC\\n       Iter. #6: Sat 2026-04-04 20:00:00 UTC\\n\"]\n\n/tests/test_outputs.py:77: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_offset_folding",
+                "status": "passed",
+                "duration": 0.0064029250061139464,
+                "start": 1790443959.2856457,
+                "stop": 1790443959.2931974,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_field_rollover",
+                "status": "passed",
+                "duration": 0.008314415987115353,
+                "start": 1790443959.2935388,
+                "stop": 1790443959.302867,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_end_of_month",
+                "status": "passed",
+                "duration": 0.006848302989965305,
+                "start": 1790443959.3032503,
+                "stop": 1790443959.311051,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_normalized_forms",
+                "status": "passed",
+                "duration": 0.014044096984434873,
+                "start": 1790443959.3112822,
+                "stop": 1790443959.326754,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_two_digit_years",
+                "status": "passed",
+                "duration": 0.010717237018980086,
+                "start": 1790443959.3271239,
+                "stop": 1790443959.3391063,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_rejected_expressions",
+                "status": "passed",
+                "duration": 0.012793867033906281,
+                "start": 1790443959.3393788,
+                "stop": 1790443959.3532557,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_far_future_rules",
+                "status": "passed",
+                "duration": 0.005680823000147939,
+                "start": 1790443959.353578,
+                "stop": 1790443959.3605423,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_multi_expression_reports",
+                "status": "passed",
+                "duration": 0.0049489319790154696,
+                "start": 1790443959.3609054,
+                "stop": 1790443959.3670065,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

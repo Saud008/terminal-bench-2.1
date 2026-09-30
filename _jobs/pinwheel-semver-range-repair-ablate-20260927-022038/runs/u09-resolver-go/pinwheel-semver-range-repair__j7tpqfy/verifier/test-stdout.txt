@@ -1,0 +1,57 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 15 items
+
+../tests/test_outputs.py .........F.....                                 [100%]
+
+=================================== FAILURES ===================================
+_________________ test_lock_drops_packages_no_longer_required __________________
+
+pinwheel = '/tmp/pinwheel-verify/pinwheel'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_drops_packages_no_lo0')
+
+    def test_lock_drops_packages_no_longer_required(pinwheel, tmp_path):
+        """A release downgraded in a later round no longer drags its old dependencies into the lock."""
+>       _check_lock(pinwheel, "prune", tmp_path)
+
+/tests/test_outputs.py:177: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/pinwheel-verify/pinwheel', name = 'prune'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_drops_packages_no_lo0')
+
+    def _check_lock(binary, name, tmp_path):
+        expected = (FIXTURES / "expected" / f"{name}.lock").read_text(encoding="utf-8")
+        count = len(json.loads(expected)["packages"])
+        rc, out, err, lock = _resolve(binary, name, tmp_path)
+        assert rc == 0, f"resolve {name}: exit {rc}, stderr: {err.strip()}"
+>       assert out == f"resolved {count} packages\n", f"resolve {name}: stdout {out!r}"
+E       AssertionError: resolve prune: stdout 'resolved 6 packages\n'
+E       assert 'resolved 6 packages\n' == 'resolved 4 packages\n'
+E         
+E         - resolved 4 packages
+E         ?          ^
+E         + resolved 6 packages
+E         ?          ^
+
+/tests/test_outputs.py:102: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_caret_ranges
+PASSED ../tests/test_outputs.py::test_tilde_ranges
+PASSED ../tests/test_outputs.py::test_partial_version_comparators
+PASSED ../tests/test_outputs.py::test_hyphen_ranges
+PASSED ../tests/test_outputs.py::test_prerelease_admission
+PASSED ../tests/test_outputs.py::test_union_and_operator_spacing
+PASSED ../tests/test_outputs.py::test_build_metadata_ignored
+PASSED ../tests/test_outputs.py::test_prerelease_precedence
+PASSED ../tests/test_outputs.py::test_invalid_input_rejected
+PASSED ../tests/test_outputs.py::test_lock_applies_overrides
+PASSED ../tests/test_outputs.py::test_lock_yanked_releases
+PASSED ../tests/test_outputs.py::test_lock_prefer_lowest_and_ties
+PASSED ../tests/test_outputs.py::test_lock_mixed_range_forms
+PASSED ../tests/test_outputs.py::test_resolution_failures
+FAILED ../tests/test_outputs.py::test_lock_drops_packages_no_longer_required
+========================= 1 failed, 14 passed in 8.73s =========================

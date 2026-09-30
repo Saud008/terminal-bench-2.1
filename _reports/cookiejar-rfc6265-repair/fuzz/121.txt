@@ -1,0 +1,12 @@
+at 1767225600
+set https://10.1.2.3/a/ A=2; Expires=29 Feb 2400 00:00:00; SameSite=Lax
+get http://10.1.2.3/a/b/
+set http://example.com sid=7; Path=/a; Expires=29 Feb 2400 00:00:00; Max-Age=0; Expires=31 Apr 2030 00:00:00
+get https://api.example.com/ab
+set http://api.example.com/ab sid=9; Domain=alice.github.io; Path=/ab; SameSite=Lax; SameSite=Lax
+at 1767225630
+set http://github.io/a/ b=0; HttpOnly
+get http://x.co.uk/a/b/
+get http://192.168.0.1/
+set http://alice.github.io/a/b a=5; HttpOnly; Max-Age=0; SameSite=Lax
+dump

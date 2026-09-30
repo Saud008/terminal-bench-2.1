@@ -1,0 +1,36 @@
+at 1767225600
+get https://192.168.0.1/
+get http://example.com/a/
+set https://1.2.3/x/y?q=/z A=8; Domain=co.uk; HttpOnly
+at 1767225601
+set http://api.example.com/a a=7; Domain=test; HttpOnly
+get http://a.b.example.com/
+get http://example.org/a
+get https://api.example.com/a/bc/d
+get http://alice.github.io/a/b/c
+dump
+get http://10.1.2.3/a/b/c
+dump
+get http://x.co.uk/a/b/c
+get https://10.1.2.3/a
+get https://foo.test
+set https://co.uk/a/b b=7; SameSite=Lax; Secure
+set http://github.io/ab z=4; HttpOnly; SameSite=Lax; HttpOnly
+set https://co.uk z=7; HttpOnly
+set https://1.2.3/a b=0
+set http://co.uk/a/b/ sid=4; Domain=localhost; HttpOnly; HttpOnly
+get https://a.b.example.com
+get https://1.2.3
+dump
+get https://x.co.uk/a/b
+at 1767229601
+get http://192.168.0.1
+get https://alice.github.io/a/bc/d
+get https://alice.github.io
+at 1767229601
+set https://alice.github.io/a/bc/d z=6; Domain=github.io; HttpOnly; Secure
+set http://co.uk/a/b/c b=7; HttpOnly; Path=/a/b; SameSite=Lax
+dump
+get https://www.example.com/a/b/
+get http://x.co.uk/x/y?q=/z
+dump

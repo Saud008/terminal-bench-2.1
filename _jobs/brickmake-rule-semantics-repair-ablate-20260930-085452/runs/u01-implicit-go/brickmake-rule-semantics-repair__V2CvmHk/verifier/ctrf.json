@@ -1,0 +1,83 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 6,
+            "passed": 3,
+            "failed": 3,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790758699.6875992,
+            "stop": 1790758706.0094788
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_cli_builds_and_rebuilds",
+                "status": "passed",
+                "duration": 6.145266299998184,
+                "start": 1790758699.6978507,
+                "stop": 1790758705.84421,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_shortest_stem_selection",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.024415917996520875,
+                "start": 1790758705.8444898,
+                "stop": 1790758705.8826241,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "def test_shortest_stem_selection():\n        \"\"\"Among matching pattern rules the one with the shortest stem wins, where the\n        stem of a directory-relative match includes the directory; ties keep makefile order.\"\"\"\n>       replay(\"stem\")\n\n/tests/test_outputs.py:47: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\ngroup = 'stem'\n\n    def replay(group):\n        binary = brickmake()\n        names = [n for n, c in CASES.items() if c[\"group\"] == group]\n        assert names, f\"no scenarios for {group}\"\n        failures = []\n        for name in names:\n            case = CASES[name]\n            got = play(case[\"steps\"], binary)\n            for i, (g, want) in enumerate(zip(got, case[\"expect\"])):\n                if g != want:\n                    failures.append(f\"{name} result #{i}\\n  expected: {want!r}\\n  actual:   {g!r}\")\n            if len(got) != len(case[\"expect\"]):\n                failures.append(f\"{name}: expected {len(case['expect'])} results, got {len(got)}\")\n>       assert not failures, \"\\n\".join(failures)\nE       AssertionError: stem/shortest_stem_wins_across_directories result #0\nE           expected: {'stdout': 'lib lib/a.o from lib/a.c (stem a)\\ngen src/b.o from src/gen/b.c (stem b)\\ngeneric c.o from c.c (stem c)\\nlib lib/deep/d.o from lib/deep/d.c (stem deep/d)\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'generic lib/a.o from lib/a.c (stem lib/a)\\ngeneric src/b.o from src/b.c (stem src/b)\\ngeneric c.o from c.c (stem c)\\ngeneric lib/deep/d.o from lib/deep/d.c (stem lib/deep/d)\\n', 'stderr': '', 'code': 0}\nE         stem/shortest_stem_wins_across_directories result #1\nE           expected: {'stdout': 'gen src/b.o from src/gen/b.c (stem b)\\nlib lib/a.o from lib/a.c (stem a)\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': 'generic src/b.o from src/b.c (stem src/b)\\ngeneric lib/a.o from lib/a.c (stem lib/a)\\n', 'stderr': '', 'code': 0}\nE       assert not [\"stem/shortest_stem_wins_across_directories result #0\\n  expected: {'stdout': 'lib lib/a.o from lib/a.c (stem a)\\\\nge... 'generic src/b.o from src/b.c (stem src/b)\\\\ngeneric lib/a.o from lib/a.c (stem lib/a)\\\\n', 'stderr': '', 'code': 0}\"]\n\n/tests/test_outputs.py:35: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_directory_relative_prerequisites",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.01582107300419011,
+                "start": 1790758705.882968,
+                "stop": 1790758705.9022272,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "def test_directory_relative_prerequisites():\n        \"\"\"For a slash-less target pattern matched against a name with a directory, the\n        directory is prepended only to prerequisites that contain '%'.\"\"\"\n>       replay(\"dirs\")\n\n/tests/test_outputs.py:53: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\ngroup = 'dirs'\n\n    def replay(group):\n        binary = brickmake()\n        names = [n for n, c in CASES.items() if c[\"group\"] == group]\n        assert names, f\"no scenarios for {group}\"\n        failures = []\n        for name in names:\n            case = CASES[name]\n            got = play(case[\"steps\"], binary)\n            for i, (g, want) in enumerate(zip(got, case[\"expect\"])):\n                if g != want:\n                    failures.append(f\"{name} result #{i}\\n  expected: {want!r}\\n  actual:   {g!r}\")\n            if len(got) != len(case[\"expect\"]):\n                failures.append(f\"{name}: expected {len(case['expect'])} results, got {len(got)}\")\n>       assert not failures, \"\\n\".join(failures)\nE       AssertionError: dirs/shared_prerequisite_is_not_moved_into_the_directory result #0\nE           expected: {'stdout': 'net/sock.o: net/sock.c config.h (dir net, file sock)\\nmain.o: main.c config.h (dir ., file main)\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': '', 'stderr': \"brickmake: *** No rule to make target 'net/sock.o', needed by 'all'.  Stop.\\n\", 'code': 2}\nE         dirs/directory_prefix_goes_before_the_pattern_prefix result #0\nE           expected: {'stdout': '@=[src/eat] <=[src/car] *=[src/a]\\ngen api/v1.pb.go from [api/proto/v1.proto tools.lock]\\n', 'stderr': '', 'code': 0}\nE           actual:   {'stdout': '@=[src/eat] <=[src/car] *=[src/a]\\n', 'stderr': \"brickmake: *** No rule to make target 'api/v1.pb.go'.  Stop.\\n\", 'code': 2}\nE       assert not ['dirs/shared_prerequisite_is_not_moved_into_the_directory result #0\\n  expected: {\\'stdout\\': \\'net/sock.o: net/sock....rc/car] *=[src/a]\\\\n\\', \\'stderr\\': \"brickmake: *** No rule to make target \\'api/v1.pb.go\\'.  Stop.\\\\n\", \\'code\\': 2}']\n\n/tests/test_outputs.py:35: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_mentioned_prerequisite_ought_to_exist",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.016474747004394885,
+                "start": 1790758705.9024699,
+                "stop": 1790758705.922295,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "def test_mentioned_prerequisite_ought_to_exist():\n        \"\"\"A prerequisite that is mentioned anywhere in the makefile counts as one that\n        ought to exist during the first implicit-rule pass, even without a rule of its own.\"\"\"\n>       replay(\"mention\")\n\n/tests/test_outputs.py:59: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\ngroup = 'mention'\n\n    def replay(group):\n        binary = brickmake()\n        names = [n for n, c in CASES.items() if c[\"group\"] == group]\n        assert names, f\"no scenarios for {group}\"\n        failures = []\n        for name in names:\n            case = CASES[name]\n            got = play(case[\"steps\"], binary)\n            for i, (g, want) in enumerate(zip(got, case[\"expect\"])):\n                if g != want:\n                    failures.append(f\"{name} result #{i}\\n  expected: {want!r}\\n  actual:   {g!r}\")\n            if len(got) != len(case[\"expect\"]):\n                failures.append(f\"{name}: expected {len(case['expect'])} results, got {len(got)}\")\n>       assert not failures, \"\\n\".join(failures)\nE       AssertionError: mention/prerequisite_mentioned_elsewhere_ought_to_exist result #1\nE           expected: {'stdout': '', 'stderr': \"brickmake: *** No rule to make target 'parser.h', needed by 'parser.o'.  Stop.\\n\", 'code': 2}\nE           actual:   {'stdout': 'compile parser.c alone\\n', 'stderr': '', 'code': 0}\nE       assert not ['mention/prerequisite_mentioned_elsewhere_ought_to_exist result #1\\n  expected: {\\'stdout\\': \\'\\', \\'stderr\\': \"brick...o\\'.  Stop.\\\\n\", \\'code\\': 2}\\n  actual:   {\\'stdout\\': \\'compile parser.c alone\\\\n\\', \\'stderr\\': \\'\\', \\'code\\': 0}']\n\n/tests/test_outputs.py:35: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_pattern_specific_variable_order",
+                "status": "passed",
+                "duration": 0.02181848999680369,
+                "start": 1790758705.9225469,
+                "stop": 1790758705.9461732,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_project_builds",
+                "status": "passed",
+                "duration": 0.06119563900574576,
+                "start": 1790758705.9464786,
+                "stop": 1790758706.0086837,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

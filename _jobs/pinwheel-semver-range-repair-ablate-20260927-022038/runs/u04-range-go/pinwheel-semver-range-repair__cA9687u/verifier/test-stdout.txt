@@ -1,0 +1,151 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 15 items
+
+../tests/test_outputs.py ....FF..F....F.                                 [100%]
+
+=================================== FAILURES ===================================
+__________________________ test_prerelease_admission ___________________________
+
+pinwheel = '/tmp/pinwheel-verify/pinwheel'
+
+    def test_prerelease_admission(pinwheel):
+        """Prereleases only match a set naming a prerelease of the same major.minor.patch."""
+>       _check_satisfies(pinwheel, "prerelease_admission")
+
+/tests/test_outputs.py:132: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/pinwheel-verify/pinwheel', group = 'prerelease_admission'
+
+    def _check_satisfies(binary, group):
+        rows = CASES["satisfies"][group]
+        failures = []
+        for version, rng, want in rows:
+            rc, out, err = _run(binary, "satisfies", version, rng)
+            expected = "true\n" if want else "false\n"
+            if (rc, out) != (0, expected):
+                failures.append(
+                    f"satisfies {version!r} {rng!r}: expected rc=0 {expected.strip()}, "
+                    f"got rc={rc} stdout={out.strip()!r} stderr={err.strip()!r}"
+                )
+>       assert not failures, f"{len(failures)} of {len(rows)} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 6 of 16 cases differ:
+E         satisfies '1.5.0-beta' '^1.2.3': expected rc=0 false, got rc=0 stdout='true' stderr=''
+E         satisfies '1.3.0-beta' '^1.2.3-beta.2': expected rc=0 false, got rc=0 stdout='true' stderr=''
+E         satisfies '1.5.0-rc.1' '>=1.2.0-rc.1 <2': expected rc=0 false, got rc=0 stdout='true' stderr=''
+E         satisfies '1.9.0-rc.2' '^1.4.0': expected rc=0 false, got rc=0 stdout='true' stderr=''
+E         satisfies '1.0.1-beta' '>=1.0.0-beta <2': expected rc=0 false, got rc=0 stdout='true' stderr=''
+E         satisfies '0.3.1-rc.1' '~0.3.0-rc.0': expected rc=0 false, got rc=0 stdout='true' stderr=''
+E       assert not ["satisfies '1.5.0-beta' '^1.2.3': expected rc=0 false, got rc=0 stdout='true' stderr=''", "satisfies '1.3.0-beta' '^1...tdout='true' stderr=''", "satisfies '0.3.1-rc.1' '~0.3.0-rc.0': expected rc=0 false, got rc=0 stdout='true' stderr=''"]
+
+/tests/test_outputs.py:75: AssertionError
+_______________________ test_union_and_operator_spacing ________________________
+
+pinwheel = '/tmp/pinwheel-verify/pinwheel'
+
+    def test_union_and_operator_spacing(pinwheel):
+        """'||' with or without surrounding spaces, spaces after operators and the empty range."""
+>       _check_satisfies(pinwheel, "unions_and_spacing")
+
+/tests/test_outputs.py:137: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/pinwheel-verify/pinwheel', group = 'unions_and_spacing'
+
+    def _check_satisfies(binary, group):
+        rows = CASES["satisfies"][group]
+        failures = []
+        for version, rng, want in rows:
+            rc, out, err = _run(binary, "satisfies", version, rng)
+            expected = "true\n" if want else "false\n"
+            if (rc, out) != (0, expected):
+                failures.append(
+                    f"satisfies {version!r} {rng!r}: expected rc=0 {expected.strip()}, "
+                    f"got rc={rc} stdout={out.strip()!r} stderr={err.strip()!r}"
+                )
+>       assert not failures, f"{len(failures)} of {len(rows)} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 6 of 12 cases differ:
+E         satisfies '2.6.0' '1.x||>=2.5.0': expected rc=0 true, got rc=2 stdout='' stderr='pinwheel: invalid range "1.x||>=2.5.0"'
+E         satisfies '1.4.0' '1.x||>=2.5.0': expected rc=0 true, got rc=2 stdout='' stderr='pinwheel: invalid range "1.x||>=2.5.0"'
+E         satisfies '2.1.0' '1.x||>=2.5.0': expected rc=0 false, got rc=2 stdout='' stderr='pinwheel: invalid range "1.x||>=2.5.0"'
+E         satisfies '3.0.1' '^1.0.0||^3.0.0': expected rc=0 true, got rc=2 stdout='' stderr='pinwheel: invalid range "^1.0.0||^3.0.0"'
+E         satisfies '0.8.0' '~0.7.0||~0.8.0||~0.9.0': expected rc=0 true, got rc=2 stdout='' stderr='pinwheel: invalid range "~0.7.0||~0.8.0||~0.9.0"'
+E         satisfies '1.1.0' '1.0.x ||1.2.x': expected rc=0 false, got rc=2 stdout='' stderr='pinwheel: invalid range "1.0.x ||1.2.x"'
+E       assert not ['satisfies \'2.6.0\' \'1.x||>=2.5.0\': expected rc=0 true, got rc=2 stdout=\'\' stderr=\'pinwheel: invalid range "1.x...1.0\' \'1.0.x ||1.2.x\': expected rc=0 false, got rc=2 stdout=\'\' stderr=\'pinwheel: invalid range "1.0.x ||1.2.x"\'']
+
+/tests/test_outputs.py:75: AssertionError
+_________________________ test_invalid_input_rejected __________________________
+
+pinwheel = '/tmp/pinwheel-verify/pinwheel'
+
+    def test_invalid_input_rejected(pinwheel):
+        """Strictly invalid versions and ranges exit 2 with the documented message; valid ones are accepted."""
+        inv = CASES["invalid"]
+        failures = []
+        for v in inv["versions"]:
+            for args in (["satisfies", v, "*"], ["compare", v, "1.0.0"]):
+                rc, out, err = _run(pinwheel, *args)
+                if rc != 2 or out or not err.startswith(f'pinwheel: invalid version "{v}"'):
+                    failures.append(f"{args}: expected exit 2 invalid version, got rc={rc} stdout={out!r} stderr={err.strip()!r}")
+        for r in inv["ranges"]:
+            rc, out, err = _run(pinwheel, "satisfies", "1.0.0", r)
+            if rc != 2 or out or not err.startswith(f'pinwheel: invalid range "{r}"'):
+                failures.append(f"satisfies 1.0.0 {r!r}: expected exit 2 invalid range, got rc={rc} stdout={out!r} stderr={err.strip()!r}")
+        for v in inv["valid_versions"]:
+            rc, out, err = _run(pinwheel, "satisfies", v, "*")
+            if rc != 0 or out not in ("true\n", "false\n"):
+                failures.append(f"satisfies {v!r} '*': valid version rejected, rc={rc} stderr={err.strip()!r}")
+        for r in inv["valid_ranges"]:
+            rc, out, err = _run(pinwheel, "satisfies", "1.0.0", r)
+            if rc != 0 or out not in ("true\n", "false\n"):
+                failures.append(f"satisfies 1.0.0 {r!r}: valid range rejected, rc={rc} stderr={err.strip()!r}")
+>       assert not failures, "\n".join(failures)
+E       AssertionError: satisfies 1.0.0 '^1.0.0||^2.0.0': valid range rejected, rc=2 stderr='pinwheel: invalid range "^1.0.0||^2.0.0"'
+E       assert not ['satisfies 1.0.0 \'^1.0.0||^2.0.0\': valid range rejected, rc=2 stderr=\'pinwheel: invalid range "^1.0.0||^2.0.0"\'']
+
+/tests/test_outputs.py:172: AssertionError
+_________________________ test_lock_mixed_range_forms __________________________
+
+pinwheel = '/tmp/pinwheel-verify/pinwheel'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_mixed_range_forms0')
+
+    def test_lock_mixed_range_forms(pinwheel, tmp_path):
+        """A project using caret, tilde, hyphen, partial, union, prerelease and build-metadata ranges locks correctly."""
+>       _check_lock(pinwheel, "mixed", tmp_path)
+
+/tests/test_outputs.py:197: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/pinwheel-verify/pinwheel', name = 'mixed'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_mixed_range_forms0')
+
+    def _check_lock(binary, name, tmp_path):
+        expected = (FIXTURES / "expected" / f"{name}.lock").read_text(encoding="utf-8")
+        count = len(json.loads(expected)["packages"])
+        rc, out, err, lock = _resolve(binary, name, tmp_path)
+>       assert rc == 0, f"resolve {name}: exit {rc}, stderr: {err.strip()}"
+E       AssertionError: resolve mixed: exit 2, stderr: pinwheel: manifest: dependencies.umber-ui: invalid range "^2.0.0||^3.0.0"
+E       assert 2 == 0
+
+/tests/test_outputs.py:101: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_caret_ranges
+PASSED ../tests/test_outputs.py::test_tilde_ranges
+PASSED ../tests/test_outputs.py::test_partial_version_comparators
+PASSED ../tests/test_outputs.py::test_hyphen_ranges
+PASSED ../tests/test_outputs.py::test_build_metadata_ignored
+PASSED ../tests/test_outputs.py::test_prerelease_precedence
+PASSED ../tests/test_outputs.py::test_lock_drops_packages_no_longer_required
+PASSED ../tests/test_outputs.py::test_lock_applies_overrides
+PASSED ../tests/test_outputs.py::test_lock_yanked_releases
+PASSED ../tests/test_outputs.py::test_lock_prefer_lowest_and_ties
+PASSED ../tests/test_outputs.py::test_resolution_failures
+FAILED ../tests/test_outputs.py::test_prerelease_admission - AssertionError: ...
+FAILED ../tests/test_outputs.py::test_union_and_operator_spacing - AssertionE...
+FAILED ../tests/test_outputs.py::test_invalid_input_rejected - AssertionError...
+FAILED ../tests/test_outputs.py::test_lock_mixed_range_forms - AssertionError...
+========================= 4 failed, 11 passed in 8.51s =========================

@@ -1,0 +1,22 @@
+at 1767225600
+set https://alice.github.io/a/ A=4; HttpOnly; Domain=example.com; HttpOnly; HttpOnly
+set https://10.1.2.3/a sid=2; Path=/ab; Max-Age=-5; Domain=com
+get https://example.com/a/b/
+get http://localhost/a/
+at 1767225700
+get http://co.uk
+get http://x.co.uk/a/b
+get https://alice.github.io/a/bc/d
+get http://co.uk/x/y?q=/z
+set https://10.1.2.3 A=3; Secure; HttpOnly; Secure
+set https://github.io/a/b/ sid=8; Domain=example.com; Domain=example.co.uk
+set https://alice.github.io/a/ z=2; Domain=alice.github.io; Path=ab
+set https://foo.test/a/b/ a=3; Path=/a; HttpOnly; SameSite=Lax; Domain=github.io
+set http://example.org/ab sid=8; SameSite=Lax; Secure
+set https://10.1.2.3/a/bc/d A=3; Max-Age=; Secure; SameSite=Lax
+set https://a.b.example.com/x/y?q=/z 	=x
+set http://alice.github.io/a sid=3
+get http://x.co.uk
+set https://co.uk/x/y?q=/z A=6; Domain=.; Domain=example.co.uk; SameSite=Lax; Secure
+at 1767225700
+dump

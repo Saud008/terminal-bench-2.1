@@ -1,0 +1,161 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 15,
+            "passed": 13,
+            "failed": 2,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790456196.4942553,
+            "stop": 1790456205.6673722
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_caret_ranges",
+                "status": "passed",
+                "duration": 8.853678961000242,
+                "start": 1790456196.5080824,
+                "stop": 1790456205.3628833,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_tilde_ranges",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.02928152799995587,
+                "start": 1790456205.3632567,
+                "stop": 1790456205.4061782,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\n\n    def test_tilde_ranges(pinwheel):\n        \"\"\"Tilde ranges (~, ~>, major-only and major.minor forms) match node-semver.\"\"\"\n>       _check_satisfies(pinwheel, \"tilde\")\n\n/tests/test_outputs.py:117: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/pinwheel-verify/pinwheel', group = 'tilde'\n\n    def _check_satisfies(binary, group):\n        rows = CASES[\"satisfies\"][group]\n        failures = []\n        for version, rng, want in rows:\n            rc, out, err = _run(binary, \"satisfies\", version, rng)\n            expected = \"true\\n\" if want else \"false\\n\"\n            if (rc, out) != (0, expected):\n                failures.append(\n                    f\"satisfies {version!r} {rng!r}: expected rc=0 {expected.strip()}, \"\n                    f\"got rc={rc} stdout={out.strip()!r} stderr={err.strip()!r}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(rows)} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 5 of 16 cases differ:\nE         satisfies '1.9.0' '~1': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE         satisfies '1.4.0' '~>1': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE         satisfies '2.7.1' '~2': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE         satisfies '1.5.2' '~1.x': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE         satisfies '0.9.0' '~0': expected rc=0 true, got rc=0 stdout='false' stderr=''\nE       assert not [\"satisfies '1.9.0' '~1': expected rc=0 true, got rc=0 stdout='false' stderr=''\", \"satisfies '1.4.0' '~>1': expected r...e, got rc=0 stdout='false' stderr=''\", \"satisfies '0.9.0' '~0': expected rc=0 true, got rc=0 stdout='false' stderr=''\"]\n\n/tests/test_outputs.py:75: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_partial_version_comparators",
+                "status": "passed",
+                "duration": 0.036372195000240026,
+                "start": 1790456205.4064174,
+                "stop": 1790456205.443871,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_hyphen_ranges",
+                "status": "passed",
+                "duration": 0.02660469700003887,
+                "start": 1790456205.4441273,
+                "stop": 1790456205.4717076,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_prerelease_admission",
+                "status": "passed",
+                "duration": 0.02615120600012233,
+                "start": 1790456205.4720054,
+                "stop": 1790456205.4992106,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_union_and_operator_spacing",
+                "status": "passed",
+                "duration": 0.020410383000125876,
+                "start": 1790456205.4996336,
+                "stop": 1790456205.5215619,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_build_metadata_ignored",
+                "status": "passed",
+                "duration": 0.015960347000145703,
+                "start": 1790456205.5218248,
+                "stop": 1790456205.5388715,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_prerelease_precedence",
+                "status": "passed",
+                "duration": 0.026505394999730925,
+                "start": 1790456205.539122,
+                "stop": 1790456205.5668442,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_invalid_input_rejected",
+                "status": "passed",
+                "duration": 0.05641122399993037,
+                "start": 1790456205.5670922,
+                "stop": 1790456205.624699,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_lock_drops_packages_no_longer_required",
+                "status": "passed",
+                "duration": 0.005604574999779288,
+                "start": 1790456205.6250558,
+                "stop": 1790456205.6317308,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_lock_applies_overrides",
+                "status": "passed",
+                "duration": 0.0033316960002593987,
+                "start": 1790456205.6320245,
+                "stop": 1790456205.6361823,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_lock_yanked_releases",
+                "status": "passed",
+                "duration": 0.0032631860003675683,
+                "start": 1790456205.6363492,
+                "stop": 1790456205.6407418,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_lock_prefer_lowest_and_ties",
+                "status": "passed",
+                "duration": 0.0038224229997467774,
+                "start": 1790456205.6409748,
+                "stop": 1790456205.6457272,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_lock_mixed_range_forms",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.0042416729997967195,
+                "start": 1790456205.6459548,
+                "stop": 1790456205.656131,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\ntmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_mixed_range_forms0')\n\n    def test_lock_mixed_range_forms(pinwheel, tmp_path):\n        \"\"\"A project using caret, tilde, hyphen, partial, union, prerelease and build-metadata ranges locks correctly.\"\"\"\n>       _check_lock(pinwheel, \"mixed\", tmp_path)\n\n/tests/test_outputs.py:197: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/pinwheel-verify/pinwheel', name = 'mixed'\ntmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_mixed_range_forms0')\n\n    def _check_lock(binary, name, tmp_path):\n        expected = (FIXTURES / \"expected\" / f\"{name}.lock\").read_text(encoding=\"utf-8\")\n        count = len(json.loads(expected)[\"packages\"])\n        rc, out, err, lock = _resolve(binary, name, tmp_path)\n        assert rc == 0, f\"resolve {name}: exit {rc}, stderr: {err.strip()}\"\n        assert out == f\"resolved {count} packages\\n\", f\"resolve {name}: stdout {out!r}\"\n        assert lock.is_file(), f\"resolve {name}: no pin.lock written\"\n        actual = lock.read_text(encoding=\"utf-8\")\n        diff = \"\".join(difflib.unified_diff(\n            expected.splitlines(True), actual.splitlines(True), \"expected pin.lock\", \"actual pin.lock\"))\n>       assert actual == expected, f\"resolve {name}: lock differs\\n{diff}\"\nE       AssertionError: resolve mixed: lock differs\nE         --- expected pin.lock\nE         +++ actual pin.lock\nE         @@ -19,7 +19,7 @@\nE                }\nE              },\nE              \"rune-cli\": {\nE         -      \"version\": \"1.9.1\",\nE         +      \"version\": \"1.0.2\",\nE                \"requiredBy\": [\nE                  \"<root>\"\nE                ],\nE         \nE       assert '{\\n  \"lockfi...  }\\n  }\\n}\\n' == '{\\n  \"lockfi...  }\\n  }\\n}\\n'\nE         \nE         Skipping 391 identical leading characters in diff, use -v to show\nE         Skipping 736 identical trailing characters in diff, use -v to show\nE         - sion\": \"1.9.1\",\nE         ?           ^ ^\nE         + sion\": \"1.0.2\",\nE         ?           ^ ^\n\n/tests/test_outputs.py:107: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_resolution_failures",
+                "status": "passed",
+                "duration": 0.009250725000129023,
+                "start": 1790456205.6563504,
+                "stop": 1790456205.6666389,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

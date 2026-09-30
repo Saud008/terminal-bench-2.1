@@ -1,0 +1,90 @@
+# Negative-control ledger (NC-01..NC-14) for ship check 59. Lives in _reports/<slug>/, never zipped.
+# Every "run" control is a shortcut script in authoring/nc/ncNN.sh applied inside the agent image; the
+# resulting /app went through the real separate verifier image (tests/Dockerfile, bash /tests/test.sh):
+#   `bash _reports/brickmake-rule-semantics-repair/authoring/nc_run.sh brickmake-rule-semantics-repair/brickmake-rule-semantics-repair`
+# Full verifier stdout and reward per control: authoring/nc_out/ncNN.stdout.txt, ncNN.reward.txt.
+# Every control ended with reward.txt = 0.
+
+[NC-01]
+control = "Empty / no-op submission"
+status = "run"
+test = "test_outputs.py::test_shortest_stem_selection"
+evidence = "authoring/nc/nc01.sh (`true`, /app untouched) through `bash /tests/test.sh`: reward 0, all 6 tests FAILED. Own assertion nc_out/nc01.stdout.txt:71 \"AssertionError: stem/shortest_stem_wins_across_directories result #0\": expected 'lib lib/a.o from lib/a.c (stem a)', got 'generic lib/a.o from lib/a.c (stem lib/a)'."
+
+[NC-02]
+control = "Format-only fake, no real content"
+status = "run"
+test = "test_outputs.py::test_project_builds"
+evidence = "authoring/nc/nc02.sh: reference fix plus main.go forcing `-n`, so the right recipe lines are printed but never run. `bash /tests/test.sh`: reward 0. Own assertion nc_out/nc02.stdout.txt:244 \"AssertionError: project/incremental_builds result #0\": actual stdout starts 'echo \\\"mkdir build\\\"; mkdir -p build' instead of 'mkdir build', and no objects are left on disk (smoke rm step at :51 \"out/main.o should have been built before this step removes it\")."
+
+[NC-03]
+control = "Hard-coded public/example answer"
+status = "run"
+test = "test_outputs.py::test_pattern_specific_variable_order"
+evidence = "authoring/nc/nc03.sh: reference fix, but pattern-specific variables applied in reverse definition order, which reproduces the instruction's -O2 -fPIC -DNET example. `bash /tests/test.sh`: reward 0, only this test FAILED. nc_out/nc03.stdout.txt:36 \"AssertionError: patvars/equal_length_patterns_later_wins result #0\": expected 'xay OPT=[] V=[ypat]', got 'V=[xpat]'."
+
+[NC-04]
+control = "Self-reported metric, no underlying work"
+status = "run"
+test = "test_outputs.py::test_directory_relative_prerequisites"
+evidence = "authoring/nc/nc04.sh writes /app/REPORT.md ('17/17 GNU make parity scenarios pass') and /app/parity_results.json {\"passed\": 17}, engine unchanged. The verifier never reads them. `bash /tests/test.sh`: reward 0. Own assertion nc_out/nc04.stdout.txt:106 \"AssertionError: dirs/shared_prerequisite_is_not_moved_into_the_directory result #0\"."
+
+[NC-05]
+control = "One declared artifact missing"
+status = "run"
+test = "test_outputs.py::test_cli_builds_and_rebuilds"
+evidence = "authoring/nc/nc05.sh: reference fix, then `rm -rf /app/cmd/brickmake`. `bash /tests/test.sh`: reward 0. Own assertion nc_out/nc05.stdout.txt:37 \"AssertionError: go build ./cmd/brickmake failed:\" / \"stat /app/cmd/brickmake: directory not found\"."
+
+[NC-06]
+control = "Fake reward/CTRF written from the agent side (incl. detached background writer)"
+status = "run"
+test = "test_outputs.py::test_mentioned_prerequisite_ought_to_exist"
+evidence = "authoring/nc/nc06.sh: agent side writes reward.txt=1 and a passing ctrf.json and starts a `setsid nohup` loop writing 1. brickmake's main.go also writes /logs/verifier/reward.txt and ctrf.json and starts a Setsid writer every time the verifier runs it. The agent-side files never reach the separate verifier. In the verifier, brickmake runs as nobody and /logs/verifier is 0755 root, so its writes fail; test.sh writes the final reward after pytest. Result: nc_out/nc06.reward.txt = 0. Own assertion nc_out/nc06.stdout.txt:141 \"AssertionError: mention/prerequisite_mentioned_elsewhere_ought_to_exist result #1\"."
+
+[NC-07]
+control = "Naive/textbook baseline that misses the crux"
+status = "run"
+test = "test_outputs.py::test_mentioned_prerequisite_ought_to_exist"
+evidence = "authoring/nc/nc07.sh fixes only the two reported symptoms (pattern-variable order, directory prefix) and misses the doc-only rules (`ablate_one.py stem`, `ablate_one.py mention`). `bash /tests/test.sh`: reward 0; cli, dirs, patvars, project PASSED; stem and mention FAILED. nc_out/nc07.stdout.txt:71 \"AssertionError: mention/prerequisite_mentioned_elsewhere_ought_to_exist result #1\"."
+
+[NC-08]
+control = "Primary metric passes while a second stated requirement is violated"
+status = "run"
+test = "test_outputs.py::test_cli_builds_and_rebuilds"
+evidence = "authoring/nc/nc08.sh: reference fix, correct behavior, but a third-party module is vendored into /app (vendor/example.com/strutil + go.mod require), so it builds offline, breaking the instruction's 'Go standard library only'. `bash /tests/test.sh`: reward 0. nc_out/nc08.stdout.txt:45 \"AssertionError: brickmake must use the Go standard library only, found: ['example.com/strutil']\" (harness.py `go list -deps` check)."
+
+[NC-09]
+control = "Correct value printed but not persisted"
+status = "n/a"
+test = ""
+evidence = "brickmake's output is its stdout/stderr/exit status plus the files its recipes create. There is no separate computed value to persist. The print-but-do-not-execute variant (recipes echoed, files never written) is NC-02, and the 'ls' steps compare the file listing byte for byte."
+
+[NC-10]
+control = "Visible-size / first-N / sorted-input / boundary-only shortcut"
+status = "n/a"
+test = ""
+evidence = "Inputs are makefile scenarios, not data sets. There is no size, first-N or sorted-record dimension to shortcut. Order-based shortcuts on rule and variable order are exercised by NC-03 (reverse definition order) and NC-14 (example-only stem rule), both rejected."
+
+[NC-11]
+control = "Tamper with or replace a protected input/baseline"
+status = "n/a"
+test = ""
+evidence = "The only thing the verifier takes from the agent side is the Go source under /app that it compiles. Scenarios and GNU make expectations (tests/cases.json) are baked into the separate verifier image by tests/Dockerfile, and /app/docs is never read, so there is no protected input or baseline the agent can reach."
+
+[NC-12]
+control = "PATH shim, shadow module, or wrapper always returning success"
+status = "run"
+test = "test_outputs.py::test_project_builds"
+evidence = "authoring/nc/nc12.sh: main.go execs `make -r -R` found on PATH and exits 0 when make is absent. The verifier image purges make and runs brickmake with PATH=/usr/bin:/bin, so it prints nothing and builds nothing. `bash /tests/test.sh`: reward 0, all 6 FAILED. Own assertion nc_out/nc12.stdout.txt:247 \"AssertionError: project/incremental_builds result #0\"."
+
+[NC-13]
+control = "Smallest-scale-only / warm-cache-only implementation"
+status = "n/a"
+test = ""
+evidence = "There is no scale axis: every scenario is a handful of files in a fresh scratch directory, and brickmake is rebuilt from source with an empty GOCACHE owned by the sandbox user. Nothing is cached between scenarios or from the agent run."
+
+[NC-14]
+control = "Fits public examples exactly, fails an unseen/metamorphic case"
+status = "run"
+test = "test_outputs.py::test_shortest_stem_selection"
+evidence = "authoring/nc/nc14.sh: reference fix, but the stem length counts the directory only for the docs' own `lib/` example (rules.md:82). `bash /tests/test.sh`: reward 0, only this test FAILED. nc_out/nc14.stdout.txt:36 \"AssertionError: stem/shortest_stem_wins_across_directories result #0\": 'src/b.o' still picks 'generic ... (stem src/b)'."

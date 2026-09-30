@@ -1,0 +1,116 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 10,
+            "passed": 8,
+            "failed": 2,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790451651.3663034,
+            "stop": 1790451658.6580393
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_section_anchoring",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 7.126308629987761,
+                "start": 1790451651.377714,
+                "stop": 1790451658.5148597,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "quire = '/tmp/quire-verify/quire'\n\n    def test_section_anchoring(quire):\n        \"\"\"Headers with a '/' are anchored to their file's directory; others match at any depth.\"\"\"\n>       _check_group(quire, \"section_anchoring\")\n\n/tests/test_outputs.py:102: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/quire-verify/quire', group = 'section_anchoring'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            rc, out, err = _run_case(binary, case)\n            if (rc, out, err) != (case[\"rc\"], case[\"stdout\"], case[\"stderr\"]):\n                failures.append(\n                    f\"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\\n\"\n                    f\"expected rc={case['rc']} stderr={case['stderr']!r}\\n{case['stdout']}\"\n                    f\"got rc={rc} stderr={err!r}\\n{out}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 6 of 6 cases differ:\nE         --- section_anchoring-01 args=['{root}/scripts/build.sh', '{root}/tools/scripts/build.sh', '{root}/Makefile', '{root}/sub/Makefile', '{root}/docs/a/b.md', '{root}/x/docs/a.md'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/section_anchoring-01/scripts/build.sh]\nE         indent_style=space\nE         indent_size=4\nE         tab_width=4\nE         [/srv/qc/section_anchoring-01/tools/scripts/build.sh]\nE         indent_style=space\nE         [/srv/qc/section_anchoring-01/Makefile]\nE         indent_style=tab\nE         indent_size=tab\nE         [/srv/qc/section_anchoring-01/sub/Makefile]\nE         [/srv/qc/section_anchoring-01/docs/a/b.md]\nE         max_line_length=100\nE         [/srv/qc/section_anchoring-01/x/docs/a.md]\nE         got rc=0 stderr=''\nE         [/srv/qc/section_anchoring-01/scripts/build.sh]\nE         indent_style=space\nE         indent_size=4\nE         tab_width=4\nE         [/srv/qc/section_anchoring-01/tools/scripts/build.sh]\nE         indent_style=space\nE         indent_size=4\nE         tab_width=4\nE         [/srv/qc/section_anchoring-01/Makefile]\nE         indent_style=tab\nE         indent_size=tab\nE         [/srv/qc/section_anchoring-01/sub/Makefile]\nE         [/srv/qc/section_anchoring-01/docs/a/b.md]\nE         max_line_length=100\nE         [/srv/qc/section_anchoring-01/x/docs/a.md]\nE         max_line_length=100\nE         \nE         --- section_anchoring-02 args=['{root}/web/src/app.ts', '{root}/web/lib/src/app.ts', '{root}/src/app.ts', '{root}/web/app.ts'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/section_anchoring-02/web/src/app.ts]\nE         charset=utf-8\nE         indent_size=2\nE         quote_type=single\nE         tab_width=2\nE         [/srv/qc/section_anchoring-02/web/lib/src/app.ts]\nE         charset=utf-8\nE         quote_type=single\nE         [/srv/qc/section_anchoring-02/src/app.ts]\nE         charset=utf-8\nE         [/srv/qc/section_anchoring-02/web/app.ts]\nE         charset=utf-8\nE         quote_type=single\nE         got rc=0 stderr=''\nE         [/srv/qc/section_anchoring-02/web/src/app.ts]\nE         charset=utf-8\nE         indent_size=2\nE         quote_type=single\nE         tab_width=2\nE         [/srv/qc/section_anchoring-02/web/lib/src/app.ts]\nE         charset=utf-8\nE         indent_size=2\nE         quote_type=single\nE         tab_width=2\nE         [/srv/qc/section_anchoring-02/src/app.ts]\nE         charset=utf-8\nE         [/srv/qc/section_anchoring-02/web/app.ts]\nE         charset=utf-8\nE         quote_type=single\nE         \nE         --- section_anchoring-03 args=['{root}/src/a.c', '{root}/lib/src/a.c', '{root}/test/b.c', '{root}/src.c', '{root}/x/test.c'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/section_anchoring-03/src/a.c]\nE         indent_size=8\nE         tab_width=8\nE         [/srv/qc/section_anchoring-03/lib/src/a.c]\nE         [/srv/qc/section_anchoring-03/test/b.c]\nE         indent_size=8\nE         tab_width=8\nE         [/srv/qc/section_anchoring-03/src.c]\nE         m=flat\nE         [/srv/qc/section_anchoring-03/x/test.c]\nE         m=flat\nE         got rc=0 stderr=''\nE         [/srv/qc/section_anchoring-03/src/a.c]\nE         indent_size=8\nE         tab_width=8\nE         [/srv/qc/section_anchoring-03/lib/src/a.c]\nE         indent_size=8\nE         tab_width=8\nE         [/srv/qc/section_anchoring-03/test/b.c]\nE         indent_size=8\nE         tab_width=8\nE         [/srv/qc/section_anchoring-03/src.c]\nE         m=flat\nE         [/srv/qc/section_anchoring-03/x/test.c]\nE         m=flat\nE         \nE         --- section_anchoring-04 args=['{root}/v2/readme.md', '{root}/old/v2/readme.md', '{root}/v4/readme.md', '{root}/api/v1/users/list.json', '{root}/x/api/v1/a'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/section_anchoring-04/v2/readme.md]\nE         m=versioned\nE         [/srv/qc/section_anchoring-04/old/v2/readme.md]\nE         [/srv/qc/section_anchoring-04/v4/readme.md]\nE         [/srv/qc/section_anchoring-04/api/v1/users/list.json]\nE         n=api\nE         [/srv/qc/section_anchoring-04/x/api/v1/a]\nE         got rc=0 stderr=''\nE         [/srv/qc/section_anchoring-04/v2/readme.md]\nE         m=versioned\nE         [/srv/qc/section_anchoring-04/old/v2/readme.md]\nE         m=versioned\nE         [/srv/qc/section_anchoring-04/v4/readme.md]\nE         [/srv/qc/section_anchoring-04/api/v1/users/list.json]\nE         n=api\nE         [/srv/qc/section_anchoring-04/x/api/v1/a]\nE         n=api\nE         \nE         --- section_anchoring-05 args=['{root}/a/b/c.txt', '{root}/z/a/b/c.txt', '{root}/b/c.txt', '{root}/c.txt'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/section_anchoring-05/a/b/c.txt]\nE         m=exact\nE         o=name\nE         [/srv/qc/section_anchoring-05/z/a/b/c.txt]\nE         o=name\nE         [/srv/qc/section_anchoring-05/b/c.txt]\nE         n=tail\nE         o=name\nE         [/srv/qc/section_anchoring-05/c.txt]\nE         o=name\nE         got rc=0 stderr=''\nE         [/srv/qc/section_anchoring-05/a/b/c.txt]\nE         m=exact\nE         n=tail\nE         o=name\nE         [/srv/qc/section_anchoring-05/z/a/b/c.txt]\nE         m=exact\nE         n=tail\nE         o=name\nE         [/srv/qc/section_anchoring-05/b/c.txt]\nE         n=tail\nE         o=name\nE         [/srv/qc/section_anchoring-05/c.txt]\nE         o=name\nE         \nE         --- section_anchoring-06 args=['{root}/proj/lib/a.rb', '{root}/proj/app/lib/a.rb', '{root}/proj/a.rb'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/section_anchoring-06/proj/lib/a.rb]\nE         m=top\nE         n=rel\nE         o=any\nE         [/srv/qc/section_anchoring-06/proj/app/lib/a.rb]\nE         o=any\nE         [/srv/qc/section_anchoring-06/proj/a.rb]\nE         o=any\nE         got rc=0 stderr=''\nE         [/srv/qc/section_anchoring-06/proj/lib/a.rb]\nE         m=top\nE         n=rel\nE         o=any\nE         [/srv/qc/section_anchoring-06/proj/app/lib/a.rb]\nE         n=rel\nE         o=any\nE         [/srv/qc/section_anchoring-06/proj/a.rb]\nE         o=any\nE         \nE       assert not [\"--- section_anchoring-01 args=['{root}/scripts/build.sh', '{root}/tools/scripts/build.sh', '{root}/Makefile', '{root...ny\\n[/srv/qc/section_anchoring-06/proj/app/lib/a.rb]\\nn=rel\\no=any\\n[/srv/qc/section_anchoring-06/proj/a.rb]\\no=any\\n\"]\n\n/tests/test_outputs.py:97: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_tab_indentation",
+                "status": "passed",
+                "duration": 0.02032021401100792,
+                "start": 1790451658.5151088,
+                "stop": 1790451658.5364997,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_bracketed_directories",
+                "status": "passed",
+                "duration": 0.015296239027520642,
+                "start": 1790451658.5367422,
+                "stop": 1790451658.5531435,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_stdin_paths",
+                "status": "passed",
+                "duration": 0.014875766995828599,
+                "start": 1790451658.5534196,
+                "stop": 1790451658.5693085,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_globstar_segments",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.011987003032118082,
+                "start": 1790451658.5695598,
+                "stop": 1790451658.5865605,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "quire = '/tmp/quire-verify/quire'\n\n    def test_globstar_segments(quire):\n        \"\"\"'/**/' matches zero or more directories.\"\"\"\n>       _check_group(quire, \"globstar_segments\")\n\n/tests/test_outputs.py:122: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/quire-verify/quire', group = 'globstar_segments'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            rc, out, err = _run_case(binary, case)\n            if (rc, out, err) != (case[\"rc\"], case[\"stdout\"], case[\"stderr\"]):\n                failures.append(\n                    f\"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\\n\"\n                    f\"expected rc={case['rc']} stderr={case['stderr']!r}\\n{case['stdout']}\"\n                    f\"got rc={rc} stderr={err!r}\\n{out}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 3 of 5 cases differ:\nE         --- globstar_segments-01 args=['{root}/lib/a.js', '{root}/lib/x/a.js', '{root}/lib/x/y/a.min.js', '{root}/src/lib/a.js'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/globstar_segments-01/lib/a.js]\nE         indent_size=2\nE         tab_width=2\nE         [/srv/qc/globstar_segments-01/lib/x/a.js]\nE         indent_size=2\nE         tab_width=2\nE         [/srv/qc/globstar_segments-01/lib/x/y/a.min.js]\nE         indent_size=2\nE         m=min\nE         tab_width=2\nE         [/srv/qc/globstar_segments-01/src/lib/a.js]\nE         got rc=0 stderr=''\nE         [/srv/qc/globstar_segments-01/lib/a.js]\nE         indent_size=2\nE         tab_width=2\nE         [/srv/qc/globstar_segments-01/lib/x/a.js]\nE         indent_size=2\nE         tab_width=2\nE         [/srv/qc/globstar_segments-01/lib/x/y/a.min.js]\nE         indent_size=2\nE         m=min\nE         tab_width=2\nE         [/srv/qc/globstar_segments-01/src/lib/a.js]\nE         indent_size=2\nE         tab_width=2\nE         \nE         --- globstar_segments-02 args=['{root}/a/b', '{root}/a/x/b', '{root}/a/x/y/b', '{root}/a/b/c', '{root}/a/x/b/y/c', '{root}/z/a/b', '{root}/ab'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/globstar_segments-02/a/b]\nE         m=1\nE         [/srv/qc/globstar_segments-02/a/x/b]\nE         m=1\nE         [/srv/qc/globstar_segments-02/a/x/y/b]\nE         m=1\nE         [/srv/qc/globstar_segments-02/a/b/c]\nE         n=2\nE         [/srv/qc/globstar_segments-02/a/x/b/y/c]\nE         n=2\nE         [/srv/qc/globstar_segments-02/z/a/b]\nE         [/srv/qc/globstar_segments-02/ab]\nE         got rc=0 stderr=''\nE         [/srv/qc/globstar_segments-02/a/b]\nE         m=1\nE         [/srv/qc/globstar_segments-02/a/x/b]\nE         m=1\nE         [/srv/qc/globstar_segments-02/a/x/y/b]\nE         m=1\nE         [/srv/qc/globstar_segments-02/a/b/c]\nE         n=2\nE         [/srv/qc/globstar_segments-02/a/x/b/y/c]\nE         n=2\nE         [/srv/qc/globstar_segments-02/z/a/b]\nE         m=1\nE         [/srv/qc/globstar_segments-02/ab]\nE         \nE         --- globstar_segments-03 args=['{root}/node_modules/x/index.js', '{root}/a/node_modules/b.js', '{root}/src/a.py', '{root}/tests/unit/b.py', '{root}/docs/src/a.py'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/globstar_segments-03/node_modules/x/index.js]\nE         m=vendored\nE         [/srv/qc/globstar_segments-03/a/node_modules/b.js]\nE         m=vendored\nE         [/srv/qc/globstar_segments-03/src/a.py]\nE         n=py\nE         [/srv/qc/globstar_segments-03/tests/unit/b.py]\nE         n=py\nE         [/srv/qc/globstar_segments-03/docs/src/a.py]\nE         got rc=0 stderr=''\nE         [/srv/qc/globstar_segments-03/node_modules/x/index.js]\nE         m=vendored\nE         [/srv/qc/globstar_segments-03/a/node_modules/b.js]\nE         m=vendored\nE         [/srv/qc/globstar_segments-03/src/a.py]\nE         n=py\nE         [/srv/qc/globstar_segments-03/tests/unit/b.py]\nE         n=py\nE         [/srv/qc/globstar_segments-03/docs/src/a.py]\nE         n=py\nE         \nE       assert not [\"--- globstar_segments-01 args=['{root}/lib/a.js', '{root}/lib/x/a.js', '{root}/lib/x/y/a.min.js', '{root}/src/lib/a....py]\\nn=py\\n[/srv/qc/globstar_segments-03/tests/unit/b.py]\\nn=py\\n[/srv/qc/globstar_segments-03/docs/src/a.py]\\nn=py\\n\"]\n\n/tests/test_outputs.py:97: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_negated_classes",
+                "status": "passed",
+                "duration": 0.013452104991301894,
+                "start": 1790451658.5867853,
+                "stop": 1790451658.6012042,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_inline_comments",
+                "status": "passed",
+                "duration": 0.014899508008966222,
+                "start": 1790451658.6014392,
+                "stop": 1790451658.617378,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_root_declarations",
+                "status": "passed",
+                "duration": 0.014138322963844985,
+                "start": 1790451658.6176157,
+                "stop": 1790451658.6327102,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_value_case",
+                "status": "passed",
+                "duration": 0.009147683973424137,
+                "start": 1790451658.6329322,
+                "stop": 1790451658.6430273,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_property_order",
+                "status": "passed",
+                "duration": 0.012383963039610535,
+                "start": 1790451658.6432555,
+                "stop": 1790451658.6567476,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

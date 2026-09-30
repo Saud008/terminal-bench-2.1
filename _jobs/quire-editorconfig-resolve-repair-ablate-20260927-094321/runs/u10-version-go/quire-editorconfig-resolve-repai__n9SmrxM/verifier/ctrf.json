@@ -1,0 +1,125 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 10,
+            "passed": 5,
+            "failed": 5,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790482925.9257202,
+            "stop": 1790482933.898101
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_section_anchoring",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 7.7517670189990895,
+                "start": 1790482925.9390082,
+                "stop": 1790482933.7067719,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "quire = '/tmp/quire-verify/quire'\n\n    def test_section_anchoring(quire):\n        \"\"\"Headers with a '/' are anchored to their file's directory; others match at any depth.\"\"\"\n>       _check_group(quire, \"section_anchoring\")\n\n/tests/test_outputs.py:102: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/quire-verify/quire', group = 'section_anchoring'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            rc, out, err = _run_case(binary, case)\n            if (rc, out, err) != (case[\"rc\"], case[\"stdout\"], case[\"stderr\"]):\n                failures.append(\n                    f\"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\\n\"\n                    f\"expected rc={case['rc']} stderr={case['stderr']!r}\\n{case['stdout']}\"\n                    f\"got rc={rc} stderr={err!r}\\n{out}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 1 of 6 cases differ:\nE         --- section_anchoring-01 args=['{root}/scripts/build.sh', '{root}/tools/scripts/build.sh', '{root}/Makefile', '{root}/sub/Makefile', '{root}/docs/a/b.md', '{root}/x/docs/a.md'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/section_anchoring-01/scripts/build.sh]\nE         indent_style=space\nE         indent_size=4\nE         tab_width=4\nE         [/srv/qc/section_anchoring-01/tools/scripts/build.sh]\nE         indent_style=space\nE         [/srv/qc/section_anchoring-01/Makefile]\nE         indent_style=tab\nE         indent_size=tab\nE         [/srv/qc/section_anchoring-01/sub/Makefile]\nE         [/srv/qc/section_anchoring-01/docs/a/b.md]\nE         max_line_length=100\nE         [/srv/qc/section_anchoring-01/x/docs/a.md]\nE         got rc=0 stderr=''\nE         [/srv/qc/section_anchoring-01/scripts/build.sh]\nE         indent_style=space\nE         indent_size=4\nE         tab_width=4\nE         [/srv/qc/section_anchoring-01/tools/scripts/build.sh]\nE         indent_style=space\nE         [/srv/qc/section_anchoring-01/Makefile]\nE         indent_style=tab\nE         [/srv/qc/section_anchoring-01/sub/Makefile]\nE         [/srv/qc/section_anchoring-01/docs/a/b.md]\nE         max_line_length=100\nE         [/srv/qc/section_anchoring-01/x/docs/a.md]\nE         \nE       assert not [\"--- section_anchoring-01 args=['{root}/scripts/build.sh', '{root}/tools/scripts/build.sh', '{root}/Makefile', '{root...efile]\\n[/srv/qc/section_anchoring-01/docs/a/b.md]\\nmax_line_length=100\\n[/srv/qc/section_anchoring-01/x/docs/a.md]\\n\"]\n\n/tests/test_outputs.py:97: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_tab_indentation",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.03292659799262765,
+                "start": 1790482933.7072425,
+                "stop": 1790482933.7472901,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "quire = '/tmp/quire-verify/quire'\n\n    def test_tab_indentation(quire):\n        \"\"\"indent_size / tab_width derivation, with and without -b.\"\"\"\n>       _check_group(quire, \"tab_indentation\")\n\n/tests/test_outputs.py:107: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/quire-verify/quire', group = 'tab_indentation'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            rc, out, err = _run_case(binary, case)\n            if (rc, out, err) != (case[\"rc\"], case[\"stdout\"], case[\"stderr\"]):\n                failures.append(\n                    f\"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\\n\"\n                    f\"expected rc={case['rc']} stderr={case['stderr']!r}\\n{case['stdout']}\"\n                    f\"got rc={rc} stderr={err!r}\\n{out}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 9 of 12 cases differ:\nE         --- tab_indentation-01 args=['{root}/a.go'] stdin=None\nE         expected rc=0 stderr=''\nE         indent_style=tab\nE         indent_size=tab\nE         got rc=0 stderr=''\nE         indent_style=tab\nE         \nE         --- tab_indentation-02 args=['{root}/a.go', '{root}/a.txt'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/tab_indentation-02/a.go]\nE         indent_style=tab\nE         tab_width=8\nE         indent_size=8\nE         [/srv/qc/tab_indentation-02/a.txt]\nE         indent_style=tab\nE         indent_size=tab\nE         got rc=0 stderr=''\nE         [/srv/qc/tab_indentation-02/a.go]\nE         indent_style=tab\nE         tab_width=8\nE         [/srv/qc/tab_indentation-02/a.txt]\nE         indent_style=tab\nE         \nE         --- tab_indentation-03 args=['{root}/a.py', '{root}/a.c', '{root}/a.md'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/tab_indentation-03/a.py]\nE         indent_size=4\nE         tab_width=4\nE         [/srv/qc/tab_indentation-03/a.c]\nE         indent_size=tab\nE         [/srv/qc/tab_indentation-03/a.md]\nE         indent_size=3\nE         tab_width=3\nE         got rc=0 stderr=''\nE         [/srv/qc/tab_indentation-03/a.py]\nE         indent_size=tab\nE         tab_width=4\nE         [/srv/qc/tab_indentation-03/a.c]\nE         indent_size=tab\nE         tab_width=tab\nE         [/srv/qc/tab_indentation-03/a.md]\nE         indent_size=3\nE         tab_width=3\nE         \nE         --- tab_indentation-04 args=['{root}/a.txt', '{root}/rules.mk'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/tab_indentation-04/a.txt]\nE         indent_style=tab\nE         indent_size=2\nE         tab_width=2\nE         [/srv/qc/tab_indentation-04/rules.mk]\nE         indent_style=tab\nE         indent_size=tab\nE         got rc=0 stderr=''\nE         [/srv/qc/tab_indentation-04/a.txt]\nE         indent_style=tab\nE         indent_size=2\nE         tab_width=2\nE         [/srv/qc/tab_indentation-04/rules.mk]\nE         indent_style=tab\nE         indent_size=tab\nE         tab_width=tab\nE         \nE         --- tab_indentation-05 args=['-b', '0.8', '{root}/a.go'] stdin=None\nE         expected rc=0 stderr=''\nE         indent_style=tab\nE         got rc=1 stderr='Required version is greater than the current version.\\n'\nE         \nE         --- tab_indentation-06 args=['-b', '0.8.4', '{root}/a.go', '{root}/b.go'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/tab_indentation-06/a.go]\nE         indent_size=tab\nE         tab_width=tab\nE         [/srv/qc/tab_indentation-06/b.go]\nE         indent_size=tab\nE         tab_width=tab\nE         got rc=1 stderr='Required version is greater than the current version.\\n'\nE         [/srv/qc/tab_indentation-06/a.go]\nE         \nE         --- tab_indentation-07 args=['-b', '0.9', '{root}/a.go'] stdin=None\nE         expected rc=0 stderr=''\nE         indent_size=6\nE         tab_width=6\nE         got rc=1 stderr='Required version is greater than the current version.\\n'\nE         \nE         --- tab_indentation-08 args=['-b', '0.12.6', '{root}/a.go'] stdin=None\nE         expected rc=0 stderr=''\nE         indent_style=tab\nE         indent_size=tab\nE         got rc=0 stderr=''\nE         indent_style=tab\nE         \nE         --- tab_indentation-11 args=['-b', '0..10', '{root}/a.go'] stdin=None\nE         expected rc=0 stderr=''\nE         indent_style=tab\nE         indent_size=tab\nE         got rc=0 stderr=''\nE         indent_style=tab\nE         indent_size=tab\nE         tab_width=tab\nE         \nE       assert not [\"--- tab_indentation-01 args=['{root}/a.go'] stdin=None\\nexpected rc=0 stderr=''\\nindent_style=tab\\nindent_size=tab\\n...ngot rc=1 stderr='Required version is greater than the current version.\\\\n'\\n[/srv/qc/tab_indentation-06/a.go]\\n\", ...]\n\n/tests/test_outputs.py:97: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_bracketed_directories",
+                "status": "passed",
+                "duration": 0.016745557000831468,
+                "start": 1790482933.7476838,
+                "stop": 1790482933.7657113,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_stdin_paths",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.016554524001548998,
+                "start": 1790482933.7659912,
+                "stop": 1790482933.7888544,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "quire = '/tmp/quire-verify/quire'\n\n    def test_stdin_paths(quire):\n        \"\"\"File paths read from standard input.\"\"\"\n>       _check_group(quire, \"stdin_paths\")\n\n/tests/test_outputs.py:117: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/quire-verify/quire', group = 'stdin_paths'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            rc, out, err = _run_case(binary, case)\n            if (rc, out, err) != (case[\"rc\"], case[\"stdout\"], case[\"stderr\"]):\n                failures.append(\n                    f\"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\\n\"\n                    f\"expected rc={case['rc']} stderr={case['stderr']!r}\\n{case['stdout']}\"\n                    f\"got rc={rc} stderr={err!r}\\n{out}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 3 of 7 cases differ:\nE         --- stdin_paths-02 args=['-'] stdin='  {root}/app.py  \\n\\n\\t\\n{root}/Makefile\\n{root}/notes.txt'\nE         expected rc=0 stderr=''\nE         [/srv/qc/stdin_paths-02/app.py]\nE         indent_style=space\nE         indent_size=4\nE         tab_width=4\nE         [/srv/qc/stdin_paths-02/Makefile]\nE         indent_style=tab\nE         indent_size=tab\nE         [/srv/qc/stdin_paths-02/notes.txt]\nE         indent_style=space\nE         got rc=0 stderr=''\nE         [/srv/qc/stdin_paths-02/app.py]\nE         indent_style=space\nE         indent_size=4\nE         tab_width=4\nE         [/srv/qc/stdin_paths-02/Makefile]\nE         indent_style=tab\nE         [/srv/qc/stdin_paths-02/notes.txt]\nE         indent_style=space\nE         \nE         --- stdin_paths-03 args=['{root}/app.py', '-', '{root}/Makefile'] stdin='{root}/b.txt\\n{root}/c.py\\n'\nE         expected rc=0 stderr=''\nE         [/srv/qc/stdin_paths-03/app.py]\nE         indent_style=space\nE         indent_size=4\nE         tab_width=4\nE         [/srv/qc/stdin_paths-03/b.txt]\nE         indent_style=space\nE         [/srv/qc/stdin_paths-03/c.py]\nE         indent_style=space\nE         indent_size=4\nE         tab_width=4\nE         [/srv/qc/stdin_paths-03/Makefile]\nE         indent_style=tab\nE         indent_size=tab\nE         got rc=0 stderr=''\nE         [/srv/qc/stdin_paths-03/app.py]\nE         indent_style=space\nE         indent_size=4\nE         tab_width=4\nE         [/srv/qc/stdin_paths-03/b.txt]\nE         indent_style=space\nE         [/srv/qc/stdin_paths-03/c.py]\nE         indent_style=space\nE         indent_size=4\nE         tab_width=4\nE         [/srv/qc/stdin_paths-03/Makefile]\nE         indent_style=tab\nE         \nE         --- stdin_paths-07 args=['-b', '0.8', '-'] stdin='{root}/Makefile\\n'\nE         expected rc=0 stderr=''\nE         [/srv/qc/stdin_paths-07/Makefile]\nE         indent_style=tab\nE         got rc=1 stderr='Required version is greater than the current version.\\n'\nE         [/srv/qc/stdin_paths-07/Makefile]\nE         \nE       assert not [\"--- stdin_paths-02 args=['-'] stdin='  {root}/app.py  \\\\n\\\\n\\\\t\\\\n{root}/Makefile\\\\n{root}/notes.txt'\\nexpected rc=0...=tab\\ngot rc=1 stderr='Required version is greater than the current version.\\\\n'\\n[/srv/qc/stdin_paths-07/Makefile]\\n\"]\n\n/tests/test_outputs.py:97: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_globstar_segments",
+                "status": "passed",
+                "duration": 0.012752985996485222,
+                "start": 1790482933.7891436,
+                "stop": 1790482933.8031147,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_negated_classes",
+                "status": "passed",
+                "duration": 0.013266928002849454,
+                "start": 1790482933.8034203,
+                "stop": 1790482933.8178043,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_inline_comments",
+                "status": "passed",
+                "duration": 0.02001205799751915,
+                "start": 1790482933.818582,
+                "stop": 1790482933.8398774,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_root_declarations",
+                "status": "passed",
+                "duration": 0.01926840900341631,
+                "start": 1790482933.8401797,
+                "stop": 1790482933.8607054,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_value_case",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.012125965000450378,
+                "start": 1790482933.8609898,
+                "stop": 1790482933.8787563,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "quire = '/tmp/quire-verify/quire'\n\n    def test_value_case(quire):\n        \"\"\"Which property values are lowercased.\"\"\"\n>       _check_group(quire, \"value_case\")\n\n/tests/test_outputs.py:142: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/quire-verify/quire', group = 'value_case'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            rc, out, err = _run_case(binary, case)\n            if (rc, out, err) != (case[\"rc\"], case[\"stdout\"], case[\"stderr\"]):\n                failures.append(\n                    f\"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\\n\"\n                    f\"expected rc={case['rc']} stderr={case['stderr']!r}\\n{case['stdout']}\"\n                    f\"got rc={rc} stderr={err!r}\\n{out}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 2 of 5 cases differ:\nE         --- value_case-02 args=['{root}/a.txt'] stdin=None\nE         expected rc=0 stderr=''\nE         indent_style=tab\nE         tab_width=Eight\nE         quote_type=Double\nE         indent_size=eight\nE         got rc=0 stderr=''\nE         indent_style=tab\nE         tab_width=Eight\nE         quote_type=Double\nE         \nE         --- value_case-04 args=['-b', '0.8', '{root}/a.txt'] stdin=None\nE         expected rc=0 stderr=''\nE         indent_size=tab\nE         tab_width=X4\nE         got rc=1 stderr='Required version is greater than the current version.\\n'\nE         \nE       assert not [\"--- value_case-02 args=['{root}/a.txt'] stdin=None\\nexpected rc=0 stderr=''\\nindent_style=tab\\ntab_width=Eight\\nquot...tderr=''\\nindent_size=tab\\ntab_width=X4\\ngot rc=1 stderr='Required version is greater than the current version.\\\\n'\\n\"]\n\n/tests/test_outputs.py:97: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_property_order",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.013220182998338714,
+                "start": 1790482933.8790371,
+                "stop": 1790482933.8972101,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "quire = '/tmp/quire-verify/quire'\n\n    def test_property_order(quire):\n        \"\"\"Output order when properties are overridden or derived.\"\"\"\n>       _check_group(quire, \"property_order\")\n\n/tests/test_outputs.py:147: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/quire-verify/quire', group = 'property_order'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            rc, out, err = _run_case(binary, case)\n            if (rc, out, err) != (case[\"rc\"], case[\"stdout\"], case[\"stderr\"]):\n                failures.append(\n                    f\"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\\n\"\n                    f\"expected rc={case['rc']} stderr={case['stderr']!r}\\n{case['stdout']}\"\n                    f\"got rc={rc} stderr={err!r}\\n{out}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 2 of 6 cases differ:\nE         --- property_order-04 args=['{root}/f'] stdin=None\nE         expected rc=0 stderr=''\nE         indent_style=tab\nE         indent_size=4\nE         tab_width=4\nE         got rc=0 stderr=''\nE         indent_style=tab\nE         indent_size=tab\nE         tab_width=4\nE         \nE         --- property_order-05 args=['{root}/f.go'] stdin=None\nE         expected rc=0 stderr=''\nE         tab_width=8\nE         indent_style=tab\nE         indent_size=8\nE         got rc=0 stderr=''\nE         tab_width=8\nE         indent_style=tab\nE         \nE       assert not [\"--- property_order-04 args=['{root}/f'] stdin=None\\nexpected rc=0 stderr=''\\nindent_style=tab\\nindent_size=4\\ntab_wi...ted rc=0 stderr=''\\ntab_width=8\\nindent_style=tab\\nindent_size=8\\ngot rc=0 stderr=''\\ntab_width=8\\nindent_style=tab\\n\"]\n\n/tests/test_outputs.py:97: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            }
+        ]
+    }
+}

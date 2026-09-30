@@ -1,0 +1,568 @@
+TERMINAL BENCH 4.0 MASTER SHIP CHECKLIST
+
+DELIVERY FOLDER STRUCTURE (one zip per task, exactly this, nothing else)
+
+<task-slug>/
+├── <task-slug>/                (named after the actual task -- never the literal word
+│                                 "task" or "bundle" -- only these 5 go in here)
+│   ├── instruction.md
+│   ├── task.toml
+│   ├── environment/            (a Dockerfile and any other files can exist here.)
+│   ├── solution/
+│   └── tests/
+├── rubric.txt                  (sibling of the inner <task-slug>/ -- NOT inside it)
+├── oracle-nop-evidence/         (sibling of the inner <task-slug>/ -- NOT inside it)
+│   ├── oracle-1/   (ctrf.json, reward.txt, test-stdout.txt)
+│   ├── oracle-2/
+│   ├── oracle-3/               (oracle x3 -- all full credit, every test passing)
+│   ├── nop-1/
+│   └── nop-2/                  (nop x2 -- all zero credit, every test failing)
+└── trajectories/                (sibling of the inner <task-slug>/ -- NOT inside it)
+    ├── run-01/   (agent/, verifier/, config.json, result.json, rubric_score.txt --
+    │              that trial's own files only)
+    ├── run-02/
+    ├── run-03/
+    ├── run-04/
+    ├── run-05/
+    └── SUMMARY.txt
+
+The inner <task-slug>/, rubric.txt, oracle-nop-evidence/, and trajectories/ are four
+siblings at the top level of the zip. Nothing else lives inside the inner <task-slug>/
+besides the 5 items above, and nothing else lives at the top level of the zip beside
+these four siblings (no SOURCE.txt, .DS_Store, __MACOSX, ._*, .git, __pycache__, *.pyc).
+
+Single canonical, objective, numbered checklist. A task may only move to
+READY_TO_SHIP/ once every check below has been performed against it and answered, with evidence
+(file:line, quoted text, or a command output) attached to every "fail". No check may be marked
+pass from memory or from a prior pass's claim — re-verify against the disk state in front of you.
+
+Severity labels on any FAIL — for triage/ordering ONLY, never for deciding what ships:
+  BLOCKER = a correct solution could score 0, a wrong/empty solution could score above 0, an
+            expert reader would flag it on inspection, or a real test passes under NOP.
+  MAJOR   = a real quality defect that compounds with others or misrepresents the task.
+  MINOR   = polish — smaller in scope than the other two, but still a real, verified defect.
+There is no tier that ships with open items. A task ships only when EVERY finding from EVERY
+check below is resolved — zero BLOCKER, zero MAJOR, zero MINOR, no exceptions. "Minor" describes
+how much work a finding takes to fix, not whether it's allowed to remain. If a check surfaces
+something and you can't immediately tell which label it deserves, that uncertainty is not a reason
+to skip it — write it down and fix it. When triaging fix order under time pressure, do BLOCKER
+findings first only because they're usually cheaper to verify you actually closed — never because
+MINOR findings can be deferred past shipping.
+
+Numbering is continuous 1→N across all sections; sections group checks by artifact for usability,
+not for scoring — every check applies to every task regardless of section.
+
+================================================================================
+SECTION A — INSTRUCTION.MD
+================================================================================
+
+0. The prompt the agent receives — write it yourself, as a human (no LLM-generated text).
+   Use absolute paths in backticks (/app/data.csv, never data.csv), name every expected
+   output file, describe the "what" not the "how". Around 2 short paragraphs or 20 bullets is
+   a good guide — more room is fine when the problem's own complexity genuinely needs it;
+   flag length that comes from step-lists or restated requirements, not length itself.
+
+1. Every requirement instruction.md states in declarative language is exercised by at least one
+   test in tests/. Cross-map sentence-by-sentence; any requirement with zero test coverage is a
+   genuine gap. But we need to make sure the test is not getting NOP pass, in that case that test
+   in tests/ is okay to be dropped or missing.
+
+2. Every requirement a test actually enforces is stated. A test enforcing an unstated rule is a BLOCKER
+   as any correct agent solution scores 0 on it.
+
+3. No sentence in instruction.md prescribes an internal implementation step (a specific algorithm,
+   data structure, variable name, code order, or literal replacement line) where a statement of
+   required outcome or observable behavior would suffice. For every "how"-shaped sentence found,
+   flag it and ask for rewording it as a "what" sentence and confirm the graded behavior is unchanged.
+
+4. Exception to check 3: a sentence that states file paths, CLI flags/arguments, exit codes,
+   output file format/schema, or any other genuine interface contract the tests directly assert
+   against is NOT a violation — confirm it really is graded as an interface, not as a nudge toward
+   the internal fix, before waving it through.
+
+5. instruction.md contains no reference to "the grader," "the test suite," "the verifier," "pytest,"
+   "/tests," "/opt/verifier," or any other pipeline/tooling term that breaks the task's fictional
+   framing. Legitimate anti-reward-hacking language ("static or hardcoded outputs will not pass",
+   "your solution must handle inputs it hasn't seen") is fine and is NOT a finding.
+
+6. Every numeric constant, tolerance, threshold, or format instruction.md states matches, byte for
+   byte, the constant actually enforced in tests/. A mismatched tolerance (doc says 1e-4, test
+   enforces 1e-6, or vice versa) is a BLOCKER regardless of how small the numeric gap looks —
+   verify by grep, not by eyeballing.
+
+7. Every file path instruction.md tells the agent to read or write actually exists at that exact
+   path inside environment/ once the image is built.
+
+8. Every schema instruction.md gives for an output file (JSON keys, CSV columns, field order,
+   "exactly these keys") is checked in tests/ with the same exactness the prose implies — if the
+   prose says "exactly these keys" but the test only checks presence (not absence of extras), that
+   is a documentation/test mismatch worth flagging, and check whether the shipped reference itself
+   honors the "exactly" reading.
+
+9. instruction.md does not contradict itself between two sentences on the same rule (e.g. one
+   clause implying a one-time reading, another implying a repeating/recurring one) — if two
+   readings are both textually defensible, treat this as equivalent to an undocumented requirement
+   against whichever reading the tests actually grade.
+
+10. If the task's difficulty is meant to come from genuine reasoning/engineering complexity, confirm
+    instruction.md does not hand over the answer by narrating each planted defect's exact mechanism
+    ("the reject handler discards state before saving" style sentences that name the bug, not just
+    its symptom) — distinguish "what's wrong" (fine, expected) from "here is the literal fixed code"
+    (not fine). This applies equally to whether instruction.md implies a naive approach is
+    insufficient — naming that a naive path exists is fine; describing WHY it fails is a hint.
+
+11. No canary or GUID-shaped string anywhere in instruction.md — this is training-dataset material,
+    presence is always the finding, never something to add.
+
+================================================================================
+SECTION B — ENVIRONMENT/
+================================================================================
+
+12. Every file under environment/ should be ensured to be required by reading it through.
+
+13. No comment anywhere under environment/ narrates the specific bug, the fix, or engineering intent
+    aimed at whoever solves the task (e.g. "TODO: this only handles the happy path", "BUG:", "FIXME",
+    "planted", "deliberate", "for the grader", "for the test"). Run a literal grep for these terms
+    across environment/ and solution/ and confirm zero hits, or justify each hit found.
+
+14. No comment anywhere under environment/ that restates, paraphrases, or closely echoes a sentence
+    from the author — this is a confirmed hint-plantation pattern that a keyword grep does NOT catch.
+    For every planted defect's location, read the nearby comment and cross-check it.
+
+15. No in-fiction "lore," "notes," or "history" doc under environment/ itemizes each planted defect
+    as a distinct bullet, even when phrased as flavor text — a confirmed real case had a lore file
+    whose bullet list was a 1:1 index of all 5 defects. This includes "attempt log"/"debug notes"
+    style files that each map near-verbatim onto one rubric.txt line and its enforcing test — map
+    every such file against rubric.txt line by line before accepting it as legitimate color, and
+    confirm severity empirically: do the real model trajectories pass exactly the axes the notes
+    describe and fail exactly the axis they don't? That pattern is definitive evidence of a leak.
+
+16. No file or directory name under environment/ is senseless/obscure in a way that hides what it
+    does (single/double-letter names like `k7`, `t2`, `w0`, `qp7` for functions or modules that do
+    real, specific work) — in-fiction thematic naming (mill/kiln/bag for a build pipeline) is fine
+    as long as it's internally decodable from docstrings or docs; opaque short codes are not.
+
+17. No function/module name under environment/ actively mislabels what the code does (e.g. a
+    function named for "visibility" that actually drops default trait methods, a function named
+    "merge crates" that has nothing to do with merging) — naming that lies about behavior is worse
+    than naming that's merely terse.
+
+18. No file under environment/ is dead code / orphaned / unreferenced by the build, the docs, or any
+    test — grep every file's basename across the whole bundle; zero hits outside itself means it's
+    a candidate for deletion. Distinguish a deliberate, disclosed decoy (explicitly labeled as not
+    authoritative, e.g. "Do not treat this as the whole picture") from genuine authoring leftovers.
+
+19. No unused helper/module under environment/ already implements most or all of the core capability
+    the task asks the agent to build — an unused-but-present "answer key" module undercuts the
+    task's real difficulty even if the agent has to notice and wire it in themselves. If found,
+    decide explicitly: remove it, wire it into a legitimate in-fiction caller, or document the
+    decision to keep it as intended scaffolding.
+
+20. Byte-diff every file under environment/ against its counterpart under tests/ and solution/
+    (actual content, `diff`/md5, not just filename overlap). A file that's byte-identical between
+    the agent's own image and the verifier's private copy is a leaked oracle, not a coincidence —
+    if it can compute even a subset of the graded quantity, the agent has a perfect local
+    answer-check for that subset. Determine exactly which scored axes the leaked file covers, and
+    where feasible actually build a solver that uses the leak and run it through the real verifier
+    to see whether it alone is sufficient for reward=1 or only difficulty-reducing — don't assume
+    either way from a static read.
+
+21. Every doc under environment/docs (or equivalent) that instruction.md names as authoritative should be
+    internally consistent with instruction.md itself — no contradictions on ordering, tie-breaking,
+    numeric formats, or edge-case handling between the two.
+
+22. Every doc under environment/ should be treated as a requirement, and include test cases for it in
+    the grader. Docs and other bugs in environment/ become a requirement in RL which the agent needs 
+    to fulfill.
+
+23. No vendored binary/archive under environment/ (wheels, .debs, tarballs) carries authoring-machine
+    metadata (a real username in tar headers, absolute host paths baked into a binary) — re-tar with
+    `--owner=0 --group=0` if found.
+
+24. The Dockerfile does not `COPY` solution/ or tests/ into the built image at any layer — verify by
+    reading every COPY/ADD line, not just skimming for "solution" as a literal string (a COPY of a
+    parent directory that happens to include solution/ or tests/ as a subdirectory is the same bug).
+    The agent's own Dockerfile also never creates, copies to, modifies, chowns, or chmods `/tests`,
+    `/solution`, `/oracle`, `/logs/verifier`, or `/logs/artifacts` — these are reserved for the
+    oracle/verifier passes. (The separate tests/Dockerfile owning /tests to build the verifier's
+    own image is a different mechanism, not a collision with this rule).
+
+25. Any decoy/red-herring file or module deliberately present in environment/ is fair: it is
+    genuinely reachable and inspectable by an honest agent, and it is not presented or commented as
+    a decoy. Making sure the bug is not revealed is essential here.
+
+26. Every `FROM` (and every compose `image:`) is digest-pinned with `@sha256:<digest>`; the final
+    runtime stage uses a canonical base for the task's language or carries a credible non-canonical
+    justification comment; tmux and asciinema are installed explicitly regardless of network mode.
+    Language packages are pinned to exact versions; apt packages are installed WITHOUT version pins
+    (the opposite instinct, easy to get backwards). environment/ is at most 100 MiB total, no single
+    file over 50 MiB. No `--privileged`, docker socket, or dangerous capability anywhere. No
+    `FROM --platform=...` pin or silent amd64-only artifact without a portable fallback.
+
+================================================================================
+SECTION C — SOLUTION/
+================================================================================
+
+27. solve.sh (or equivalent) has been diffed file-by-file against the shipped environment/ to
+    produce an exact list of what changes. Whole-file cp/heredoc replacement is explicitly
+    permitted — the FORM is never the issue, only the delta/behavior is judged.
+
+28. Every file solve.sh touches maps to a real, identifiable planted defect or missing capability
+    that instruction.md (directly or via a named doc) actually asks to be fixed/built. No file is
+    touched for no observable reason (a no-op delta).
+
+29. No file in or via solve.sh touches makes a change outside what instruction.md asks for (an out-of-scope
+    delta) — if the fix quietly also changes graded behavior instruction.md never mentioned, that's
+    either an undisclosed requirement (fold into check 2) or scope creep that needs trimming.
+
+30. The reference solution's own output has been independently verified as CORRECT, not merely
+    self-consistent with the tests — oracle scoring 1.0 across 3 runs is proof of self-consistency,
+    never proof of correctness. This check is MANDATORY, not optional, whenever the task grades
+    against a named mathematical/algorithmic/statistical structure (a standard transform, distance
+    metric, physics law, published algorithm, cryptographic KDF, statistical estimator). Re-derive
+    or re-implement the graded quantity independently — by hand, or with a trusted external
+    library/reference — and diff against what solution/ actually produces on the shipped fixtures.
+
+31. The reference must not answer a graded sub-question by branching on a scenario/case identifier
+    read straight from its own input (`if config.scenario_id == "X": return <constant matching the
+    private reference>`) instead of computing it — this reads like real numerics on a skim. Diff
+    every output field against the actual expected values by hand if anything looks suspiciously
+    constant per case; if found, that axis's difficulty was never validated by real computation.
+
+32. The reference must not encode knowledge of private or held-out data (exact identities, time
+    windows, thresholds) that isn't derivable from anything the agent can see. If a reference
+    solution's own score becomes the basis for an acceptance threshold, a reference built partly on
+    privileged information contaminates that threshold, not just tightens it.
+
+33. If multiple independent agent trajectories converge on an answer different from the reference on
+    some sub-computation, do not default to "the agents all made the same mistake" — check whether
+    the agents' shared answer is the mathematically/behaviorally correct one and the reference is
+    the outlier.
+
+34. solution/ contains no orphaned files that solve.sh does not reference (a full standalone copy of
+    the fix sitting beside the heredoc version, byte-identical or drifted) — if present, delete it, 
+    since an unreferenced copy can silently drift from what actually ships.
+
+35. Every planted defect the solution fixes produces the expected specific test failures when
+    ablated one at a time (leave every OTHER fix applied, revert just this one file to its shipped
+    buggy state, rerun the suite). This is the single most reliable way to confirm a defect is real
+    and correctly scoped — do this for every file solution/ touches, not a sample.
+
+36. The oracle build actually succeeds and runs cleanly from a cold image build, portably (no
+    unexplained architecture-specific behavior) — not just "it worked once before."
+
+================================================================================
+SECTION D — TESTS/
+================================================================================
+
+37. The verifier runs in a separate container the agent cannot see or reach — `artifacts` is a
+    TOP-LEVEL task.toml key listing every path the verifier needs from the agent's final
+    environment (nesting it under `[verifier]` silently drops it and the verifier receives
+    nothing — the single most common cause of "the verifier sees nothing"), and every declared
+    artifact's parent directory already exists in the verifier image (a missing landing directory
+    fails the upload in a way that looks exactly like a broken test).
+
+38. tests/Dockerfile bakes every verifier dependency at exact pinned versions — nothing is
+    installed or downloaded at trial time, regardless of network mode.
+
+39. tests/test.sh: no `set -e` (a failing run must still reach the reward write); reward is
+    always written, on both pass and fail, before any exit — trace the actual control flow, don't
+    assume the write happens just because an if/else exists somewhere in the file; always exits 0
+    at the very end regardless of the test result, since the reward FILE determines pass/fail, not
+    the script's exit status.
+
+40. Zero individual tests pass under NOP (do-nothing baseline). Read oracle-nop-evidence/nop-1/
+    ctrf.json and nop-2/ctrf.json TEST BY TEST. Never trust the aggregate reward number alone. A
+    task can show aggregate NOP reward 0.0 while one or more individual tests still silently pass.
+
+41. Every test that superficially looks like a "regression guard" or "safety check" (e.g. "read-only
+    data wasn't corrupted", "shipped inputs are pristine") is, on inspection, coupled inside the same
+    test function to a real-behavior assertion that requires genuine work — not standing alone as a
+    test that trivially passes on an untouched tree. A guard-only test with no coupled behavioral
+    assertion is a NOP-passable test which we don't want.
+
+42. For every NOP-passable test found, the recommended fix is to COUPLE it into an
+    existing or new real-behavior assertion in the same test function — never to simply delete the
+    guard. Deleting loses real coverage; coupling keeps it while closing the free-pass gap.
+
+43. Every test's assertion has been read in full (not just its name) and confirmed to test what its
+    name and any docstring claim — a test named `test_X` that actually checks something unrelated to
+    X, or a docstring describing a check the code doesn't perform, is a documentation-integrity
+    defect even when the test itself is otherwise fine.
+
+44. No test's ground truth / expected value depends on re-running agent-editable code (the
+    candidate's own solution, its own generator functions, its own self-reported status strings). If
+    a test's "expected" side is computed by calling into code the agent can modify, the test proves
+    nothing about correctness — trace every such dependency and flag it.
+
+45. No test's input fixtures are read from a path the agent can modify at test time in a way that
+    also feeds the expected/reference computation. When `environment_mode="separate"` is set,
+    confirm the verifier's own copy of every private/reference file is baked independently at
+    image-build time (byte-identical to the agent-visible equivalent, never a runtime mount from the
+    agent side) — when in doubt, build a submission that tampers with its own local copy and confirm
+    live that grading is unaffected, don't just read the Dockerfile and assume.
+
+46. Every held-out/hidden test scenario actually differs, in a way that changes the graded outcome,
+    from the public/shipped scenario. Verify by hand: run the perturbation generator (or reason
+    through it) and confirm the expected value on the holdout genuinely differs from the public
+    value — an inert holdout perturbation that a constant-output solution would still pass is a
+    confirmed real defect class.
+
+47. If instruction.md or a named doc states an exactness rule ("exactly these keys", "unique and
+    sorted ascending", "no other fields"), the test enforces that exactness literally (set equality,
+    not subset/superset checks) — and the reference solution itself is confirmed to satisfy the
+    exact rule, not just the loose superset the test happens to check.
+
+48. Every stated numeric tolerance is the SAME tolerance actually compiled into the test assertions
+    — grep the literal tolerance constants in tests/ against the literal numbers in instruction.md/
+    docs and diff them by hand.
+
+49. Every test file has been checked for deliberate string-obfuscation (string-concatenation tricks
+    like `"frame=" + "best_" + "effort_"` used purely to defeat grep/similarity scanners) — this adds
+    no grading value and is flagged as a trust/quality defect regardless of whether it affects
+    correctness.
+
+50. No dead/unused test-only code exists (imported-but-unused helpers, generator functions built for
+    an earlier fixture design that no current test calls) — worth pruning since it signals the test
+    file wasn't fully re-audited after edits.
+
+51. Test names accurately describe what each test checks — a test named for one behavior that
+    actually checks a different (even if related) behavior should be renamed or its body corrected.
+
+52. Every rejection-only / fail-closed test (one that only checks a bad input produces a non-zero
+    exit or an error) also runs a known-good positive control in the SAME test function — an
+    always-fail script would otherwise pass a fail-closed test with no positive control.
+
+53. Test count in every oracle-nop-evidence ctrf.json and every trajectories/run-0N/verifier/ctrf.json
+    matches the actual number of test functions collected from the current tests/ tree — a mismatch
+    means the evidence was captured against a different tests/ than what's shipping now.
+
+54. Whenever the verifier executes anything the agent produced (a rebuilt binary, an imported
+    module, a build hook), that execution is unprivileged, resource-bounded, environment-sanitized,
+    uses non-agent-writable interpreter/tool paths, cleans up its process group after execution, and
+    has no write access to `/logs/verifier` — verify the actual file permissions, don't assume
+    container separation alone is sufficient.
+
+56. No wall-clock latency, throughput, or percentile-latency assertion anywhere — an absolute ban,
+    not a calibration question. Any deterministic score/work threshold (when the task's efficiency
+    genuinely is part of the public contract) is fixed BEFORE model trials from the public objective
+    and a realistic baseline — never from the best model attempt or the reference's own exact
+    output — must admit a fundamentally different correct strategy, and must not sit within roughly
+    5% of the reference's own achieved performance without an explicit, recorded sign-off. Don't
+    accept a code comment claiming the threshold was calibrated correctly at face value — actually
+    run the reference (and a named naive baseline, if one exists) through the real scoring logic and
+    measure the real percentage margin yourself. Correctness is always checked before any such gate.
+
+57. Reward is binary only, written as exactly 0 or 1 on every reachable path — never a fraction,
+    ratio, or weighted composite based on how many of N checks passed. Oracle and agent get
+    identical verifier logic — no conditional branching on which one is being graded, an identity
+    flag, or a job name anywhere in test.sh or the tests.
+
+58. Tests check the actual correct VALUE, not just that a well-formed artifact exists — an assertion
+    that only confirms a file exists and is valid JSON lets a plausible-looking wrong or default
+    output pass.
+
+59. Every empty submission, format-only fake, hardcoded public/example answer, self-reported metric
+    with no underlying work, missing declared artifact, and fake reward/report written directly by
+    the agent side (including a detached background process rewriting the reward file after the
+    agent's own turn ends) is checked and rejected through its OWN specific, named assertion — a
+    reward of 0 through a different, unplanned test is a fail of that control, not a pass, because
+    the intended check went untested.
+
+================================================================================
+SECTION E — TASK.TOML
+================================================================================
+
+61. `artifacts` (a list of every needed verifier-visible path) is a TOP-LEVEL key — nesting it under
+    `[verifier]` silently drops it. `name`, `author_name`/`author_email` ("anonymous"), `category`
+    + `subcategory` (exactly one each, Title Case, matching the real taxonomy — classify by what the
+    agent must UNDERSTAND, not by "the agent writes code"), `tags` (3-6, specific), `languages`,
+    `expert_time_estimate_hours`, and the four write-up fields (`difficulty_explanation`,
+    `solution_explanation`, `verification_explanation`, `relevant_experience`, all substantive, not
+    placeholder text) are all present and accurate to what the task actually is — not a stale
+    description left over from an earlier draft.
+
+62. There is no `difficulty` field anywhere in task.toml, and no tier label, percentage, or
+    pass-count of any kind appears anywhere else in the task either — `difficulty_explanation` is a
+    plain-language write-up only, never a measured rate or category.
+
+63. `[verifier].environment_mode = "separate"`. `[agent].timeout_sec` and `[verifier].timeout_sec`
+    are both `28800` on every task, deliberately — not a value to "fix" down.
+
+64. `network_mode` should be `"public"` by default.
+
+65. No stale-schema residue: `schema_version`, any difficulty tier name, a `[[task.authors]]`/
+    `[task]` table duplicating the top-level `name`, a milestone field, `codebase_size`,
+    minute-based time-estimate fields, or any generator-bookkeeping field (`[reference_pattern]` or
+    similar) that leaks how the task was produced. No real local machine path anywhere in task.toml.
+    A genuinely multi-container task sets `[metadata].is_multi_container = true`; a single-container
+    task omits the field entirely.
+
+================================================================================
+SECTION F — RUBRIC.TXT
+================================================================================
+
+66. Every rubric.txt line maps to a real instruction — no line grades behavior that is not 
+    present in instructions. But if a check is implicit requirement then we cannot flag the
+    rubric criteria.
+
+67. Every rubric.txt line is exactly `Agent <specific behavior>, +N` or `, -N` — nothing else: no
+    headers, no titles, no test citations, no blank lines. Filename is exactly `rubric.txt`. At least
+    one negative criterion is required; cumulative positive score sums to 10–40; every magnitude —
+    positive or negative — is drawn exactly from {1, 2, 3, 5}, never 4; every positive carries an
+    explicit `+` sign.
+
+68. No rubric.txt line describes a requirement no correct solution could ever satisfy simultaneously
+    with another rubric line (an internal contradiction) — e.g. a line requiring a design that reads
+    the corpus to prove a property, paired with a different line penalizing reading the corpus.
+
+69. No rubric.txt line double-counts the same underlying test/behavior under two different criteria. 
+    Positve should not be checked again in negative.
+
+71. rubric.txt's total point budget and pass/fail semantics are internally consistent with how
+    rubric_score.txt actually computes MET/NOT MET and the final gradient — verify the arithmetic on
+    each real rubric_score.txt by hand.
+
+================================================================================
+SECTION G — ORACLE-NOP-EVIDENCE/
+================================================================================
+
+73. Structure is exactly {oracle-1,oracle-2,oracle-3,nop-1,nop-2}/{ctrf.json,reward.txt,
+    test-stdout.txt} — nothing missing, nothing extra.
+
+74. oracle-1/2/3 each show reward 1.0 with every individual test passing — read all three
+    ctrf.json files test-by-test, not just the aggregate.
+
+75. nop-1/2 each show reward 0.0 with every individual test EXPLICITLY failing (status "failed", not
+    "error"/"skipped" masking a real pass).
+
+76. Every failure shown in nop-1/nop-2's test-stdout.txt is a genuine assertion mismatch against real
+    do-nothing behavior, not an infrastructure/import/crash error that happens to look like a fail —
+    distinguish "the shipped code ran and produced the wrong answer" from "the shipped code didn't
+    run at all," since only the former is real NOP evidence. A session-scoped autouse fixture that
+    asserts before the actual test body runs turns every NOP row into an infrastructure error, which
+    this rejects outright.
+
+77. Evidence mtimes are newer than every file under tests/, environment/, solution/, and
+    instruction.md that could affect grading — if any graded file was edited after
+    this evidence was captured, the evidence must be regenerated with oracle and NOP, 
+    not assumed still valid.
+
+78. Duplication check among the runs applied specifically to this evidence set before trusting it as
+    proof of 3 independent oracle passes and 2 independent NOP fails — compare timestamps and any
+    embedded object-id/address strings across the "different" runs.
+
+================================================================================
+SECTION H — TRAJECTORIES/
+================================================================================
+
+79. trajectories/SUMMARY.txt is exactly 2 lines: the slug+sha+model+reasoning_effort line, then the
+    5-run reward array line. No "note:", no prose, no explanation appended.
+
+80. Every rubric_score.txt is pure data plus evidence citations and graded seaprately for 
+    each trajectory — no "note:, Summary:".
+
+81. SUMMARY.txt's reward array matches each run-0N's own verifier/reward.txt AND its own ctrf.json,
+    run for run, in order. Diff them explicitly rather than assuming the rollup was transcribed
+    correctly.
+
+82. The bundle sha recorded in SUMMARY.txt matches a FRESH recompute from current disk content, run
+    from inside the inner task-slug directory using relative paths.
+
+83. A matching sha is NOT by itself proof the trajectories are current — separately verify by
+    mtime: the newest mtime under tests/ (and environment/ and instruction.md) must be OLDER than
+    every trajectories/run-*/ directory and every oracle-nop-evidence/*/ctrf.json. Any tests/ file
+    newer than the evidence means the evidence predates what's shipping, regardless of what the sha
+    says (an edit can be hand-applied and the sha refreshed without ever re-running the trials).
+
+84. oracle-1/2/3 are genuinely three independent executions, not the same run copied under three
+    names; nop-1/2 likewise genuinely two independent executions. Compare each pair's ctrf.json
+    start timestamps and any embedded object-id/address strings in test-stdout.txt — identical
+    values across "different" runs means the evidence was duplicated, not regenerated.
+
+85. Apply the same duplication check to the five model runs and its rubric_score.txt, not just 
+    to oracle/nop. For any numeric result that accumulates floating-point error over many 
+    iterative steps (an integrator, an optimizer, a simulation), compare the full-precision value across all 5 runs — agreement to
+    fewer than ~6 significant figures is unremarkable, but agreement to 15-16 significant figures on
+    a value that should be sensitive to solver internals is close to impossible for genuinely
+    independent generations and is a real evidence-integrity finding worth escalating, not waved off
+    as convergence.
+
+86. For every FAILING run, the actual failure has been read from that run's own agent/trajectory.json
+    and verifier/test-stdout.txt — not inferred from rubric_score.txt alone — and confirmed
+    to match what rubric_score.txt claims caused the failure.
+
+87. All 5 rubric_score.txt files have been diffed against each other. They are NOT byte-identical or
+    near-identical copies with only the header swapped — each must cite THAT run's own evidence.
+
+88. Every NOT MET / negative-criterion verdict in every rubric_score.txt cites a specific line,
+    function name, or quoted value from THAT run's own trajectory.json or test-stdout.txt — a verdict
+    that could have been copy-pasted from a different run, or invented without evidence, is a finding
+    even if the pass/fail bottom line happens to be correct. Every MET verdict is likewise
+    spot-checked on at least the passing runs — an overclaimed MET is as real a defect as a
+    wrongly-NOT-MET.
+
+89. PII scrub is clean across every trajectory file AND every oracle-nop-evidence job (config.json,
+    result.json, agent/*, verifier/*): zero hits for `/Users/`, `/private/tmp/`, `/home/` (except
+    legitimate in-container paths like `/home/agent`), and zero case-sensitive, word-boundary `stb`
+    hits — the confirmed real leak vector is each run's own `task.path`/`trials_dir` fields in
+    config.json and result.json. Grep every one of the ten run/job directories individually, never
+    rely on one aggregate recursive grep to cover all of them.
+
+90. No canary or GUID-shaped string appears anywhere in trajectories/ or oracle-nop-evidence/. When
+    one does turn up: check whether it's still present in the currently shipped environment/. If the
+    trajectory shows it but the current source doesn't (or the reverse — a renamed or moved file),
+    the environment was edited after the evidence was captured, and the evidence no longer reflects
+    the bundle actually being shipped — cite the specific file or line that changed.
+
+91. result.json's nested model-name fields are left at their raw captured form — do NOT hand-edit
+    result.json's captured fields to "normalize" them.
+
+92. Every `agent/` folder across all 5 runs contains the same canonical filename set (api-calls.jsonl,
+    recording.cast, terminus_2.pane or equivalent, trajectory.json) — a missing file in one run is
+    either a real capture gap or must be explained, never silently accepted. Every `verifier/` folder
+    across all 5 runs contains ctrf.json, reward.txt, and test-stdout.txt, with reward.txt matching
+    that run's ctrf.json outcome exactly.
+
+93. reasoning_effort=xhigh is confirmed on every one of the 5 runs individually, not sampled from one and
+    assumed for the rest.
+
+94. No run's result.json shows exception_info populated (key-exhaustion, timeout, infrastructure
+    error) that would invalidate its reward as a real measurement — any such run must be re-run,
+    never shipped as-is with a fabricated or assumed reward. A failing run that was actually still
+    making progress at cutoff is not real capability-failure evidence.
+
+95. Reward-hacking scan performed on every one of the 5 trajectories individually: zero reads of or
+    writes to /tests, test_outputs.py, ctrf.json, reward.txt, /logs/verifier, or the solution/
+    directory; zero hand-written output artifacts that bypass actually running the fixed code; zero
+    truncation markers in the transcript; the run ends in a genuine completion step, not a
+    crashed/abandoned shell.
+
+96. After ANY fresh rerun, confirm these moved together as one atomic set — this is the default
+    failure mode, not an edge case: (1) all 5 trajectory folders replaced, (2) SUMMARY.txt
+    sha+rewards, (3) all 5 rubric_score.txt files, (4) the expert time estimate if it materially
+    changed, (5) the bundle sha recompute, (6) a fresh PII/stb/canary grep (new trajectories carry
+    new local paths and possibly new canary exposure that need scrubbing again).
+
+================================================================================
+SECTION I — CROSS-ARTIFACT / GROUND-TRUTH / STRUCTURAL
+================================================================================
+
+97. No manufactured difficulty: the task's hardness comes from genuine reasoning/engineering
+    complexity (diagnosis, multi-step inference, correct handling of edge cases/faults/state) — not
+    from obscurity, spec transcription, decoys with no fair signal, contradictory
+    requirements, or compliance walls. Explicitly classify what actually makes the task difficult, in
+    plain language — never a number, a tier, or a pass count.
+
+98. Delivery structure is exactly: <task-slug>/ containing {instruction.md, task.toml, environment/,
+    solution/, tests/} as one sibling group, and {rubric.txt, oracle-nop-evidence/, trajectories/}
+    as the other — nothing else. No extra wrapper directory, no SOURCE.txt, no .DS_Store, no
+    __MACOSX, no ._*, no .git, no __pycache__, no *.pyc anywhere in the final zip. No AI-framework
+    scaffolding filenames (AGENTS.md, CLAUDE.md, skills.md, .cursor/, .aider/) unless the task's
+    actual subject.
+
+99. A final, post-every-other-edit grep for stb (word-boundary, case-sensitive), /Users/,
+    /private/tmp/, /home/ (excluding legitimate in-container /home/agent-style paths), and any
+    canary/GUID-shaped string — run across the ENTIRE bundle including trajectories/ and
+    oracle-nop-evidence/ — done as the literal last step before zipping, since a scrub done early and
+    never re-checked after later edits is how leaks survive to delivery.

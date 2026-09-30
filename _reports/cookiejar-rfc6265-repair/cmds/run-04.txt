@@ -1,0 +1,508 @@
+### step 2 call_0_1
+ls -la && find docs examples src -maxdepth 3 -type f -print | sort
+
+### step 2 call_0_2
+cat Cargo.toml && printf '\n--- POLICY ---\n' && cat docs/POLICY.md && printf '\n--- CLI ---\n' && cat docs/cli.md
+
+### step 2 call_0_3
+for f in docs/*; do echo "===== $f ====="; cat "$f"; done
+
+### step 2 call_0_4
+for f in src/*.rs; do echo "===== $f ====="; sed -n '1,260p' "$f"; done
+
+### step 3 call_1_1
+for f in src/cookie/*.rs src/jar/*.rs src/time/*.rs; do echo "===== $f ====="; cat "$f"; done
+
+### step 3 call_1_2
+for f in README.md examples/*; do echo "===== $f ====="; cat "$f"; done && printf '\nPSL lines: ' && wc -l data/public_suffix.dat && head -20 data/public_suffix.dat
+
+### step 3 call_1_3
+grep -RInE 'TODO|FIXME|unwrap|sort|domain|path|expires|max-age|creation|access' src | head -200
+
+### step 3 call_1_4
+cargo build --release && for f in examples/*.txt; do echo "===== $f ====="; target/release/crumbjar replay "$f"; done
+
+### step 4 call_2_1
+cat > src/cookie/path.rs <<'EOF'
+//! Paths and path-match (RFC 6265 section 5.1.4).
+
+/// The default-path of a request-uri path.
+pub fn default_path(uri_path: &str) -> String {
+    if !uri_path.starts_with('/') {
+        return "/".to_string();
+    }
+    match uri_path.rfind('/') {
+        Some(0) | None => "/".to_string(),
+        Some(i) => uri_path[..i].to_string(),
+    }
+}
+
+pub fn path_match(request_path: &str, cookie_path: &str) -> bool {
+    if request_path == cookie_path {
+        return true;
+    }
+    request_path.starts_with(cookie_path)
+        && (cookie_path.ends_with('/')
+            || request_path.as_bytes().get(cookie_path.len()) == Some(&b'/'))
+}
+EOF
+cat > src/host.rs <<'EOF'
+/// True for a dotted-quad IPv4 address such as `192.0.2.7`.
+pub fn is_ip_address(host: &str) -> bool {
+    let parts: Vec<&str> = host.split('.').collect();
+    parts.len() == 4
+        && parts.iter().all(|p| {
+            !p.is_empty()
+                && p.len() <= 3
+                && p.bytes().all(|b| b.is_ascii_digit())
+                && p.parse::<u16>().map_or(false, |v| v <= 255)
+        })
+}
+
+/// Domain matching (RFC 6265 section 5.1.3). Both arguments must already be
+/// canonicalized.
+pub fn domain_match(string: &str, domain: &str) -> bool {
+    if string == domain {
+        return true;
+    }
+    !is_ip_address(string)
+        && string.len() > domain.len()
+        && string.ends_with(domain)
+        && string.as_bytes()[string.len() - domain.len() - 1] == b'.'
+}
+EOF
+cat > src/cookie/domain.rs <<'EOF'
+//! Which hosts a new cookie is scoped to (RFC 6265 section 5.3, steps 4-6).
+
+use super::parse::Attr;
+use crate::host::domain_match;
+use crate::psl::List;
+
+pub enum Scope {
+    /// Only sent back to exactly this host.
+    HostOnly(String),
+    /// Sent to this domain and every subdomain of it.
+    Domain(String),
+}
+
+/// `None` means the cookie must be ignored.
+pub fn resolve(attrs: &[Attr], host: &str, psl: &List) -> Option<Scope> {
+    let domain = attrs.iter().rev().find_map(|a| match a {
+        Attr::Domain(d) => Some(d.as_str()),
+        _ => None,
+    });
+
+    let Some(domain) = domain else {
+        return Some(Scope::HostOnly(host.to_string()));
+    };
+
+    // RFC 6265 section 5.3 step 5: a public suffix equal to the request
+    // host is treated as though the Domain attribute were empty.
+    if psl.is_public_suffix(domain) {
+        return if domain == host {
+            Some(Scope::HostOnly(host.to_string()))
+        } else {
+            None
+        };
+    }
+    if !domain_match(host, domain) {
+        return None;
+    }
+    Some(Scope::Domain(domain.to_string()))
+}
+EOF
+cat > src/cookie/expiry.rs <<'EOF'
+use super::parse::Attr;
+
+pub enum Lifetime {
+    Session,
+    Persistent(i64),
+}
+
+/// Lifetime of a new cookie from its attribute list (RFC 6265 section 5.3,
+/// step 3). Max-Age takes precedence over Expires regardless of attribute
+/// order; the last occurrence of the selected attribute is used.
+pub fn resolve(attrs: &[Attr]) -> Lifetime {
+    let max_age = attrs.iter().rev().find_map(|a| match a {
+        Attr::MaxAge(t) => Some(*t),
+        _ => None,
+    });
+    let expires = attrs.iter().rev().find_map(|a| match a {
+        Attr::Expires(t) => Some(*t),
+        _ => None,
+    });
+    max_age
+        .or(expires)
+        .map_or(Lifetime::Session, Lifetime::Persistent)
+}
+EOF
+
+### step 4 call_2_2
+cat > src/jar/order.rs <<'EOF'
+use super::Cookie;
+
+/// Orders the indices of the cookies going into one Cookie header.
+pub fn sort(hits: &mut [usize], cookies: &[Cookie]) {
+    hits.sort_by(|&a, &b| {
+        let (a, b) = (&cookies[a], &cookies[b]);
+        b.path
+            .len()
+            .cmp(&a.path.len())
+            .then_with(|| a.created.cmp(&b.created))
+    });
+}
+EOF
+cat > src/jar/select.rs <<'EOF'
+//! Building the Cookie header (RFC 6265 section 5.4).
+
+use super::{order, Cookie, Jar};
+use crate::cookie::path::path_match;
+use crate::host::domain_match;
+use crate::url::Url;
+
+fn applies_to(c: &Cookie, url: &Url) -> bool {
+    let domain_ok = if c.host_only {
+        url.host == c.domain
+    } else {
+        domain_match(&url.host, &c.domain)
+    };
+    domain_ok && path_match(&url.path, &c.path) && (!c.secure || url.secure)
+}
+
+impl Jar {
+    /// The Cookie header value for an HTTP request to `url` (empty when no
+    /// cookie applies). Updates the last-access-time of every cookie sent.
+    pub fn cookie_header(&mut self, url: &Url) -> String {
+        self.purge_expired();
+        let stamp = self.stamp();
+
+        let mut hits: Vec<usize> = (0..self.cookies.len())
+            .filter(|&i| applies_to(&self.cookies[i], url))
+            .collect();
+        order::sort(&mut hits, &self.cookies);
+
+        let mut parts = Vec::with_capacity(hits.len());
+        for &i in &hits {
+            let c = &mut self.cookies[i];
+            c.accessed = stamp;
+            parts.push(format!("{}={}", c.name, c.value));
+        }
+        parts.join("; ")
+    }
+}
+EOF
+cat > src/jar/evict.rs <<'EOF'
+//! Removing cookies: expiry, and the per-site limit from docs/POLICY.md.
+
+use super::Jar;
+
+pub const MAX_COOKIES_PER_SITE: usize = 6;
+
+impl Jar {
+    pub(super) fn purge_expired(&mut self) {
+        let now = self.clock;
+        self.cookies.retain(|c| !c.is_expired(now));
+    }
+
+    /// Evicts cookies of `site` until it is back within the limit.
+    pub(super) fn enforce_site_limit(&mut self, site: &str) {
+        loop {
+            let members: Vec<usize> = (0..self.cookies.len())
+                .filter(|&i| self.psl.registrable_domain(&self.cookies[i].domain) == site)
+                .collect();
+            if members.len() <= MAX_COOKIES_PER_SITE {
+                return;
+            }
+            let victim = members
+                .into_iter()
+                .min_by_key(|&i| (self.cookies[i].accessed, self.cookies[i].created))
+                .expect("site has members");
+            self.cookies.remove(victim);
+        }
+    }
+}
+EOF
+
+### step 4 call_2_3
+cat > src/jar/store.rs <<'EOF'
+//! Storage model (RFC 6265 section 5.3).
+
+use super::{Cookie, Jar};
+use crate::cookie::domain::{self, Scope};
+use crate::cookie::expiry::{self, Lifetime};
+use crate::cookie::parse::{self, Attr};
+use crate::cookie::path::default_path;
+use crate::url::Url;
+
+impl Jar {
+    /// Handles a Set-Cookie header received in the response to `url`.
+    pub fn set_cookie(&mut self, url: &Url, header: &str) {
+        self.purge_expired();
+
+        let Some(sc) = parse::parse(header, url, self.clock) else {
+            return;
+        };
+        let Some(scope) = domain::resolve(&sc.attrs, &url.host, &self.psl) else {
+            return;
+        };
+        let (domain, host_only) = match scope {
+            Scope::HostOnly(h) => (h, true),
+            Scope::Domain(d) => (d, false),
+        };
+        let path = sc
+            .attrs
+            .iter()
+            .rev()
+            .find_map(|a| match a {
+                Attr::Path(p) => Some(p.clone()),
+                _ => None,
+            })
+            .unwrap_or_else(|| default_path(&url.path));
+        let expiry = match expiry::resolve(&sc.attrs) {
+            Lifetime::Session => None,
+            Lifetime::Persistent(t) => Some(t),
+        };
+        let secure = sc.attrs.iter().any(|a| matches!(a, Attr::Secure));
+        let http_only = sc.attrs.iter().any(|a| matches!(a, Attr::HttpOnly));
+
+        let stamp = self.stamp();
+        let site = self.psl.registrable_domain(&domain);
+        let old_creation = self
+            .cookies
+            .iter()
+            .position(|c| c.name == sc.name && c.domain == domain && c.path == path)
+            .map(|i| self.cookies.remove(i).created);
+
+        self.cookies.push(Cookie {
+            name: sc.name,
+            value: sc.value,
+            domain,
+            path,
+            expiry,
+            host_only,
+            secure,
+            http_only,
+            created: old_creation.unwrap_or(stamp),
+            accessed: stamp,
+        });
+
+        self.purge_expired();
+        self.enforce_site_limit(&site);
+    }
+}
+EOF
+# Make a missing '=' invalidate the Set-Cookie pair, clamp positive Max-Age both ways,
+# and correct Gregorian century leap years.
+sed -i 's/Some((n, v)) => (trim_wsp(n), trim_wsp(v)),/Some((n, v)) => (trim_wsp(n), trim_wsp(v)),/; s/None => ("", trim_wsp(pair)),/None => return None,/' src/cookie/parse.rs
+sed -i 's/Some(now.saturating_add(delta).min(LATEST))/Some(now.saturating_add(delta).clamp(EARLIEST, LATEST))/' src/cookie/parse.rs
+sed -i 's/year % 400 != 0/year % 400 == 0/' src/time/civil.rs
+cargo fmt && cargo build --release
+
+### step 4 call_2_4
+cat > /tmp/edge.txt <<'EOF'
+at 0
+set https://example.com/ h=1
+get https://api.example.com/
+get https://example.com/
+set https://help.example.net/kb/articles/123 p=1
+get https://help.example.net/kb/articles
+get https://help.example.net/kb/articles2
+set https://example.org/ z=first; Path=/
+set https://example.org/ a=second; Path=/
+set https://example.org/ z=refreshed; Path=/
+get https://example.org/
+set https://example.org/ precedence=ok; Max-Age=100; Expires=Sun, 06 Nov 1994 08:49:37 GMT
+set https://example.org/ leap=ok; Expires=Tue, 29 Feb 2000 12:00:00 GMT
+set https://example.org/ invalid-without-equals
+set https://com/ suffix=host; Domain=com
+get https://x.com/
+get https://com/
+dump
+EOF
+target/release/crumbjar replay /tmp/edge.txt
+
+### step 4 call_2_5
+cat > /tmp/evict.txt <<'EOF'
+at 10
+set https://a.example.com/ a=1
+set https://a.example.com/ b=2
+set https://a.example.com/ c=3
+set https://a.example.com/ d=4
+set https://a.example.com/ e=5
+set https://a.example.com/ f=6
+get https://a.example.com/only-no-match
+set https://a.example.com/ a=1; Path=/special
+get https://a.example.com/special
+set https://a.example.com/ g=7
+dump
+EOF
+target/release/crumbjar replay /tmp/evict.txt
+cargo test
+
+### step 5 call_3_1
+python3 - <<'PY'
+p='src/cookie/parse.rs'
+s=open(p).read()
+s=s.replace('    if name.is_empty() && value.is_empty() {\n', '    if name.is_empty() {\n')
+start=s.index('fn max_age(')
+end=s.index('\n}\n\n/// Parses', start)+2
+new='''fn max_age(v: &str, now: i64) -> Option<i64> {
+    let (neg, digits) = match v.strip_prefix('-') {
+        Some(rest) => (true, rest),
+        None => (false, v),
+    };
+    if digits.is_empty()
+        || digits[0..1] == *"0"
+        || !digits.bytes().all(|b| b.is_ascii_digit())
+    {
+        return None;
+    }
+    let delta = digits.bytes().fold(0i64, |acc, b| {
+        acc.saturating_mul(10)
+            .saturating_add(i64::from(b - b'0'))
+    });
+    if neg {
+        Some(EARLIEST)
+    } else {
+        Some(now.saturating_add(delta).clamp(EARLIEST, LATEST))
+    }
+}'''
+s=s[:start]+new+s[end:]
+open(p,'w').write(s)
+PY
+sed -n '1,150p' src/cookie/parse.rs && grep -RIn "is_leap\|min_by_key\|created:" src/time/civil.rs src/jar
+cargo build --release
+
+### step 5 call_3_2
+echo '===== edge ====='; target/release/crumbjar replay /tmp/edge.txt; echo '===== eviction ====='; target/release/crumbjar replay /tmp/evict.txt; echo '===== examples ====='; for f in examples/*.txt; do echo "--- $f"; target/release/crumbjar replay "$f"; done
+
+### step 5 call_3_3
+cat > /tmp/more.txt <<'EOF'
+at 0
+set https://h.example/kb/articles/123 d=1
+get https://h.example/kb/articles
+get https://h.example/kb/articles/child
+get https://h.example/kb/articles2
+set https://h.example/ exact=1; Path=/foo
+get https://h.example/foo
+get https://h.example/foo/bar
+get https://h.example/foobar
+set https://192.0.2.7/ ip=1; Domain=0.2.7
+get https://192.0.2.7/
+set https://h.example/ old=1; Expires=Tue, 29 Feb 2000 12:00:00 GMT
+set https://h.example/ future=1; Expires=Fri, 31 Dec 9999 23:59:59 GMT
+set https://h.example/ zero=1; Max-Age=0
+set https://h.example/ leading=1; Max-Age=01
+set https://h.example/ emptyname
+set https://h.example/ =bad
+get https://h.example/
+dump
+EOF
+target/release/crumbjar replay /tmp/more.txt
+cargo test
+
+### step 6 call_4_1
+python3 - <<'PY'
+p='src/cookie/parse.rs'
+s=open(p).read()
+start=s.index('fn max_age(')
+end=s.index('\n}\n\n/// Parses', start)+2
+new='''fn max_age(v: &str, now: i64) -> Option<i64> {
+    let (neg, digits) = match v.strip_prefix('-') {
+        Some(rest) => (true, rest),
+        None => (false, v),
+    };
+    if digits.is_empty() || !digits.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    let delta = digits.bytes().fold(0i64, |acc, b| {
+        acc.saturating_mul(10)
+            .saturating_add(i64::from(b - b'0'))
+    });
+    if neg || delta == 0 {
+        Some(EARLIEST)
+    } else {
+        Some(now.saturating_add(delta).clamp(EARLIEST, LATEST))
+    }
+}'''
+s=s[:start]+new+s[end:]
+s=s.replace('    if name.is_empty() {\n', '    if name.is_empty() && value.is_empty() {\n')
+open(p,'w').write(s)
+PY
+cargo build --release && target/release/crumbjar replay examples/expiry.txt
+
+### step 6 call_4_2
+cat > /tmp/parser-final.txt <<'EOF'
+at 0
+set https://example.test/ keep=old
+set https://example.test/ keep=new; Max-Age=0
+set https://example.test/ leading=ok; Max-Age=01
+set https://example.test/ no-equals
+set https://example.test/ =empty-name
+get https://example.test/
+dump
+EOF
+target/release/crumbjar replay /tmp/parser-final.txt
+
+### step 6 call_4_3
+cargo test && cargo build --release && git diff -- src 2>/dev/null || true
+
+### step 7 call_5_task_complete
+{}
+### step 8 call_6_1
+python3 - <<'PY'
+p='src/cookie/parse.rs'
+s=open(p).read()
+old='''    let delta = digits.bytes().fold(0i64, |acc, b| {
+        acc.saturating_mul(10)
+            .saturating_add(i64::from(b - b'0'))
+    });
+    if neg || delta == 0 {
+        Some(EARLIEST)
+    } else {
+        Some(now.saturating_add(delta).clamp(EARLIEST, LATEST))
+    }
+'''
+new='''    let delta = digits.bytes().fold(0i128, |acc, b| {
+        acc.saturating_mul(10)
+            .saturating_add(i128::from(b - b'0'))
+    });
+    if neg || delta == 0 {
+        Some(EARLIEST)
+    } else {
+        let expiry = i128::from(now).saturating_add(delta);
+        Some(expiry.clamp(i128::from(EARLIEST), i128::from(LATEST)) as i64)
+    }
+'''
+assert old in s
+open(p,'w').write(s.replace(old,new))
+PY
+cargo build --release && cargo test
+cat > /tmp/max-age-overflow.txt <<'EOF'
+at -9223372036854775808
+set https://example.test/ huge=ok; Max-Age=999999999999999999999999999999999999999999999999999999
+set https://example.test/ gone=1; Max-Age=0
+dump
+EOF
+target/release/crumbjar replay /tmp/max-age-overflow.txt
+
+### step 9 call_7_1
+python3 - <<'PY'
+p='src/cookie/parse.rs'
+s=open(p).read()
+s=s.replace("    if digits.is_empty() || !digits.bytes().all(|b| b.is_ascii_digit()) {\n", "    if (!neg && digits.is_empty()) || !digits.bytes().all(|b| b.is_ascii_digit()) {\n")
+open(p,'w').write(s)
+PY
+cargo build --release && cargo test
+cat > /tmp/max-age-final.txt <<'EOF'
+at 0
+set https://example.test/ minus=gone; Max-Age=-
+set https://example.test/ huge=ok; Max-Age=999999999999999999999999999999999999999999999999999999
+dump
+EOF
+target/release/crumbjar replay /tmp/max-age-final.txt
+
+### step 10 call_8_task_complete
+{}
+### step 11 call_9_task_complete
+{}

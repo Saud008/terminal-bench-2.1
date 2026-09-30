@@ -1,0 +1,292 @@
+[step 2] printf '%s\n' '--- files ---'; find . -maxdepth 3 -type f -print | sort; printf '%s\n' '--- Cargo.toml ---'; cat Cargo.toml; printf '%s\n' '--- docs ---'; for f in docs/*; do echo "### $f"; cat "$f"; done
+[step 2] printf '%s\n' '--- source ---'; for f in src/*.rs; do echo "### $f"; sed -n '1,260p' "$f"; done; printf '%s\n' '--- tests ---'; find tests -type f -maxdepth 3 -print -exec sh -c 'echo "### $1"; sed -n "1,300p" "$1"' _ {} \; 2>/dev/null || true
+[step 2] cargo test
+[step 3] for f in $(find src -type f -name '*.rs' | sort); do echo "### $f"; cat "$f"; done
+[step 3] echo '### README.md'; cat README.md; echo '### toolchain'; command -v cargo || true; command -v rustc || true; find /root /usr/local /opt -type f \( -name cargo -o -name rustc \) 2>/dev/null | head -30; echo '### current help'; ./target/release/gleaner --help
+[step 4] cat > src/ignore/lines.rs <<'EOF'
+//! Splitting a pattern file into candidate lines.
+
+#[derive(Debug, Clone)]
+pub struct RawLine {
+    pub number: usize,
+    pub text: Vec<u8>,
+}
+
+/// Split on LF, remove a UTF-8 BOM at the start and CR before LF (or EOF),
+/// while preserving physical line numbers.
+pub fn split(buf: &[u8]) -> Vec<RawLine> {
+    let buf = buf.strip_prefix(&[0xef, 0xbb, 0xbf]).unwrap_or(buf);
+    let mut out = Vec::new();
+    for (index, raw) in buf.split(|&b| b == b'\n').enumerate() {
+        let line = raw.strip_suffix(b"\r").unwrap_or(raw);
+        if line.is_empty() || line[0] == b'#' {
+            continue;
+        }
+        out.push(RawLine { number: index + 1, text: line.to_vec() });
+    }
+    out
+}
+EOF
+cat > src/ignore/parse.rs <<'EOF'
+//! Turning one line of a pattern file into a pattern.
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Parsed {
+    pub text: Vec<u8>,
+    pub body: Vec<u8>,
+    pub negative: bool,
+    pub dir_only: bool,
+    pub basename_only: bool,
+}
+
+/// Remove only unescaped trailing spaces. In a run of trailing spaces, a
+/// space immediately preceded by a backslash is retained with its escape.
+pub fn trim_trailing_spaces(line: &[u8]) -> &[u8] {
+    let mut end = line.len();
+    while end > 0 && line[end - 1] == b' ' {
+        if end >= 2 && line[end - 2] == b'\\' {
+            break;
+        }
+        end -= 1;
+    }
+    &line[..end]
+}
+
+pub fn parse_line(line: &[u8]) -> Option<Parsed> {
+    let text = trim_trailing_spaces(line);
+    if text.is_empty() {
+        return None;
+    }
+    let negative = text[0] == b'!';
+    let mut body = if negative { &text[1..] } else { text };
+    if body.is_empty() {
+        return None;
+    }
+    // \! and \# are glob escapes, not syntax. Keep the backslash so the
+    // matcher treats the first character literally.
+    let dir_only = body.last() == Some(&b'/');
+    if dir_only {
+        body = &body[..body.len() - 1];
+    }
+    if body.is_empty() {
+        return None;
+    }
+    let basename_only = !body.contains(&b'/');
+    Some(Parsed {
+        text: text.to_vec(),
+        body: body.to_vec(),
+        negative,
+        dir_only,
+        basename_only,
+    })
+}
+EOF
+cat > src/ignore/charclass.rs <<'EOF'
+//! Bracket expressions used by wildmatch.
+
+/// Match one byte and return the closing bracket index. `None` means the
+/// expression is malformed, which makes the whole glob fail.
+pub(super) fn bracket(pat: &[u8], mut p: usize, tc: u8) -> Option<(bool, usize)> {
+    let mut n...[+4645 chars]
+[step 4] python3 - <<'PY'
+p='src/ignore/pattern.rs'
+s=open(p).read()
+s=s.replace('                match_pathname(path, &pat.body)', '                match_pathname(path, &self.base, &pat.body)')
+s=s.replace('fn match_pathname(path: &str, body: &[u8]) -> bool {\n    let body = body.strip_prefix(b"/").unwrap_or(body);\n    wildmatch(body, path.as_bytes(), true)\n}', '''fn match_pathname(path: &str, base: &str, body: &[u8]) -> bool {
+    let body = body.strip_prefix(b"/").unwrap_or(body);
+    let relative = if base.is_empty() {
+        path
+    } else {
+        path.strip_prefix(base).and_then(|p| p.strip_prefix('/')).unwrap_or("")
+    };
+    wildmatch(body, relative.as_bytes(), true)
+}''')
+open(p,'w').write(s)
+
+p='src/config/paths.rs'; s=open(p).read()
+s=s.replace('pub fn default_excludes_file() -> Option<String> {\n    home().map(|h| format!("{h}/.config/git/ignore"))\n}', '''pub fn default_excludes_file() -> Option<String> {
+    match env::var("XDG_CONFIG_HOME") {
+        Ok(xdg) if !xdg.is_empty() => Some(format!("{xdg}/git/ignore")),
+        _ => home().map(|h| format!("{h}/.config/git/ignore")),
+    }
+}''')
+open(p,'w').write(s)
+
+p='src/config/gitconfig.rs'; s=open(p).read()
+s=s.replace('&& e.key == key)', '&& e.key.eq_ignore_ascii_case(key))')
+open(p,'w').write(s)
+
+p='src/walk/order.rs'; open(p,'w').write('''/// Sort by the bytes of the complete relative path. UTF-8 preserves byte order.\npub fn sort_paths(mut paths: Vec<String>) -> Vec<String> {\n    paths.sort_unstable();\n    paths\n}\n''')
+PY
+cat > src/ignore/stack.rs <<'EOF'
+//! Combining pattern sources into a decision for one path.
+
+use std::path::{Path, PathBuf};
+use super::pattern::{Pattern, PatternList};
+use super::sources::{read_optional, Sources};
+use crate::error::Result;
+
+pub const PER_DIRECTORY: &str = ".gitignore";
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Hit { pub source: String, pub line: usize, pub text: String, pub negative: bool }
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Verdict { NoMatch, Matched(Hit) }
+impl Verdict { pub fn is_ignored(&self) -> bool { matches!(self, Self::Matched(h) if !h.negative) } }
+
+pub struct Matcher { root: PathBuf, globals: Vec<PatternList> }
+fn hit(list: &PatternList, pat: &Pattern) -> Hit {
+    Hit { source: list.source.clone(), line: pat.line, text: pat.text.clone(), negative: pat.negative }
+}
+// Retained for the public API: an excluded ancestor always wins.
+pub fn resolve(inherited: Option<Hit>, own: Option<Hit>) -> Option<Hit> { inherited.or(ow...[+3287 chars]
+[step 4] python3 - <<'PY'
+p='src/ignore/sources.rs'; s=open(p).read()
+# Required precedence: info/exclude before excludes file.
+old='''        if let Some(name) = &self.excludes_file {
+            let path = resolve(root, name);
+            if let Some(list) = read_optional(&path, name)? {
+                lists.push(list);
+            }
+        }
+        if let Some(list) = read_optional(&root.join(INFO_EXCLUDE), INFO_EXCLUDE)? {
+            lists.push(list);
+        }'''
+new='''        if let Some(list) = read_optional(&root.join(INFO_EXCLUDE), INFO_EXCLUDE)? {
+            lists.push(list);
+        }
+        if let Some(name) = &self.excludes_file {
+            let path = resolve(root, name);
+            if let Some(list) = read_optional(&path, name)? {
+                lists.push(list);
+            }
+        }'''
+s=s.replace(old,new)
+# Explicitly skip anything whose followed metadata is not a regular file.
+old='''pub fn read_optional(path: &Path, source: &str) -> Result<Option<PatternList>> {
+    match fs::read(path) {'''
+new='''pub fn read_optional(path: &Path, source: &str) -> Result<Option<PatternList>> {
+    match fs::metadata(path) {
+        Ok(meta) if !meta.is_file() => return Ok(None),
+        Ok(_) => {}
+        Err(e) if matches!(e.kind(), io::ErrorKind::NotFound | io::ErrorKind::NotADirectory) => return Ok(None),
+        Err(e) => return Err(Error::io(path, e)),
+    }
+    match fs::read(path) {'''
+s=s.replace(old,new)
+open(p,'w').write(s)
+PY
+export PATH=/usr/local/rustup/toolchains/1.85.1-x86_64-unknown-linux-gnu/bin:$PATH
+cargo test && cargo build --release
+[step 5] python3 - <<'PY'
+p='src/config/gitconfig.rs'
+s=open(p).read()
+s=s.replace('''        if let Some(head) = raw.strip_suffix('\\\\') {
+            if !head.ends_with('\\\\') {
+                current.push_str(head);
+                continue;
+            }
+        }''', '''        if let Some(head) = raw.strip_suffix('\\\\') {
+            current.push_str(head);
+            continue;
+        }''')
+open(p,'w').write(s)
+PY
+rm -rf /tmp/gleaner-case && mkdir -p /tmp/gleaner-case/{build,one/build,sub,ignored,sort/a,glob/a/x/y,glob/z} /tmp/gleaner-case/.git/info
+printf 'top\n' > /tmp/gleaner-case/build/a
+printf 'nested\n' > /tmp/gleaner-case/one/build/b
+printf 'drop\n' > /tmp/gleaner-case/sub/drop.tmp
+printf 'keep\n' > /tmp/gleaner-case/sub/keep.tmp
+printf 'hidden\n' > /tmp/gleaner-case/ignored/revive.txt
+printf 'x\n' > /tmp/gleaner-case/sort/a-b
+printf 'x\n' > /tmp/gleaner-case/sort/a/file
+printf 'x\n' > /tmp/gleaner-case/sort/a0
+printf 'x\n' > /tmp/gleaner-case/glob/a/b
+printf 'x\n' > /tmp/gleaner-case/glob/a/x/y/b
+printf 'x\n' > /tmp/gleaner-case/glob/z/q
+printf '\357\273\277# comment\r\nbuild/\r\n*.tmp\r\nignored/\r\n!ignored/revive.txt\r\nglob/a/**/b\r\n' > /tmp/gleaner-case/.gitignore
+printf '!keep.tmp\ndoc/frotz\n' > /tmp/gleaner-case/sub/.gitignore
+printf 'x\n' > /tmp/gleaner-case/sub/doc-frotz
+mkdir -p /tmp/gleaner-case/sub/doc && printf 'x\n' > /tmp/gleaner-case/sub/doc/frotz
+printf '%s\n' '--- list fixture ---'; ./target/release/gleaner --root /tmp/gleaner-case list
+printf '%s\n' '--- check fixture ---'; ./target/release/gleaner --root /tmp/gleaner-case check build/a one/build/b sub/drop.tmp sub/keep.tmp ignored/revive.txt glob/a/b glob/a/x/y/b sub/doc/frotz; printf 'status=%s\n' "$?"
+[step 5] cat >> src/ignore/parse.rs <<'EOF'
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn spaces_and_markers() {
+        assert_eq!(trim_trailing_spaces(b"foo  "), b"foo");
+        assert_eq!(trim_trailing_spaces(b"foo\\  "), b"foo\\ ");
+        let p = parse_line(br"\!important").unwrap();
+        assert!(!p.negative);
+        assert_eq!(p.body, br"\!important");
+        let p = parse_line(b"build/").unwrap();
+        assert!(p.dir_only && p.basename_only);
+    }
+}
+EOF
+cat >> src/ignore/lines.rs <<'EOF'
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn bom_crlf_and_physical_numbers() {
+        let got = split(b"\xef\xbb\xbf# c\r\n\r\nfoo\r\n");
+        assert_eq!(got.len(), 1);
+        assert_eq!(got[0].number, 3);
+        assert_eq!(got[0].text, b"foo");
+    }
+}
+EOF
+cat >> src/ignore/wildmatch.rs <<'EOF'
+
+#[cfg(test)]
+mod tests {
+    use super::wildmatch;
+    fn m(p: &str, t: &str) -> bool { wildmatch(p.as_bytes(), t.as_bytes(), true) }
+    #[test]
+    fn ordinary_and_globstar() {
+        assert!(m("a/**/b", "a/b"));
+        assert!(m("a/**/b", "a/x/y/b"));
+        assert!(m("**/x", "x"));
+        assert!(m("**/x", "a/b/x"));
+        assert!(m("a/**", "a/x/y"));
+        assert!(!m("a/*/b", "a/x/y/b"));
+        assert!(!m("**z/q", "a/z/q"));
+        assert!(m("[!a]", "b"));
+        assert!(m("[^a]", "b"));
+        assert!(m("[]a]", "]"));
+        assert!(!m("[[:unknown:]]", "x"));
+    }
+}
+EOF
+export PATH=/usr/local/rustup/toolchains/1.85.1-x86_64-unknown-linux-gnu/bin:$PATH
+cargo test
+[step 5] rm -rf /tmp/gleaner-prec && mkdir -p /tmp/gleaner-prec/.git/info /tmp/gleaner-prec/deep
+printf 'x\n' > /tmp/gleaner-prec/deep/file.tmp
+printf '*.tmp\n' > /tmp/gleaner-prec/.gitignore
+printf '!file.tmp\n' > /tmp/gleaner-prec/deep/.gitignore
+printf '!global.dat\n' > /tmp/gleaner-prec/.git/info/exclude
+printf 'x\n' > /tmp/gleaner-prec/global.dat
+printf '[Core]\nExcludesFile = local-excludes\n' > /tmp/gleaner-prec/.git/config
+printf 'global.dat\n' > /tmp/gleaner-prec/local-excludes
+printf '%s\n' '--- precedence ---'; ./target/release/gleaner --root /tmp/gleaner-prec check deep/file.tmp global.dat; printf 'status=%s\n' "$?"; ./target/release/gleaner --root /tmp/gleaner-prec list
+export PATH=/usr/local/rustup/toolchains/1.85.1-x86_64-unknown-linux-gnu/bin:$PATH
+cargo build --release
+[step 6] export PATH=/usr/local/rustup/toolchains/1.85.1-x86_64-unknown-linux-gnu/bin:$PATH
+cargo fmt --all
+printf '%s\n' '--- policy scan ---'; grep -RInE 'unsafe|extern[[:space:]]+"|std::process::Command|Command::new' src || true; printf '%s\n' '--- manifest dependencies ---'; sed -n '/\[dependencies\]/,/^\[/p' Cargo.toml
+cargo test && cargo build --release
+[step 6] {}
+[step 7] python3 - <<'PY'
+p = 'src/ignore/sources.rs'
+s = open(p).read()
+s = s.replace('match fs::metadata(path) {', 'match fs::symlink_metadata(path) {')
+open(p, 'w').write(s)
+PY
+export PATH=/usr/local/rustup/toolchains/1.85.1-x86_64-unknown-linux-gnu/bin:$PATH
+cargo test && cargo build --release
+[step 7] {}

@@ -1,0 +1,131 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 12,
+            "passed": 11,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790481161.9026299,
+            "stop": 1790481163.1334677
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_default_path",
+                "status": "passed",
+                "duration": 1.171896089996153,
+                "start": 1790481161.9119873,
+                "stop": 1790481163.0857687,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_path_boundary",
+                "status": "passed",
+                "duration": 0.0015534820049651898,
+                "start": 1790481163.0859606,
+                "stop": 1790481163.0885625,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_host_only",
+                "status": "passed",
+                "duration": 0.0014701649997732602,
+                "start": 1790481163.0887198,
+                "stop": 1790481163.0923119,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_ip_hosts",
+                "status": "passed",
+                "duration": 0.0015346930049418006,
+                "start": 1790481163.0924747,
+                "stop": 1790481163.0949922,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_max_age_precedence",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.0015730590021121316,
+                "start": 1790481163.0951498,
+                "stop": 1790481163.1060603,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "crumbjar = '/tmp/crumbjar-verify-target/release/crumbjar'\n\n    def test_max_age_precedence(crumbjar):\n        \"\"\"Max-Age decides the lifetime over Expires regardless of attribute order; invalid Max-Age is skipped.\"\"\"\n>       _check_group(crumbjar, \"max_age_precedence\")\n\n/tests/test_outputs.py:101: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/crumbjar-verify-target/release/crumbjar'\ngroup = 'max_age_precedence'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            p = subprocess.run(\n                [binary, \"replay\", \"-\"],\n                input=case[\"transcript\"], capture_output=True, text=True, timeout=60,\n                env={\"PATH\": \"/usr/local/bin:/usr/bin:/bin\", \"LC_ALL\": \"C\"},\n            )\n            if p.returncode != 0 or p.stdout != case[\"stdout\"]:\n                failures.append(\n                    f\"--- transcript\\n{case['transcript']}\"\n                    f\"--- expected (exit 0)\\n{case['stdout']}\"\n                    f\"--- got (exit {p.returncode})\\n{p.stdout}{p.stderr[-500:]}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} transcripts differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 1 of 2 transcripts differ:\nE         --- transcript\nE         at 1767225600\nE         set https://news.example.org/ a=1; Max-Age=3600; Expires=Wed, 01 Jan 2031 00:00:00 GMT\nE         set https://news.example.org/ b=1; Expires=Wed, 01 Jan 2031 00:00:00 GMT; Max-Age=60\nE         set https://news.example.org/ c=1; Max-Age=soon; Expires=Wed, 01 Jan 2031 00:00:00 GMT\nE         set https://news.example.org/ d=1; Expires=Wed, 01 Jan 2031 00:00:00 GMT; Max-Age=0\nE         set https://news.example.org/ e=1; Max-Age=+60\nE         set https://news.example.org/ f=1; Max-Age=-1\nE         set https://news.example.org/ g=1; Max-Age=0; Expires=Wed, 01 Jan 2031 00:00:00 GMT\nE         dump\nE         at 1767225700\nE         get https://news.example.org/\nE         at 1767229300\nE         get https://news.example.org/\nE         dump\nE         --- expected (exit 0)\nE         -- jar @1767225600: 4 cookie(s)\nE         news.example.org\t/\ta=1\thost-only\t1767229200\t1767225600\t1767225600\nE         news.example.org\t/\tb=1\thost-only\t1767225660\t1767225600\t1767225600\nE         news.example.org\t/\tc=1\thost-only\t1924992000\t1767225600\t1767225600\nE         news.example.org\t/\te=1\thost-only\tsession\t1767225600\t1767225600\nE         https://news.example.org/\ta=1; c=1; e=1\nE         https://news.example.org/\tc=1; e=1\nE         -- jar @1767229300: 2 cookie(s)\nE         news.example.org\t/\tc=1\thost-only\t1924992000\t1767225600\t1767229300\nE         news.example.org\t/\te=1\thost-only\tsession\t1767225600\t1767229300\nE         --- got (exit 0)\nE         -- jar @1767225600: 5 cookie(s)\nE         news.example.org\t/\ta=1\thost-only\t1924992000\t1767225600\t1767225600\nE         news.example.org\t/\tb=1\thost-only\t1767225660\t1767225600\t1767225600\nE         news.example.org\t/\tc=1\thost-only\t1924992000\t1767225600\t1767225600\nE         news.example.org\t/\te=1\thost-only\tsession\t1767225600\t1767225600\nE         news.example.org\t/\tg=1\thost-only\t1924992000\t1767225600\t1767225600\nE         https://news.example.org/\ta=1; c=1; e=1; g=1\nE         https://news.example.org/\ta=1; c=1; e=1; g=1\nE         -- jar @1767229300: 4 cookie(s)\nE         news.example.org\t/\ta=1\thost-only\t1924992000\t1767225600\t1767229300\nE         news.example.org\t/\tc=1\thost-only\t1924992000\t1767225600\t1767229300\nE         news.example.org\t/\te=1\thost-only\tsession\t1767225600\t1767229300\nE         news.example.org\t/\tg=1\thost-only\t1924992000\t1767225600\t1767229300\nE         \nE       assert not ['--- transcript\\nat 1767225600\\nset https://news.example.org/ a=1; Max-Age=3600; Expires=Wed, 01 Jan 2031 00:00:00 GM...host-only\\tsession\\t1767225600\\t1767229300\\nnews.example.org\\t/\\tg=1\\thost-only\\t1924992000\\t1767225600\\t1767229300\\n']\n\n/tests/test_outputs.py:76: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_two_digit_years",
+                "status": "passed",
+                "duration": 0.0016336070002580527,
+                "start": 1790481163.1061916,
+                "stop": 1790481163.1085813,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_invalid_dates",
+                "status": "passed",
+                "duration": 0.0016534940004930831,
+                "start": 1790481163.1087372,
+                "stop": 1790481163.1136703,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_replacement",
+                "status": "passed",
+                "duration": 0.001455198995245155,
+                "start": 1790481163.113825,
+                "stop": 1790481163.1163056,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_header_order",
+                "status": "passed",
+                "duration": 0.0014598199959436897,
+                "start": 1790481163.116436,
+                "stop": 1790481163.1216035,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_public_suffix",
+                "status": "passed",
+                "duration": 0.0014258580013120081,
+                "start": 1790481163.1217363,
+                "stop": 1790481163.1241078,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_site_limit",
+                "status": "passed",
+                "duration": 0.0015461410002899356,
+                "start": 1790481163.1242645,
+                "stop": 1790481163.1297,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_name_value_pair",
+                "status": "passed",
+                "duration": 0.001598741000634618,
+                "start": 1790481163.1298516,
+                "stop": 1790481163.1324558,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

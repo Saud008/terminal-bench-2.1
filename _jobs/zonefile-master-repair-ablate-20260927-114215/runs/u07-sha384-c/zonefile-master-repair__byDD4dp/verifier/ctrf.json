@@ -1,0 +1,122 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 11,
+            "passed": 10,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790489792.4671488,
+            "stop": 1790489794.0279784
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_owner_continuation",
+                "status": "passed",
+                "duration": 1.430388043999983,
+                "start": 1790489792.4914703,
+                "stop": 1790489793.9235125,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_default_ttl",
+                "status": "passed",
+                "duration": 0.007765848999952141,
+                "start": 1790489793.9238951,
+                "stop": 1790489793.9331741,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_include_scope",
+                "status": "passed",
+                "duration": 0.006789195999772346,
+                "start": 1790489793.9338608,
+                "stop": 1790489793.942316,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_include_paths",
+                "status": "passed",
+                "duration": 0.007509924000032697,
+                "start": 1790489793.9428973,
+                "stop": 1790489793.9522674,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_quoted_parentheses",
+                "status": "passed",
+                "duration": 0.005276547000221399,
+                "start": 1790489793.9525874,
+                "stop": 1790489793.9593008,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_escaped_case",
+                "status": "passed",
+                "duration": 0.0027442869995866204,
+                "start": 1790489793.959614,
+                "stop": 1790489793.9639118,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_escaped_label_length",
+                "status": "passed",
+                "duration": 0.007534216999829368,
+                "start": 1790489793.9646752,
+                "stop": 1790489793.9739296,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_canonical_order",
+                "status": "passed",
+                "duration": 0.006255762000137111,
+                "start": 1790489793.9744437,
+                "stop": 1790489793.9822247,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_rrset_ttl",
+                "status": "passed",
+                "duration": 0.005791355000155818,
+                "start": 1790489793.9826791,
+                "stop": 1790489793.98987,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_zonemd",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.011225102000253173,
+                "start": 1790489793.9903035,
+                "stop": 1790489794.0214016,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "zonec = '/tmp/zonec-verify-build/zonec'\n\n    def test_zonemd(zonec):\n        \"\"\"The apex ZONEMD gets the SOA serial and the RFC 8976 SHA-384 digest of the listing; other ZONEMD records are data; SHA-512 at the apex is rejected.\"\"\"\n>       _check_group(zonec, \"zonemd\")\n\n/tests/test_outputs.py:154: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/zonec-verify-build/zonec', group = 'zonemd'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            base, proc = _run_case(binary, case)\n            label = f\"--- {group}/{case['name']} (zonec -o {case['origin']} {case['entry']})\"\n            if case[\"error_line\"] is None:\n                if (proc.returncode, proc.stdout) != (0, case[\"stdout\"]):\n                    failures.append(\n                        f\"{label}\\nexpected exit 0 and:\\n{case['stdout']}\"\n                        f\"got exit {proc.returncode}, stderr {proc.stderr.strip()!r}, stdout:\\n{proc.stdout}\"\n                    )\n                continue\n            prefix = f\"{base / case['error_file']}:{case['error_line']}: \"\n            first = proc.stderr.splitlines()[0] if proc.stderr else \"\"\n            if proc.returncode != 1 or proc.stdout != \"\" or not first.startswith(prefix):\n                failures.append(\n                    f\"{label}\\nexpected exit 1, empty stdout and a diagnostic starting with {prefix!r}\\n\"\n                    f\"got exit {proc.returncode}, stderr {first!r}, stdout:\\n{proc.stdout}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 1 of 4 cases differ:\nE         --- zonemd/digest_input_near_block_end (zonec -o example.org main.zone)\nE         expected exit 0 and:\nE         example.org.\t3600\tIN\tNS\tns1.example.org.\nE         example.org.\t3600\tIN\tSOA\tns1.example.org. hostmaster.example.org. 2026092706 7200 1800 1209600 300\nE         example.org.\t3600\tIN\tZONEMD\t2026092706 1 1 880977E80C2B78B35D39EFDF8778FFC95DED0E387B0645CC7D6EA5130A9C2FEB188EE5B2A42C353B3BB90B43D1FD9795\nE         mail.example.org.\t3600\tIN\tA\t192.0.2.25\nE         mail.example.org.\t3600\tIN\tTXT\t\"v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDwq7ve1Hc9Lr2MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDwq7ve1Hc9Lr2MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBg\"\nE         ns1.example.org.\t3600\tIN\tA\t192.0.2.53\nE         got exit 0, stderr '', stdout:\nE         example.org.\t3600\tIN\tNS\tns1.example.org.\nE         example.org.\t3600\tIN\tSOA\tns1.example.org. hostmaster.example.org. 2026092706 7200 1800 1209600 300\nE         example.org.\t3600\tIN\tZONEMD\t2026092706 1 1 7A31B4008309AAE27B0BF9D7F6E035CD6348E07A7B4E169DBC98989A69F88F8C2C7A49E483159B52F7FAC4D52F98CAC1\nE         mail.example.org.\t3600\tIN\tA\t192.0.2.25\nE         mail.example.org.\t3600\tIN\tTXT\t\"v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDwq7ve1Hc9Lr2MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDwq7ve1Hc9Lr2MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBg\"\nE         ns1.example.org.\t3600\tIN\tA\t192.0.2.53\nE         \nE       assert not ['--- zonemd/digest_input_near_block_end (zonec -o example.org main.zone)\\nexpected exit 0 and:\\nexample.org.\\t3600\\tI...QEBAQUAA4GNADCBiQKBgQDwq7ve1Hc9Lr2MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBg\"\\nns1.example.org.\\t3600\\tIN\\tA\\t192.0.2.53\\n']\n\n/tests/test_outputs.py:104: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_reference_zone",
+                "status": "passed",
+                "duration": 0.0035826829998768517,
+                "start": 1790489794.0217109,
+                "stop": 1790489794.0267234,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

@@ -1,0 +1,113 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 10,
+            "passed": 9,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790480750.387971,
+            "stop": 1790480760.3411922
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_section_anchoring",
+                "status": "passed",
+                "duration": 9.761690947001625,
+                "start": 1790480750.4050875,
+                "stop": 1790480760.1681182,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_tab_indentation",
+                "status": "passed",
+                "duration": 0.021699534001527354,
+                "start": 1790480760.1684074,
+                "stop": 1790480760.1911907,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_bracketed_directories",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.013711117000639206,
+                "start": 1790480760.1914222,
+                "stop": 1790480760.217994,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "quire = '/tmp/quire-verify/quire'\n\n    def test_bracketed_directories(quire):\n        \"\"\"EditorConfig files in directories whose names contain glob characters.\"\"\"\n>       _check_group(quire, \"bracketed_directories\")\n\n/tests/test_outputs.py:112: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/quire-verify/quire', group = 'bracketed_directories'\n\n    def _check_group(binary, group):\n        failures = []\n        for case in CASES[group]:\n            rc, out, err = _run_case(binary, case)\n            if (rc, out, err) != (case[\"rc\"], case[\"stdout\"], case[\"stderr\"]):\n                failures.append(\n                    f\"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\\n\"\n                    f\"expected rc={case['rc']} stderr={case['stderr']!r}\\n{case['stdout']}\"\n                    f\"got rc={rc} stderr={err!r}\\n{out}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(CASES[group])} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 5 of 6 cases differ:\nE         --- bracketed_directories-01 args=['{root}/[wip] shop/app.tsx', '{root}/[wip] shop/components/Button.tsx'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/bracketed_directories-01/[wip] shop/app.tsx]\nE         indent_style=space\nE         indent_size=2\nE         tab_width=2\nE         [/srv/qc/bracketed_directories-01/[wip] shop/components/Button.tsx]\nE         indent_style=space\nE         indent_size=2\nE         m=component\nE         tab_width=2\nE         got rc=0 stderr=''\nE         [/srv/qc/bracketed_directories-01/[wip] shop/app.tsx]\nE         [/srv/qc/bracketed_directories-01/[wip] shop/components/Button.tsx]\nE         \nE         --- bracketed_directories-02 args=['{root}/site[2024]/index.tsx', '{root}/site[2024]/components/Nav.tsx'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/bracketed_directories-02/site[2024]/index.tsx]\nE         indent_style=space\nE         indent_size=2\nE         tab_width=2\nE         [/srv/qc/bracketed_directories-02/site[2024]/components/Nav.tsx]\nE         indent_style=space\nE         indent_size=2\nE         m=component\nE         tab_width=2\nE         got rc=0 stderr=''\nE         [/srv/qc/bracketed_directories-02/site[2024]/index.tsx]\nE         [/srv/qc/bracketed_directories-02/site[2024]/components/Nav.tsx]\nE         \nE         --- bracketed_directories-03 args=['{root}/a[!x]b/sub/page.tsx', '{root}/a[!x]b/page.tsx'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/bracketed_directories-03/a[!x]b/sub/page.tsx]\nE         indent_style=space\nE         indent_size=2\nE         quote_type=double\nE         tab_width=2\nE         [/srv/qc/bracketed_directories-03/a[!x]b/page.tsx]\nE         indent_style=space\nE         indent_size=2\nE         tab_width=2\nE         got rc=0 stderr=''\nE         [/srv/qc/bracketed_directories-03/a[!x]b/sub/page.tsx]\nE         [/srv/qc/bracketed_directories-03/a[!x]b/page.tsx]\nE         \nE         --- bracketed_directories-04 args=['{root}/r[0-9]/x.tsx', '{root}/r5/x.tsx'] stdin=None\nE         expected rc=0 stderr=''\nE         [/srv/qc/bracketed_directories-04/r[0-9]/x.tsx]\nE         indent_style=space\nE         indent_size=2\nE         tab_width=2\nE         [/srv/qc/bracketed_directories-04/r5/x.tsx]\nE         got rc=0 stderr=''\nE         [/srv/qc/bracketed_directories-04/r[0-9]/x.tsx]\nE         [/srv/qc/bracketed_directories-04/r5/x.tsx]\nE         \nE         --- bracketed_directories-06 args=['{root}/[x]/a/b/readme.md'] stdin=None\nE         expected rc=0 stderr=''\nE         trim_trailing_whitespace=false\nE         charset=latin1\nE         got rc=0 stderr=''\nE         \nE       assert not [\"--- bracketed_directories-01 args=['{root}/[wip] shop/app.tsx', '{root}/[wip] shop/components/Button.tsx'] stdin=Non...readme.md'] stdin=None\\nexpected rc=0 stderr=''\\ntrim_trailing_whitespace=false\\ncharset=latin1\\ngot rc=0 stderr=''\\n\"]\n\n/tests/test_outputs.py:97: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_stdin_paths",
+                "status": "passed",
+                "duration": 0.014565388002665713,
+                "start": 1790480760.2182634,
+                "stop": 1790480760.2338476,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_globstar_segments",
+                "status": "passed",
+                "duration": 0.011914231999980984,
+                "start": 1790480760.234108,
+                "stop": 1790480760.2472217,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_negated_classes",
+                "status": "passed",
+                "duration": 0.0158609729987802,
+                "start": 1790480760.2475612,
+                "stop": 1790480760.2646828,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_inline_comments",
+                "status": "passed",
+                "duration": 0.02307680900048581,
+                "start": 1790480760.2649722,
+                "stop": 1790480760.2890422,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_root_declarations",
+                "status": "passed",
+                "duration": 0.020558617001370294,
+                "start": 1790480760.2894115,
+                "stop": 1790480760.3112512,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_value_case",
+                "status": "passed",
+                "duration": 0.010388974998932099,
+                "start": 1790480760.3115215,
+                "stop": 1790480760.3232956,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_property_order",
+                "status": "passed",
+                "duration": 0.01543559399942751,
+                "start": 1790480760.3235607,
+                "stop": 1790480760.340154,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

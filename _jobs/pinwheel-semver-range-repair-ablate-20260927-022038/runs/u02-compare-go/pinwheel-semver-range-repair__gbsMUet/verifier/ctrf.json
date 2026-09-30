@@ -1,0 +1,161 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 15,
+            "passed": 13,
+            "failed": 2,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790456061.9301114,
+            "stop": 1790456070.1890364
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_caret_ranges",
+                "status": "passed",
+                "duration": 7.937703005000003,
+                "start": 1790456061.950453,
+                "stop": 1790456069.8873696,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_tilde_ranges",
+                "status": "passed",
+                "duration": 0.02670221199991829,
+                "start": 1790456069.8877065,
+                "stop": 1790456069.916105,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_partial_version_comparators",
+                "status": "passed",
+                "duration": 0.042372430000114036,
+                "start": 1790456069.9164114,
+                "stop": 1790456069.9598153,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_hyphen_ranges",
+                "status": "passed",
+                "duration": 0.02422719799983497,
+                "start": 1790456069.960051,
+                "stop": 1790456069.985371,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_prerelease_admission",
+                "status": "passed",
+                "duration": 0.022811902999819722,
+                "start": 1790456069.9856615,
+                "stop": 1790456070.0093112,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_union_and_operator_spacing",
+                "status": "passed",
+                "duration": 0.023611268000195196,
+                "start": 1790456070.009532,
+                "stop": 1790456070.0342531,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_build_metadata_ignored",
+                "status": "passed",
+                "duration": 0.015074534999939715,
+                "start": 1790456070.0345094,
+                "stop": 1790456070.0507033,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_prerelease_precedence",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.025509810999665206,
+                "start": 1790456070.050998,
+                "stop": 1790456070.0889535,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\n\n    def test_prerelease_precedence(pinwheel):\n        \"\"\"compare orders prereleases by SemVer 2.0.0 precedence (numeric ids, longer sets, v prefix).\"\"\"\n>       _check_compare(pinwheel, \"precedence\")\n\n/tests/test_outputs.py:148: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/pinwheel-verify/pinwheel', group = 'precedence'\n\n    def _check_compare(binary, group):\n        rows = CASES[\"compare\"][group]\n        failures = []\n        for a, b, want in rows:\n            rc, out, err = _run(binary, \"compare\", a, b)\n            if (rc, out) != (0, f\"{want}\\n\"):\n                failures.append(\n                    f\"compare {a!r} {b!r}: expected rc=0 {want}, got rc={rc} stdout={out.strip()!r} stderr={err.strip()!r}\"\n                )\n>       assert not failures, f\"{len(failures)} of {len(rows)} cases differ:\\n\" + \"\\n\".join(failures)\nE       AssertionError: 7 of 16 cases differ:\nE         compare '1.3.0-beta.11' '1.3.0-beta.2': expected rc=0 1, got rc=0 stdout='-1' stderr=''\nE         compare '1.0.0-alpha' '1.0.0-alpha.1': expected rc=0 -1, got rc=0 stdout='0' stderr=''\nE         compare '1.0.0-beta' '1.0.0-beta.2': expected rc=0 -1, got rc=0 stdout='0' stderr=''\nE         compare '1.0.0-beta.2' '1.0.0-beta.11': expected rc=0 -1, got rc=0 stdout='1' stderr=''\nE         compare '1.0.0-rc.1.2' '1.0.0-rc.1': expected rc=0 1, got rc=0 stdout='0' stderr=''\nE         compare '1.0.0-9' '1.0.0-10': expected rc=0 -1, got rc=0 stdout='1' stderr=''\nE         compare '1.0.0-alpha.9.1' '1.0.0-alpha.10': expected rc=0 -1, got rc=0 stdout='1' stderr=''\nE       assert not [\"compare '1.3.0-beta.11' '1.3.0-beta.2': expected rc=0 1, got rc=0 stdout='-1' stderr=''\", \"compare '1.0.0-alpha' '1...., got rc=0 stdout='0' stderr=''\", \"compare '1.0.0-9' '1.0.0-10': expected rc=0 -1, got rc=0 stdout='1' stderr=''\", ...]\n\n/tests/test_outputs.py:87: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_invalid_input_rejected",
+                "status": "passed",
+                "duration": 0.0521848549999504,
+                "start": 1790456070.089241,
+                "stop": 1790456070.1424968,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_lock_drops_packages_no_longer_required",
+                "status": "passed",
+                "duration": 0.005783602000065002,
+                "start": 1790456070.1428561,
+                "stop": 1790456070.1498716,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_lock_applies_overrides",
+                "status": "passed",
+                "duration": 0.004468107000093369,
+                "start": 1790456070.1501157,
+                "stop": 1790456070.1555705,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_lock_yanked_releases",
+                "status": "passed",
+                "duration": 0.004009581999980583,
+                "start": 1790456070.155769,
+                "stop": 1790456070.1607163,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_lock_prefer_lowest_and_ties",
+                "status": "passed",
+                "duration": 0.004262670999878537,
+                "start": 1790456070.1609387,
+                "stop": 1790456070.1661541,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_lock_mixed_range_forms",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.003766492000067956,
+                "start": 1790456070.166388,
+                "stop": 1790456070.1758788,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "pinwheel = '/tmp/pinwheel-verify/pinwheel'\ntmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_mixed_range_forms0')\n\n    def test_lock_mixed_range_forms(pinwheel, tmp_path):\n        \"\"\"A project using caret, tilde, hyphen, partial, union, prerelease and build-metadata ranges locks correctly.\"\"\"\n>       _check_lock(pinwheel, \"mixed\", tmp_path)\n\n/tests/test_outputs.py:197: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/pinwheel-verify/pinwheel', name = 'mixed'\ntmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_mixed_range_forms0')\n\n    def _check_lock(binary, name, tmp_path):\n        expected = (FIXTURES / \"expected\" / f\"{name}.lock\").read_text(encoding=\"utf-8\")\n        count = len(json.loads(expected)[\"packages\"])\n        rc, out, err, lock = _resolve(binary, name, tmp_path)\n        assert rc == 0, f\"resolve {name}: exit {rc}, stderr: {err.strip()}\"\n        assert out == f\"resolved {count} packages\\n\", f\"resolve {name}: stdout {out!r}\"\n        assert lock.is_file(), f\"resolve {name}: no pin.lock written\"\n        actual = lock.read_text(encoding=\"utf-8\")\n        diff = \"\".join(difflib.unified_diff(\n            expected.splitlines(True), actual.splitlines(True), \"expected pin.lock\", \"actual pin.lock\"))\n>       assert actual == expected, f\"resolve {name}: lock differs\\n{diff}\"\nE       AssertionError: resolve mixed: lock differs\nE         --- expected pin.lock\nE         +++ actual pin.lock\nE         @@ -48,7 +48,7 @@\nE                \"dependencies\": {}\nE              },\nE              \"vale-core\": {\nE         -      \"version\": \"1.3.0-beta.11\",\nE         +      \"version\": \"1.3.0-beta.2\",\nE                \"requiredBy\": [\nE                  \"<root>\"\nE                ],\nE         \nE       assert '{\\n  \"lockfi...  }\\n  }\\n}\\n' == '{\\n  \"lockfi...  }\\n  }\\n}\\n'\nE         \nE         Skipping 920 identical leading characters in diff, use -v to show\nE         - .3.0-beta.11\",\nE         ?           ^^\nE         + .3.0-beta.2\",\nE         ?           ^\nE                 \"requiredBy\": [...\nE         \nE         ...Full output truncated (13 lines hidden), use '-vv' to show\n\n/tests/test_outputs.py:107: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_resolution_failures",
+                "status": "passed",
+                "duration": 0.011240731999805575,
+                "start": 1790456070.1760912,
+                "stop": 1790456070.1883364,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

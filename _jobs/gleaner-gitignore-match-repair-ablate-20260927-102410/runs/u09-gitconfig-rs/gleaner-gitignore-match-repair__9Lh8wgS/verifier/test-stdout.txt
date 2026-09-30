@@ -1,0 +1,300 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 15 items
+
+../tests/test_outputs.py ...........F..F                                 [100%]
+
+=================================== FAILURES ===================================
+_____________________________ test_config_spelling _____________________________
+
+gleaner = '/tmp/gleaner-verify-target/release/gleaner'
+
+    def test_config_spelling(gleaner):
+        """core.excludesFile is found with any capitalisation of section and key, quoted values, and the last assignment wins."""
+>       _check_group(gleaner, "config_spelling")
+
+/tests/test_outputs.py:181: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/gleaner-verify-target/release/gleaner', group = 'config_spelling'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            _materialize(case)
+            rc, out, err = _run(binary, case, ["list"])
+            if (rc, out) != (0, case["list"]):
+                failures.append(f"--- {case['name']}: list\nexpected rc=0\n{case['list']}got rc={rc} {err}\n{out}")
+            rc, out, err = _run(binary, case, ["check", "--", *case["checks"]])
+            if (rc, out) != (case["check_rc"], case["check"]):
+                failures.append(
+                    f"--- {case['name']}: check {case['checks']}\n"
+                    f"expected rc={case['check_rc']}\n{case['check']}got rc={rc} {err}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} mismatches in {len(CASES[group])} trees:\n" + "\n".join(failures)
+E       AssertionError: 6 mismatches in 3 trees:
+E         --- lowercase_key: list
+E         expected rc=0
+E         b.tmp
+E         got rc=0 
+E         a.log
+E         
+E         --- lowercase_key: check ['a.log', 'b.tmp']
+E         expected rc=0
+E         /tmp/gleaner-case/user/.gitignore_global:1:*.log	a.log
+E         ::	b.tmp
+E         got rc=0 
+E         ::	a.log
+E         /tmp/gleaner-case/user/.config/git/ignore:1:*.tmp	b.tmp
+E         
+E         --- mixed_case_section_and_quoted_value: list
+E         expected rc=0
+E         a.log
+E         b.tmp
+E         got rc=0 
+E         a.log
+E         c.dat
+E         
+E         --- mixed_case_section_and_quoted_value: check ['a.log', 'b.tmp', 'c.dat']
+E         expected rc=0
+E         ::	a.log
+E         ::	b.tmp
+E         /tmp/gleaner-case/user/ignore list:1:*.dat	c.dat
+E         got rc=0 
+E         ::	a.log
+E         /tmp/gleaner-case/user/.config/git/ignore:1:*.tmp	b.tmp
+E         ::	c.dat
+E         
+E         --- last_assignment_wins: list
+E         expected rc=0
+E         a.log
+E         b.tmp
+E         got rc=0 
+E         b.tmp
+E         c.dat
+E         
+E         --- last_assignment_wins: check ['a.log', 'b.tmp', 'c.dat']
+E         expected rc=0
+E         ::	a.log
+E         ::	b.tmp
+E         /tmp/gleaner-case/user/second:1:*.dat	c.dat
+E         got rc=0 
+E         /tmp/gleaner-case/user/first:1:*.log	a.log
+E         ::	b.tmp
+E         ::	c.dat
+E         
+E       assert not ['--- lowercase_key: list\nexpected rc=0\nb.tmp\ngot rc=0 \na.log\n', "--- lowercase_key: check ['a.log', 'b.tmp']\nex...eaner-case/user/second:1:*.dat\tc.dat\ngot rc=0 \n/tmp/gleaner-case/user/first:1:*.log\ta.log\n::\tb.tmp\n::\tc.dat\n"]
+
+/tests/test_outputs.py:121: AssertionError
+_______________________________ test_mixed_trees _______________________________
+
+gleaner = '/tmp/gleaner-verify-target/release/gleaner'
+
+    def test_mixed_trees(gleaner):
+        """Randomly generated trees combining nested .gitignore files, info/exclude and excludes files."""
+>       _check_group(gleaner, "mixed_trees")
+
+/tests/test_outputs.py:196: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/gleaner-verify-target/release/gleaner', group = 'mixed_trees'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            _materialize(case)
+            rc, out, err = _run(binary, case, ["list"])
+            if (rc, out) != (0, case["list"]):
+                failures.append(f"--- {case['name']}: list\nexpected rc=0\n{case['list']}got rc={rc} {err}\n{out}")
+            rc, out, err = _run(binary, case, ["check", "--", *case["checks"]])
+            if (rc, out) != (case["check_rc"], case["check"]):
+                failures.append(
+                    f"--- {case['name']}: check {case['checks']}\n"
+                    f"expected rc={case['check_rc']}\n{case['check']}got rc={rc} {err}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} mismatches in {len(CASES[group])} trees:\n" + "\n".join(failures)
+E       AssertionError: 5 mismatches in 30 trees:
+E         --- mixed_08: list
+E         expected rc=0
+E         !n
+E         #c
+E         b/!n
+E         b/#c
+E         b/.gitignore
+E         b/a]b
+E         b/foo.txt
+E         b/x
+E         foo.txt
+E         foo/.gitignore
+E         foo/a0
+E         log
+E         x/.gitignore
+E         x/b
+E         x/x.o
+E         x/x/ab
+E         x/x/b
+E         x/x/foo
+E         got rc=0 
+E         !n
+E         #c
+E         b/!n
+E         b/#c
+E         b/.gitignore
+E         b/a]b
+E         b/foo.txt
+E         b/x
+E         foo.txt
+E         foo/.gitignore
+E         foo/a0
+E         log
+E         x/.gitignore
+E         x/b
+E         x/build
+E         x/x.o
+E         x/x/ab
+E         x/x/b
+E         x/x/foo
+E         
+E         --- mixed_08: check ['x/build', 'x/x/b', 'x/.gitignore', 'foo/a0', '!n', 'b/.gitignore', 'b/!n', 'x/x/ab', 'x/x', 'foo/.gitignore', 'x/x/foo', 'foo.txt', 'log', 'b/foo.txt']
+E         expected rc=0
+E         /tmp/gleaner-case/user/gi:1:build	x/build
+E         ::	x/x/b
+E         ::	x/.gitignore
+E         ::	foo/a0
+E         ::	!n
+E         ::	b/.gitignore
+E         ::	b/!n
+E         ::	x/x/ab
+E         ::	x/x
+E         ::	foo/.gitignore
+E         ::	x/x/foo
+E         ::	foo.txt
+E         ::	log
+E         ::	b/foo.txt
+E         got rc=1 
+E         ::	x/build
+E         ::	x/x/b
+E         ::	x/.gitignore
+E         ::	foo/a0
+E         ::	!n
+E         ::	b/.gitignore
+E         ::	b/!n
+E         ::	x/x/ab
+E         ::	x/x
+E         ::	foo/.gitignore
+E         ::	x/x/foo
+E         ::	foo.txt
+E         ::	log
+E         ::	b/foo.txt
+E         
+E         --- mixed_12: list
+E         expected rc=0
+E         -
+E         a.b
+E         b
+E         foo/.gitignore
+E         foo/a.b
+E         foo/build
+E         foo/x
+E         x.o
+E         got rc=0 
+E         -
+E         a.b
+E         b
+E         doc/!n
+E         doc/.gitignore
+E         doc/a-b
+E         doc/b.log
+E         foo/.gitignore
+E         foo/a.b
+E         foo/build
+E         foo/x
+E         x.o
+E         
+E         --- mixed_12: check ['foo/x', 'doc/!n', 'foo/a.b', 'b', 'foo', 'foo/build', 'foo/.gitignore', 'doc/a-b', 'a.b', 'x.o', 'doc', '-', 'doc/.gitignore', 'doc/b.log']
+E         expected rc=0
+E         foo/.gitignore:6:!*	foo/x
+E         /tmp/gleaner-case/user/gi:2:/doc	doc/!n
+E         foo/.gitignore:6:!*	foo/a.b
+E         ::	b
+E         ::	foo
+E         foo/.gitignore:6:!*	foo/build
+E         foo/.gitignore:6:!*	foo/.gitignore
+E         /tmp/gleaner-case/user/gi:2:/doc	doc/a-b
+E         ::	a.b
+E         ::	x.o
+E         /tmp/gleaner-case/user/gi:2:/doc	doc
+E         ::	-
+E         /tmp/gleaner-case/user/gi:2:/doc	doc/.gitignore
+E         /tmp/gleaner-case/user/gi:2:/doc	doc/b.log
+E         got rc=1 
+E         foo/.gitignore:6:!*	foo/x
+E         ::	doc/!n
+E         foo/.gitignore:6:!*	foo/a.b
+E         ::	b
+E         ::	foo
+E         foo/.gitignore:6:!*	foo/build
+E         foo/.gitignore:6:!*	foo/.gitignore
+E         ::	doc/a-b
+E         ::	a.b
+E         ::	x.o
+E         ::	doc
+E         ::	-
+E         ::	doc/.gitignore
+E         ::	doc/b.log
+E         
+E         --- mixed_13: check ['a-b/ab/.gitignore', 'build/abc', 'a-b/a0', 'build/[x]', 'build', 'build/.gitignore', 'a-b/a.b/doc', 'a-b/build/doc', 'a-b/ab', 'a-b/build/.gitignore', 'a-b', 'a-b/a', 'log', 'a-b/a.b/a']
+E         expected rc=0
+E         .gitignore:2:a-b/	a-b/ab/.gitignore
+E         /tmp/gleaner-case/user/gi:5:!?*	build/abc
+E         .gitignore:2:a-b/	a-b/a0
+E         /tmp/gleaner-case/user/gi:5:!?*	build/[x]
+E         /tmp/gleaner-case/user/gi:5:!?*	build
+E         /tmp/gleaner-case/user/gi:5:!?*	build/.gitignore
+E         .gitignore:2:a-b/	a-b/a.b/doc
+E         .gitignore:2:a-b/	a-b/build/doc
+E         .gitignore:2:a-b/	a-b/ab
+E         .gitignore:2:a-b/	a-b/build/.gitignore
+E         .gitignore:2:a-b/	a-b
+E         .gitignore:2:a-b/	a-b/a
+E         /tmp/gleaner-case/user/gi:5:!?*	log
+E         .gitignore:2:a-b/	a-b/a.b/a
+E         got rc=0 
+E         .gitignore:2:a-b/	a-b/ab/.gitignore
+E         ::	build/abc
+E         .gitignore:2:a-b/	a-b/a0
+E         ::	build/[x]
+E         ::	build
+E         ::	build/.gitignore
+E         .gitignore:2:a-b/	a-b/a.b/doc
+E         .gitignore:2:a-b/	a-b/build/doc
+E         .gitignore:2:a-b/	a-b/ab
+E         .gitignore:2:a-b/	a-b/build/.gitignore
+E         .gitignore:2:a-b/	a-b
+E         .gitignore:2:a-b/	a-b/a
+E         ::	log
+E         .gitignore:2:a-b/	a-b/a.b/a
+E         
+E       assert not ['--- mixed_08: list\nexpected rc=0\n!n\n#c\nb/!n\nb/#c\nb/.gitignore\nb/a]b\nb/foo.txt\nb/x\nfoo.txt\nfoo/.gitignore\...a-b/\ta-b/build/.gitignore\n.gitignore:2:a-b/\ta-b\n.gitignore:2:a-b/\ta-b/a\n::\tlog\n.gitignore:2:a-b/\ta-b/a.b/a\n"]
+
+/tests/test_outputs.py:121: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_file_encodings
+PASSED ../tests/test_outputs.py::test_trailing_spaces
+PASSED ../tests/test_outputs.py::test_escaped_leading_characters
+PASSED ../tests/test_outputs.py::test_directory_only_patterns
+PASSED ../tests/test_outputs.py::test_anchoring
+PASSED ../tests/test_outputs.py::test_double_star
+PASSED ../tests/test_outputs.py::test_bracket_expressions
+PASSED ../tests/test_outputs.py::test_reinclude_under_excluded_directory
+PASSED ../tests/test_outputs.py::test_per_directory_precedence
+PASSED ../tests/test_outputs.py::test_tree_wide_sources
+PASSED ../tests/test_outputs.py::test_default_excludes_file
+PASSED ../tests/test_outputs.py::test_list_order
+PASSED ../tests/test_outputs.py::test_check_line_numbers
+FAILED ../tests/test_outputs.py::test_config_spelling - AssertionError: 6 mis...
+FAILED ../tests/test_outputs.py::test_mixed_trees - AssertionError: 5 mismatc...
+========================= 2 failed, 13 passed in 1.48s =========================

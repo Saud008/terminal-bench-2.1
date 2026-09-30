@@ -1,0 +1,51 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 15 items
+
+../tests/test_outputs.py ..........F....                                 [100%]
+
+=================================== FAILURES ===================================
+_________________________ test_lock_applies_overrides __________________________
+
+pinwheel = '/tmp/pinwheel-verify/pinwheel'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_applies_overrides0')
+
+    def test_lock_applies_overrides(pinwheel, tmp_path):
+        """An override replaces the dependents' ranges and never adds a package by itself."""
+>       _check_lock(pinwheel, "overrides", tmp_path)
+
+/tests/test_outputs.py:182: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/pinwheel-verify/pinwheel', name = 'overrides'
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_lock_applies_overrides0')
+
+    def _check_lock(binary, name, tmp_path):
+        expected = (FIXTURES / "expected" / f"{name}.lock").read_text(encoding="utf-8")
+        count = len(json.loads(expected)["packages"])
+        rc, out, err, lock = _resolve(binary, name, tmp_path)
+>       assert rc == 0, f"resolve {name}: exit {rc}, stderr: {err.strip()}"
+E       AssertionError: resolve overrides: exit 3, stderr: pinwheel: no version of gale-queue satisfies "^1.4.0" (from jade-cli), ">=1.0.0 <3" (from kelp-cache), "2.1.x" (from <overrides>)
+E       assert 3 == 0
+
+/tests/test_outputs.py:101: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_caret_ranges
+PASSED ../tests/test_outputs.py::test_tilde_ranges
+PASSED ../tests/test_outputs.py::test_partial_version_comparators
+PASSED ../tests/test_outputs.py::test_hyphen_ranges
+PASSED ../tests/test_outputs.py::test_prerelease_admission
+PASSED ../tests/test_outputs.py::test_union_and_operator_spacing
+PASSED ../tests/test_outputs.py::test_build_metadata_ignored
+PASSED ../tests/test_outputs.py::test_prerelease_precedence
+PASSED ../tests/test_outputs.py::test_invalid_input_rejected
+PASSED ../tests/test_outputs.py::test_lock_drops_packages_no_longer_required
+PASSED ../tests/test_outputs.py::test_lock_yanked_releases
+PASSED ../tests/test_outputs.py::test_lock_prefer_lowest_and_ties
+PASSED ../tests/test_outputs.py::test_lock_mixed_range_forms
+PASSED ../tests/test_outputs.py::test_resolution_failures
+FAILED ../tests/test_outputs.py::test_lock_applies_overrides - AssertionError...
+========================= 1 failed, 14 passed in 8.04s =========================

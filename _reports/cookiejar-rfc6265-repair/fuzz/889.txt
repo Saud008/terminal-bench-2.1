@@ -1,0 +1,21 @@
+at 1767225600
+get http://10.1.2.3/x/y?q=/z
+set http://api.example.com/a A=7; Domain=example.com; HttpOnly; SameSite=Lax; HttpOnly
+at 1767225700
+get http://192.168.0.1
+set http://api.example.com/x/y?q=/z sid=3; Domain=.; Expires=29 Feb 2100 00:00:00; Path=/a/b
+at 1767229700
+set http://shop.example.co.uk/x/y?q=/z sid=9; SameSite=Lax
+get https://www.example.com/a
+set https://example.org/ab A=2
+set https://foo.test/a/b/c A=0; Expires=12:00:00 1 jan 1600; HttpOnly; HttpOnly; SameSite=Lax
+get http://x.co.uk/
+set http://example.com/a sid=4; Max-Age=999999999999999999999; Expires=29 Feb 2028 1:2:3; Expires=01-Jan-49 00:00:00
+set http://example.org/a/bc/d A=1; HttpOnly; HttpOnly; Path=/a; Expires=24:00:00 1 jan 2030
+set http://a.b.example.com/a/b a=4; Max-Age=-5; Expires=12:00:00 1 jan 1600; Domain=co.uk
+set https://a.b.example.com/a a=1; Domain=co.uk
+set http://www.example.com/a/bc/d z=6; HttpOnly; Path=
+set http://10.1.2.3/a/b/ sid=5; Domain=example.co.uk; Domain=test; SameSite=Lax
+get http://shop.example.co.uk/a/b/
+at 1767229800
+dump

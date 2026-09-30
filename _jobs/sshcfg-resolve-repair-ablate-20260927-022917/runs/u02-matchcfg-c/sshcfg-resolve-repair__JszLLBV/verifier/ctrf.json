@@ -1,0 +1,122 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 11,
+            "passed": 10,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1790456492.22079,
+            "stop": 1790456493.448711
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_host_line_patterns",
+                "status": "passed",
+                "duration": 1.0520902679995743,
+                "start": 1790456492.2323604,
+                "stop": 1790456493.2857316,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_match_criteria",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.010701170000174898,
+                "start": 1790456493.286,
+                "stop": 1790456493.3115575,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "hopcfg = '/tmp/hopcfg-verify-3sfzpv94/hopcfg'\n\n    def test_match_criteria(hopcfg):\n        \"\"\"Match host/originalhost/user/localuser/canonical/all criteria, incl. HostName-based host matching.\"\"\"\n>       _check(hopcfg, \"match_criteria\")\n\n/tests/test_outputs.py:125: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nbinary = '/tmp/hopcfg-verify-3sfzpv94/hopcfg', groups = ('match_criteria',)\nfailures = [\"[match_criteria] args=['-F', '/root/.ssh/config', 'db'] expected rc=0 got rc=0\\n--- ssh -G\\n+++ hopcfg\\n@@ -1,3 +1,3...ile ~/.ssh/id_xmss\\n+identityfile ~/.ssh/id_dsa\\n userknownhostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2\\n\"]\ntotal = 9, group = 'match_criteria'\n\n    def _check(binary, *groups):\n        failures = []\n        total = 0\n        for group in groups:\n            for case in GROUPS[group]:\n                total += 1\n                rc, out = _run(binary, case)\n                if (rc, out) == (case[\"rc\"], case[\"stdout\"]):\n                    continue\n                diff = \"\".join(difflib.unified_diff(\n                    case[\"stdout\"].splitlines(True), out.splitlines(True),\n                    \"ssh -G\", \"hopcfg\", n=1))\n                failures.append(f\"[{group}] args={case['args']} expected rc={case['rc']} \"\n                                f\"got rc={rc}\\n{diff}\")\n        assert total > 0\n>       assert not failures, (f\"{len(failures)}/{total} cases differ from ssh -G:\\n\"\n                              + \"\\n\".join(failures[:4]))\nE       AssertionError: 3/9 cases differ from ssh -G:\nE         [match_criteria] args=['-F', '/root/.ssh/config', 'db'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -1,3 +1,3 @@\nE          host db\nE         -user dc2ops\nE         +user root\nE          hostname db01.dc2.example.org\nE         @@ -8,9 +8,9 @@\nE          stricthostkeychecking ask\nE         -serveralivecountmax 9\nE         +serveralivecountmax 3\nE          serveraliveinterval 0\nE          loglevel INFO\nE         -identityfile ~/.ssh/dc2-not-cache\nE         +identityfile ~/.ssh/by-alias\nE          userknownhostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2\nE          forwardagent no\nE         -connecttimeout 7\nE         +connecttimeout none\nE          controlpersist no\nE         \nE         [match_criteria] args=['-F', '/root/.ssh/config', 'cache'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -1,3 +1,3 @@\nE          host cache\nE         -user dc2ops\nE         +user root\nE          hostname cache.dc2.example.org\nE         @@ -8,3 +8,3 @@\nE          stricthostkeychecking ask\nE         -serveralivecountmax 9\nE         +serveralivecountmax 3\nE          serveraliveinterval 0\nE         @@ -20,3 +20,3 @@\nE          forwardagent no\nE         -connecttimeout 7\nE         +connecttimeout none\nE          controlpersist no\nE         \nE         [match_criteria] args=['-F', '/root/.ssh/config', 'short'] expected rc=0 got rc=0\nE         --- ssh -G\nE         +++ hopcfg\nE         @@ -1,5 +1,5 @@\nE          host short\nE         -user viahost\nE         +user root\nE          hostname long.example.net\nE         -port 22\nE         +port 1111\nE          batchmode no\nE         @@ -11,3 +11,9 @@\nE          loglevel INFO\nE         -identityfile ~/.ssh/pass-one\nE         +identityfile ~/.ssh/id_rsa\nE         +identityfile ~/.ssh/id_ecdsa\nE         +identityfile ~/.ssh/id_ecdsa_sk\nE         +identityfile ~/.ssh/id_ed25519\nE         +identityfile ~/.ssh/id_ed25519_sk\nE         +identityfile ~/.ssh/id_xmss\nE         +identityfile ~/.ssh/id_dsa\nE          userknownhostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2\nE         \nE       assert not [\"[match_criteria] args=['-F', '/root/.ssh/config', 'db'] expected rc=0 got rc=0\\n--- ssh -G\\n+++ hopcfg\\n@@ -1,3 +1,3...ile ~/.ssh/id_xmss\\n+identityfile ~/.ssh/id_dsa\\n userknownhostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2\\n\"]\n\n/tests/test_outputs.py:114: AssertionError",
+                "message": "The test failed in the call phase due to an assertion error"
+            },
+            {
+                "name": "test_outputs.py::test_final_pass",
+                "status": "passed",
+                "duration": 0.010594833000595827,
+                "start": 1790456493.3119404,
+                "stop": 1790456493.3237722,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_include_scoping",
+                "status": "passed",
+                "duration": 0.016787034000117274,
+                "start": 1790456493.3240335,
+                "stop": 1790456493.3418324,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_include_paths",
+                "status": "passed",
+                "duration": 0.012392516000090836,
+                "start": 1790456493.342173,
+                "stop": 1790456493.3557327,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_precedence_and_lists",
+                "status": "passed",
+                "duration": 0.011662501000500924,
+                "start": 1790456493.3560023,
+                "stop": 1790456493.3690038,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_sendenv_setenv",
+                "status": "passed",
+                "duration": 0.009732571999848005,
+                "start": 1790456493.3692932,
+                "stop": 1790456493.3805385,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_time_values",
+                "status": "passed",
+                "duration": 0.011956032999933086,
+                "start": 1790456493.3808372,
+                "stop": 1790456493.3939588,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_proxy_settings",
+                "status": "passed",
+                "duration": 0.011140338000132033,
+                "start": 1790456493.3942778,
+                "stop": 1790456493.4068801,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_token_expansion",
+                "status": "passed",
+                "duration": 0.00778004099993268,
+                "start": 1790456493.4070866,
+                "stop": 1790456493.4165447,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_syntax_and_rejections",
+                "status": "passed",
+                "duration": 0.029778222999993886,
+                "start": 1790456493.4169207,
+                "stop": 1790456493.4478006,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

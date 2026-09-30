@@ -1,0 +1,550 @@
+### step 2 CMD:
+ls -la && printf '\n--- files ---\n' && find . -maxdepth 3 -type f | sort
+
+### step 2 CMD:
+printf '\n--- docs ---\n'; for f in docs/*; do echo "### $f"; sed -n '1,240p' "$f"; done
+
+### step 2 CMD:
+go test ./...
+
+--- step 2 OUT:
+New Terminal Output:
+root@1eac795907f2:/app# ls -la && printf '\n--- files ---\n' && find . -maxdepth 3 -type f | sort
+total 32
+drwxr-xr-x  1 root root 4096 Sep 25 20:04 .
+drwxr-xr-x  1 root root 4096 Sep 30 09:28 ..
+-rwxrwxrwx  1 root root 1649 Sep 30 08:42 README.md
+drwxrwxrwx  3 root root 4096 Sep 25 20:04 cmd
+drwxrwxrwx  2 root root 4096 Sep 25 20:04 docs
+drwxrwxrwx  3 root root 4096 Sep 25 20:04 examples
+-rwxrwxrwx  1 root root   26 Sep 30 0
+  [...23917 chars...]
+h; empty otherwise |
+
+`$(@D)`, `$(@F)` and the other `D`/`F` variants give the directory (without
+the trailing slash, `.` if none) and the file part of each word.
+`$(origin @)` is `automatic` inside recipes.
+
+## Other variables
+
+`SHELL` (`/bin/sh`), `CURDIR`, `MAKECMDGOALS` and `.DEFAULT_GOAL` are
+defined. `$(origin NAME)` reports `undefined`, `default`, `environment`,
+`file`, `command line` or `automatic`.
+root@1eac795907f2:/app# go test ./...
+
+
+### step 3 CMD:
+{"keystrokes": "", "duration": 3.0}
+### step 3 CMD:
+sed -n '1,260p' internal/db/db.go; sed -n '1,300p' internal/engine/scope.go; sed -n '1,360p' internal/engine/implicit.go
+
+### step 3 CMD:
+sed -n '1,340p' internal/parse/rules.go; sed -n '1,280p' internal/engine/node.go; sed -n '1,360p' internal/engine/deps.go
+
+### step 3 CMD:
+grep -RIn "Pattern\|pattern\|Stem\|stem\|Implicit" internal --exclude='*.sum'
+
+--- step 3 OUT:
+New Terminal Output:
+
+root@1eac795907f2:/app# go test ./...
+sed -n '1,260p' internal/db/db.go; sed -n '1,300p' internal/engine/scope.go; sed -n '1,360p' internal/engine/implicit.go
+sed -n '1,340p' internal/parse/rules.go; sed -n '1,280p' internal/engine/node.go; sed -n '1,360p' internal/engine/deps.go
+grep -RIn "Pattern\|pattern\|Stem\|stem\|Implicit" internal --exclude='*.sum'
+?       brickmake/cmd/brickmake [no test files]
+?       brickmake/internal/cli  [no test files]
+?       brickmake/internal/db   [no test files]
+?       brickmake/internal/diag [no test files]
+
+
+### step 4 CMD:
+{"keystrokes": "", "duration": 5.0}
+--- step 4 OUT:
+New Terminal Output:
+
+?       brickmake/internal/diag [no test files]
+ok      brickmake/internal/engine       0.002s
+ok      brickmake/internal/expand       0.003s
+ok      brickmake/internal/parse        0.002s
+ok      brickmake/internal/text 0.003s
+?       brickmake/internal/vars [no test files]
+root@1eac795907f2:/app# sed -n '1,260p' internal/db/db.go; sed -n '1,300p' internal/engine/scope.go; sed -n '1,360p' internal/engine/implicit.go
+// Pack
+  [...32479 chars...]
+al/text/words.go:70:      return repl[:i] + stem + repl[i+1:]
+internal/text/words.go:73:// Patsubst implements $(patsubst pattern,replacement,text).
+internal/text/words.go:74:func Patsubst(pattern, repl, s string) string {
+internal/text/words.go:75:      pat := ParsePattern(pattern)
+internal/text/words.go:78:              stem, ok := pat.Match(w)
+internal/text/words.go:83:                      words[i] = Subst(repl, stem)
+root@1eac795907f2:/app#
+
+### step 5 CMD:
+sed -n '1,380p' internal/engine/recipe_test.go; sed -n '1,260p' internal/engine/engine.go; sed -n '1,240p' internal/expand/define.go; sed -n '1,200p' internal/vars/vars.go
+
+### step 5 CMD:
+python3 - <<'PY'
+p='internal/engine/scope.go'
+s=open(p).read()
+s=s.replace('import (\n', 'import (\n\t"sort"\n')
+s=s.replace('// the file into one set. Definitions are applied in makefile order.', '// the file into one set. Less-specific (shorter) patterns are applied first;\n// patterns of equal length retain makefile order.')
+s=s.replace('\tif len(hits) == 0 {\n\t\treturn nil\n\t}\n\tset := vars.NewSet()', '\tif len(hits) == 0 {\n\t\treturn nil\n\t}\n\tsort.SliceStable(hits, func(i, j int) bool {\n\t\treturn len(hits[i].Pattern) < len(hits[j].Pattern)\n\t})\n\tset := vars.NewSet()')
+open(p,'w').write(s)
+
+p='internal/engine/implicit.go'
+s=open(p).read()
+s=s.replace('return len(cs[i].stem) < len(cs[j].stem)', 'return len(cs[i].fullStem()) < len(cs[j].fullStem())')
+s=s.replace('// prereqs c
+  [...57 chars...]
+of a\n// directory-relative match is prepended to every prerequisite.', '// prereqs computes a candidate\'s prerequisite names. For a directory-relative\n// match, the directory is prepended only to prerequisites containing `%`.')
+s=s.replace('out[i] = c.dir + text.Subst(w, c.stem)', 'out[i] = text.Subst(w, c.stem)\n\t\t\tif c.dir != "" && strings.IndexByte(w, \'%\') >= 0 {\n\t\t\t\tout[i] = c.dir + out[i]\n\t\t\t}')
+s=s.replace('if f := e.db.Lookup(name); f != nil && (len(f.Rules) > 0 || f.Phony) {\n\t\treturn true\n\t}', 'if e.db.Lookup(name) != nil {\n\t\treturn true\n\t}')
+open(p,'w').write(s)
+PY
+gofmt -w internal/engine/scope.go internal/engine/implicit.go
+git diff -- internal/engine/scope.go internal/engine/implicit.go 2>/dev/null || diff -u /dev/null internal/engine/scope.go | head
+
+--- step 5 OUT:
+New Terminal Output:
+
+root@1eac795907f2:/app# sed -n '1,380p' internal/engine/recipe_test.go; sed -n '1,260p' internal/engine/engine.go; sed -n '1,240p' internal/expand/define.go; se
+d -n '1,200p' internal/vars/vars.go
+package engine
+
+import (
+        "testing"
+
+        "brickmake/internal/db"
+)
+
+func TestPrefixes(t *testing.T) {
+        cases := []struct {
+                in, text              string
+                silent, ignore, force bool
+  
+  [...13342 chars...]
+    return n.patVars
++// maxChain bounds implicit rule chains.
++const maxChain = 16
++
++// match is the result of implicit rule search for one target.
++type match struct {
++       rule      *db.PatternRule
++       stem      string // $*, including the directory part
++       normal    []string
++       orderOnly []string
++       also      []string // the rule's other targets
++       inter     map[string]*match
++}
++
++type candidate struct {
+--More--
+
+### step 6 CMD:
+q
+### step 6 CMD:
+sed -n '1,120p' internal/engine/scope.go; sed -n '32,112p' internal/engine/implicit.go
+go test ./... && go build -o /tmp/brickmake ./cmd/brickmake
+
+### step 6 CMD:
+tmp=$(mktemp -d); cd "$tmp"; mkdir -p build/net; touch build/net/sock.c config.h; cat >Makefile <<'EOF'
+CFLAGS = -O2
+build/net/%.o: CFLAGS += -DNET
+build/%.o: CFLAGS += -fPIC
+%.o: %.c config.h
+	@printf '%s\n' 'FLAGS=$(CFLAGS) FIRST=$< ALL=$^ STEM=$*'
+EOF
+/tmp/brickmake -r -R -n build/net/sock.o; cd /app; rm -rf "$tmp"
+
+### step 6 CMD:
+tmp=$(mktemp -d); cd "$tmp"; mkdir -p lib; touch lib/a.src lib/a.alt; cat >Makefile <<'EOF'
+%.out: %.src config.h
+	@echo generic:$^
+lib/%.out: lib/%.alt
+	@echo specific:$^
+config.h:
+EOF
+/tmp/brickmake -r -R -n lib/a.out; cd /app; rm -rf "$tmp"
+
+--- step 6 OUT:
+Previous response had warnings:
+WARNINGS: - Command 1 should end with newline when followed by another command. Otherwise the two commands will be concatenated together on the same line.
+
+New Terminal Output:
+
+--More--qsed -n '1,120p' internal/engine/scope.go; sed -n '32,112p' internal/engine/implicit.go
+go test ./... && go build -o /tmp/brickmake ./cmd/brickmake
+tmp=$(mktemp -d); cd "$tmp"; mkdir -p build/net; touch build/net/sock.c config.h; ca
+  [...52 chars...]
+GS += -DNET
+build/%.o: CFLAGS += -fPIC
+%.o: %.c config.h
+        @printf '%s\n' 'FLAGS=$(CFLAGS) FIRST=$< ALL=$^ STEM=$*'
+EOF
+/tmp/brickmake -r -R -n build/net/sock.o; cd /app; rm -rf "$tmp"
+tmp=$(mktemp -d); cd "$tmp"; mkdir -p lib; touch lib/a.src lib/a.alt; cat >Makefile <<'EOF'
+%.out: %.src config.h
+        @echo generic:$^
+lib/%.out: lib/%.alt
+        @echo specific:$^
+config.h:
+EOF
+/tmp/brickmake -r -R -n lib/a.out; cd /app; rm -rf "$tmp"
+
+
+### step 7 CMD:
+q
+
+### step 7 CMD:
+sed -n '1,120p' internal/engine/scope.go; sed -n '32,112p' internal/engine/implicit.go
+
+### step 7 CMD:
+go test ./... && go build -o /tmp/brickmake ./cmd/brickmake
+
+--- step 7 OUT:
+New Terminal Output:
+
+/tmp/brickmake -r -R -n lib/a.out; cd /app; rm -rf "$tmp"
+q
+sed -n '1,120p' internal/engine/scope.go; sed -n '32,112p' internal/engine/implicit.go
+go test ./... && go build -o /tmp/brickmake ./cmd/brickmake
+
+
+### step 8 CMD:
+C-c
+### step 8 CMD:
+pwd
+
+--- step 8 OUT:
+Previous response had warnings:
+WARNINGS: - Command 1 should end with newline when followed by another command. Otherwise the two commands will be concatenated together on the same line.
+
+New Terminal Output:
+
+go test ./... && go build -o /tmp/brickmake ./cmd/brickmake
+
+root@1eac795907f2:/app# pwd
+/app
+root@1eac795907f2:/app#
+
+### step 9 CMD:
+sed -n '1,120p' internal/engine/scope.go; sed -n '32,112p' internal/engine/implicit.go
+
+### step 9 CMD:
+go test ./... && go build -o /tmp/brickmake ./cmd/brickmake
+
+### step 9 CMD:
+tmp=$(mktemp -d); cd "$tmp"; mkdir -p build/net; touch build/net/sock.c config.h; printf '%s\n' 'CFLAGS = -O2' 'build/net/%.o: CFLAGS += -DNET' 'build/%.o: CFLAGS += -fPIC' '%.o: %.c config.h' "	@printf '%s\\n' 'FLAGS=\$(CFLAGS) FIRST=\$< ALL=\$^ STEM=\$*'" > Makefile; /tmp/brickmake -r -R -n build/net/sock.o; rc=$?; cd /app; rm -rf "$tmp"; exit $rc
+
+### step 9 CMD:
+tmp=$(mktemp -d); cd "$tmp"; mkdir -p lib; touch lib/a.src lib/a.alt; printf '%s\n' '%.out: %.src config.h' '	@echo generic:$^' 'lib/%.out: lib/%.alt' '	@echo specific:$^' 'config.h:' > Makefile; /tmp/brickmake -r -R -n lib/a.out; rc=$?; cd /app; rm -rf "$tmp"; exit $rc
+
+--- step 9 OUT:
+Current Terminal Screen:
+                return out
+        }
+        return conv(normal), conv(orderOnly)
+}
+
+// oughtToExist reports whether a prerequisite exists or is a target in
+// the makefile.
+func (e *Engine) oughtToExist(name string) bool {
+        if e.db.Lookup(name) != nil {
+                return true
+        }
+        _, err := os.Stat(name)
+        return err == nil
+}
+
+// findImplicit searches the pattern rules for name. The first p
+  [...1172 chars...]
+rickmake: *** No rule to make target 'build/net/sock.o'.  Stop.
+exit
+root@1eac795907f2:/app# tmp=$(mktemp -d); cd "$tmp"; mkdir -p lib; touch lib/a.src lib/a.alt; printf '%s\n' '%.out: %.src config.h' '@echo generic:$^' 'lib/%.ou
+t: lib/%.alt' '@echo specific:$^' 'config.h:' > Makefile; /tmp/brickmake -r -R -n lib/a.out; rc=$?; cd /app; rm -rf "$tmp"; exit $rc
+brickmake: *** No rule to make target 'lib/a.out'.  Stop.
+exit
+root@1eac795907f2:/app#
+
+### step 10 CMD:
+tmp=$(mktemp -d); cd "$tmp"; mkdir -p build/net; touch build/net/sock.c config.h; { printf '%s\n' 'CFLAGS = -O2' 'build/net/%.o: CFLAGS += -DNET' 'build/%.o: CFLAGS += -fPIC' '%.o: %.c config.h'; printf '\t%s\n' "@printf '%s\\n' 'FLAGS=\$(CFLAGS) FIRST=\$< ALL=\$^ STEM=\$*'"; } > Makefile; /tmp/brickmake -r -R -n build/net/sock.o; rc=$?; cd /app; rm -rf "$tmp"; test $rc -eq 0
+
+### step 10 CMD:
+tmp=$(mktemp -d); cd "$tmp"; mkdir -p lib; touch lib/a.src lib/a.alt; { printf '%s\n' '%.out: %.src config.h'; printf '\t%s\n' '@echo generic:$^'; printf '%s\n' 'lib/%.out: lib/%.alt'; printf '\t%s\n' '@echo specific:$^'; printf '%s\n' 'config.h:'; } > Makefile; /tmp/brickmake -r -R -n lib/a.out; rc=$?; cd /app; rm -rf "$tmp"; test $rc -eq 0
+
+### step 10 CMD:
+sed -n '130,220p' internal/parse/parser.go; sed -n '1,120p' internal/engine/scope.go
+
+--- step 10 OUT:
+New Terminal Output:
+
+root@1eac795907f2:/app# tmp=$(mktemp -d); cd "$tmp"; mkdir -p build/net; touch build/net/sock.c config.h; { printf '%s\n' 'CFLAGS = -O2' 'build/net/%.o: CFLAGS
++= -DNET' 'build/%.o: CFLAGS += -fPIC' '%.o: %.c config.h'; printf '\t%s\n' "@printf '%s\\n' 'FLAGS=\$(CFLAGS) FIRST=\$< ALL=\$^ STEM=\$*'"; } > Makefile; /tmp/
+brickmake -r -R -n build/net/sock.o; rc=$?; cd /app; rm -rf "$tmp"; test $rc -eq 0
+printf '%s\n' 'FLAGS=-O2
+  [...4610 chars...]
+, then the context of the
+// target that first asked for it, and finally the global variables.
+func (e *Engine) scope(n *node) *expand.Scope {
+        sc := &expand.Scope{}
+        for x := n; x != nil; x = x.parent {
+                sc.Sets = append(sc.Sets, x.f.Vars)
+                if ps := e.patternSet(x); ps != nil {
+                        sc.Sets = append(sc.Sets, ps)
+                }
+        }
+        return sc
+}
+root@1eac795907f2:/app#
+
+### step 11 CMD:
+sed -n '1,150p' internal/expand/expand.go; sed -n '1,130p' internal/text/words.go; grep -RIn "c\.dir\|SplitDir\|fullStem\|PatternVars" internal/engine internal/parse
+
+### step 11 CMD:
+cat > internal/engine/pattern_test.go <<'EOF'
+package engine
+
+import (
+	"reflect"
+	"testing"
+
+	"brickmake/internal/db"
+	"brickmake/internal/expand"
+	"brickmake/internal/vars"
+)
+
+func testEngine(d *db.DB) *Engine {
+	x := expand.New(vars.NewSet())
+	return New(d, x)
+}
+
+func recipe(s string) *db.Recipe { return &db.Recipe{Lines: []string{s}} }
+
+func TestPatternSetSpecificityOrder(t *testing.T) {
+	d := db.New()
+	d.PatternVars = []*db.PatternVar{
+		{Pattern: "build/net/%.o", Name: "CFLAGS", Op: vars.OpAppend, Value: "-DNET"},
+		{Pattern: "build/%.o", Name: "CFLAGS", Op: vars.OpAppend, Value: "-fPIC"},
+	}
+	e := testEngine(d)
+	e.x.DefineGlobal("CFLAGS", vars.OpRecursive, "-O2", vars.File, db.PatternVar{}.Pos)
+	n := e.node(d.Enter("build/net/sock.o"))
+	v, _ := e.x.Lookup("CFLAGS", e.scope(n))
+	if g
+  [...598 chars...]
+toryRelativePrereqsPrefixOnlyPatterns(t *testing.T) {
+	d := db.New()
+	r := &db.PatternRule{Targets: []string{"%.o"}, Prereqs: db.Prereqs{
+		Normal: []string{"%.c", "config.h"}, OrderOnly: []string{"%/dir", "stamp"},
+	}}
+	e := testEngine(d)
+	c := candidate{rule: r, dir: "net/", stem: "sock"}
+	normal, order := e.prereqs(c, "net/sock.o", nil)
+	if !reflect.DeepEqual(normal, []string{"net/sock.c", "config.h"}) ||
+		!reflect.DeepEqual(order, []string{"net/sock/dir", "stamp"}) {
+		t.Fatalf("prereqs = %q | %q", normal, order)
+	}
+}
+
+func TestMentionedPrerequisiteOughtToExist(t *testing.T) {
+	d := db.New()
+	d.Enter("generated.h")
+	if !testEngine(d).oughtToExist("generated.h") {
+		t.Fatal("mentioned prerequisite should ought to exist")
+	}
+}
+EOF
+
+gofmt -w internal/engine/pattern_test.go
+go test ./...
+
+--- step 11 OUT:
+Current Terminal Screen:
+> }}
+> e := testEngine(d)
+> c := candidate{rule: r, dir: "net/", stem: "sock"}
+> normal, order := e.prereqs(c, "net/sock.o", nil)
+> if !reflect.DeepEqual(normal, []string{"net/sock.c", "config.h"}) ||
+>
+README.md  cmd/       docs/      examples/  go.mod     internal/
+> !reflect.DeepEqual(order, []string{"net/sock/dir", "stamp"}) {
+>
+README.md  cmd/       docs/      examples/  go.mod     internal/
+> t.Fatalf("prereqs = %q 
+  [...638 chars...]
+ brickmake/cmd/brickmake [no test files]
+?       brickmake/internal/cli  [no test files]
+?       brickmake/internal/db   [no test files]
+?       brickmake/internal/diag [no test files]
+FAIL    brickmake/internal/engine [build failed]
+ok      brickmake/internal/expand       (cached)
+ok      brickmake/internal/parse        (cached)
+ok      brickmake/internal/text (cached)
+?       brickmake/internal/vars [no test files]
+FAIL
+root@1eac795907f2:/app#
+
+### step 12 CMD:
+python3 - <<'PY'
+p='internal/engine/pattern_test.go'
+s=open(p).read()
+s=s.replace('\tv, _ := e.x.Lookup("CFLAGS", e.scope(n))\n\tif got := e.x.ExpandVar(v, e.scope(n)); got != "-O2 -fPIC -DNET" {', '\tsc := e.scope(n)\n\tif got := e.x.Expand("$(CFLAGS)", sc); got != "-O2 -fPIC -DNET" {')
+open(p,'w').write(s)
+PY
+gofmt -w internal/engine/pattern_test.go
+go test ./...
+
+### step 12 CMD:
+sed -n '1,240p' internal/engine/pattern_test.go; printf '\n--- modified source snippets ---\n'; sed -n '1,70p' internal/engine/scope.go; sed -n '34,108p' internal/engine/implicit.go
+
+### step 12 CMD:
+go vet ./... && go build -o /tmp/brickmake-final ./cmd/brickmake
+
+--- step 12 OUT:
+Current Terminal Screen:
+
+// prereqs computes a candidate's prerequisite names. For a directory-relative
+// match, the directory is prepended only to prerequisites containing `%`.
+func (e *Engine) prereqs(c candidate, name string, sc *expand.Scope) (normal, orderOnly []string) {
+        pr := c.rule.Prereqs
+        normal, orderOnly = pr.Normal, pr.OrderOnly
+        if pr.Second {
+                s := &expand.Scope{Auto: &expand.Auto{Target: name
+  [...696 chars...]
+nly)
+}
+
+// oughtToExist reports whether a prerequisite exists or is a target in
+// the makefile.
+func (e *Engine) oughtToExist(name string) bool {
+        if e.db.Lookup(name) != nil {
+                return true
+        }
+        _, err := os.Stat(name)
+        return err == nil
+}
+
+// findImplicit searches the pattern rules for name. The first pass accepts
+root@1eac795907f2:/app# go vet ./... && go build -o /tmp/brickmake-final ./cmd/brickmake
+
+
+### step 13 CMD:
+{"keystrokes": "", "duration": 3.0}
+### step 13 CMD:
+tmp=$(mktemp -d); cd "$tmp"; mkdir -p net; touch net/x.c global.h; { printf '%s\n' '.SECONDEXPANSION:' '%.o: $$*.c global.h'; printf '\t%s\n' '@echo $^'; } > Makefile; /tmp/brickmake-final -r -R -n net/x.o; rc=$?; cd /app; rm -rf "$tmp"; test $rc -eq 0
+
+### step 13 CMD:
+find internal/engine -maxdepth 1 -type f -printf '%TY-%Tm-%Td %TH:%TM:%TS %f\n' | sort; go test ./...
+
+--- step 13 OUT:
+Current Terminal Screen:
+                return out
+        }
+        return conv(normal), conv(orderOnly)
+}
+
+// oughtToExist reports whether a prerequisite exists or is a target in
+// the makefile.
+func (e *Engine) oughtToExist(name string) bool {
+        if e.db.Lookup(name) != nil {
+                return true
+        }
+        _, err := os.Stat(name)
+        return err == nil
+}
+
+// findImplicit searches the pattern rules for name. The first p
+  [...906 chars...]
+      brickmake/cmd/brickmake [no test files]
+?       brickmake/internal/cli  [no test files]
+?       brickmake/internal/db   [no test files]
+?       brickmake/internal/diag [no test files]
+ok      brickmake/internal/engine       (cached)
+ok      brickmake/internal/expand       (cached)
+ok      brickmake/internal/parse        (cached)
+ok      brickmake/internal/text (cached)
+?       brickmake/internal/vars [no test files]
+root@1eac795907f2:/app#
+
+### step 14 CMD:
+{}
+--- step 14 OUT:
+Current terminal state:
+New Terminal Output:
+t files]
+root@1eac795907f2:/app#
+
+
+Are you sure you want to mark the task as complete? This will trigger your solution to be graded and you won't be able to make any further corrections. If so, include "task_complete": true in your JSON response again.
+### step 15 CMD:
+python3 - <<'PY'
+p='internal/db/db.go'
+s=open(p).read()
+old='if sameWords(old.Targets, r.Targets) && sameWords(old.Normal, r.Normal) && old.Text == r.Text {'
+new='if sameWords(old.Targets, r.Targets) && sameWords(old.Normal, r.Normal) && sameWords(old.OrderOnly, r.OrderOnly) && old.Text == r.Text {'
+if old not in s:
+    raise SystemExit('expected comparison not found')
+s=s.replace(old,new)
+open(p,'w').write(s)
+PY
+cat >> internal/engine/pattern_test.go <<'EOF'
+
+func TestPatternRulesDifferingInOrderOnlyPrereqsAreDistinct(t *testing.T) {
+	d := db.New()
+	d.AddPatternRule(&db.PatternRule{
+		Targets: []string{"%.o"},
+		Prereqs: db.Prereqs{Normal: []string{"%.c"}, OrderOnly: []string{"one"}},
+		Recipe:  recipe("one"),
+	})
+	d.AddPatternRule(&db.PatternRule{
+		Targets: []string{"%.o"},
+		Prereqs: db.Prereqs{Normal: []string{"%.c"}, OrderOnly: []string{"two"}},
+		Recipe:  recipe("two"),
+	})
+	if len(d.PatternRules) != 2 {
+		t.Fatalf("pattern rules = %d, want 2", len(d.PatternRules))
+	}
+}
+EOF
+gofmt -w internal/db/db.go internal/engine/pattern_test.go
+go test ./... && go vet ./... && go build -o /tmp/brickmake-final ./cmd/brickmake
+
+--- step 15 OUT:
+New Terminal Output:
+t files]
+root@1eac795907f2:/app# python3 - <<'PY'
+nternal/engine/pattern_test.go
+go test ./... && go vet ./... && go build -o /tmp/brickmake-final ./cmd/brickmake
+> p='internal/db/db.go'
+> s=open(p).read()
+> old='if sameWords(old.Targets, r.Targets) && sameWords(old.Normal, r.Normal) && old.Text == r.Text {'
+> new='if sameWords(old.Targets, r.Targets) && sameWords(old.Normal, r.Normal) && sameWords(old.OrderOnly, r.OrderOnly)
+  [...1425 chars...]
+e
+?       brickmake/cmd/brickmake [no test files]
+?       brickmake/internal/cli  [no test files]
+?       brickmake/internal/db   [no test files]
+?       brickmake/internal/diag [no test files]
+ok      brickmake/internal/engine       0.005s
+ok      brickmake/internal/expand       (cached)
+ok      brickmake/internal/parse        0.004s
+ok      brickmake/internal/text (cached)
+?       brickmake/internal/vars [no test files]
+root@1eac795907f2:/app#
+
+### step 16 CMD:
+{}
+--- step 16 OUT:
+Current terminal state:
+New Terminal Output:
+t files]
+root@1eac795907f2:/app#
+
+
+Are you sure you want to mark the task as complete? This will trigger your solution to be graded and you won't be able to make any further corrections. If so, include "task_complete": true in your JSON response again.
+### step 17 CMD:
+{}
+--- step 17 OUT:
+New Terminal Output:
+t files]
+root@1eac795907f2:/app#

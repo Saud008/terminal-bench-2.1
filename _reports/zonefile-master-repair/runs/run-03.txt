@@ -1,0 +1,72 @@
+T E         --- escaped_case/decimal_escapes_fold_case (zonec -o example.com main.zone)
+T E         --- escaped_label_length/sixty_three_octet_labels (zonec -o example.com main.zone)
+T E         --- escaped_label_length/sixty_four_octet_label (zonec -o example.com main.zone)
+T E         --- zonemd/digest_input_near_block_end (zonec -o example.org main.zone)
+T E         --- reference_zone/production_like_zone (zonec -o shop.example db/shop.example.zone)
+T PASSED ../tests/test_outputs.py::test_owner_continuation
+T PASSED ../tests/test_outputs.py::test_default_ttl
+T PASSED ../tests/test_outputs.py::test_include_scope
+T PASSED ../tests/test_outputs.py::test_include_paths
+T PASSED ../tests/test_outputs.py::test_quoted_parentheses
+T PASSED ../tests/test_outputs.py::test_canonical_order
+T PASSED ../tests/test_outputs.py::test_rrset_ttl
+T FAILED ../tests/test_outputs.py::test_escaped_case - AssertionError: 1 of 1 c...
+T FAILED ../tests/test_outputs.py::test_escaped_label_length - AssertionError: ...
+T FAILED ../tests/test_outputs.py::test_zonemd - AssertionError: 1 of 4 cases d...
+T FAILED ../tests/test_outputs.py::test_reference_zone - AssertionError: 1 of 1...
+001> find . -maxdepth 3 -type f -print | sort | 
+001> printf '%s\n' '--- Makefile ---'; sed -n '1,240p' Makefile; printf '%s\n' '--- docs ---'; for f in docs/*; do echo "===== $f ====="; cat "$f"; done | 
+001> printf '%s\n' '--- C sources ---'; for f in *.c *.h; do [ -f "$f" ] || continue; echo "===== $f ====="; sed -n '1,260p' "$f"; done | 
+002> for f in src/*.h; do echo "===== $f ====="; cat "$f"; done | 
+002> for f in src/lexer.c src/parser.c src/directives.c src/main.c src/diag.c src/util.c src/ttl.c; do echo "===== $f ====="; cat "$f"; done | 
+002> for f in src/name.c src/zone.c src/rdata.c src/rr_*.c src/zonemd.c src/sha384.c src/buf.c; do echo "===== $f ====="; cat "$f"; done | 
+002> cat README.md; for f in examples/example.net.zone examples/office/hosts.inc examples/reverse/2.0.192.in-addr.arpa.zone; do echo "===== $f ====="; cat "$f"; done | 
+003> wc -l src/*.[ch]; grep -RInE 'TODO|FIXME|qsort|include|origin|paren|ZONEMD|zonemd|digest|owner' src | 
+003> cat src/parser.h src/lexer.h src/zone.h src/name.h src/rdata.h src/zonemd.h src/buf.h src/diag.h src/ttl.h src/util.h | 
+003> sed -n '1,260p' src/lexer.c; sed -n '1,320p' src/parser.c; cat src/directives.c | 
+003> cat src/name.c; sed -n '1,360p' src/zone.c; cat src/zonemd.c | 
+004> nl -ba src/parser.h; nl -ba src/lexer.h; nl -ba src/zone.h; nl -ba src/name.h | 
+004> nl -ba src/lexer.c | sed -n '1,240p' | 
+004> nl -ba src/parser.c | sed -n '1,240p' | 
+005> nl -ba src/lexer.c | sed -n '1,130p' | 
+005> nl -ba src/lexer.c | sed -n '131,280p' | 
+005> nl -ba src/parser.c | sed -n '1,115p' | 
+005> nl -ba src/directives.c | 
+006> nl -ba src/lexer.c | sed -n '1,220p' | 
+007> nl -ba src/lexer.c | sed -n '90,125p' | 
+007> nl -ba src/directives.c | sed -n '1,82p' | 
+007> nl -ba src/parser.h; nl -ba src/ttl.h | 
+008> sed -n '85,130p' src/lexer.c | 
+009> grep -nE 'cmp|sort|duplicate|dedup|qsort|ttl|zone_finish|zone_add' src/zone.c src/name.c | 
+010> nl -ba src/zone.c | sed -n '1,125p'; nl -ba src/zone.h | 
+011> cat src/zone.c | 
+012> sed -n '1,76p' src/zone.c | 
+013> sed -n '1,82p' src/directives.c | 
+014> sed -n '1,38p' src/directives.c | 
+015> python3 - <<'PY' | from pathlib import Path | p=Path('src/lexer.c'); s=p.read_text(); s=s.replace("            if (c == '(' || c == ')') {", "            if (!inq && (c == '(' || c == ')')) {"); p.write_text(s) | p=Path('src/directives.c'); s=p.read_text(); s=s.replace("slash = strchr(including, '/');", "slash = strrchr(including, '/');"); s=s.replace("    ctx->origin = origin;\n    ctx->owner = origin;\n    ctx->have_owner = 1;", "    ctx->origin = origin;"); s=s.replace("    int saved_have_owner = ctx->have_owner;\n    char *file;", "    int saved_have_owner = ctx->have_owner;\n    ttl_ctx_t saved_ttl = ctx->ttl;\n    char *file;"); s=s.replace("    ctx->have_owner = saved_have_owner;\n}", "    
+016> cat src/name.c | 
+017> tmp=$(mktemp -d); mkdir -p "$tmp/a/b"; cat >"$tmp/a/main.zone" <<'EOF' | $TTL 100 | @ IN SOA ns host 7 1 2 3 4 | old IN A 192.0.2.1 | $ORIGIN sub.example. |  IN TXT "ok :-)" | $INCLUDE b/one.inc |  IN TXT after | EOF | cat >"$tmp/a/b/one.inc" <<'EOF' | $TTL 200 | inside 300 IN A 192.0.2.2 | $INCLUDE two.inc | EOF | cat >"$tmp/a/b/two.inc" <<'EOF' | deep IN A 192.0.2.3 | EOF | ./build/zonec -o example. "$tmp/a/main.zone"; echo status=$? | cat >"$tmp/order.zone" <<'EOF' | $TTL 99 | @ IN SOA ns host 1 1 1 1 1 | z IN A 1.1.1.1 | a.z IN A 1.1.1.2 | y IN A 1.1.1.3 | a IN A 1.1.1.4 | @ IN TXT x | @ IN A 2.2.2.2 | same 500 IN A 1.2.3.4 | same 100 IN A 1.2.3.5 | same 10 IN A 1.2.3.4 | EOF | ./build/zonec -o example. "$tmp/order.zone" | rm -rf "$tmp" | 
+018> cat src/main.c; cat src/parser.c | 
+019> cat src/main.c | 
+020> sed -n '1,110p' src/parser.c | 
+021> sed -n '1,120p' src/name.c | 
+022> sed -n '120,170p' src/name.c | 
+023> wc -l src/rr_*.c; for f in src/rr_*.c; do echo ===$f; grep -nE 'parse|if \(|fail|buf_put|strto|strlen|inet|digest|serial' "$f"; done | 
+024> cat src/zonemd.c | 
+025> tmp=$(mktemp -d); cat >$tmp/z <<'EOF' | $TTL 100 | @ IN SOA ns.example. host.example. 42 1 2 3 4 | @ IN A 192.0.2.1 | @ 999 IN ZONEMD 999 1 1 00112233445566778899AABB | x 200 IN A 192.0.2.3 | x 50 IN A 192.0.2.2 | child IN ZONEMD 7 2 3 00112233445566778899AABB | EOF | out=$(./build/zonec -o example. $tmp/z) || exit; printf '%s\n' "$out"; got=$(printf '%s\n' "$out" | awk '$4=="ZONEMD" && $1=="example." {print $8}'); exp=$(python3 - <<'PY' | import hashlib,struct,ipaddress |  | def name(s): |  return b''.join(bytes([len(x)])+x.lower().encode() for x in s.rstrip('.').split('.'))+b'\0' | def rr(owner,t,ttl,rd): |  return name(owner)+struct.pack('!HHIH',t,1,ttl,len(rd))+rd | records=[] | records.append(rr('example.',1,100,ipaddre
+026> cat src/ttl.c | 
+027> python3 - <<'PY' | p='src/ttl.c' | s=open(p).read() | old='''    if (c->has_last) {\n        *out = c->last;\n        return 1;\n    }\n    if (c->has_dollar) {\n        *out = c->dollar;\n        return 1;\n    }''' | new='''    if (c->has_dollar) {\n        *out = c->dollar;\n        return 1;\n    }\n    if (c->has_last) {\n        *out = c->last;\n        return 1;\n    }''' | assert old in s | open(p,'w').write(s.replace(old,new)) | PY | make CFLAGS='-O2 -g -Wall -Wextra -Werror -std=c11' | rm -rf /tmp/zonec-build-test; make BUILD=/tmp/zonec-build-test CFLAGS='-O2 -Wall -Wextra -Werror -std=c11' | 
+028> python3 - <<'PY' | import tempfile,subprocess,hashlib,struct,ipaddress,re,os | z='''$TTL 100 | @ IN SOA ns.example. host.example. 42 1 2 3 4 | @ IN A 192.0.2.1 | @ 999 IN ZONEMD 999 1 1 00112233445566778899AABB | x 200 IN A 192.0.2.3 | x 50 IN A 192.0.2.2 | child IN ZONEMD 7 2 3 00112233445566778899AABB | ''' | fd,p=tempfile.mkstemp(); os.write(fd,z.encode()); os.close(fd) | out=subprocess.check_output(['./build/zonec','-o','example.',p],text=True); os.unlink(p) | def name(s): return b''.join(bytes([len(x)])+x.lower().encode() for x in s.rstrip('.').split('.'))+b'\0' | def rr(o,t,ttl,rd): return name(o)+struct.pack('!HHIH',t,1,ttl,len(rd))+rd | records=[rr('example.',1,100,ipaddress.ip_address('192.0.2.1').packed),rr('
+029> cat src/rr_addr.c; cat src/rdata.c | 
+030> cat src/rr_addr.c | 
+031> cat src/rr_caa.c src/rr_txt.c src/rr_names.c src/rr_soa.c src/rr_srv.c | 
+032> git diff -- src; git status --short | 
+033> cat src/rr_caa.c; cat src/rr_txt.c | 
+034> cat src/util.c; sed -n '1,100p' src/name.c; sed -n '1,90p' src/lexer.c | 
+035> grep -nE 'decode_string|parse_u32' src/util.c; sed -n '45,125p' src/util.c | 
+036> tmp=$(mktemp -d); mkdir "$tmp/sub dir"; cat >"$tmp/main" <<'EOF' | $TTL 1 | @ IN SOA n\115 h 1 1 1 1 1 | foo\046bar IN TXT "a\032b" c\;d |  IN CAA 0 issue ca\032value | $INCLUDE sub\032dir/inc | EOF | cat >"$tmp/sub dir/inc" <<'EOF' | x IN A 1.2.3.4 | EOF | ./build/zonec -o EXAMPLE. "$tmp/main"; echo status=$?; rm -rf "$tmp" | 
+037> python3 - <<'PY' | p='src/directives.c'; s=open(p).read() | s=s.replace('''    ttl_ctx_t saved_ttl = ctx->ttl;\n    char *file;''','''    ttl_ctx_t saved_ttl = ctx->ttl;\n    char *file, *name;\n    size_t name_len;''') | s=s.replace('''    file = include_path(path, ll->v[1].text);\n    ctx->depth++;''','''    name = xmalloc(strlen(ll->v[1].text) + 1);\n    if (decode_string(ll->v[1].text, (unsigned char *)name,\n                      strlen(ll->v[1].text), &name_len) != DECODE_OK ||\n        memchr(name, '\\0', name_len) != NULL) {\n        free(name);\n        fail_at(pos, "bad $INCLUDE file name");\n    }\n    name[name_len] = '\\0';\n    file = include_path(path, name);\n    free(name);\n    c
+038> rm -rf /tmp/zonec-san; make BUILD=/tmp/zonec-san CFLAGS='-O1 -g -Wall -Wextra -Werror -std=c11 -fsanitize=address,undefined -fno-omit-frame-pointer' | tmp=$(mktemp -d); cat >$tmp/all.zone <<'EOF' | $TTL 1h | @ IN SOA Ns HOSTMASTER ( 4294967295 1w 2d 3h 4m ) | @ IN NS ns | @ IN MX 65535 mail | @ IN TXT "ok :-) ;" unquoted\032part | @ IN AAAA 2001:0DB8:0:0:1:0:0:1 | @ IN CAA 255 Issue "ca\\\"x" | _a._tcp IN SRV 65535 0 443 target | one IN A 001.002.003.004 | ptr IN PTR target | alias IN CNAME target | @ IN ZONEMD 0 1 1 00112233445566778899aabb | EOF | ASAN_OPTIONS=detect_leaks=0 /tmp/zonec-san/zonec -o example. $tmp/all.zone >$tmp/out && cat $tmp/out | printf '$TTL 1\n bad IN A 1.2.3.4\n' >$tmp/bad; ASAN_OPTIONS=detect_leaks
+039> rm -rf /tmp/zonec-san; make BUILD=/tmp/zonec-san CFLAGS='-O1 -g -Wall -Wextra -std=c11 -fsanitize=address,undefined -fno-omit-frame-pointer' >/tmp/san-build.log && tail -3 /tmp/san-build.log | tmp=$(mktemp -d); cat >$tmp/all.zone <<'EOF' | $TTL 1h | @ IN SOA Ns HOSTMASTER ( 4294967295 1w 2d 3h 4m ) | @ IN NS ns | @ IN MX 65535 mail | @ IN TXT "ok :-) ;" unquoted\032part | @ IN AAAA 2001:0DB8:0:0:1:0:0:1 | @ IN CAA 255 Issue "ca.example" | _a._tcp IN SRV 65535 0 443 target | one IN A 001.002.003.004 | ptr IN PTR target | alias IN CNAME target | @ IN ZONEMD 0 1 1 00112233445566778899aabb | EOF | ASAN_OPTIONS=detect_leaks=0 /tmp/zonec-san/zonec -o example. $tmp/all.zone >$tmp/out; rc=$?; echo valid_status=$rc; cat $tmp/out | 
+040> sed -n '1,75p' src/main.c; cat src/diag.c | 
+041> make clean && make | ./build/zonec -o example.net. examples/example.net.zone >/tmp/example.list | ./build/zonec -o 2.0.192.in-addr.arpa. examples/reverse/2.0.192.in-addr.arpa.zone >/tmp/reverse.list | printf 'example_records=%s reverse_records=%s\n' "$(wc -l </tmp/example.list)" "$(wc -l </tmp/reverse.list)" | grep -nE 'strrchr|saved_ttl|decode_string|!inq|name_cmp_canonical|zonemd_update|soa_serial|has_dollar' src/directives.c src/lexer.c src/zone.c src/zonemd.c src/ttl.c | 

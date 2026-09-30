@@ -1,0 +1,164 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 10 items
+
+../tests/test_outputs.py .....F....                                      [100%]
+
+=================================== FAILURES ===================================
+_____________________________ test_negated_classes _____________________________
+
+quire = '/tmp/quire-verify/quire'
+
+    def test_negated_classes(quire):
+        """Bracket expressions: '[!...]' negation, literal '^', brackets containing '/'."""
+>       _check_group(quire, "negated_classes")
+
+/tests/test_outputs.py:127: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/quire-verify/quire', group = 'negated_classes'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']!r}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err!r}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 6 of 6 cases differ:
+E         --- negated_classes-01 args=['{root}/readme.md', '{root}/.gitignore', '{root}/sub/.env', '{root}/sub/x'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/negated_classes-01/readme.md]
+E         m=visible
+E         n=all
+E         [/srv/qc/negated_classes-01/.gitignore]
+E         n=all
+E         [/srv/qc/negated_classes-01/sub/.env]
+E         n=all
+E         [/srv/qc/negated_classes-01/sub/x]
+E         m=visible
+E         n=all
+E         got rc=0 stderr=''
+E         [/srv/qc/negated_classes-01/readme.md]
+E         n=all
+E         [/srv/qc/negated_classes-01/.gitignore]
+E         m=visible
+E         n=all
+E         [/srv/qc/negated_classes-01/sub/.env]
+E         m=visible
+E         n=all
+E         [/srv/qc/negated_classes-01/sub/x]
+E         n=all
+E         
+E         --- negated_classes-02 args=['{root}/a.c', '{root}/a.o', '{root}/a.h', '{root}/a.cc'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/negated_classes-02/a.c]
+E         m=source
+E         n=c
+E         [/srv/qc/negated_classes-02/a.o]
+E         [/srv/qc/negated_classes-02/a.h]
+E         m=source
+E         n=c
+E         [/srv/qc/negated_classes-02/a.cc]
+E         got rc=0 stderr=''
+E         [/srv/qc/negated_classes-02/a.c]
+E         n=c
+E         [/srv/qc/negated_classes-02/a.o]
+E         m=source
+E         [/srv/qc/negated_classes-02/a.h]
+E         n=c
+E         [/srv/qc/negated_classes-02/a.cc]
+E         
+E         --- negated_classes-03 args=['{root}/file1.txt', '{root}/filea.txt', '{root}/file!.txt', '{root}/file.txt'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/negated_classes-03/file1.txt]
+E         n=numbered
+E         [/srv/qc/negated_classes-03/filea.txt]
+E         m=named
+E         [/srv/qc/negated_classes-03/file!.txt]
+E         m=named
+E         [/srv/qc/negated_classes-03/file.txt]
+E         got rc=0 stderr=''
+E         [/srv/qc/negated_classes-03/file1.txt]
+E         m=named
+E         n=numbered
+E         [/srv/qc/negated_classes-03/filea.txt]
+E         [/srv/qc/negated_classes-03/file!.txt]
+E         m=named
+E         [/srv/qc/negated_classes-03/file.txt]
+E         
+E         --- negated_classes-04 args=['{root}/main.go', '{root}/_gen.go', '{root}/^x.go'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/negated_classes-04/main.go]
+E         n=bang
+E         [/srv/qc/negated_classes-04/_gen.go]
+E         m=caret
+E         [/srv/qc/negated_classes-04/^x.go]
+E         m=caret
+E         n=bang
+E         got rc=0 stderr=''
+E         [/srv/qc/negated_classes-04/main.go]
+E         m=caret
+E         [/srv/qc/negated_classes-04/_gen.go]
+E         n=bang
+E         [/srv/qc/negated_classes-04/^x.go]
+E         m=caret
+E         
+E         --- negated_classes-05 args=['{root}/[!/]x', '{root}/ax', '{root}/ay', '{root}/dy', '{root}/-y'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/negated_classes-05/[!/]x]
+E         m=slash
+E         [/srv/qc/negated_classes-05/ax]
+E         [/srv/qc/negated_classes-05/ay]
+E         [/srv/qc/negated_classes-05/dy]
+E         n=range
+E         [/srv/qc/negated_classes-05/-y]
+E         n=range
+E         got rc=0 stderr=''
+E         [/srv/qc/negated_classes-05/[!/]x]
+E         m=slash
+E         [/srv/qc/negated_classes-05/ax]
+E         [/srv/qc/negated_classes-05/ay]
+E         n=range
+E         [/srv/qc/negated_classes-05/dy]
+E         [/srv/qc/negated_classes-05/-y]
+E         
+E         --- negated_classes-06 args=['{root}/app.py', '{root}/tool.py', '{root}/test_main.py', '{root}/test_other.py'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/negated_classes-06/app.py]
+E         m=alt
+E         [/srv/qc/negated_classes-06/tool.py]
+E         [/srv/qc/negated_classes-06/test_main.py]
+E         m=alt
+E         [/srv/qc/negated_classes-06/test_other.py]
+E         got rc=0 stderr=''
+E         [/srv/qc/negated_classes-06/app.py]
+E         [/srv/qc/negated_classes-06/tool.py]
+E         m=alt
+E         [/srv/qc/negated_classes-06/test_main.py]
+E         m=alt
+E         [/srv/qc/negated_classes-06/test_other.py]
+E         m=alt
+E         
+E       assert not ["--- negated_classes-01 args=['{root}/readme.md', '{root}/.gitignore', '{root}/sub/.env', '{root}/sub/x'] stdin=None\...ool.py]\nm=alt\n[/srv/qc/negated_classes-06/test_main.py]\nm=alt\n[/srv/qc/negated_classes-06/test_other.py]\nm=alt\n"]
+
+/tests/test_outputs.py:97: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_section_anchoring
+PASSED ../tests/test_outputs.py::test_tab_indentation
+PASSED ../tests/test_outputs.py::test_bracketed_directories
+PASSED ../tests/test_outputs.py::test_stdin_paths
+PASSED ../tests/test_outputs.py::test_globstar_segments
+PASSED ../tests/test_outputs.py::test_inline_comments
+PASSED ../tests/test_outputs.py::test_root_declarations
+PASSED ../tests/test_outputs.py::test_value_case
+PASSED ../tests/test_outputs.py::test_property_order
+FAILED ../tests/test_outputs.py::test_negated_classes - AssertionError: 6 of ...
+========================= 1 failed, 9 passed in 8.66s ==========================

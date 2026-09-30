@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "/home/saud/.local/share/uv/tools/snorkelai-stb/lib/python3.13/site-packages/harbor/trial/trial.py", line 415, in run
+    await self._prepare()
+  File "/home/saud/.local/share/uv/tools/snorkelai-stb/lib/python3.13/site-packages/harbor/trial/trial.py", line 453, in _prepare
+    await self._setup_agent_environment()
+  File "/home/saud/.local/share/uv/tools/snorkelai-stb/lib/python3.13/site-packages/harbor/trial/trial.py", line 1542, in _setup_agent_environment
+    await self._start_agent_environment()
+  File "/home/saud/.local/share/uv/tools/snorkelai-stb/lib/python3.13/site-packages/harbor/trial/trial.py", line 1548, in _start_agent_environment
+    await asyncio.wait_for(
+    ...<4 lines>...
+    )
+  File "/home/saud/.local/share/uv/python/cpython-3.13.14-linux-x86_64-gnu/lib/python3.13/asyncio/tasks.py", line 507, in wait_for
+    return await fut
+           ^^^^^^^^^
+  File "/home/saud/.local/share/uv/tools/snorkelai-stb/lib/python3.13/site-packages/harbor/environments/docker/docker.py", line 1007, in start
+    await self._run_docker_compose_command(["up", *runtime.up_args])
+  File "/home/saud/.local/share/uv/tools/snorkelai-stb/lib/python3.13/site-packages/harbor/environments/docker/docker.py", line 704, in _run_docker_compose_command
+    raise RuntimeError(
+    ...<5 lines>...
+    )
+RuntimeError: Docker compose command failed for environment brickmake-rule-semantics-repair. Command: docker compose --project-name brickmake-rule-semantics-repair__cvrfyql__env --project-directory /mnt/c/Users/masau/Downloads/Terminus-2nd edition (1)/brickmake-rule-semantics-repair/brickmake-rule-semantics-repair/environment -f /tmp/tmpd13xdr1t/brickmake-rule-semantics-repair__cVrFYqL__env-docker-compose-resources.json -f /home/saud/.local/share/uv/tools/snorkelai-stb/lib/python3.13/site-packages/harbor/environments/docker/docker-compose-build.yaml -f /tmp/tmpnew1gz6f/docker-compose-environment.json -f /tmp/tmpka0bz8t9/docker-compose-mounts.json up --detach --wait. Return code: 1. Stdout: validating /tmp/tmpd13xdr1t/brickmake-rule-semantics-repair__cVrFYqL__env-docker-compose-resources.json: error in parsing "compose-spec.json": getwd: no such file or directory
+. Stderr: None. 

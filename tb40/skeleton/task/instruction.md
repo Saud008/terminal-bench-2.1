@@ -1,0 +1,1 @@
+<<REPLACE: written by you, the way you'd actually prompt a coding agent — around two short paragraphs (or up to ~20 bullets) unless the problem genuinely needs more. State the outcome and every output file as an absolute path in backticks. No steps, no hints, no task name, no mention of tests, no GUID-like marker strings, no difficulty wording.>>

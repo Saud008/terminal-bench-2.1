@@ -1,0 +1,38 @@
+at 1767225600
+get https://shop.example.co.uk/a
+get https://shop.example.co.uk/a
+set http://co.uk/ab z=4; Path=/a/b; Path=ab; SameSite=Lax; SameSite=Lax
+set http://10.1.2.3/a/b/ z=6
+at 1767225601
+set http://example.org/ a=1
+set http://www.example.com/ z=8
+set https://example.org/x/y?q=/z a=7; Secure; Max-Age=999999999999999999999; Secure; Max-Age=-0
+get http://x.co.uk/a/b/
+get https://foo.test/a/b
+at 1767225701
+set https://shop.example.co.uk/a/b A=6
+get http://co.uk/a/bc/d
+get http://x.co.uk/
+get https://example.com/a/b/
+get http://example.com/
+set http://example.com/x/y?q=/z A=9
+at 1767225701
+set http://example.com/a/ sid=6; Max-Age=0; HttpOnly
+set https://localhost/a/b/ b=0; Path=; Secure; Secure; SameSite=Lax
+set http://localhost/ z=0; Max-Age=999999999999999999999
+set https://example.com/a/b sid=7; Max-Age=-0
+get https://localhost/a/b/c
+set http://192.168.0.1 A=6; HttpOnly; Secure; Domain=1.2.3
+set http://foo.test/ sid=1
+set https://a.b.example.com/x/y?q=/z z=9; Domain=com; Secure
+set https://10.1.2.3/x/y?q=/z  
+get https://10.1.2.3/
+at 1767225801
+at 1767225831
+set http://10.1.2.3/ab a=1
+get http://co.uk/a
+get https://github.io/a/b/
+set http://alice.github.io/a/b/c sid=4; Secure; HttpOnly
+get http://foo.test/
+set https://foo.test/ sid=4; SameSite=Lax
+dump

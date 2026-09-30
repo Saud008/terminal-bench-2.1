@@ -1,0 +1,16 @@
+at 1767225600
+set https://example.com/a/b A=4; Expires=12:00:00 1 jan 1600
+set http://alice.github.io/ab z=7; SameSite=Lax
+set https://192.168.0.1/a sid=3; Max-Age=; Expires=Thu, 01 Jan 2032 00:00:00 GMT; Expires=01-Jan-49 00:00:00; Expires=junk
+get https://foo.test/a/b/c
+at 1767225601
+get https://example.org/a/b/
+dump
+get http://alice.github.io/a/
+set http://192.168.0.1/a/b/ =v
+set http://co.uk/a/b/c A=0; SameSite=Lax
+set https://example.com/a b=0
+dump
+get https://localhost/a/b/c
+set http://example.org/a/ b=8; Domain=b.example.com; Domain=.; SameSite=Lax
+dump

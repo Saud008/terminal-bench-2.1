@@ -1,0 +1,112 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 10 items
+
+../tests/test_outputs.py ..F.......                                      [100%]
+
+=================================== FAILURES ===================================
+__________________________ test_bracketed_directories __________________________
+
+quire = '/tmp/quire-verify/quire'
+
+    def test_bracketed_directories(quire):
+        """EditorConfig files in directories whose names contain glob characters."""
+>       _check_group(quire, "bracketed_directories")
+
+/tests/test_outputs.py:112: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/quire-verify/quire', group = 'bracketed_directories'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            rc, out, err = _run_case(binary, case)
+            if (rc, out, err) != (case["rc"], case["stdout"], case["stderr"]):
+                failures.append(
+                    f"--- {case['id']} args={case['args']} stdin={case.get('stdin')!r}\n"
+                    f"expected rc={case['rc']} stderr={case['stderr']!r}\n{case['stdout']}"
+                    f"got rc={rc} stderr={err!r}\n{out}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 5 of 6 cases differ:
+E         --- bracketed_directories-01 args=['{root}/[wip] shop/app.tsx', '{root}/[wip] shop/components/Button.tsx'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/bracketed_directories-01/[wip] shop/app.tsx]
+E         indent_style=space
+E         indent_size=2
+E         tab_width=2
+E         [/srv/qc/bracketed_directories-01/[wip] shop/components/Button.tsx]
+E         indent_style=space
+E         indent_size=2
+E         m=component
+E         tab_width=2
+E         got rc=0 stderr=''
+E         [/srv/qc/bracketed_directories-01/[wip] shop/app.tsx]
+E         [/srv/qc/bracketed_directories-01/[wip] shop/components/Button.tsx]
+E         
+E         --- bracketed_directories-02 args=['{root}/site[2024]/index.tsx', '{root}/site[2024]/components/Nav.tsx'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/bracketed_directories-02/site[2024]/index.tsx]
+E         indent_style=space
+E         indent_size=2
+E         tab_width=2
+E         [/srv/qc/bracketed_directories-02/site[2024]/components/Nav.tsx]
+E         indent_style=space
+E         indent_size=2
+E         m=component
+E         tab_width=2
+E         got rc=0 stderr=''
+E         [/srv/qc/bracketed_directories-02/site[2024]/index.tsx]
+E         [/srv/qc/bracketed_directories-02/site[2024]/components/Nav.tsx]
+E         
+E         --- bracketed_directories-03 args=['{root}/a[!x]b/sub/page.tsx', '{root}/a[!x]b/page.tsx'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/bracketed_directories-03/a[!x]b/sub/page.tsx]
+E         indent_style=space
+E         indent_size=2
+E         quote_type=double
+E         tab_width=2
+E         [/srv/qc/bracketed_directories-03/a[!x]b/page.tsx]
+E         indent_style=space
+E         indent_size=2
+E         tab_width=2
+E         got rc=0 stderr=''
+E         [/srv/qc/bracketed_directories-03/a[!x]b/sub/page.tsx]
+E         [/srv/qc/bracketed_directories-03/a[!x]b/page.tsx]
+E         
+E         --- bracketed_directories-04 args=['{root}/r[0-9]/x.tsx', '{root}/r5/x.tsx'] stdin=None
+E         expected rc=0 stderr=''
+E         [/srv/qc/bracketed_directories-04/r[0-9]/x.tsx]
+E         indent_style=space
+E         indent_size=2
+E         tab_width=2
+E         [/srv/qc/bracketed_directories-04/r5/x.tsx]
+E         got rc=0 stderr=''
+E         [/srv/qc/bracketed_directories-04/r[0-9]/x.tsx]
+E         [/srv/qc/bracketed_directories-04/r5/x.tsx]
+E         
+E         --- bracketed_directories-06 args=['{root}/[x]/a/b/readme.md'] stdin=None
+E         expected rc=0 stderr=''
+E         trim_trailing_whitespace=false
+E         charset=latin1
+E         got rc=0 stderr=''
+E         
+E       assert not ["--- bracketed_directories-01 args=['{root}/[wip] shop/app.tsx', '{root}/[wip] shop/components/Button.tsx'] stdin=Non...readme.md'] stdin=None\nexpected rc=0 stderr=''\ntrim_trailing_whitespace=false\ncharset=latin1\ngot rc=0 stderr=''\n"]
+
+/tests/test_outputs.py:97: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_section_anchoring
+PASSED ../tests/test_outputs.py::test_tab_indentation
+PASSED ../tests/test_outputs.py::test_stdin_paths
+PASSED ../tests/test_outputs.py::test_globstar_segments
+PASSED ../tests/test_outputs.py::test_negated_classes
+PASSED ../tests/test_outputs.py::test_inline_comments
+PASSED ../tests/test_outputs.py::test_root_declarations
+PASSED ../tests/test_outputs.py::test_value_case
+PASSED ../tests/test_outputs.py::test_property_order
+FAILED ../tests/test_outputs.py::test_bracketed_directories - AssertionError:...
+========================= 1 failed, 9 passed in 7.87s ==========================

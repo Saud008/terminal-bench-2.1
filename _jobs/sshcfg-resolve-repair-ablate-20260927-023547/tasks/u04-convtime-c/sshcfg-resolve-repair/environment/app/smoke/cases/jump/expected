@@ -1,0 +1,24 @@
+host db-main
+user root
+hostname db-main.internal.example.com
+port 22
+batchmode no
+controlmaster auto
+identitiesonly no
+stricthostkeychecking ask
+serveralivecountmax 3
+serveraliveinterval 0
+controlpath /root/.ssh/cm-root@db-main.internal.example.com:22
+loglevel INFO
+identityfile ~/.ssh/id_rsa
+identityfile ~/.ssh/id_ecdsa
+identityfile ~/.ssh/id_ecdsa_sk
+identityfile ~/.ssh/id_ed25519
+identityfile ~/.ssh/id_ed25519_sk
+identityfile ~/.ssh/id_xmss
+identityfile ~/.ssh/id_dsa
+userknownhostsfile /root/.ssh/known_hosts /root/.ssh/known_hosts2
+forwardagent no
+connecttimeout none
+controlpersist 600
+proxyjump ops@bastion.example.com:2222

@@ -1,0 +1,26 @@
+at 1767225600
+get http://a.b.example.com/
+set http://api.example.com/a/ A=2
+set http://x.co.uk/a/b/ z=0; Domain=com; Path=
+set http://api.example.com/a/b/ b=7; Expires=Thu, 01 Jan 2032 00:00:00 GMT; Path=/ab; Path=/a
+set http://shop.example.co.uk/x/y?q=/z sid=8; Max-Age=-0; Max-Age=60; Path=/
+set http://api.example.com/x/y?q=/z A=2; HttpOnly; Expires=2030 12:00:00 5 mar; Max-Age=999999999999999999999; Expires=2030 12:00:00 5 mar
+get https://x.co.uk/a/
+get http://foo.test/a/bc/d
+get https://10.1.2.3/a/bc/d
+set https://alice.github.io/a/b/ b=4
+get https://api.example.com/a/b/c
+get https://example.com/a/b
+dump
+set https://example.com/x/y?q=/z a=2; Path=/ab; Path=/a/; Secure
+at 1767225600
+get http://example.com/ab
+at 1767225630
+at 1767225660
+set https://alice.github.io/a a=3; Secure; HttpOnly; Max-Age=-0; Path=/a/b
+set http://example.org/a/ sid=1
+get http://www.example.com/a/b/
+set http://192.168.0.1/a/b/ A=7; Max-Age=; Secure
+at 1767225690
+get https://example.org/
+dump

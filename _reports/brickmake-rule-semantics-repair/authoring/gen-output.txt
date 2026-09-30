@@ -1,0 +1,89 @@
+GNU Make 4.3
+ok stem/shortest_stem_wins_across_directories
+ok stem/prefix_pattern_beats_plain_suffix
+ok stem/applicable_rule_after_inapplicable_shorter_stem
+ok stem/equal_stems_keep_makefile_order_and_redefinition_moves_last
+ok dirs/shared_prerequisite_is_not_moved_into_the_directory
+ok dirs/directory_prefix_goes_before_the_pattern_prefix
+ok dirs/static_pattern_rules_match_the_whole_name
+ok mention/prerequisite_mentioned_elsewhere_ought_to_exist
+ok mention/mentioned_header_with_rule_is_generated
+ok mention/order_only_mention_counts_too
+ok patvars/more_specific_pattern_applies_last
+ok patvars/equal_length_patterns_later_wins
+ok patvars/pattern_variables_match_whole_names
+ok patvars/command_line_overrides_everything
+ok project/incremental_builds
+ok project/generated_parser_and_version_header
+0 mismatches
+{
+ "smoke_layered_flags_and_rerun": {
+  "group": "smoke",
+  "steps": [
+   [
+    "write",
+    "Makefile",
+    "OBJS = out/main.o out/util/str.o\nall: $(OBJS)\n\t@echo linked $(words $^) objects\nout/util/%.o: CF += -DUTIL\nout/%.o: CF += -Iinclude\n%.o: CF = -O1\nout/%.o: src/%.c\n\t@mkdir -p $(@D)\n\t@echo '$(CF)' > $@\n\t@echo cc $(CF) -c $< -o $@\n"
+   ],
+   [
+    "write",
+    "src/main.c",
+    "int main(void){return 0;}\n"
+   ],
+   [
+    "write",
+    "src/util/str.c",
+    "int s;\n"
+   ],
+   [
+    "touch",
+    "old",
+    "src/main.c",
+    "src/util/str.c"
+   ],
+   [
+    "run"
+   ],
+   [
+    "ls"
+   ],
+   [
+    "run",
+    "out/util/str.o"
+   ],
+   [
+    "rm",
+    "out/main.o"
+   ],
+   [
+    "run"
+   ]
+  ],
+  "expect": [
+   {
+    "stdout": "cc -O1 -Iinclude -c src/main.c -o out/main.o\ncc -O1 -Iinclude -DUTIL -c src/util/str.c -o out/util/str.o\nlinked 2 objects\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "files": [
+     "Makefile",
+     "out/main.o",
+     "out/util/str.o",
+     "src/main.c",
+     "src/util/str.c"
+    ]
+   },
+   {
+    "stdout": "brickmake: 'out/util/str.o' is up to date.\n",
+    "stderr": "",
+    "code": 0
+   },
+   {
+    "stdout": "cc -O1 -Iinclude -c src/main.c -o out/main.o\nlinked 2 objects\n",
+    "stderr": "",
+    "code": 0
+   }
+  ]
+ }
+}

@@ -1,0 +1,24 @@
+at 1767225600
+get http://www.example.com
+at 1767225600
+set https://foo.test/ a=7
+get https://api.example.com/a
+dump
+at 1767225600
+at 1767225601
+set http://github.io b=3; Domain=example.co.uk; Path=ab; SameSite=Lax; Secure
+get https://co.uk/a/b/c
+set http://foo.test/ab a=2; Domain=github.io
+set http://1.2.3/a z=0; Secure; SameSite=Lax
+get https://x.co.uk/x/y?q=/z
+get http://localhost
+dump
+get https://192.168.0.1/ab
+set http://localhost/ b=1; Path=/a; Path=/a/; Max-Age=3600
+at 1767225601
+set http://api.example.com/a/ z=9
+get http://alice.github.io/a/bc/d
+get https://co.uk/a/b/c
+set https://localhost/ a=1; Secure
+set https://192.168.0.1/ab A=8; SameSite=Lax; Path=; Path=
+dump

@@ -1,0 +1,22 @@
+at 1767225600
+set http://api.example.com/ab a=2; HttpOnly; Secure; Expires=01-Jan-49 00:00:00; SameSite=Lax
+get https://x.co.uk/a/
+set http://co.uk/a/b/ z=4
+set http://1.2.3/a/bc/d z=0; Max-Age=999999999999999999999; SameSite=Lax
+get https://x.co.uk
+set https://co.uk/a/b/c b=1; HttpOnly; Secure; Max-Age=60
+at 1767225630
+dump
+get http://example.org
+set http://example.org/x/y?q=/z z=1; Max-Age=-0; Secure
+at 1767225631
+get http://1.2.3/
+at 1767225632
+get https://example.org/a/
+set https://192.168.0.1/a/b/c z=8
+dump
+get http://shop.example.co.uk/a/b/c
+set https://shop.example.co.uk/ab a=7
+get http://co.uk/x/y?q=/z
+at 1767225732
+dump

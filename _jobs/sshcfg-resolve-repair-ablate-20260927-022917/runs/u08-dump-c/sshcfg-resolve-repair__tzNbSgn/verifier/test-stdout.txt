@@ -1,0 +1,124 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 11 items
+
+../tests/test_outputs.py .....F....F                                     [100%]
+
+=================================== FAILURES ===================================
+__________________________ test_precedence_and_lists ___________________________
+
+hopcfg = '/tmp/hopcfg-verify-vxz902ym/hopcfg'
+
+    def test_precedence_and_lists(hopcfg):
+        """First obtained value wins across -o/-l/-p/destination/config; list keywords accumulate and dedupe like ssh."""
+>       _check(hopcfg, "first_value_wins", "list_keywords")
+
+/tests/test_outputs.py:145: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/hopcfg-verify-vxz902ym/hopcfg'
+groups = ('first_value_wins', 'list_keywords')
+failures = ["[first_value_wins] args=['-F', '/root/.ssh/config', '-o', 'LogLevel=QUIET', 'box'] expected rc=0 got rc=0\n--- ssh -...+ hopcfg\n@@ -10,3 +10,3 @@\n serveraliveinterval 0\n-loglevel SILENT\n+loglevel QUIET\n identityfile ~/.ssh/id_rsa\n"]
+total = 10, group = 'list_keywords'
+
+    def _check(binary, *groups):
+        failures = []
+        total = 0
+        for group in groups:
+            for case in GROUPS[group]:
+                total += 1
+                rc, out = _run(binary, case)
+                if (rc, out) == (case["rc"], case["stdout"]):
+                    continue
+                diff = "".join(difflib.unified_diff(
+                    case["stdout"].splitlines(True), out.splitlines(True),
+                    "ssh -G", "hopcfg", n=1))
+                failures.append(f"[{group}] args={case['args']} expected rc={case['rc']} "
+                                f"got rc={rc}\n{diff}")
+        assert total > 0
+>       assert not failures, (f"{len(failures)}/{total} cases differ from ssh -G:\n"
+                              + "\n".join(failures[:4]))
+E       AssertionError: 1/10 cases differ from ssh -G:
+E         [first_value_wins] args=['-F', '/root/.ssh/config', '-o', 'LogLevel=QUIET', 'box'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -10,3 +10,3 @@
+E          serveraliveinterval 0
+E         -loglevel SILENT
+E         +loglevel QUIET
+E          identityfile ~/.ssh/id_rsa
+E         
+E       assert not ["[first_value_wins] args=['-F', '/root/.ssh/config', '-o', 'LogLevel=QUIET', 'box'] expected rc=0 got rc=0\n--- ssh -...+ hopcfg\n@@ -10,3 +10,3 @@\n serveraliveinterval 0\n-loglevel SILENT\n+loglevel QUIET\n identityfile ~/.ssh/id_rsa\n"]
+
+/tests/test_outputs.py:114: AssertionError
+__________________________ test_syntax_and_rejections __________________________
+
+hopcfg = '/tmp/hopcfg-verify-vxz902ym/hopcfg'
+
+    def test_syntax_and_rejections(hopcfg):
+        """Keyword/value spelling variants print like ssh, and invalid configs or destinations exit 255 with no output."""
+>       _check(hopcfg, "value_formats", "rejected_configs")
+
+/tests/test_outputs.py:170: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/hopcfg-verify-vxz902ym/hopcfg'
+groups = ('value_formats', 'rejected_configs')
+failures = ["[value_formats] args=['-F', '/root/.ssh/config', 'fmt4'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -10,3 +1...+ hopcfg\n@@ -10,3 +10,3 @@\n serveraliveinterval 0\n-loglevel SILENT\n+loglevel QUIET\n identityfile ~/.ssh/id_rsa\n"]
+total = 26, group = 'rejected_configs'
+
+    def _check(binary, *groups):
+        failures = []
+        total = 0
+        for group in groups:
+            for case in GROUPS[group]:
+                total += 1
+                rc, out = _run(binary, case)
+                if (rc, out) == (case["rc"], case["stdout"]):
+                    continue
+                diff = "".join(difflib.unified_diff(
+                    case["stdout"].splitlines(True), out.splitlines(True),
+                    "ssh -G", "hopcfg", n=1))
+                failures.append(f"[{group}] args={case['args']} expected rc={case['rc']} "
+                                f"got rc={rc}\n{diff}")
+        assert total > 0
+>       assert not failures, (f"{len(failures)}/{total} cases differ from ssh -G:\n"
+                              + "\n".join(failures[:4]))
+E       AssertionError: 2/26 cases differ from ssh -G:
+E         [value_formats] args=['-F', '/root/.ssh/config', 'fmt4'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -10,3 +10,3 @@
+E          serveraliveinterval 0
+E         -loglevel SILENT
+E         +loglevel QUIET
+E          identityfile ~/.ssh/id_rsa
+E         
+E         [value_formats] args=['-F', '/root/.ssh/config', 'fmt5'] expected rc=0 got rc=0
+E         --- ssh -G
+E         +++ hopcfg
+E         @@ -10,3 +10,3 @@
+E          serveraliveinterval 0
+E         -loglevel SILENT
+E         +loglevel QUIET
+E          identityfile ~/.ssh/id_rsa
+E         
+E       assert not ["[value_formats] args=['-F', '/root/.ssh/config', 'fmt4'] expected rc=0 got rc=0\n--- ssh -G\n+++ hopcfg\n@@ -10,3 +1...+ hopcfg\n@@ -10,3 +10,3 @@\n serveraliveinterval 0\n-loglevel SILENT\n+loglevel QUIET\n identityfile ~/.ssh/id_rsa\n"]
+
+/tests/test_outputs.py:114: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_host_line_patterns
+PASSED ../tests/test_outputs.py::test_match_criteria
+PASSED ../tests/test_outputs.py::test_final_pass
+PASSED ../tests/test_outputs.py::test_include_scoping
+PASSED ../tests/test_outputs.py::test_include_paths
+PASSED ../tests/test_outputs.py::test_sendenv_setenv
+PASSED ../tests/test_outputs.py::test_time_values
+PASSED ../tests/test_outputs.py::test_proxy_settings
+PASSED ../tests/test_outputs.py::test_token_expansion
+FAILED ../tests/test_outputs.py::test_precedence_and_lists - AssertionError: ...
+FAILED ../tests/test_outputs.py::test_syntax_and_rejections - AssertionError:...
+========================= 2 failed, 9 passed in 1.16s ==========================

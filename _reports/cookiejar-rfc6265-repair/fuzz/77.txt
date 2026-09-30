@@ -1,0 +1,23 @@
+at 1767225600
+set http://a.b.example.com/a A=9; Path=ab
+get http://localhost/a/b/c
+at 1767225700
+set http://github.io/a/bc/d sid=1
+set https://github.io b=1
+get https://alice.github.io/x/y?q=/z
+at 1767225701
+get http://www.example.com/a/b/
+set http://foo.test/x/y?q=/z sid=7; Domain=co.uk; Secure; Domain=localhost; SameSite=Lax
+get https://192.168.0.1/a/b/
+get http://a.b.example.com/a/b/
+set http://192.168.0.1/a/bc/d noequals
+at 1767225701
+get https://www.example.com/a/b/c
+dump
+get https://example.com
+get http://api.example.com/a/b/c
+set http://localhost z=9
+at 1767225801
+set http://1.2.3/ z=1; Max-Age=0; SameSite=Lax; Path=/a
+set http://api.example.com/a/ a=3; SameSite=Lax; Max-Age=20; HttpOnly; HttpOnly
+dump

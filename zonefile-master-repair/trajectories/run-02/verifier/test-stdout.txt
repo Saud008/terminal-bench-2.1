@@ -1,0 +1,280 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 11 items
+
+../tests/test_outputs.py .....FF..FF                                     [100%]
+
+=================================== FAILURES ===================================
+______________________________ test_escaped_case _______________________________
+
+zonec = '/tmp/zonec-verify-build/zonec'
+
+    def test_escaped_case(zonec):
+        """Names written with \\DDD escapes fold to lowercase like plain letters, in owners and in RDATA, and deduplicate."""
+>       _check_group(zonec, "escaped_case")
+
+/tests/test_outputs.py:134: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/zonec-verify-build/zonec', group = 'escaped_case'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            base, proc = _run_case(binary, case)
+            label = f"--- {group}/{case['name']} (zonec -o {case['origin']} {case['entry']})"
+            if case["error_line"] is None:
+                if (proc.returncode, proc.stdout) != (0, case["stdout"]):
+                    failures.append(
+                        f"{label}\nexpected exit 0 and:\n{case['stdout']}"
+                        f"got exit {proc.returncode}, stderr {proc.stderr.strip()!r}, stdout:\n{proc.stdout}"
+                    )
+                continue
+            prefix = f"{base / case['error_file']}:{case['error_line']}: "
+            first = proc.stderr.splitlines()[0] if proc.stderr else ""
+            if proc.returncode != 1 or proc.stdout != "" or not first.startswith(prefix):
+                failures.append(
+                    f"{label}\nexpected exit 1, empty stdout and a diagnostic starting with {prefix!r}\n"
+                    f"got exit {proc.returncode}, stderr {first!r}, stdout:\n{proc.stdout}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 1 of 1 cases differ:
+E         --- escaped_case/decimal_escapes_fold_case (zonec -o example.com main.zone)
+E         expected exit 0 and:
+E         example.com.	3600	IN	NS	ns1.example.com.
+E         example.com.	3600	IN	SOA	ns1.example.com. hostmaster.example.com. 1 7200 1800 1209600 300
+E         _srv._tcp.example.com.	3600	IN	SRV	0 5 443 backend.example.com.
+E         alias.example.com.	3600	IN	CNAME	backend.example.com.
+E         apex.example.com.	3600	IN	A	192.0.2.10
+E         apex.example.com.	3600	IN	A	192.0.2.11
+E         backend.example.com.	3600	IN	A	192.0.2.12
+E         host\.one.example.com.	3600	IN	A	192.0.2.13
+E         ns1.example.com.	3600	IN	A	192.0.2.1
+E         got exit 0, stderr '', stdout:
+E         example.com.	3600	IN	NS	ns1.example.com.
+E         example.com.	3600	IN	SOA	ns1.example.com. hostmaster.example.com. 1 7200 1800 1209600 300
+E         Apex.example.com.	3600	IN	A	192.0.2.10
+E         NS1.example.com.	3600	IN	A	192.0.2.1
+E         _srv._tcp.example.com.	3600	IN	SRV	0 5 443 Backend.example.com.
+E         alias.example.com.	3600	IN	CNAME	BackEnd.example.com.
+E         apex.example.com.	3600	IN	A	192.0.2.10
+E         apex.example.com.	3600	IN	A	192.0.2.11
+E         backend.example.com.	3600	IN	A	192.0.2.12
+E         host\.one.example.com.	3600	IN	A	192.0.2.13
+E         
+E       assert not ['--- escaped_case/decimal_escapes_fold_case (zonec -o example.com main.zone)\nexpected exit 0 and:\nexample.com.\t360...tIN\tA\t192.0.2.11\nbackend.example.com.\t3600\tIN\tA\t192.0.2.12\nhost\\.one.example.com.\t3600\tIN\tA\t192.0.2.13\n']
+
+/tests/test_outputs.py:104: AssertionError
+__________________________ test_escaped_label_length ___________________________
+
+zonec = '/tmp/zonec-verify-build/zonec'
+
+    def test_escaped_label_length(zonec):
+        """Label length is counted in decoded octets: 63-octet escaped labels are accepted, 64-octet labels rejected at their line."""
+>       _check_group(zonec, "escaped_label_length")
+
+/tests/test_outputs.py:139: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/zonec-verify-build/zonec', group = 'escaped_label_length'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            base, proc = _run_case(binary, case)
+            label = f"--- {group}/{case['name']} (zonec -o {case['origin']} {case['entry']})"
+            if case["error_line"] is None:
+                if (proc.returncode, proc.stdout) != (0, case["stdout"]):
+                    failures.append(
+                        f"{label}\nexpected exit 0 and:\n{case['stdout']}"
+                        f"got exit {proc.returncode}, stderr {proc.stderr.strip()!r}, stdout:\n{proc.stdout}"
+                    )
+                continue
+            prefix = f"{base / case['error_file']}:{case['error_line']}: "
+            first = proc.stderr.splitlines()[0] if proc.stderr else ""
+            if proc.returncode != 1 or proc.stdout != "" or not first.startswith(prefix):
+                failures.append(
+                    f"{label}\nexpected exit 1, empty stdout and a diagnostic starting with {prefix!r}\n"
+                    f"got exit {proc.returncode}, stderr {first!r}, stdout:\n{proc.stdout}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 2 of 2 cases differ:
+E         --- escaped_label_length/sixty_three_octet_labels (zonec -o example.com main.zone)
+E         expected exit 0 and:
+E         example.com.	3600	IN	NS	ns1.example.com.
+E         example.com.	3600	IN	SOA	ns1.example.com. hostmaster.example.com. 1 7200 1800 1209600 300
+E         \.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.\.ccccccccccccccccccccccc.example.com.	3600	IN	TXT	"dots"
+E         aaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.example.com.	3600	IN	A	192.0.2.63
+E         link.example.com.	3600	IN	CNAME	aaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.example.com.
+E         ns1.example.com.	3600	IN	A	192.0.2.1
+E         got exit 1, stderr '/tmp/zonec-case-6nqzu8iz/main.zone:5: \\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb: label too long', stdout:
+E         
+E         --- escaped_label_length/sixty_four_octet_label (zonec -o example.com main.zone)
+E         expected exit 1, empty stdout and a diagnostic starting with '/tmp/zonec-case-5t0i8y_s/main.zone:6: '
+E         got exit 1, stderr '/tmp/zonec-case-5t0i8y_s/main.zone:5: \\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097\\097bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb: label too long', stdout:
+E         
+E       assert not ["--- escaped_label_length/sixty_three_octet_labels (zonec -o example.com main.zone)\nexpected exit 0 and:\nexample.co...\097\\\\097\\\\097\\\\097\\\\097\\\\097\\\\097bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb: label too long', stdout:\n"]
+
+/tests/test_outputs.py:104: AssertionError
+_________________________________ test_zonemd __________________________________
+
+zonec = '/tmp/zonec-verify-build/zonec'
+
+    def test_zonemd(zonec):
+        """The apex ZONEMD gets the SOA serial and the RFC 8976 SHA-384 digest of the listing; other ZONEMD records are data; SHA-512 at the apex is rejected."""
+>       _check_group(zonec, "zonemd")
+
+/tests/test_outputs.py:154: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/zonec-verify-build/zonec', group = 'zonemd'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            base, proc = _run_case(binary, case)
+            label = f"--- {group}/{case['name']} (zonec -o {case['origin']} {case['entry']})"
+            if case["error_line"] is None:
+                if (proc.returncode, proc.stdout) != (0, case["stdout"]):
+                    failures.append(
+                        f"{label}\nexpected exit 0 and:\n{case['stdout']}"
+                        f"got exit {proc.returncode}, stderr {proc.stderr.strip()!r}, stdout:\n{proc.stdout}"
+                    )
+                continue
+            prefix = f"{base / case['error_file']}:{case['error_line']}: "
+            first = proc.stderr.splitlines()[0] if proc.stderr else ""
+            if proc.returncode != 1 or proc.stdout != "" or not first.startswith(prefix):
+                failures.append(
+                    f"{label}\nexpected exit 1, empty stdout and a diagnostic starting with {prefix!r}\n"
+                    f"got exit {proc.returncode}, stderr {first!r}, stdout:\n{proc.stdout}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 1 of 4 cases differ:
+E         --- zonemd/digest_input_near_block_end (zonec -o example.org main.zone)
+E         expected exit 0 and:
+E         example.org.	3600	IN	NS	ns1.example.org.
+E         example.org.	3600	IN	SOA	ns1.example.org. hostmaster.example.org. 2026092706 7200 1800 1209600 300
+E         example.org.	3600	IN	ZONEMD	2026092706 1 1 880977E80C2B78B35D39EFDF8778FFC95DED0E387B0645CC7D6EA5130A9C2FEB188EE5B2A42C353B3BB90B43D1FD9795
+E         mail.example.org.	3600	IN	A	192.0.2.25
+E         mail.example.org.	3600	IN	TXT	"v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDwq7ve1Hc9Lr2MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDwq7ve1Hc9Lr2MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBg"
+E         ns1.example.org.	3600	IN	A	192.0.2.53
+E         got exit 0, stderr '', stdout:
+E         example.org.	3600	IN	NS	ns1.example.org.
+E         example.org.	3600	IN	SOA	ns1.example.org. hostmaster.example.org. 2026092706 7200 1800 1209600 300
+E         example.org.	3600	IN	ZONEMD	2026092706 1 1 7A31B4008309AAE27B0BF9D7F6E035CD6348E07A7B4E169DBC98989A69F88F8C2C7A49E483159B52F7FAC4D52F98CAC1
+E         mail.example.org.	3600	IN	A	192.0.2.25
+E         mail.example.org.	3600	IN	TXT	"v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDwq7ve1Hc9Lr2MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDwq7ve1Hc9Lr2MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBg"
+E         ns1.example.org.	3600	IN	A	192.0.2.53
+E         
+E       assert not ['--- zonemd/digest_input_near_block_end (zonec -o example.org main.zone)\nexpected exit 0 and:\nexample.org.\t3600\tI...QEBAQUAA4GNADCBiQKBgQDwq7ve1Hc9Lr2MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBg"\nns1.example.org.\t3600\tIN\tA\t192.0.2.53\n']
+
+/tests/test_outputs.py:104: AssertionError
+_____________________________ test_reference_zone ______________________________
+
+zonec = '/tmp/zonec-verify-build/zonec'
+
+    def test_reference_zone(zonec):
+        """A multi-file production-style zone combining includes with origins, $TTL scopes, escapes, multi-line records and a ZONEMD digest."""
+>       _check_group(zonec, "reference_zone")
+
+/tests/test_outputs.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/zonec-verify-build/zonec', group = 'reference_zone'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            base, proc = _run_case(binary, case)
+            label = f"--- {group}/{case['name']} (zonec -o {case['origin']} {case['entry']})"
+            if case["error_line"] is None:
+                if (proc.returncode, proc.stdout) != (0, case["stdout"]):
+                    failures.append(
+                        f"{label}\nexpected exit 0 and:\n{case['stdout']}"
+                        f"got exit {proc.returncode}, stderr {proc.stderr.strip()!r}, stdout:\n{proc.stdout}"
+                    )
+                continue
+            prefix = f"{base / case['error_file']}:{case['error_line']}: "
+            first = proc.stderr.splitlines()[0] if proc.stderr else ""
+            if proc.returncode != 1 or proc.stdout != "" or not first.startswith(prefix):
+                failures.append(
+                    f"{label}\nexpected exit 1, empty stdout and a diagnostic starting with {prefix!r}\n"
+                    f"got exit {proc.returncode}, stderr {first!r}, stdout:\n{proc.stdout}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} cases differ:\n" + "\n".join(failures)
+E       AssertionError: 1 of 1 cases differ:
+E         --- reference_zone/production_like_zone (zonec -o shop.example db/shop.example.zone)
+E         expected exit 0 and:
+E         shop.example.	14400	IN	NS	ns1.shop.example.
+E         shop.example.	14400	IN	NS	ns2.provider.example.
+E         shop.example.	14400	IN	SOA	ns1.shop.example. hostmaster.shop.example. 2026092703 3600 900 1209600 600
+E         shop.example.	14400	IN	MX	10 mx1.shop.example.
+E         shop.example.	14400	IN	MX	20 mx2.shop.example.
+E         shop.example.	14400	IN	TXT	"v=spf1 mx include:_spf.provider.example ~all"
+E         shop.example.	14400	IN	ZONEMD	2026092703 1 1 D40FCFF2AF3CCE52A1F0C2F6C7B0D6EF85D14681F4844839D7184D1FC7B94049D78AF379283100F74BF7D62D325A1ECB
+E         shop.example.	14400	IN	CAA	0 issue "letsencrypt.org"
+E         shop.example.	14400	IN	CAA	128 iodef "mailto:security@shop.example"
+E         _imaps._tcp.shop.example.	14400	IN	TXT	"imaps fallback on mx2"
+E         _imaps._tcp.shop.example.	14400	IN	SRV	0 1 993 mx1.shop.example.
+E         _imaps._tcp.shop.example.	14400	IN	SRV	10 1 993 mx2.shop.example.
+E         _submission._tcp.shop.example.	14400	IN	SRV	0 1 587 mx1.shop.example.
+E         api.shop.example.	300	IN	A	203.0.113.80
+E         api.shop.example.	300	IN	A	203.0.113.81
+E         docs.api.shop.example.	300	IN	TXT	"api v2 (beta); see" "https://shop.example/docs"
+E         db01.internal.api.shop.example.	300	IN	A	10.20.0.11
+E         db01.internal.api.shop.example.	3600	IN	TXT	"primary"
+E         db02.internal.api.shop.example.	300	IN	A	10.20.0.12
+E         v2.api.shop.example.	300	IN	CNAME	api.shop.example.
+E         mx1.shop.example.	14400	IN	A	203.0.113.25
+E         mx2.shop.example.	14400	IN	A	203.0.113.26
+E         ns1.shop.example.	14400	IN	A	203.0.113.53
+E         ns1.shop.example.	14400	IN	AAAA	2001:db8::1:0:0:53
+E         status.shop.example.	14400	IN	A	203.0.113.99
+E         www.shop.example.	300	IN	CNAME	cdn.provider.example.
+E         got exit 0, stderr '', stdout:
+E         shop.example.	14400	IN	NS	ns1.shop.example.
+E         shop.example.	14400	IN	NS	ns2.provider.example.
+E         shop.example.	14400	IN	SOA	ns1.shop.example. hostmaster.shop.example. 2026092703 3600 900 1209600 600
+E         shop.example.	14400	IN	MX	10 mx1.shop.example.
+E         shop.example.	14400	IN	MX	20 mx2.shop.example.
+E         shop.example.	14400	IN	TXT	"v=spf1 mx include:_spf.provider.example ~all"
+E         shop.example.	14400	IN	ZONEMD	2026092703 1 1 A31A87EFD352F3335881E7D747D4B23C1F327FD4473A26DE098126488F352E99F096D17832D77A014182E2D7186DC17C
+E         shop.example.	14400	IN	CAA	0 issue "letsencrypt.org"
+E         shop.example.	14400	IN	CAA	128 iodef "mailto:security@shop.example"
+E         _imaps._tcp.shop.example.	14400	IN	TXT	"imaps fallback on mx2"
+E         _imaps._tcp.shop.example.	14400	IN	SRV	0 1 993 mx1.shop.example.
+E         _imaps._tcp.shop.example.	14400	IN	SRV	10 1 993 mx2.shop.example.
+E         _submission._tcp.shop.example.	14400	IN	SRV	0 1 587 mx1.shop.example.
+E         api.shop.example.	300	IN	A	203.0.113.80
+E         api.shop.example.	300	IN	A	203.0.113.81
+E         docs.api.shop.example.	300	IN	TXT	"api v2 (beta); see" "https://shop.example/docs"
+E         Db01.internal.api.shop.example.	300	IN	A	10.20.0.11
+E         db01.internal.api.shop.example.	3600	IN	TXT	"primary"
+E         db02.internal.api.shop.example.	300	IN	A	10.20.0.12
+E         v2.api.shop.example.	300	IN	CNAME	api.shop.example.
+E         mx1.shop.example.	14400	IN	A	203.0.113.25
+E         mx2.shop.example.	14400	IN	A	203.0.113.26
+E         ns1.shop.example.	14400	IN	A	203.0.113.53
+E         ns1.shop.example.	14400	IN	AAAA	2001:db8::1:0:0:53
+E         status.shop.example.	14400	IN	A	203.0.113.99
+E         www.shop.example.	300	IN	CNAME	cdn.provider.example.
+E         
+E       assert not ['--- reference_zone/production_like_zone (zonec -o shop.example db/shop.example.zone)\nexpected exit 0 and:\nshop.exa...:0:0:53\nstatus.shop.example.\t14400\tIN\tA\t203.0.113.99\nwww.shop.example.\t300\tIN\tCNAME\tcdn.provider.example.\n']
+
+/tests/test_outputs.py:104: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_owner_continuation
+PASSED ../tests/test_outputs.py::test_default_ttl
+PASSED ../tests/test_outputs.py::test_include_scope
+PASSED ../tests/test_outputs.py::test_include_paths
+PASSED ../tests/test_outputs.py::test_quoted_parentheses
+PASSED ../tests/test_outputs.py::test_canonical_order
+PASSED ../tests/test_outputs.py::test_rrset_ttl
+FAILED ../tests/test_outputs.py::test_escaped_case - AssertionError: 1 of 1 c...
+FAILED ../tests/test_outputs.py::test_escaped_label_length - AssertionError: ...
+FAILED ../tests/test_outputs.py::test_zonemd - AssertionError: 1 of 4 cases d...
+FAILED ../tests/test_outputs.py::test_reference_zone - AssertionError: 1 of 1...
+========================= 4 failed, 7 passed in 1.54s ==========================

@@ -1,0 +1,27 @@
+at 1767225600
+set http://example.org/a/ b=4
+set http://alice.github.io/a/b A=5; SameSite=Lax; Path=/a/; HttpOnly
+set https://alice.github.io/ A=3; Expires=12:00:00 1 jan 1600
+set http://foo.test/ b=2; SameSite=Lax
+get https://example.org/a/b/
+at 1767225630
+set http://www.example.com/a sid=2; Max-Age=-0; SameSite=Lax; Secure
+set https://example.org/a A=3; Secure
+set https://example.org/a A=9; HttpOnly; HttpOnly
+get http://localhost/a/b
+set https://1.2.3/x/y?q=/z sid=3; SameSite=Lax; Path=/
+set https://a.b.example.com/a/ a=3; Expires=1 jan 9999 23:59:59; Max-Age=abc; Expires=junk
+set https://alice.github.io z=0; Path=/a/b; Expires=05 Mar 2030 12:00:00abc; Secure
+dump
+dump
+get http://co.uk/a/bc/d
+at 1767225631
+set http://foo.test A=5; Max-Age=60; Expires=junk; Domain=1.2.3; Secure
+get https://example.org/x/y?q=/z
+set https://1.2.3/ z=5; HttpOnly; SameSite=Lax; Expires=01-Jan-70 00:00:00
+dump
+set https://alice.github.io sid=7; Max-Age=20
+get https://co.uk/a/
+set https://x.co.uk/a/ b=0; Domain=alice.github.io; HttpOnly; Max-Age=+5; Path=
+get http://x.co.uk/
+dump

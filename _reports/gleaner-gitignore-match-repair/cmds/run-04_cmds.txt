@@ -1,0 +1,321 @@
+[step 2] find . -maxdepth 3 -type f -print | sort
+[step 2] printf '%s\n' '--- Cargo.toml ---'; cat Cargo.toml; printf '%s\n' '--- docs ---'; for f in docs/*; do echo "### $f"; cat "$f"; done
+[step 2] printf '%s\n' '--- source ---'; for f in src/*.rs; do echo "### $f"; sed -n '1,260p' "$f"; done
+[step 2] cargo test
+[step 3] for f in $(find src -type f -name '*.rs' | sort); do echo "### $f"; cat "$f"; done
+[step 3] cat README.md; printf '\n--- toolchain search ---\n'; command -v rustc || true; command -v cargo || true; find /root /usr/local /opt -type f \( -name cargo -o -name rustc \) 2>/dev/null | head -30
+[step 4] cat > src/ignore/lines.rs <<'EOF'
+//! Splitting a pattern file into candidate lines.
+
+#[derive(Debug, Clone)]
+pub struct RawLine {
+    pub number: usize,
+    pub text: Vec<u8>,
+}
+
+pub fn split(buf: &[u8]) -> Vec<RawLine> {
+    let mut out = Vec::new();
+    for (index, raw) in buf.split(|&b| b == b'\n').enumerate() {
+        let mut line = raw;
+        if index == 0 {
+            line = line.strip_prefix(b"\xef\xbb\xbf").unwrap_or(line);
+        }
+        line = line.strip_suffix(b"\r").unwrap_or(line);
+        if line.is_empty() || line[0] == b'#' {
+            continue;
+        }
+        out.push(RawLine { number: index + 1, text: line.to_vec() });
+    }
+    out
+}
+EOF
+cat > src/ignore/parse.rs <<'EOF'
+//! Turning one line of a pattern file into a pattern.
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Parsed {
+    pub text: Vec<u8>,
+    pub body: Vec<u8>,
+    pub negative: bool,
+    pub dir_only: bool,
+    pub basename_only: bool,
+}
+
+/// Remove only unescaped trailing space characters.
+pub fn trim_trailing_spaces(line: &[u8]) -> &[u8] {
+    let mut end = line.len();
+    while end > 0 && line[end - 1] == b' ' {
+        let mut slashes = 0;
+        let mut i = end - 1;
+        while i > 0 && line[i - 1] == b'\\' {
+            slashes += 1;
+            i -= 1;
+        }
+        if slashes % 2 == 1 {
+            break;
+        }
+        end -= 1;
+    }
+    &line[..end]
+}
+
+pub fn parse_line(line: &[u8]) -> Option<Parsed> {
+    let text = trim_trailing_spaces(line);
+    if text.is_empty() {
+        return None;
+    }
+    let negative = text[0] == b'!';
+    let mut body = if negative { &text[1..] } else { text };
+    let dir_only = body.last() == Some(&b'/');
+    if dir_only {
+        body = &body[..body.len() - 1];
+    }
+    let basename_only = !body.contains(&b'/');
+    Some(Parsed {
+        text: text.to_vec(),
+        body: body.to_vec(),
+        negative,
+        dir_only,
+        basename_only,
+    })
+}
+EOF
+cat > src/ignore/pattern.rs <<'EOF'
+use super::lines;
+use super::parse::parse_line;
+use super::wildmatch::wildmatch;
+
+#[derive(Debug, Clone)]
+pub struct Pattern {
+    pub text: String,
+    pub body: Vec<u8>,
+    pub negative: bool,
+    pub dir_only: bool,
+    pub basename_only: bool,
+    pub line: usize,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct PatternList {
+    pub source: String,
+    pub base: String,
+    pub patterns: Vec<Pattern>,
+}
+
+impl PatternList {
+    pub fn empty(source: &str, base: &str) -> PatternList {
+        PatternList { source...[+1498 chars]
+[step 4] python3 - <<'PY'
+p='src/ignore/sources.rs'
+s=open(p).read()
+s=s.replace('config.get("core", "excludesFile")', 'config.get("core", "excludesfile")')
+s=s.replace('''        if let Some(name) = &self.excludes_file {
+            let path = resolve(root, name);
+            if let Some(list) = read_optional(&path, name)? {
+                lists.push(list);
+            }
+        }
+        if let Some(list) = read_optional(&root.join(INFO_EXCLUDE), INFO_EXCLUDE)? {
+            lists.push(list);
+        }''','''        if let Some(list) = read_optional(&root.join(INFO_EXCLUDE), INFO_EXCLUDE)? {
+            lists.push(list);
+        }
+        if let Some(name) = &self.excludes_file {
+            let path = resolve(root, name);
+            if let Some(list) = read_optional(&path, name)? {
+                lists.push(list);
+            }
+        }''')
+open(p,'w').write(s)
+
+p='src/config/gitconfig.rs'; s=open(p).read()
+s=s.replace('key: key.to_string(),', 'key: key.to_ascii_lowercase(),')
+s=s.replace('&& e.key == key)', '&& e.key.eq_ignore_ascii_case(key))')
+open(p,'w').write(s)
+PY
+cat > src/config/paths.rs <<'EOF'
+use std::env;
+
+fn home() -> Option<String> {
+    env::var("HOME").ok()
+}
+
+pub fn expand_user(value: &str) -> Option<String> {
+    if value == "~" {
+        return home();
+    }
+    match value.strip_prefix("~/") {
+        Some(rest) => home().map(|h| format!("{h}/{rest}")),
+        None => Some(value.to_string()),
+    }
+}
+
+pub fn default_excludes_file() -> Option<String> {
+    match env::var("XDG_CONFIG_HOME") {
+        Ok(xdg) if !xdg.is_empty() => Some(format!("{xdg}/git/ignore")),
+        _ => home().map(|h| format!("{h}/.config/git/ignore")),
+    }
+}
+EOF
+python3 - <<'PY'
+p='src/ignore/stack.rs'; s=open(p).read()
+s=s.replace('''    match own {
+        Some(h) if h.negative => Some(h),
+        own => inherited.or(own),
+    }''','''    inherited.or(own)''')
+s=s.replace('''        stack
+            .iter()
+            .chain(self.globals.iter())''','''        stack
+            .iter()
+            .rev()
+            .chain(self.globals.iter())''')
+start=s.index('    pub fn check_path(&self, path: &str) -> Result<Verdict> {')
+end=s.index('\n    }\n}', start)+6
+new='''    pub fn check_path(&self, path: &str) -> Result<Verdict> {
+        let mut stack = vec![self.dir_list("")?];
+        let mut inherited: Option<Hit> = None;
+        let components: Vec<&str> = path.split('/').collect();
+        let mut prefix = String::new();
+        for comp in &components[..com...[+1730 chars]
+[step 4] cat > src/ignore/charclass.rs <<'EOF'
+//! Bracket expressions used by wildmatch.
+
+pub(super) fn bracket(pat: &[u8], mut p: usize, tc: u8) -> Option<(bool, usize)> {
+    let mut negated = false;
+    if matches!(pat.get(p), Some(b'!') | Some(b'^')) {
+        negated = true;
+        p += 1;
+    }
+    let mut matched = false;
+    let mut first = true;
+    let mut previous: Option<u8> = None;
+    loop {
+        let c = *pat.get(p)?;
+        if c == b']' && !first {
+            return Some((matched != negated, p));
+        }
+        first = false;
+
+        if c == b'[' && pat.get(p + 1) == Some(&b':') {
+            let mut q = p + 2;
+            while q + 1 < pat.len() && !(pat[q] == b':' && pat[q + 1] == b']') {
+                q += 1;
+            }
+            if q + 1 < pat.len() {
+                matched |= posix_class(&pat[p + 2..q], tc)?;
+                previous = None;
+                p = q + 2;
+                continue;
+            }
+        }
+
+        let (value, next) = if c == b'\\' {
+            (pat.get(p + 1).copied()?, p + 2)
+        } else {
+            (c, p + 1)
+        };
+        if value == b'-' && previous.is_some() && pat.get(next) != Some(&b']') {
+            let mut end = *pat.get(next)?;
+            let mut after = next + 1;
+            if end == b'\\' {
+                end = *pat.get(after)?;
+                after += 1;
+            }
+            let lo = previous.unwrap();
+            matched |= lo <= tc && tc <= end;
+            previous = None;
+            p = after;
+        } else {
+            matched |= value == tc;
+            previous = Some(value);
+            p = next;
+        }
+    }
+}
+
+fn posix_class(name: &[u8], c: u8) -> Option<bool> {
+    Some(match name {
+        b"alnum" => c.is_ascii_alphanumeric(), b"alpha" => c.is_ascii_alphabetic(),
+        b"blank" => c == b' ' || c == b'\t', b"cntrl" => c.is_ascii_control(),
+        b"digit" => c.is_ascii_digit(), b"graph" => c.is_ascii_graphic(),
+        b"lower" => c.is_ascii_lowercase(), b"print" => c.is_ascii_graphic() || c == b' ',
+        b"punct" => c.is_ascii_punctuation(), b"space" => c.is_ascii_whitespace(),
+        b"upper" => c.is_ascii_uppercase(), b"xdigit" => c.is_ascii_hexdigit(),
+        _ => return None,
+    })
+}
+EOF
+cat > src/ignore/wildmatch.rs <<'EOF'
+//! Git-style byte-oriented wildcard matching.
+
+use std::collections::HashMap;
+use super::charclass;
+
+pub fn wildmatch(pattern: &[u8], text: &[u8], pathname: bool) -> bool {
+    fn go(pat: &[u8], text: &[u8], pat...[+2671 chars]
+[step 4] rm -rf /tmp/gtest && mkdir -p /tmp/gtest/{sub/build,build,ignored/deep,.git/info} && touch /tmp/gtest/{a.tmp,keep.txt,build/top,sub/build/nested,sub/keep.tmp,ignored/deep/rescue,ignored/visible} && printf '\357\273\277*.tmp\r\nbuild/\r\nignored/\r\n!ignored/visible\r\n' > /tmp/gtest/.gitignore && printf '!keep.tmp\r\n' > /tmp/gtest/sub/.gitignore && target/release/gleaner --root /tmp/gtest list; echo '--- check ---'; target/release/gleaner --root /tmp/gtest check a.tmp sub/keep.tmp sub/build/nested ignored/visible ignored/deep/rescue keep.txt; echo status=$?
+[step 5] 
+[step 5] sed -n '1,240p' src/ignore/charclass.rs; echo '--- wildmatch ---'; sed -n '1,260p' src/ignore/wildmatch.rs; echo '--- stack tail ---'; tail -100 src/ignore/stack.rs
+[step 5] export PATH=/usr/local/rustup/toolchains/1.85.1-x86_64-unknown-linux-gnu/bin:$PATH; cargo build --release
+[step 6] rm -rf /tmp/gtest && mkdir -p /tmp/gtest/{sub/build,build,ignored/deep,.git/info} && touch /tmp/gtest/{a.tmp,keep.txt,build/top,sub/build/nested,sub/keep.tmp,ignored/deep/rescue,ignored/visible} && printf '\357\273\277*.tmp\r\nbuild/\r\nignored/\r\n!ignored/visible\r\n' > /tmp/gtest/.gitignore && printf '!keep.tmp\r\n' > /tmp/gtest/sub/.gitignore && echo '--- list ---' && target/release/gleaner --root /tmp/gtest list && echo '--- check ---' && target/release/gleaner --root /tmp/gtest check a.tmp sub/keep.tmp sub/build/nested ignored/visible ignored/deep/rescue keep.txt; echo status=$?
+[step 6] python3 - <<'PY'
+p='src/ignore/sources.rs'
+s=open(p).read()
+old='''pub fn read_optional(path: &Path, source: &str) -> Result<Option<PatternList>> {
+    match fs::read(path) {'''
+new='''pub fn read_optional(path: &Path, source: &str) -> Result<Option<PatternList>> {
+    match fs::symlink_metadata(path) {
+        Ok(meta) if !meta.file_type().is_file() => return Ok(None),
+        Ok(_) => {}
+        Err(e) if matches!(e.kind(), io::ErrorKind::NotFound | io::ErrorKind::NotADirectory) => return Ok(None),
+        Err(e) => return Err(Error::io(path, e)),
+    }
+    match fs::read(path) {'''
+assert old in s
+open(p,'w').write(s.replace(old,new))
+
+p='src/config/gitconfig.rs'
+s=open(p).read()
+old='''        if let Some(head) = raw.strip_suffix('\\\\') {
+            if !head.ends_with('\\\\') {
+                current.push_str(head);
+                continue;
+            }
+        }
+        current.push_str(raw);'''
+new='''        let trailing = raw.as_bytes().iter().rev().take_while(|&&b| b == b'\\\\').count();
+        if trailing % 2 == 1 {
+            current.push_str(&raw[..raw.len() - 1]);
+            continue;
+        }
+        current.push_str(raw);'''
+assert old in s
+open(p,'w').write(s.replace(old,new))
+PY
+export PATH=/usr/local/rustup/toolchains/1.85.1-x86_64-unknown-linux-gnu/bin:$PATH; cargo build --release
+[step 6] rm -rf /tmp/gcases /tmp/gxdg && mkdir -p /tmp/gcases/{a/x/y,sub,.git/info} /tmp/gxdg/git && touch /tmp/gcases/{foo,a/foo,a/x/y/foo,a/x/y/bar,sub/foo.tmp,bang,'hash#',space,'trail ',z} && cat > /tmp/gcases/.gitignore <<'EOF'
+# comment
+
+/foo
+**/bar
+\!bang
+\#hash
+trail\ 
+*.tmp
+EOF
+cat > /tmp/gcases/sub/.gitignore <<'EOF'
+!foo.tmp
+EOF
+printf 'z\n' > /tmp/gcases/.git/info/exclude
+printf 'space\n' > /tmp/gxdg/git/ignore
+XDG_CONFIG_HOME=/tmp/gxdg target/release/gleaner --root /tmp/gcases check foo a/foo a/x/y/bar bang hash space 'trail ' sub/foo.tmp z > /tmp/actual; printf '.gitignore:3:/foo\tfoo\n::\ta/foo\n.gitignore:4:**/bar\ta/x/y/bar\n.gitignore:5:\\!bang\tbang\n.gitignore:6:\\#hash\thash\n/tmp/gxdg/git/ignore:1:space\tspace\n.gitignore:7:trail\\ \ttrail \nsub/.gitignore:1:!foo.tmp\tsub/foo.tmp\n.git/info/exclude:1:z\tz\n' > /tmp/expected; diff -u /tmp/expected /tmp/actual; rc=$?; echo assertion_status=$rc; cat /tmp/actual
+[step 7] touch '/tmp/gcases/!bang' '/tmp/gcases/#hash'; XDG_CONFIG_HOME=/tmp/gxdg target/release/gleaner --root /tmp/gcases check foo a/foo a/x/y/bar '!bang' '#hash' space 'trail ' sub/foo.tmp z > /tmp/actual; printf '.gitignore:3:/foo\tfoo\n::\ta/foo\n.gitignore:4:**/bar\ta/x/y/bar\n.gitignore:5:\\!bang\t!bang\n.gitignore:6:\\#hash\t#hash\n/tmp/gxdg/git/ignore:1:space\tspace\n.gitignore:7:trail\\ \ttrail \nsub/.gitignore:1:!foo.tmp\tsub/foo.tmp\n.git/info/exclude:1:z\tz\n' > /tmp/expected; diff -u /tmp/expected /tmp/actual; echo corrected_pattern_assertion=$?
+[step 7] rm -rf /tmp/gconfig && mkdir -p /tmp/gconfig/{.git/info,sub} && touch /tmp/gconfig/{global,info,local,a-b,a0} /tmp/gconfig/sub/file && printf 'global\ninfo\n' > /tmp/gconfig/excludes && printf '[Core]\n  ExcludesFile = excludes\n' > /tmp/gconfig/.git/config && printf '!info\n' > /tmp/gconfig/.git/info/exclude && printf 'local\n!global\n' > /tmp/gconfig/.gitignore && target/release/gleaner --root /tmp/gconfig check global info local > /tmp/config.actual; printf '.gitignore:2:!global\tglobal\n.git/info/exclude:1:!info\tinfo\n.gitignore:1:local\tlocal\n' > /tmp/config.expected; diff -u /tmp/config.expected /tmp/config.actual; echo precedence_config_assertion=$?; target/release/gleaner --root /tmp/gconfig list > /tmp/list.actual; printf '.gitignore\na-b\na0\nexcludes\nsub/file\n' > /tmp/list.expected; diff -u /tmp/list.expected /tmp/list.actual; echo list_assertion=$?
+[step 7] export PATH=/usr/local/rustup/toolchains/1.85.1-x86_64-unknown-linux-gnu/bin:$PATH; cargo test && cargo build --release
+[step 8] 
+[step 8] printf '.gitignore\na-b\na0\nexcludes\nglobal\ninfo\nsub/file\n' > /tmp/list.expected; diff -u /tmp/list.expected /tmp/list.actual; echo corrected_list_assertion=$?; echo '--- policy scan ---'; grep -RInE '\bunsafe\b|std::process::Command|extern[[:space:]]+"C"' src || true; awk '/^\[dependencies\]/{flag=1;next}/^\[/{flag=0}flag&&NF{print}' Cargo.toml
+[step 8] export PATH=/usr/local/rustup/toolchains/1.85.1-x86_64-unknown-linux-gnu/bin:$PATH; cargo build --release
+[step 9] {}
+[step 10] command -v git || true
+[step 11] {}
+[step 12] {}

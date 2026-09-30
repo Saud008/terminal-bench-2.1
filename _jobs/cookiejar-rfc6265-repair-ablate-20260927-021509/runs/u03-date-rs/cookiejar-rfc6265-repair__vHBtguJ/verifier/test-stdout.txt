@@ -1,0 +1,95 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 12 items
+
+../tests/test_outputs.py .....F......                                    [100%]
+
+=================================== FAILURES ===================================
+_____________________________ test_two_digit_years _____________________________
+
+crumbjar = '/tmp/crumbjar-verify-target/release/crumbjar'
+
+    def test_two_digit_years(crumbjar):
+        """Two-digit years in Expires map 70-99 to 19xx and 00-69 to 20xx."""
+>       _check_group(crumbjar, "two_digit_years")
+
+/tests/test_outputs.py:106: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+binary = '/tmp/crumbjar-verify-target/release/crumbjar'
+group = 'two_digit_years'
+
+    def _check_group(binary, group):
+        failures = []
+        for case in CASES[group]:
+            p = subprocess.run(
+                [binary, "replay", "-"],
+                input=case["transcript"], capture_output=True, text=True, timeout=60,
+                env={"PATH": "/usr/local/bin:/usr/bin:/bin", "LC_ALL": "C"},
+            )
+            if p.returncode != 0 or p.stdout != case["stdout"]:
+                failures.append(
+                    f"--- transcript\n{case['transcript']}"
+                    f"--- expected (exit 0)\n{case['stdout']}"
+                    f"--- got (exit {p.returncode})\n{p.stdout}{p.stderr[-500:]}"
+                )
+>       assert not failures, f"{len(failures)} of {len(CASES[group])} transcripts differ:\n" + "\n".join(failures)
+E       AssertionError: 2 of 2 transcripts differ:
+E         --- transcript
+E         at 1767225600
+E         set https://app.example.net/ y61=1; Expires=Wed, 09-Jun-61 10:18:14 GMT
+E         set https://app.example.net/ y55=1; Expires=Tue, 01-Jan-55 00:00:00 GMT
+E         set https://app.example.net/ y99=1; Expires=Fri, 31-Dec-99 23:59:59 GMT
+E         set https://app.example.net/ y70=1; Expires=Thu, 01-Jan-70 00:00:01 GMT
+E         set https://app.example.net/ y37=1; Expires=Thu, 01-Jan-37 00:00:00 GMT
+E         set https://app.example.net/ y4d=1; Expires=Mon, 01 Jan 2052 00:00:00 GMT
+E         get https://app.example.net/
+E         dump
+E         --- expected (exit 0)
+E         https://app.example.net/	y61=1; y55=1; y37=1; y4d=1
+E         -- jar @1767225600: 4 cookie(s)
+E         app.example.net	/	y37=1	host-only	2114380800	1767225600	1767225600
+E         app.example.net	/	y4d=1	host-only	2587680000	1767225600	1767225600
+E         app.example.net	/	y55=1	host-only	2682374400	1767225600	1767225600
+E         app.example.net	/	y61=1	host-only	2885537894	1767225600	1767225600
+E         --- got (exit 0)
+E         https://app.example.net/	y37=1; y4d=1
+E         -- jar @1767225600: 2 cookie(s)
+E         app.example.net	/	y37=1	host-only	2114380800	1767225600	1767225600
+E         app.example.net	/	y4d=1	host-only	2587680000	1767225600	1767225600
+E         
+E         --- transcript
+E         at 1767225600
+E         set https://cdn.example.org/ keep=1
+E         set https://cdn.example.org/ keep=2; Expires=Sun, 06-Nov-94 08:49:37 GMT
+E         set https://cdn.example.org/ late=1; expires=06 nov 68 08:49:37
+E         get https://cdn.example.org/
+E         dump
+E         --- expected (exit 0)
+E         https://cdn.example.org/	late=1
+E         -- jar @1767225600: 1 cookie(s)
+E         cdn.example.org	/	late=1	host-only	3119417377	1767225600	1767225600
+E         --- got (exit 0)
+E         https://cdn.example.org/	
+E         -- jar @1767225600: 0 cookie(s)
+E         
+E       assert not ['--- transcript\nat 1767225600\nset https://app.example.net/ y61=1; Expires=Wed, 09-Jun-61 10:18:14 GMT\nset https://...\t3119417377\t1767225600\t1767225600\n--- got (exit 0)\nhttps://cdn.example.org/\t\n-- jar @1767225600: 0 cookie(s)\n']
+
+/tests/test_outputs.py:76: AssertionError
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../tests/test_outputs.py::test_default_path
+PASSED ../tests/test_outputs.py::test_path_boundary
+PASSED ../tests/test_outputs.py::test_host_only
+PASSED ../tests/test_outputs.py::test_ip_hosts
+PASSED ../tests/test_outputs.py::test_max_age_precedence
+PASSED ../tests/test_outputs.py::test_invalid_dates
+PASSED ../tests/test_outputs.py::test_replacement
+PASSED ../tests/test_outputs.py::test_header_order
+PASSED ../tests/test_outputs.py::test_public_suffix
+PASSED ../tests/test_outputs.py::test_site_limit
+PASSED ../tests/test_outputs.py::test_name_value_pair
+FAILED ../tests/test_outputs.py::test_two_digit_years - AssertionError: 2 of ...
+========================= 1 failed, 11 passed in 1.65s =========================

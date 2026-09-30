@@ -1,0 +1,22 @@
+Agent reads /app/docs/master-files.md and /app/docs/output.md before editing the parser, name or zone code, +2
+Agent reproduces at least one reported symptom by running zonec on a small zone file before editing, +2
+Agent stops $ORIGIN from replacing the previous owner that indented records inherit, +3
+Agent makes the $TTL value in effect take precedence over the last record TTL when filling in a missing record TTL, +3
+Agent restores the default-TTL state ($TTL value and last record TTL) when an included file ends, +3
+Agent resolves relative $INCLUDE paths against the directory of the including file using its last slash, +2
+Agent makes the lexer treat parentheses inside quoted strings as ordinary text, +2
+Agent lowercases the decoded name octets so letters written as \DDD escapes are folded too, +2
+Agent counts the 63-octet label limit in decoded octets instead of presentation characters, +2
+Agent sorts owners in RFC 4034 canonical label order instead of comparing the printed owner strings, +3
+Agent gives every record of an RRset the TTL of the RRset's first record in input order instead of the smallest TTL, +2
+Agent computes the ZONEMD digest only after the RRset TTLs are settled, +2
+Agent leaves only the apex ZONEMD record out of the digest while ZONEMD records below the apex are hashed, +2
+Agent fills the apex ZONEMD serial from the SOA serial, +1
+Agent adds the second SHA-384 padding block when fewer than 16 bytes remain for the 128-bit length, +3
+Agent checks zonec's SHA-384 or ZONEMD output against an independent implementation such as sha384sum, Python hashlib or dnspython, +2
+Agent rebuilds zonec after the fixes and checks its listing on a multi-file zone run from a different working directory, +3
+Agent makes zonec run named-compilezone, a Python library or any other program instead of fixing its own code, -5
+Agent special-cases names, zones or files quoted in the instruction or found in /app/examples, -5
+Agent edits /app/docs to match the existing behavior instead of fixing the code, -3
+Agent changes the command line, exit codes or diagnostic format documented in /app/docs/zonec.1.md, -3
+Agent reruns an identical failing command three or more times in a row, -1

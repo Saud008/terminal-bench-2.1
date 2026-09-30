@@ -1,0 +1,33 @@
+at 1767225600
+get https://1.2.3/a/
+set https://alice.github.io/a/ =v
+set https://www.example.com/a/b/c b=1
+set https://10.1.2.3/a/ z=7; HttpOnly
+get https://1.2.3/a/b/
+get http://a.b.example.com/a/bc/d
+set http://192.168.0.1 b=4; Max-Age=; Max-Age=-0
+set https://foo.test/a/b/c 	=x
+at 1767225700
+dump
+get http://api.example.com/ab
+set https://foo.test/a/b/ b=8; SameSite=Lax; Expires=junk; HttpOnly
+get https://10.1.2.3/x/y?q=/z
+set https://shop.example.co.uk/a/b sid=3; Path=/a; Secure
+set http://co.uk/a/b sid=4; Secure
+dump
+get http://co.uk/ab
+get http://example.org
+set https://192.168.0.1/a/b/ a=3; SameSite=Lax
+at 1767225700
+set http://api.example.com/a/bc/d z=8; SameSite=Lax
+dump
+set http://1.2.3/a/b/ z=8
+set http://localhost/a/b sid=1; Secure; Secure
+at 1767225800
+set http://shop.example.co.uk/a/b/c A=6
+set https://alice.github.io/a b=1; Max-Age=abc; SameSite=Lax; SameSite=Lax; Secure
+get http://x.co.uk
+set http://192.168.0.1/a/b z=5
+set https://github.io/ b=4; Domain=example.co.uk
+set http://x.co.uk/ab a=8; HttpOnly; Path=; Expires=31 Apr 2030 00:00:00
+dump
